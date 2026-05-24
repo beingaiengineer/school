@@ -1,0 +1,154 @@
+---
+sidebar_position: 6
+---
+
+# Comments Docstrings
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Comments and Docstrings |
+| Difficulty | Beginner |
+| Used For | Explaining intent, contracts, and usage |
+| Core Idea | Comments explain code; docstrings document objects |
+| Common Mistake | Commenting obvious code instead of intent |
+| Production Angle | Good docs reduce onboarding and debugging time |
+
+Bro, comments are for humans. Python ignores comments, but your teammates do not.
+
+## 2. Real-World Analogy
+
+Think of comments like notes beside a restaurant recipe.
+
+The recipe says what to do. The note explains why the chef does it that way.
+
+## 3. Concept Explanation
+
+Comments start with `#`.
+
+Docstrings are string literals placed at the start of modules, classes, or functions. Tools can read them.
+
+Use comments for intent. Use docstrings for public behavior and contracts.
+
+## 4. Syntax Table
+
+| Task | Example |
+|---|---|
+| Single-line comment | `# Retry failed payments only` |
+| Inline comment | `timeout = 30  # seconds` |
+| Function docstring | `"""Return total price."""` |
+| Module docstring | `"""Payment utilities."""` |
+| Read docstring | `help(function_name)` |
+
+## 5. Beginner Example
+
+```python
+def greet(name):
+    """Return a friendly greeting."""
+    return f"Hello {name}"
+
+print(greet("Asha"))
+```
+
+The docstring explains what the function promises.
+
+## 6. Real-World Engineering Example
+
+```python
+def should_retry_payment(status_code):
+    """Return True when a payment failure is safe to retry."""
+    return status_code in {408, 429, 500, 502, 503, 504}
+```
+
+Bro, the docstring explains the business contract, not the syntax.
+
+## 7. Internal Working
+
+Comments are removed by the parser.
+
+Docstrings are stored on the object as `__doc__`.
+
+```python
+print(should_retry_payment.__doc__)
+```
+
+## 8. Performance Table
+
+| Item | Runtime Cost | Note |
+|---|---|---|
+| Comments | None | Ignored by Python |
+| Docstrings | Small memory cost | Stored as strings |
+| Huge docstrings | Small but real | Avoid dumping manuals inside code |
+| Clear docs | Saves human time | Biggest production win |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Are comments executed? | No. |
+| What is a docstring? | A string documenting a module, class, or function. |
+| Where does a function docstring go? | First statement inside the function. |
+| How can tools read docstrings? | Via `__doc__` or `help()`. |
+| What should comments explain? | Why, intent, assumptions, and non-obvious decisions. |
+
+## 10. Tricky Questions & Edge Cases
+
+```python
+def add(a, b):
+    "Add two numbers."
+    return a + b
+
+print(add.__doc__)
+```
+
+This prints the docstring.
+
+But this is not a comment:
+
+```python
+"unused string"
+```
+
+It is a string expression. Do not use random strings as comments.
+
+## 11. Real-World Usage
+
+| Place | Use |
+|---|---|
+| Public functions | Explain contract |
+| Complex business rules | Explain why |
+| APIs | Document expected behavior |
+| Data pipelines | Explain assumptions |
+| Libraries | Generate documentation |
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Explain why | Repeat what the code says |
+| Keep comments updated | Leave stale comments |
+| Document public functions | Over-document tiny private helpers |
+| Mention units | Hide whether timeout is seconds or ms |
+
+## 13. Production Notes
+
+> Production Note:
+> Stale comments are worse than no comments.
+
+During reviews, update comments and docstrings when behavior changes.
+
+## 14. Common Mistakes
+
+- Commenting obvious code.
+- Leaving outdated comments.
+- Writing docstrings that do not match behavior.
+- Using comments to excuse messy code instead of cleaning it.
+
+## 15. Related Topics
+
+- Functions Basics
+- Clean Code
+- Coding Standards
+- Project Structure
+- Debugging

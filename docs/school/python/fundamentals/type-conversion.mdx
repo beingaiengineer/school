@@ -1,0 +1,175 @@
+---
+sidebar_position: 5
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Type Conversion
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Type Conversion |
+| Difficulty | Beginner |
+| Used For | Changing values from one type to another |
+| Core Idea | Convert external text into useful Python types |
+| Common Mistake | Converting without validation |
+| Production Angle | Bad conversion causes API and data pipeline bugs |
+
+Bro, type conversion turns `"42"` into `42`, `"true"` into a boolean decision, or numbers into display text.
+
+## 2. Real-World Analogy
+
+Think of currency exchange at an airport.
+
+You cannot pay in the wrong currency. You convert first, then use it correctly.
+
+## 3. Concept Explanation
+
+External data often arrives as text:
+
+- terminal input
+- CSV values
+- environment variables
+- JSON payloads
+- form fields
+
+Convert when the program needs a specific type for math, comparison, storage, or validation.
+
+## 4. Syntax Table
+
+| Conversion | Example |
+|---|---|
+| String to int | `int("42")` |
+| String to float | `float("99.5")` |
+| Number to string | `str(42)` |
+| List to tuple | `tuple([1, 2])` |
+| Tuple to list | `list((1, 2))` |
+| List to set | `set([1, 1, 2])` |
+| Truth check | `bool("")` |
+
+## 5. Beginner Example
+
+```python
+age_text = "21"
+age = int(age_text)
+
+print(age + 1)
+```
+
+Output:
+
+```text
+22
+```
+
+## 6. Real-World Engineering Example
+
+```python
+raw_retry_count = "3"
+retry_count = int(raw_retry_count)
+
+if retry_count < 5:
+    print("retry allowed")
+```
+
+Environment variables are strings, bro. Convert them before numeric comparison.
+
+## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'Safe conversion path',
+    height: 380,
+    nodes: [
+      {id: 'raw', title: 'Raw Input', detail: 'Text from user, env, CSV, or API.', x: 40, y: 130, kind: 'data'},
+      {id: 'validate', title: 'Validate', detail: 'Check format, missing value, and range.', x: 300, y: 130, kind: 'warning'},
+      {id: 'convert', title: 'Convert', detail: 'Use int, float, bool parser, or custom parser.', x: 560, y: 130, kind: 'process'},
+      {id: 'use', title: 'Use Safely', detail: 'Perform math, compare, store, or pass forward.', x: 820, y: 130, kind: 'output'},
+    ],
+    edges: [
+      {source: 'raw', target: 'validate', label: 'inspect'},
+      {source: 'validate', target: 'convert', label: 'valid'},
+      {source: 'convert', target: 'use', label: 'typed value'},
+    ],
+  }}
+/>
+
+Constructors like `int()` and `float()` create new objects. They raise errors if the value cannot be converted.
+
+## 8. Performance Table
+
+| Conversion | Cost | Note |
+|---|---|---|
+| `int("123")` | O(n) | Depends on string length |
+| `str(number)` | O(n) | Depends on digits |
+| `list(iterable)` | O(n) | Copies all items |
+| `set(list)` | O(n) average | Hashes items |
+| Repeated conversions | Avoidable cost | Convert once near boundary |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does `int("10")` return? | Integer `10`. |
+| What does `int("10x")` do? | Raises `ValueError`. |
+| What does `bool("False")` return? | `True`, because non-empty strings are truthy. |
+| Why convert input? | `input()` returns strings. |
+| Where should conversion happen? | Near system boundaries after validation. |
+
+## 10. Tricky Questions & Edge Cases
+
+```python
+print(bool("False"))
+print(bool(""))
+```
+
+Output:
+
+```text
+True
+False
+```
+
+Bro, `bool()` checks emptiness, not human meaning. Parse boolean strings explicitly.
+
+## 11. Real-World Usage
+
+| Source | Conversion |
+|---|---|
+| `.env` | `"30"` to timeout integer |
+| CSV | `"99.5"` to float or Decimal |
+| API | JSON field validation |
+| CLI | argument text to typed value |
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Convert once near input boundary | Convert randomly deep in business logic |
+| Catch `ValueError` for user input | Let bad user input crash tools |
+| Parse booleans explicitly | Use `bool("False")` |
+| Use `Decimal` for money | Use float for financial values |
+
+## 13. Production Notes
+
+> Production Note:
+> Type conversion should be part of validation, not scattered across the codebase.
+
+In APIs, use schemas. In data pipelines, validate rows before transformation.
+
+## 14. Common Mistakes
+
+- Using `bool("False")`.
+- Not catching `ValueError`.
+- Re-converting the same value repeatedly.
+- Using `float` for money.
+
+## 15. Related Topics
+
+- Data Types
+- Input Output
+- Exceptions
+- Debugging
+- File Handling

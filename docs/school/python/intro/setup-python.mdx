@@ -1,0 +1,179 @@
+---
+sidebar_position: 2
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Setup Python
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Setup Python |
+| Difficulty | Beginner |
+| Used For | Running Python locally and managing project environments |
+| Main Tool | Python installer plus virtual environments |
+| Common Mistake | Installing packages globally for every project |
+| Production Angle | Reproducible setup prevents "works on my machine" issues |
+
+Bro, setup is not just installation. Good setup makes your code easier to run, test, share, and deploy.
+
+## 2. Real-World Analogy
+
+Think of Python setup like preparing a clean kitchen station before cooking.
+
+| Kitchen Setup | Python Setup |
+|---|---|
+| Stove | Python runtime |
+| Separate spice boxes | Virtual environments |
+| Recipe list | `requirements.txt` or `pyproject.toml` |
+| Clean counter | Project folder |
+
+Bro, if every dish uses the same messy counter, things break fast.
+
+## 3. Concept Explanation
+
+Setting up Python means installing Python, confirming it works, creating an isolated environment, and installing project packages inside that environment.
+
+Use a virtual environment for almost every project. It keeps dependencies separate so one project does not break another.
+
+Avoid global installs unless the tool is meant to be available everywhere.
+
+## 4. Syntax Table
+
+| Task | Command |
+|---|---|
+| Check Python | `python --version` |
+| Check pip | `python -m pip --version` |
+| Create environment | `python -m venv .venv` |
+| Activate on Windows | `.venv\Scripts\activate` |
+| Activate on macOS/Linux | `source .venv/bin/activate` |
+| Install package | `python -m pip install requests` |
+| Freeze dependencies | `python -m pip freeze > requirements.txt` |
+
+## 5. Beginner Example
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+python -m pip install requests
+python --version
+```
+
+This creates an isolated environment, activates it, installs a package, and confirms Python is available.
+
+## 6. Real-World Engineering Example
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+python -m pip install -r requirements.txt
+python -m pytest
+```
+
+Bro, this is the basic flow many teams use in onboarding docs and CI pipelines.
+
+## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'Project environment isolation',
+    height: 430,
+    nodes: [
+      {id: 'system', title: 'System Python', detail: 'Installed runtime available on the machine.', x: 30, y: 40, kind: 'core'},
+      {id: 'venv', title: '.venv', detail: 'Project-local isolated Python environment.', x: 270, y: 40, kind: 'tool'},
+      {id: 'pip', title: 'python -m pip', detail: 'Installs packages into the active environment.', x: 510, y: 40, kind: 'process'},
+      {id: 'site', title: 'site-packages', detail: 'Requests, pytest, pandas, and project dependencies live here.', x: 510, y: 220, kind: 'data'},
+      {id: 'project', title: 'Project Code', detail: 'Your app imports dependencies from the environment.', x: 270, y: 220, kind: 'output'},
+      {id: 'global', title: 'Global Installs', detail: 'Avoid this for project dependencies.', x: 30, y: 220, kind: 'warning'},
+    ],
+    edges: [
+      {source: 'system', target: 'venv', label: 'creates'},
+      {source: 'venv', target: 'pip', label: 'uses'},
+      {source: 'pip', target: 'site', label: 'installs'},
+      {source: 'site', target: 'project', label: 'imports', type: 'step'},
+      {source: 'global', target: 'project', label: 'conflicts', animated: true, type: 'straight'},
+    ],
+  }}
+/>
+
+A virtual environment contains its own Python links, package directory, and activation scripts. It does not copy the whole operating system.
+
+## 8. Performance Table
+
+| Area | Impact |
+|---|---|
+| Virtual environment | No meaningful runtime slowdown |
+| Package install time | Depends on package size and network |
+| Large dependencies | Can slow CI and builds |
+| Pinned versions | Improve repeatability |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why use virtual environments? | To isolate dependencies per project. |
+| What is pip? | Python's common package installer. |
+| Why use `python -m pip`? | It ensures pip belongs to the Python you are running. |
+| What is `requirements.txt`? | A dependency list used to recreate an environment. |
+| What causes package conflicts? | Different projects needing different versions of the same package. |
+
+## 10. Tricky Questions & Edge Cases
+
+```bash
+pip install requests
+python app.py
+```
+
+This can fail if `pip` points to one Python installation and `python` points to another.
+
+Bro, prefer:
+
+```bash
+python -m pip install requests
+```
+
+It removes ambiguity.
+
+## 11. Real-World Usage
+
+| Team Scenario | Setup Need |
+|---|---|
+| Backend APIs | Same dependency versions across dev and CI |
+| AI projects | Separate heavy ML libraries per project |
+| Data jobs | Controlled pandas, numpy, and connector versions |
+| Automation scripts | Easy handoff to another developer |
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `.venv` per project | Install every dependency globally |
+| Commit dependency files | Commit the `.venv` folder |
+| Use `python -m pip` | Guess which pip is active |
+| Document setup commands | Rely on memory |
+
+## 13. Production Notes
+
+> Production Note:
+> Production systems need repeatable builds, not random local package state.
+
+Pin important dependencies and make setup commands part of CI. Bro, if CI cannot recreate the environment, deployment will eventually hurt.
+
+## 14. Common Mistakes
+
+| Mistake | Fix |
+|---|---|
+| Forgetting to activate `.venv` | Check terminal prefix or `where python` |
+| Committing `.venv` | Add it to `.gitignore` |
+| Mixing Python versions | Document the required version |
+| Installing globally | Use project environments |
+
+## 15. Related Topics
+
+- Virtual Environments
+- Pip
+- Dependency Management
+- Pyproject Toml
+- First Python Program
