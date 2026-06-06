@@ -2,6 +2,220 @@
 sidebar_position: 6
 ---
 
-# Decorators
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Decorators.
+# Python Decorators
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Python Decorators |
+| Difficulty | Intermediate |
+| Used For | Adding behavior to existing functions without modifying their code |
+| Common Mistake | Forgetting `@wraps` from `functools`, losing original docstrings and names |
+| Performance | Slight overhead from the extra wrapper function call, negligible in most cases |
+
+---
+
+# 2. Real-World Analogy
+
+Think of a decorator like a bouncer at an exclusive club, bro.
+
+The VIP room (your function) just has people partying inside. The VIP room doesn't care about checking IDs. The bouncer (decorator) stands outside the door, checks IDs, and decides if someone is allowed to go in. If they pass, the bouncer opens the door. If not, they get rejected.
+
+The core VIP room logic never changes, but we "decorated" it with a security check!
+
+---
+
+# 3. Concept Explanation
+
+A decorator is a function that takes another function and extends its behavior without explicitly modifying it. In Python, functions are first-class citizens, meaning you can pass them around as arguments to other functions and return them.
+
+Bro, this is insanely powerful. If you have 50 API routes that all need to check if a user is logged in, you don't write the auth logic 50 times. You write it once in a decorator and slap `@login_required` on top of your route functions. It keeps your code DRY and separates concerns cleanly.
+
+---
+
+# 4. Syntax Table
+
+| Operation | Example |
+|---|---|
+| The `@` Syntax | `@my_decorator\ndef my_func():` |
+| Manual Application | `my_func = my_decorator(my_func)` |
+| With Arguments | `@retry(times=3)` |
+
+---
+
+# 5. Beginner Example
+
+Let's look at a simple timer decorator.
+
+```python
+def uppercase_decorator(func):
+    def wrapper():
+        # Call the original function
+        original_result = func()
+        # Modify the result
+        return original_result.upper()
+    return wrapper
+
+@uppercase_decorator
+def greet():
+    return "hello bro"
+
+print(greet())
+# Output: HELLO BRO
+```
+
+Bro, notice how `greet` itself returns lowercase, but when we call it, the decorator intercepts it and makes it uppercase!
+
+---
+
+# 6. Real-World Engineering Example
+
+Here's a classic engineering use case: a decorator that calculates how long a function takes to execute. This is huge for debugging slow endpoints or database queries.
+
+```python
+import time
+import functools
+
+def timer(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        print(f"[{func.__name__}] took {end_time - start_time:.4f} seconds")
+        return result
+    return wrapper
+
+@timer
+def heavy_computation():
+    sum([i * i for i in range(1_000_000)])
+    return "Done"
+
+heavy_computation()
+# Output: [heavy_computation] took 0.0521 seconds
+```
+
+---
+
+# 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    nodes: [
+      { id: '1', title: 'Caller', detail: 'Calls function()', x: 0, y: 100, kind: 'process' },
+      { id: '2', title: 'Decorator Wrapper', detail: 'Intercepts execution', x: 250, y: 100, kind: 'tool' },
+      { id: '3', title: 'Original Function', detail: 'Runs core business logic', x: 550, y: 100, kind: 'core' },
+      { id: '4', title: 'Output', detail: 'Returns processed result', x: 250, y: 250, kind: 'output' }
+    ],
+    edges: [
+      { source: '1', target: '2', label: '1. Invokes' },
+      { source: '2', target: '3', label: '2. Calls original' },
+      { source: '3', target: '2', label: '3. Returns result', type: 'straight' },
+      { source: '2', target: '4', label: '4. Returns final output' }
+    ]
+  }}
+/>
+
+When you put `@decorator` above a function, Python essentially does this: `func = decorator(func)`.
+1. The decorator is executed once when the module loads, returning the `wrapper` function.
+2. The name `func` is re-bound to point to the `wrapper` in memory.
+3. Every time you call `func()`, you are actually calling `wrapper()`. The original function only runs when `wrapper` decides to call it.
+
+---
+
+# 8. Performance Table
+
+| Operation | Complexity / Impact |
+|---|---|
+| Function Call w/o Decorator | Baseline overhead |
+| Function Call w/ Decorator | Additional O(1) overhead for wrapper call |
+| Decorator Initialization | O(1) during module load time |
+
+Bro, the performance impact of the wrapper is generally negligible unless you are doing high-frequency microsecond-level tight loops.
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is a Python decorator? | A function that modifies the behavior of another function or class without permanently modifying the source code. |
+| Why use `@functools.wraps`? | It copies the original function's metadata (like name and docstring) to the wrapper function. Otherwise, the function's name becomes "wrapper". |
+| Can you apply multiple decorators? | Yes. They are applied bottom-up (closest to the function first). `@dec1 \n @dec2` means `dec1(dec2(func))`. |
+| What are decorators with arguments? | Decorators that take arguments, which requires an extra layer of nesting (a decorator factory returning a decorator). |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Look at this stacked decorator scenario. It's a classic trap during interviews.
+
+```python
+def make_bold(func):
+    def wrapper():
+        return f"<b>{func()}</b>"
+    return wrapper
+
+def make_italic(func):
+    def wrapper():
+        return f"<i>{func()}</i>"
+    return wrapper
+
+@make_bold
+@make_italic
+def say_hello():
+    return "hello"
+
+print(say_hello())
+```
+
+**What is the output?**
+`<b><i>hello</i></b>`.
+Bro, remember: decorators are applied from the bottom up! First `make_italic` wraps `say_hello`, returning `<i>hello</i>`. Then `make_bold` wraps THAT result, giving `<b><i>hello</i></b>`.
+
+---
+
+# 11. Real-World Usage
+
+Where do companies actually use decorators?
+- **Web Frameworks:** Routing in Flask/FastAPI (`@app.get("/")`).
+- **Authentication:** Checking JWTs or session tokens (`@login_required`).
+- **Caching:** Saving database query results (`@lru_cache`, `@cache`).
+- **Retries:** Retrying failed API requests automatically.
+- **Logging/Metrics:** Recording telemetry for Datadog or Prometheus.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `@functools.wraps` in every decorator | Forget `@functools.wraps` and break docstrings |
+| Use `*args, **kwargs` to support any signature | Hardcode arguments in the wrapper (e.g., `def wrapper(x, y)`) |
+| Keep decorators small and focused | Put complex business logic inside a decorator |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Bro, beware of decorators hiding errors. If your decorator has a broad `except Exception: pass` block, it will swallow errors from your core function, making production debugging a total nightmare. Always log exceptions if your decorator handles them, and explicitly raise them if the caller should know.
+
+---
+
+# 14. Common Mistakes
+
+- **Forgetting to return the wrapper:** Your decorator must return the nested wrapper function, or the decorated function becomes `None`!
+- **Forgetting to return the original function's result inside the wrapper:** If you call `func()` but don't `return` it, your decorated function will silently return `None`.
+
+---
+
+# 15. Related Topics
+
+- Closures (Bro, decorators rely entirely on closures!)
+- Functions as First-Class Objects
+- Arguments & Parameters (`*args, **kwargs`)
+- Generator / Iterators (Commonly paired with decorators for data pipelines)

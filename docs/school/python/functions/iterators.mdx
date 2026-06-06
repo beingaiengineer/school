@@ -2,6 +2,206 @@
 sidebar_position: 8
 ---
 
-# Iterators
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Iterators.
+# Python Iterators
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Python Iterators |
+| Difficulty | Intermediate |
+| Used For | Customizing how objects are looped over |
+| Common Mistake | Forgetting to raise `StopIteration` |
+| Performance | O(1) memory overhead, fetches next item on demand |
+
+---
+
+# 2. Real-World Analogy
+
+Think of an Iterator like scrolling through TikTok, bro.
+
+The app doesn't load all 10 million videos into your phone at once. Instead, it holds a "state" (where you currently are). When you swipe up (`next()`), it fetches exactly one new video. If you run out of videos (or your internet dies), the feed stops (`StopIteration`).
+
+An iterable (like a List) is the whole database of videos. The iterator is your specific phone tracking your current swipe position!
+
+---
+
+# 3. Concept Explanation
+
+An **Iterable** is an object you can loop over (like a list, string, or dictionary). It implements `__iter__()`, which returns an Iterator.
+
+An **Iterator** is an object that represents a stream of data. It implements `__next__()`, which returns the next item in the stream. It remembers its state. When there are no more items, it raises a `StopIteration` exception.
+
+Bro, whenever you use a `for` loop in Python, it secretly grabs the iterator and calls `next()` repeatedly under the hood until it catches the `StopIteration` exception!
+
+---
+
+# 4. Syntax Table
+
+| Operation | Example |
+|---|---|
+| Get Iterator | `my_iter = iter([1, 2])` |
+| Get Next Item | `next(my_iter)` |
+| Iterable Magic | `def __iter__(self): return self` |
+| Iterator Magic | `def __next__(self): ...` |
+
+---
+
+# 5. Beginner Example
+
+Let's look at how Python lists use iterators internally.
+
+```python
+fruits = ["apple", "banana"]
+
+# Get the iterator object from the iterable
+fruit_iterator = iter(fruits)
+
+# Manually fetch items
+print(next(fruit_iterator))  # apple
+print(next(fruit_iterator))  # banana
+
+# print(next(fruit_iterator))  # StopIteration Exception!
+```
+
+---
+
+# 6. Real-World Engineering Example
+
+Let's build a custom Iterator. Imagine we need a class that generates unique transaction IDs for a payment system up to a certain limit.
+
+```python
+class TransactionIDGenerator:
+    def __init__(self, limit):
+        self.limit = limit
+        self.current = 0
+
+    def __iter__(self):
+        # The object itself is the iterator
+        return self
+
+    def __next__(self):
+        if self.current < self.limit:
+            self.current += 1
+            return f"TXN-{self.current:04d}"
+        else:
+            raise StopIteration
+
+# Usage
+txn_gen = TransactionIDGenerator(3)
+
+for txn_id in txn_gen:
+    print(txn_id)
+
+# Output:
+# TXN-0001
+# TXN-0002
+# TXN-0003
+```
+
+---
+
+# 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    nodes: [
+      { id: '1', title: 'for x in iterable', detail: 'Starts Loop', x: 0, y: 100, kind: 'process' },
+      { id: '2', title: 'iter(iterable)', detail: 'Gets Iterator', x: 250, y: 100, kind: 'tool' },
+      { id: '3', title: 'next(iterator)', detail: 'Fetches Item', x: 500, y: 100, kind: 'core' },
+      { id: '4', title: 'StopIteration', detail: 'Loop Ends', x: 500, y: 250, kind: 'warning' }
+    ],
+    edges: [
+      { source: '1', target: '2', label: '1. Initialize' },
+      { source: '2', target: '3', label: '2. Request Item' },
+      { source: '3', target: '3', label: '3. Return Item (Loop)', type: 'step' },
+      { source: '3', target: '4', label: '4. No more items' }
+    ]
+  }}
+/>
+
+When you write `for item in my_list:`, Python does this:
+1. Calls `iter(my_list)` to get an iterator.
+2. Enters an infinite `while True:` loop.
+3. Calls `next(iterator)` and assigns it to `item`.
+4. If `StopIteration` is raised, it silently catches it and breaks the loop.
+
+---
+
+# 8. Performance Table
+
+| Operation | Complexity | Description |
+|---|---|---|
+| `iter()` | O(1) | Just returns the iterator object |
+| `next()` | O(1)* | Fetches next item (depends on your custom logic) |
+| Memory | O(1) | Only stores the current state, not all data |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Iterable vs Iterator? | Iterable has `__iter__()`. Iterator has `__next__()` and remembers state. |
+| Are all iterators iterables? | Yes, an iterator usually returns `self` in its `__iter__()` method. |
+| Are all iterables iterators? | No. A list is iterable, but it is not an iterator (it has no `__next__` state). |
+| How does a `for` loop work internally? | It calls `iter()`, repeatedly calls `next()`, and catches `StopIteration`. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, look at this classic interview trap:
+
+```python
+my_list = [1, 2, 3]
+my_iter = iter(my_list)
+
+print(3 in my_iter) # True
+print(1 in my_iter) # False (Wait, what?)
+```
+
+**Why is the second print False?**
+Because checking `3 in my_iter` consumes the iterator up to the number 3. The iterator is now exhausted! When you check for `1`, it tries to call `next()` but immediately hits `StopIteration`. Remember, iterators only go forward, never backward!
+
+---
+
+# 11. Real-World Usage
+
+Where do companies actually use custom iterators?
+- **Database Cursors:** Fetching 100 rows at a time from a huge Postgres table.
+- **Data Streams:** Reading real-time stock prices over a websocket.
+- **Paginators:** Iterating through pages of an external REST API (like Jira or GitHub).
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use Generators instead of Iterators if the logic is simple | Write a full Iterator class just to yield a few numbers |
+| Raise `StopIteration` explicitly when done | Return `None` to indicate the end (unless `None` is expected data) |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Bro, when implementing custom iterators for network or database calls, ensure you handle network timeouts inside the `__next__` method properly. If `next()` blocks indefinitely, your entire application loop will hang!
+
+---
+
+# 14. Common Mistakes
+
+- **Forgetting `__iter__` on an Iterator:** If you don't return `self` in `__iter__`, you can't use your iterator in a `for` loop!
+- **Exhausting an Iterator accidentally:** Passing an iterator to a function that loops over it, and then trying to loop over it again later in your code. It will be empty.
+
+---
+
+# 15. Related Topics
+
+- Generators (A much easier way to write iterators using `yield`)
+- Loops (`for` loops and `while` loops)
+- Magic Methods (`__iter__` and `__next__`)

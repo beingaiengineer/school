@@ -2,6 +2,189 @@
 sidebar_position: 7
 ---
 
-# Generators
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Generators.
+# Python Generators
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Python Generators |
+| Difficulty | Intermediate |
+| Used For | Lazy evaluation, streaming large datasets without blowing up RAM |
+| Common Mistake | Trying to reuse a generator after it's exhausted |
+| Performance | Incredible memory efficiency; O(1) space complexity regardless of dataset size |
+
+---
+
+# 2. Real-World Analogy
+
+Think of a generator like a water tap versus a bucket, bro.
+
+A standard list is like a giant bucket of water. If you want 100 liters, you need a massive bucket (RAM) to hold it all at once before you take a sip.
+
+A generator is like a water tap. You ask for water, and it gives you exactly one glass at a time (`yield`). It only processes the next drop when you explicitly ask for it. You can process millions of liters without ever needing a huge bucket!
+
+---
+
+# 3. Concept Explanation
+
+A generator is a special type of function that returns an iterator. Instead of computing everything at once and returning a massive list, a generator uses the `yield` keyword to pause its execution, return a single value, and wait until it is asked for the next one.
+
+Bro, this is called **lazy evaluation**. It only calculates the next item when requested. This makes generators insanely memory-efficient for processing large files, database streams, or infinite sequences.
+
+---
+
+# 4. Syntax Table
+
+| Operation | Example |
+|---|---|
+| Define Generator | `def my_gen():\n    yield 1` |
+| Get Next Value | `next(gen_obj)` |
+| Generator Expression | `gen = (x*x for x in range(10))` |
+
+---
+
+# 5. Beginner Example
+
+Let's look at a simple countdown generator.
+
+```python
+def countdown(num):
+    print("Starting countdown...")
+    while num > 0:
+        yield num
+        num -= 1
+
+# Create generator object (doesn't run code yet!)
+timer = countdown(3)
+
+print(next(timer)) # Output: Starting countdown... \n 3
+print(next(timer)) # Output: 2
+print(next(timer)) # Output: 1
+# print(next(timer)) # Error: StopIteration
+```
+
+Bro, notice how the function "pauses" at `yield` and remembers its state (`num`) for the next time you call `next()`.
+
+---
+
+# 6. Real-World Engineering Example
+
+Here's how backend engineers use generators to read massive 50GB log files without crashing the server's RAM.
+
+```python
+def read_large_file(file_path):
+    # This doesn't load the whole file into memory!
+    with open(file_path, "r") as file:
+        for line in file:
+            yield line.strip()
+
+# Usage in a processing pipeline
+log_stream = read_large_file("/var/log/server.log")
+
+for log in log_stream:
+    if "ERROR" in log:
+        print(f"Found error: {log}")
+```
+
+---
+
+# 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    nodes: [
+      { id: '1', title: 'Caller', detail: 'Calls next()', x: 0, y: 100, kind: 'process' },
+      { id: '2', title: 'Generator', detail: 'Resumes execution', x: 250, y: 100, kind: 'core' },
+      { id: '3', title: 'yield', detail: 'Pauses & saves state', x: 500, y: 100, kind: 'data' },
+      { id: '4', title: 'Output', detail: 'Returns 1 item', x: 250, y: 250, kind: 'output' }
+    ],
+    edges: [
+      { source: '1', target: '2', label: '1. Requests next item' },
+      { source: '2', target: '3', label: '2. Runs to yield' },
+      { source: '3', target: '4', label: '3. Returns value', type: 'step' },
+      { source: '4', target: '2', label: 'State saved locally', animated: false }
+    ]
+  }}
+/>
+
+When a generator function is called, it returns a generator object without even beginning execution.
+When `next()` is called, execution starts and proceeds until it hits a `yield` statement. Python freezes the stack frame—saving all local variables and the execution pointer.
+The next time `next()` is called, it unfreezes exactly where it left off, right after the `yield`.
+
+---
+
+# 8. Performance Table
+
+| Structure | Memory Complexity | Best For |
+|---|---|---|
+| List `[x for x in range(1B)]` | O(N) (Crashes RAM) | Multiple lookups, fast index access |
+| Gen `(x for x in range(1B))` | O(1) (A few bytes) | Streaming, single-pass iteration |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Difference between `return` and `yield`? | `return` terminates the function and destroys state. `yield` pauses the function and saves state. |
+| Generator vs List Comprehension? | Generator uses `()` and evaluates lazily (low memory). List comprehension uses `[]` and builds in memory at once. |
+| Can you iterate a generator twice? | No. Generators are exhausted after one pass. You must recreate it. |
+| What is `StopIteration`? | The exception raised when a generator runs out of items to yield. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Look at this trap, bro. What happens if you try to get the length of a generator?
+
+```python
+gen = (x for x in range(10))
+
+# print(len(gen))  # TypeError: object of type 'generator' has no len()
+```
+
+Generators don't know how many items they have! They only know how to calculate the *next* item. You cannot index into them (`gen[0]`) or get their length without fully iterating through them.
+
+---
+
+# 11. Real-World Usage
+
+Where do companies actually use generators?
+- **Data Pipelines:** ETL processes reading large CSVs/JSONs chunk by chunk.
+- **Machine Learning:** Supplying batches of images to neural networks (`keras.utils.Sequence` behaves similarly).
+- **Web Scraping:** Yielding paginated API results lazily.
+- **Concurrency:** Under the hood, Python's `asyncio` originally built its coroutines on top of generators!
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use generators for processing large files | Use a list for multi-gigabyte data sets |
+| Use generator expressions `(x for x in data)` for simple pipelines | Try to iterate the same generator twice |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Bro, generators are stateful single-pass streams. If you pass a generator to two different functions in your codebase thinking they will both see the data, the second function will get an empty sequence! If you need multiple passes, either recreate the generator or, if memory allows, convert it to a list using `list(gen)`.
+
+---
+
+# 14. Common Mistakes
+
+- **Re-using Exhausted Generators:** Thinking a generator acts like a list you can loop over multiple times.
+- **Returning instead of Yielding:** Mixing up `return` inside a generator loop, which immediately stops iteration.
+
+---
+
+# 15. Related Topics
+
+- Iterators (Generators are a simpler way to write iterators)
+- List Comprehensions (vs Generator Expressions)
+- File Handling (Streaming chunks)
