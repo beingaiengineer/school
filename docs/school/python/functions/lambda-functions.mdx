@@ -4,4 +4,194 @@ sidebar_position: 4
 
 # Lambda Functions
 
-Placeholder: introduce Lambda Functions.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Lambda Functions (Anonymous Functions) |
+| Difficulty | Intermediate |
+| Used For | Writing tiny, one-line throwaway functions |
+| Common Mistake | Using lambdas for complex logic instead of a standard `def` |
+| Performance | Exact same performance as a standard `def` function |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, think of a standard `def` function like buying a heavy-duty power drill. It comes in a case, it has a brand name, and you keep it in your garage to use over and over for years.
+
+A **Lambda function** is like a cheap, disposable plastic toothpick. You don't give it a name, you use it for exactly one tiny, specific job right on the spot, and then you throw it away.
+
+You wouldn't build a house with a toothpick, and you wouldn't use lambdas for complex logic.
+
+---
+
+# 3. Concept Explanation
+
+A Lambda function is an anonymous (unnamed) function.
+
+In Python, standard functions are created using the `def` keyword. Lambda functions are created using the `lambda` keyword.
+
+They are strictly limited to a **single expression**. They cannot contain multiple lines of code, `if-elif-else` blocks (though ternary operators are fine), loops, or variable assignments.
+
+Use lambdas when:
+- You need to pass a tiny function as an argument to another function (like `map()`, `filter()`, or sorting keys).
+
+Don't use lambdas when:
+- The logic requires more than one line.
+- You need to reuse the function in multiple places.
+
+---
+
+# 4. Syntax Table
+
+| Type | Example |
+|---|---|
+| Standard `def` | `def add(x, y): return x + y` |
+| Equivalent Lambda | `lambda x, y: x + y` |
+| Lambda with no args | `lambda: "Hello"` |
+| Lambda with ternary | `lambda x: "Even" if x % 2 == 0 else "Odd"` |
+
+---
+
+# 5. Beginner Example
+
+Let's convert a simple function into a lambda.
+
+```python
+# Standard approach
+def square(x):
+    return x * x
+
+print(square(5))  # Output: 25
+
+# Lambda approach
+square_lambda = lambda x: x * x
+
+print(square_lambda(5))  # Output: 25
+```
+*Note: Assigning a lambda to a variable (`square_lambda = ...`) is generally considered bad practice. If you are giving it a name, you should just use `def`. Lambdas shine when passed directly into other functions.*
+
+---
+
+# 6. Real-World Engineering Example
+
+Lambdas are heavily used for custom sorting. Imagine you have a list of user dictionaries, and you want to sort them by age.
+
+```python
+users = [
+    {"name": "Alice", "age": 30},
+    {"name": "Bob", "age": 25},
+    {"name": "Charlie", "age": 35}
+]
+
+# We pass a lambda to the 'key' argument of the sort function.
+# For each user dict (u), sort by u["age"]
+sorted_users = sorted(users, key=lambda u: u["age"])
+
+for user in sorted_users:
+    print(user["name"])
+```
+**Output:**
+```
+Bob
+Alice
+Charlie
+```
+
+---
+
+# 7. Internal Working
+
+At the bytecode level, Python treats lambdas almost exactly the same as functions created with `def`.
+
+When Python encounters a `lambda`, it creates a function object in memory. The only difference is that a `def` binds that object to a variable name, while a `lambda` returns the object directly without a name (its internal `__name__` attribute is simply `<lambda>`).
+
+Because they are fundamentally the same object type, there is no performance advantage to using a lambda over a `def`.
+
+---
+
+# 8. Performance Table
+
+| Action | Complexity | Note |
+|---|---|---|
+| Execution Speed | O(1) overhead | Same as a normal function call |
+| Memory usage | Minimal | Creates a standard function object |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is a lambda function? | An anonymous, single-expression function defined using the `lambda` keyword. |
+| Can a lambda have multiple lines? | No. It is restricted to a single expression. |
+| Does a lambda need a `return` keyword? | No, the result of the single expression is returned automatically. |
+| When should you use a lambda? | As a short, throwaway function passed as an argument (like to `sorted()`, `map()`, or `filter()`). |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, look at this common interview trick regarding lambdas inside loops (Late Binding Closures).
+
+```python
+# Create a list of lambda functions
+multipliers = [lambda x: x * i for i in range(3)]
+
+# Let's run the first lambda (we expect 0 * 5 = 0)
+print(multipliers[0](5))
+```
+
+**Output:** `10` Wait, what?!
+
+**Why?** The lambdas don't capture the *value* of `i` at the time they are created. They capture a *reference* to the variable `i`. By the time the loop finishes, `i` is 2. So all three lambdas multiply by 2!
+
+**The Fix:** Force early binding by passing `i` as a default argument.
+`[lambda x, i=i: x * i for i in range(3)]`
+
+---
+
+# 11. Real-World Usage
+
+- **Data Processing (Pandas):** `df['salary'].apply(lambda x: x * 1.1)` to give everyone a 10% raise.
+- **UI Frameworks (Tkinter/PyQt):** Passing tiny callback functions to button clicks `button.onClick(lambda: do_something())`.
+- **AWS Lambda:** (Note: AWS Lambda is a serverless compute service, named *after* the concept of lambda functions, but in AWS, you usually write standard `def` functions!).
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use lambdas for simple `key` arguments in `sort()`, `min()`, `max()`. | Assign lambdas to variables (e.g., `f = lambda x: x`). Just use `def`. |
+| Keep lambdas extremely short and readable. | Write massive, nested, unreadable one-liners using ternary operators just to force it into a lambda. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ **Production Note:**
+> Bro, readability is king in production. While lambdas combined with `map()` and `filter()` look clever, standard Python List Comprehensions are almost always more readable and often slightly faster.
+>
+> *Hard to read:* `list(filter(lambda x: x % 2 == 0, map(lambda x: x**2, nums)))`
+> *Much better:* `[x**2 for x in nums if x % 2 == 0]`
+>
+> Only use lambdas when a list comprehension isn't an option (like sorting keys).
+
+---
+
+# 14. Common Mistakes
+
+- **Forgetting it returns automatically:** Writing `lambda x: return x * 2`. (SyntaxError: invalid syntax. You don't use the `return` keyword in a lambda).
+- **Trying to print inside a lambda:** While `lambda x: print(x)` is technically valid, lambdas are meant to return data, not perform side-effects.
+- **Over-engineering:** Trying to cram complex business logic into a single line to look smart.
+
+---
+
+# 15. Related Topics
+
+- Higher-Order Functions (map, filter, reduce)
+- List Comprehensions (often a better alternative)
+- Sorting (`sorted()` and `.sort()`)
+- Closures
