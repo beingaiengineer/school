@@ -16,6 +16,8 @@ The content should teach Python in a practical, engineering-focused way for:
 
 ## Must-Read Instructions
 
+**CRITICAL:** Before starting any new task, making changes to the codebase, or submitting a commit/PR, you MUST always read `task.md` and this `MEMORY.md` file completely.
+
 Before writing Python school content, read:
 
 - `design.md`
@@ -228,10 +230,10 @@ Before deleting files:
 - `intro`: what-is-python, setup-python, python-execution-flow, first-python-program
 - `fundamentals`: variables, data-types, operators, input-output, type-conversion, comments-docstrings
 - `control-flow`: if-else
+- `functions`: functions-basics, arguments-parameters, return-values, lambda-functions, recursion
 
 **Pending Topics (Next Up):**
 - `control-flow`: nested-conditions, loops, break-continue-pass, pattern-programs, match-case
-- `functions`: all topics
 - `collections`: all topics
 - `strings`: all topics
 - `oops`: all topics
