@@ -45,13 +45,13 @@ This checklist tracks the implementation of Python School playbook topics. Compl
 - [x] Return Values (`functions/return-values.mdx`)
 - [x] Lambda Functions (`functions/lambda-functions.mdx`)
 - [x] Recursion (`functions/recursion.mdx`)
-- [ ] Decorators (`functions/decorators.mdx`)
-- [ ] Generators (`functions/generators.mdx`)
-- [ ] Iterators (`functions/iterators.mdx`)
-- [ ] Closures (`functions/closures.mdx`)
+- [x] Decorators (`functions/decorators.mdx`)
+- [x] Generators (`functions/generators.mdx`)
+- [x] Iterators (`functions/iterators.mdx`)
+- [x] Closures (`functions/closures.mdx`)
 
 ## 5. Collections
-- [ ] Lists (`collections/lists.mdx`)
+- [x] Lists (`collections/lists.mdx`)
 - [ ] Tuples (`collections/tuples.mdx`)
 - [ ] Sets (`collections/sets.mdx`)
 - [ ] Dictionaries (`collections/dictionaries.mdx`)

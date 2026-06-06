@@ -2,6 +2,204 @@
 sidebar_position: 1
 ---
 
-# Lists
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Lists.
+# Python Lists
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Python Lists |
+| Difficulty | Beginner |
+| Used For | Ordered, mutable collections of items |
+| Common Mistake | Using lists for heavy lookup operations (`in` operator) |
+| Performance | Fast appends O(1), slow inserts/deletes at the front O(n) |
+
+---
+
+# 2. Real-World Analogy
+
+Think of a Python list like an Indian restaurant waiter carrying food orders in sequence, bro.
+
+The order matters (Table 1's naan goes first, then Table 2's biryani). If someone adds a dessert to the end of the order, it's easy—just put it at the back of the tray. But if someone suddenly cancels the first item, the waiter has to physically shift everything else forward to balance the tray. That takes effort!
+
+---
+
+# 3. Concept Explanation
+
+A list in Python is an ordered, mutable sequence of elements.
+- **Ordered:** The items stay in the exact order you put them in.
+- **Mutable:** You can change, add, or remove items after creating it.
+- **Heterogeneous:** You can mix strings, integers, and other objects in the same list.
+
+Lists are your go-to data structure when you need an array-like collection that will change over time.
+
+---
+
+# 4. Syntax Table
+
+| Operation | Example |
+|---|---|
+| Create | `items = [1, 2, 3]` |
+| Access | `items[0]` |
+| Append (End) | `items.append(4)` |
+| Insert (Anywhere)| `items.insert(0, 99)` |
+| Remove Value | `items.remove(2)` |
+| Remove Index | `items.pop(0)` |
+
+---
+
+# 5. Beginner Example
+
+Let's look at a simple shopping list.
+
+```python
+shopping = ["Milk", "Eggs", "Bread"]
+
+# I forgot apples, add to end
+shopping.append("Apples")
+
+# I want to put butter at the very top
+shopping.insert(0, "Butter")
+
+print(shopping)
+# Output: ['Butter', 'Milk', 'Eggs', 'Bread', 'Apples']
+
+# We got the butter, remove it from top
+shopping.pop(0)
+```
+
+Bro, notice how easily we can modify the list after making it.
+
+---
+
+# 6. Real-World Engineering Example
+
+In production, lists are often used as temporary queues to batch data before saving it to a database.
+
+```python
+event_batch = []
+
+def process_event(event_data):
+    # Add events to our batch
+    event_batch.append(event_data)
+
+    # Once we hit 100 events, save to DB to reduce network calls
+    if len(event_batch) >= 100:
+        save_to_database(event_batch)
+        # Clear the list for the next batch
+        event_batch.clear()
+
+# Usage
+process_event({"user": 1, "action": "click"})
+```
+
+---
+
+# 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    nodes: [
+      { id: '1', title: 'List Created', detail: 'Allocates space for 4 items', x: 0, y: 100, kind: 'process' },
+      { id: '2', title: 'Append Items', detail: 'Fills up to 4 items', x: 250, y: 100, kind: 'data' },
+      { id: '3', title: '5th Item Appended', detail: 'Array is full!', x: 500, y: 100, kind: 'warning' },
+      { id: '4', title: 'Resizing', detail: 'Allocates space for 8 items & copies', x: 250, y: 250, kind: 'core' }
+    ],
+    edges: [
+      { source: '1', target: '2', label: '1. Init' },
+      { source: '2', target: '3', label: '2. Fill capacity' },
+      { source: '3', target: '4', label: '3. Python triggers resize', type: 'smoothstep' },
+      { source: '4', target: '2', label: '4. Memory ready', type: 'straight' }
+    ]
+  }}
+/>
+
+Internally, Python lists are implemented as **dynamic arrays** of pointers. Python pre-allocates more memory than you need under the hood. When you append, it's extremely fast.
+
+But when the underlying array gets completely full, Python has to create a brand new, bigger array in memory and copy all the old pointers over. This is called "resizing."
+
+---
+
+# 8. Performance Table
+
+| Operation | Time Complexity | Why? |
+|---|---|---|
+| Append | O(1) mostly | Just placing item at the end of pre-allocated array |
+| Insert Front | O(n) | Every single item must be shifted right by one |
+| Pop End | O(1) | Just remove the last item |
+| Pop Front | O(n) | Every single item must be shifted left by one |
+| Lookup (`item in list`) | O(n) | Must scan the whole list until it finds it |
+
+Bro, never use `.insert(0, val)` or `.pop(0)` in a `while` loop with thousands of items. Your code will freeze! Use a `collections.deque` instead.
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| List vs Tuple? | Lists are mutable (can change). Tuples are immutable (cannot change). |
+| How do lists handle different data types? | They hold memory references (pointers) to objects, not the raw data itself. |
+| Time complexity of `x in list`? | O(n), because it must do a linear search. Use Sets for O(1) lookups. |
+| What does `list.clear()` do? | Empties the list in place without changing its memory address. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Look at this mutability trap, bro.
+
+```python
+list_a = [1, 2, 3]
+list_b = list_a
+
+list_b.append(4)
+
+print(list_a)
+```
+
+**Output:** `[1, 2, 3, 4]`.
+Wait, why did `list_a` change?! Because `list_b = list_a` does NOT copy the list. It just makes `list_b` point to the exact same memory address as `list_a`. To actually copy it, you must do `list_b = list_a.copy()` or `list_b = list_a[:]`.
+
+---
+
+# 11. Real-World Usage
+
+Where do companies actually use Lists?
+- **Batching:** Collecting rows of data to insert into SQL databases.
+- **Ordered Data:** Storing chronological sequences like an audit trail of user actions.
+- **Stacks:** Using `.append()` and `.pop()` to build Last-In-First-Out (LIFO) stacks (like an undo button).
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `.append()` to add to the end | Use `.insert(0, val)` for queues (use deque instead) |
+| Use List Comprehensions for mapping data | Modify a list while iterating over it with a `for` loop |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Bro, large Python lists take up significantly more memory than you might expect because they store object pointers, not raw C-types. If you need to store 10 million integers in production, a Python List will crush your RAM. Use `array.array` or `numpy.array` instead.
+
+---
+
+# 14. Common Mistakes
+
+- **Modifying while iterating:** Doing `for x in my_list: if condition: my_list.remove(x)`. This completely breaks the internal iterator logic and skips items. Iterate over a copy instead: `for x in my_list[:]:`.
+- **Default arguments:** `def my_func(items=[])`. The list is created once at compile time. Successive calls to the function will share the same list! Always use `items=None`.
+
+---
+
+# 15. Related Topics
+
+- Tuples
+- Sets
+- List Comprehension
+- `collections.deque` (For fast queues)

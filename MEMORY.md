@@ -230,12 +230,12 @@ Before deleting files:
 - `intro`: what-is-python, setup-python, python-execution-flow, first-python-program
 - `fundamentals`: variables, data-types, operators, input-output, type-conversion, comments-docstrings
 - `control-flow`: if-else, nested-conditions, loops, break-continue-pass, pattern-programs, match-case
-- `functions`: functions-basics, arguments-parameters, return-values, lambda-functions, recursion
+- `functions`: functions-basics, arguments-parameters, return-values, lambda-functions, recursion, decorators, generators, iterators, closures
+- `collections`: lists
 - `interview-prep`: top-python-interview-questions, tricky-python-questions, debugging-rounds, coding-round-patterns, system-design-rounds, senior-python-questions
 
 **Pending Topics (Next Up):**
-- `functions`: decorators, generators, iterators, closures
-- `collections`: all topics (lists, tuples, sets, dictionaries, list-comprehension, dictionary-comprehension, collections-module, deque, counter, defaultdict)
+- `collections`: tuples, sets, dictionaries, list-comprehension, dictionary-comprehension, collections-module, deque, counter, defaultdict
 - `strings`: all topics (string-basics, string-methods, string-formatting, regex, unicode, f-strings)
 - `oops`: all topics (classes-objects, constructors, inheritance, polymorphism, encapsulation, abstraction, magic-methods, dataclasses, solid-principles, composition-vs-inheritance)
 - `error-handling`: all topics (exceptions, custom-exceptions, logging, debugging, production-debugging)
