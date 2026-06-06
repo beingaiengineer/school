@@ -21,7 +21,7 @@ The content should teach Python in a practical, engineering-focused way for:
 Before writing Python school content, read:
 
 - `design.md`
-- `Agents/python-teacher.md`
+- `Agents/agent.md`
 
 These are the source of truth for content structure, tone, and workflow.
 
@@ -36,6 +36,7 @@ Preferred workflow:
 3. Keep content concise.
 4. Put relevant content only in the matching topic file.
 5. Run validation after meaningful changes.
+6. Update the checklists and progress status in `task.md` and `MEMORY.md` immediately.
 
 ## Python Topic Page Structure
 
@@ -93,10 +94,11 @@ For every topic:
 
 The user does not want all diagrams to look the same.
 
+**MANDATORY:** React Flow diagrams must be included on every single page and concept. They must be highly unique, clean, and use real-world examples/analogies to make the concepts incredibly easy to understand.
+
 React Flow diagrams must be topic-specific.
 
 Use the official React Flow concepts:
-
 - nodes represent real concepts
 - handles show connection points
 - edges show relationships
@@ -104,13 +106,11 @@ Use the official React Flow concepts:
 - different layouts should match the topic
 - use different node kinds and edge types where useful
 
-Current reusable component:
-
+Current reusable component paths:
 - `src/components/LearningFlow/index.tsx`
 - `src/components/LearningFlow/styles.module.css`
 
 It supports:
-
 - custom node positions
 - node kinds: `core`, `process`, `data`, `tool`, `warning`, `output`
 - labelled edges
@@ -194,7 +194,7 @@ Current site config:
 Keep:
 
 - `docs/school/python/`
-- `Agents/python-teacher.md`
+- `Agents/agent.md`
 - `design.md`
 - `scripts/`
 - custom components under `src/components/`
@@ -229,31 +229,34 @@ Before deleting files:
 **Completed Topics:**
 - `intro`: what-is-python, setup-python, python-execution-flow, first-python-program
 - `fundamentals`: variables, data-types, operators, input-output, type-conversion, comments-docstrings
-- `control-flow`: if-else
+- `control-flow`: if-else, nested-conditions, loops, break-continue-pass, pattern-programs, match-case
 - `functions`: functions-basics, arguments-parameters, return-values, lambda-functions, recursion
+- `interview-prep`: top-python-interview-questions, tricky-python-questions, debugging-rounds, coding-round-patterns, system-design-rounds, senior-python-questions
 
 **Pending Topics (Next Up):**
-- `control-flow`: nested-conditions, loops, break-continue-pass, pattern-programs, match-case
-- `collections`: all topics
-- `strings`: all topics
-- `oops`: all topics
-- `error-handling`: all topics
-- `file-handling`: all topics
-- `modules-packages`: all topics
-- `advanced-python`: all topics
-- `concurrency`: all topics
-- `api-development`: all topics
-- `databases`: all topics
-- `testing`: all topics
-- `performance`: all topics
-- `system-design`: all topics
-- `ai-engineering`: all topics
-- `best-practices`: all topics
+- `functions`: decorators, generators, iterators, closures
+- `collections`: all topics (lists, tuples, sets, dictionaries, list-comprehension, dictionary-comprehension, collections-module, deque, counter, defaultdict)
+- `strings`: all topics (string-basics, string-methods, string-formatting, regex, unicode, f-strings)
+- `oops`: all topics (classes-objects, constructors, inheritance, polymorphism, encapsulation, abstraction, magic-methods, dataclasses, solid-principles, composition-vs-inheritance)
+- `error-handling`: all topics (exceptions, custom-exceptions, logging, debugging, production-debugging)
+- `file-handling`: all topics (reading-files, writing-files, csv-files, json-files, pathlib, file-best-practices)
+- `modules-packages`: all topics (modules, packages, virtual-environments, pip, pyproject-toml, dependency-management)
+- `advanced-python`: all topics (memory-management, garbage-collection, shallow-vs-deep-copy, mutability, context-managers, descriptors, metaclasses, monkey-patching, dynamic-typing, python-internals)
+- `concurrency`: all topics (threading, multiprocessing, asyncio, async-await, race-conditions, queues, locks-semaphores, gil)
+- `api-development`: all topics (requests-library, rest-api-basics, fastapi, flask, authentication, middleware, api-versioning, rate-limiting)
+- `databases`: all topics (sqlite, postgresql, sqlalchemy, orm-vs-raw-sql, transactions, indexing, connection-pooling)
+- `testing`: all topics (pytest, unit-testing, mocking, integration-testing, load-testing, test-best-practices)
+- `performance`: all topics (profiling, memory-optimization, caching, lazy-loading, vectorization, numpy-performance, performance-best-practices)
+- `system-design`: all topics (python-architecture, scalable-python, event-driven-systems, queue-systems, distributed-systems, microservices, production-patterns)
+- `ai-engineering`: all topics (python-for-ai, numpy, pandas, llm-basics, rag-pipelines, vector-databases, ai-agents, async-ai-workflows, ai-observability)
+- `best-practices`: all topics (clean-code, project-structure, coding-standards, security-best-practices, production-checklists, scalability-guidelines, engineering-principles)
 
 ## Current User Preferences
 
 - Work topic by topic when creating course content.
 - Create PR's once 5 topics are done.
+- Always create a new git branch for work.
+- Pull Requests must have a clear, descriptive summary.
 - Content should have "bro feel."
 - Avoid very lengthy topic pages.
 - Diagrams should be professional and topic-specific.

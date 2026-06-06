@@ -435,14 +435,23 @@ Every section must provide value.
 
 # Diagram Rules
 
-Use Mermaid diagrams where useful.
+**CRITICAL:** Every single Python topic page and concept **MUST** include a highly unique, clean React Flow diagram using the custom `<LearningFlow>` component.
 
-Especially for:
+The diagrams must:
+- Visualize the concepts using real-world engineering examples and analogies.
+- Be highly customized and specific to the topic (avoid making diagrams look the same).
+- Utilize the full features of the `<LearningFlow>` component (custom node positions, various node kinds like `core`, `process`, `data`, `tool`, `warning`, `output`, labelled edges, different edge types like `smoothstep`, `step`, `straight`, arrows, and optional minimap).
+- Avoid generic linear steps unless the topic is truly linear.
+- Be simple to scan and understand, yet technically detailed enough to show what actually happens under the hood (e.g., memory references, network isolation, execution flow).
+
+Diagrams are especially critical for explaining:
 - memory flow
 - references
 - threading
 - async behavior
 - data structures
+
+Mermaid diagrams may still be used optionally for secondary simple flows, but React Flow is the mandatory primary visualization for every topic.
 
 ---
 
