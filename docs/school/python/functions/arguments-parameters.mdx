@@ -2,6 +2,174 @@
 sidebar_position: 2
 ---
 
-# Arguments Parameters
+# Arguments & Parameters
 
-Placeholder: introduce Arguments Parameters.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Python Arguments and Parameters |
+| Difficulty | Beginner |
+| Used For | Passing data into a function so it can do its job |
+| Core Idea | "Parameter" is the variable in the definition; "Argument" is the actual data passed in |
+| Common Mistake | Passing arguments in the wrong order |
+| Performance | Passing by object reference is very fast (O(1)) |
+
+Bro, a function without data is like an oven with no pizza. Arguments are the ingredients you pass into the function so it actually has something to work with.
+
+## 2. Real-World Analogy
+
+Think of a blender.
+
+The blueprint for the blender says it needs `liquid` and `fruit`. Those are the **parameters** (the placeholders).
+When you actually make a smoothie, you pour in `milk` and `bananas`. Those are the **arguments** (the real data).
+
+## 3. Concept Explanation
+
+- **Parameters** are the variables defined inside the parentheses of the `def` statement.
+- **Arguments** are the actual values you pass to the function when you call it.
+
+Python is incredibly flexible. You can pass arguments by position (the order matters) or by keyword (you explicitly name the parameter, so order doesn't matter). You can also set default values so the caller doesn't have to provide every single piece of data.
+
+## 4. Syntax Table
+
+| Type | Example | Explanation |
+|---|---|---|
+| Positional | `greet("Rahul", 25)` | Mapped by order. |
+| Keyword | `greet(age=25, name="Rahul")` | Mapped by name. Order doesn't matter. |
+| Default | `def greet(name="User"):` | If no argument is passed, it uses "User". |
+| \*args | `def sum(*args):` | Accepts any number of positional arguments as a tuple. |
+| \*\*kwargs | `def config(**kwargs):` | Accepts any number of keyword arguments as a dictionary. |
+
+## 5. Beginner Example
+
+```python
+def create_profile(name, age, city="Mumbai"): # city has a default!
+    print(f"{name} is {age} and lives in {city}")
+
+# Positional
+create_profile("Asha", 22)
+
+# Keyword
+create_profile(age=30, name="Ravi", city="Delhi")
+```
+
+**Output:**
+```text
+Asha is 22 and lives in Mumbai
+Ravi is 30 and lives in Delhi
+```
+
+## 6. Real-World Engineering Example
+
+Bro, when you write wrapper functions for APIs, `*args` and `**kwargs` are life savers. They let you pass any extra parameters directly to the underlying library without having to define all 50 possible options yourself.
+
+```python
+import requests
+
+def secure_get(url, *args, **kwargs):
+    """Wraps the requests.get method to enforce HTTPS."""
+    if not url.startswith("https://"):
+        raise ValueError("Bro, insecure HTTP is not allowed in production.")
+
+    # We pass whatever the user gave us straight to requests
+    return requests.get(url, *args, **kwargs)
+
+# We can pass timeout=5 because **kwargs catches it!
+response = secure_get("https://api.github.com", timeout=5)
+print(response.status_code)
+```
+
+## 7. Internal Working
+
+Python passes arguments by **Object Reference** (often called "pass by assignment").
+When you pass a list to a function, the parameter becomes an alias for the exact same list object in memory. If you append to the list inside the function, the original list outside the function changes!
+However, if you reassign the variable (e.g., `my_list = [1, 2]`), you break the alias, and the outside world is unaffected.
+
+## 8. Performance Table
+
+| Operation | Complexity | Note |
+|---|---|---|
+| Passing standard args | O(1) | Just creating a reference. Very fast. |
+| Passing `*args` | O(N) | Python has to construct a tuple of N items. |
+| Passing `**kwargs` | O(N) | Python has to construct a dictionary. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Difference between Parameter and Argument? | Parameter is the variable in `def`; Argument is the actual data in the call. |
+| What is "Pass by Reference" vs "Pass by Value"? | Python uses "Pass by Object Reference". Mutable objects can be changed, immutable objects cannot. |
+| Why must default arguments be immutable? | Because default arguments are evaluated *only once* when the function is defined. If you use `def add(item, lst=[])`, the list is shared across all calls! |
+| Can positional arguments follow keyword arguments? | No. `func(name="A", 25)` is a SyntaxError. |
+
+## 10. Tricky Questions & Edge Cases
+
+The Mutable Default Argument Trap. This is asked in almost every senior Python interview!
+
+```python
+def add_employee(name, team=[]):
+    team.append(name)
+    return team
+
+print(add_employee("Rahul"))
+print(add_employee("Priya"))
+```
+
+**Output:**
+```text
+['Rahul']
+['Rahul', 'Priya']
+```
+
+Bro, what happened? The default `[]` is created exactly *once* when Python reads the `def` line. Every time you call the function without a team, it reuses that exact same list in memory!
+
+**The Fix:**
+```python
+def add_employee(name, team=None):
+    if team is None:
+        team = []
+    team.append(name)
+    return team
+```
+
+## 11. Real-World Usage
+
+- **CLI Tools:** Mapping command-line arguments (like `--verbose`) to function `**kwargs`.
+- **Decorators:** Writing wrapper functions that can accept any function's signature using `def wrapper(*args, **kwargs):`.
+- **Data Science:** Functions in Pandas (like `read_csv`) accept dozens of keyword arguments with sensible defaults so you only specify what you need.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `None` for mutable default arguments | Put `[]` or `{}` as a default parameter |
+| Use keyword arguments for clarity (`timeout=5`) | Pass mysterious booleans `process(True, False)` |
+| Keep the number of parameters small (< 5) | Write a function that takes 15 positional arguments |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Force keyword-only arguments for critical parameters.
+
+If you have a function like `delete_user(user_id, force_delete=False)`, someone might accidentally call `delete_user(True, 123)`. To prevent this, put an asterisk `*` in the parameters. This forces everything after it to be passed by keyword.
+
+```python
+def delete_user(user_id, *, force_delete=False):
+    pass
+
+# delete_user(123, True)  <-- Crash! Error!
+# delete_user(123, force_delete=True) <-- Works!
+```
+
+## 14. Common Mistakes
+
+- Putting positional arguments *after* keyword arguments in a function call.
+- Falling for the mutable default argument trap (`def func(data=[])`).
+- Confusing `*args` (which creates a tuple) with `**kwargs` (which creates a dict).
+
+## 15. Related Topics
+- Functions Basics
+- Return Values
+- Dictionaries
+- Tuples

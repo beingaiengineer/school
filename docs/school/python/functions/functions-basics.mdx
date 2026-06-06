@@ -4,4 +4,154 @@ sidebar_position: 1
 
 # Functions Basics
 
-Placeholder: introduce Functions Basics.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Python Functions Basics |
+| Difficulty | Beginner |
+| Used For | Grouping code into reusable blocks |
+| Core Idea | Define it once, run it as many times as you want |
+| Common Mistake | Forgetting to actually call the function after defining it |
+| Performance | Tiny overhead to call, massive gain for readability |
+
+Bro, a function is just a named block of code that does one specific job. It stops you from copy-pasting the same logic 50 times across your codebase.
+
+## 2. Real-World Analogy
+
+Think of a function like a coffee machine.
+
+The machine itself is the **function definition**.
+Putting in a coffee pod is passing an **argument**.
+Pressing the button is **calling the function**.
+The coffee that comes out is the **return value**.
+
+## 3. Concept Explanation
+
+Functions allow you to follow the **DRY Principle** (Don't Repeat Yourself).
+Instead of writing the code to connect to a database in 10 different files, you write a `connect_to_db()` function once, and call it 10 times.
+
+- You define a function using the `def` keyword.
+- The code inside the function doesn't run until the function is explicitly **called**.
+
+## 4. Syntax Table
+
+| Concept | Code | Note |
+|---|---|---|
+| Define a function | `def my_func():` | Use `def` keyword |
+| Call a function | `my_func()` | Must use parentheses |
+| Accept an argument | `def greet(name):` | The variable the function expects |
+| Pass an argument | `greet("Asha")` | The actual data you provide |
+| Return a value | `return result` | Sends data back to the caller |
+
+## 5. Beginner Example
+
+```python
+# 1. Define the function
+def say_hello(name):
+    print(f"Hello there, {name}!")
+
+# 2. Call the function
+say_hello("Rahul")
+say_hello("Priya")
+```
+
+**Output:**
+```text
+Hello there, Rahul!
+Hello there, Priya!
+```
+
+## 6. Real-World Engineering Example
+
+Bro, in a real system, you wrap repetitive API calls or complex math in functions so the main logic stays clean.
+
+```python
+def calculate_discount(price, discount_percent):
+    """Calculates the final price after a discount is applied."""
+    if discount_percent < 0 or discount_percent > 100:
+        return price # Invalid discount, return original price
+
+    discount_amount = price * (discount_percent / 100)
+    return price - discount_amount
+
+# Main program flow is very readable now
+cart_total = 1000
+final_amount = calculate_discount(cart_total, 20)
+
+print(f"Please pay: ${final_amount}")
+```
+
+## 7. Internal Working
+
+When Python sees `def calculate_discount(...)`, it doesn't run the code inside. Instead, it creates a `function` object in memory and binds it to the name `calculate_discount`.
+
+When you *call* it using `()`, Python creates a new "stack frame" (a temporary memory workspace), maps the arguments to local variables, runs the code, and then destroys the stack frame once a `return` is hit.
+
+## 8. Performance Table
+
+| Operation | Complexity | Note |
+|---|---|---|
+| Defining a function | O(1) | Happens once when module is imported. |
+| Calling a function | O(1) | Tiny overhead for creating the stack frame. |
+| The function body | Varies | Depends entirely on the code you put inside it. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What happens if you define a function twice with the same name? | Python overwrites the first one. The second definition "wins". |
+| Is a function an object in Python? | Yes! Functions are "first-class citizens". You can pass them as arguments to other functions. |
+| What does a function return if there is no `return` keyword? | It implicitly returns `None`. |
+| Difference between defining and calling? | `def my_func():` creates it. `my_func()` executes it. |
+
+## 10. Tricky Questions & Edge Cases
+
+What happens if you print a function without parentheses?
+
+```python
+def greet():
+    print("Hello")
+
+print(greet)
+```
+
+**Output:**
+```text
+<function greet at 0x7f8b9c1b2d30>
+```
+
+Bro, you didn't call the function. You just asked Python to print the *object itself*. Always remember the parentheses `()` if you want the code to run!
+
+## 11. Real-World Usage
+
+- **Web Frameworks:** In Django or FastAPI, every web endpoint (like `/login`) is mapped to a specific Python function.
+- **Data Engineering:** Wrapping data cleaning steps (like `remove_nulls()`, `format_dates()`) into functions to apply to Pandas DataFrames.
+- **Testing:** Every unit test you write in `pytest` is just a function that asserts something is True.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Make a function do **one** specific thing well | Write "God functions" that are 500 lines long |
+| Use clear verb-noun names (`send_email()`) | Use vague names (`do_stuff()`) |
+| Add docstrings (`"""..."""`) to explain what it does | Assume the reader can guess what `calc(x, y)` means |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Keep your functions small and testable.
+
+If a function handles database connection, fetching user data, doing math, and sending an email all at once, you can't unit test the math without mocking the database and the email server. Break it down into four separate functions!
+
+## 14. Common Mistakes
+
+- Forgetting the colon `:` at the end of the `def` line.
+- Getting an `IndentationError` by not indenting the function body.
+- Forgetting the `return` statement, causing the function to silently return `None`.
+
+## 15. Related Topics
+- Arguments and Parameters
+- Return Values
+- Comments and Docstrings
+- Scope (Local vs Global variables)

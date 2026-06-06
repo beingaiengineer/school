@@ -4,4 +4,156 @@ sidebar_position: 3
 
 # Return Values
 
-Placeholder: introduce Return Values.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Python Function Return Values |
+| Difficulty | Beginner |
+| Used For | Sending the result of a function back to the caller |
+| Core Idea | Functions take input (arguments), process it, and *return* output |
+| Common Mistake | Using `print()` inside the function instead of `return` |
+| Performance | Instantaneous; O(1) object reference passing |
+
+Bro, a function that doesn't return anything is like ordering food and the chef just eating it in the kitchen. `return` is how the function hands the finished dish back to you.
+
+## 2. Real-World Analogy
+
+Think of an ATM machine.
+
+You pass in your debit card and PIN (the **arguments**). The ATM processes the logic. Then, it spits out cash. The cash is the **return value**. You take that cash and use it somewhere else in your life (the rest of your program).
+
+## 3. Concept Explanation
+
+The `return` statement immediately ends the execution of a function and sends a specified value back to the code that called the function.
+
+If you don't use `return` (or if you use an empty `return`), Python will automatically return `None`.
+
+Unlike Java or C++, Python functions can return *multiple* values at the same time by automatically packing them into a tuple!
+
+## 4. Syntax Table
+
+| Concept | Syntax |
+|---|---|
+| Standard Return | `return result` |
+| Early Return (Exit) | `return` (returns `None`) |
+| Multiple Returns | `return x, y` (returns a Tuple) |
+| Catching the Return | `output = my_func()` |
+| Catching Multiple | `x, y = get_coordinates()` |
+
+## 5. Beginner Example
+
+```python
+def multiply(a, b):
+    result = a * b
+    return result
+
+# We must save the returned value to a variable to use it
+total = multiply(10, 5)
+
+print(f"The total is {total}")
+```
+
+**Output:**
+```text
+The total is 50
+```
+
+## 6. Real-World Engineering Example
+
+Bro, let's look at returning multiple values. In data processing, you often need to return both a payload and a success boolean.
+
+```python
+def fetch_user_data(user_id):
+    """Simulates fetching user data from a DB."""
+    if user_id <= 0:
+        return False, {}  # Returning multiple values!
+
+    data = {"name": "Asha", "role": "admin"}
+    return True, data
+
+# Unpacking the tuple immediately
+success, user_payload = fetch_user_data(101)
+
+if success:
+    print(f"Logged in as {user_payload['name']}")
+else:
+    print("Failed to fetch user.")
+```
+
+## 7. Internal Working
+
+When Python hits the `return` keyword, it takes the object reference on the right side of the `return` statement and passes it down the call stack to the original caller.
+
+Then, Python destroys the function's local "stack frame" (cleaning up all local variables that weren't returned).
+When returning multiple values like `return a, b`, Python internally packs them into a single Tuple object: `(a, b)`.
+
+## 8. Performance Table
+
+| Operation | Complexity | Note |
+|---|---|---|
+| Single return | O(1) | Just passing an object reference. |
+| Multiple returns | O(1) | Fast, but involves creating a tiny Tuple object. |
+| Returning a huge list | O(1) | Python returns the *reference* to the list, it doesn't copy the list! |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does a function return if there is no `return` keyword? | `None`. |
+| Can a function have multiple `return` statements? | Yes. Once the first one executes, the function exits immediately. |
+| How does returning multiple values work? | Python packs the comma-separated values into a tuple. |
+| Is `return` the same as `print()`? | Absolutely not. `print` shows text on a screen. `return` hands data back to the code. |
+
+## 10. Tricky Questions & Edge Cases
+
+What happens to the code *after* a return statement?
+
+```python
+def calculate():
+    return 100
+    print("This will never print!")
+    return 200
+
+print(calculate())
+```
+
+**Output:**
+```text
+100
+```
+
+Bro, `return` means "STOP immediately and leave." Any code written after an executed `return` statement is "Dead Code" and will never run.
+
+## 11. Real-World Usage
+
+- **Web APIs:** Returning a JSON dictionary and an HTTP status code (e.g., `return payload, 200`).
+- **Data Engineering:** Returning a cleaned Pandas DataFrame so the next function in the pipeline can use it.
+- **Error Handling:** Returning `None` or a custom Error object when something fails, instead of crashing the program.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Return early (Guard Clauses) to avoid deep nesting | Write massive `if/else` blocks and put one `return` at the very end |
+| Return the same type of data consistently | Return a string on success and an integer on failure |
+| Type hint your return values (`-> int:`) | Return huge tuples (3+ items) without using a dictionary or DataClass |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Keep your return types consistent.
+
+If your function returns a `list` of users on success, it should return an empty `list` `[]` on failure (not `None` or `False`). If it returns `None`, the caller who tries to run a `for` loop over the result will crash with a `TypeError: 'NoneType' is not iterable`.
+
+## 14. Common Mistakes
+
+- Confusing `print()` and `return`. (If you use `print()` in the function, `output = my_func()` will make `output` equal to `None`).
+- Trying to unpack too many or too few variables. (e.g., `a, b, c = my_func()` when the function only returns 2 items causes a `ValueError`).
+- Returning a mutable object (like a global list) and letting the caller accidentally modify it.
+
+## 15. Related Topics
+- Functions Basics
+- Arguments and Parameters
+- Tuples (Packing and Unpacking)
+- Type Hinting

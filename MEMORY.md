@@ -222,6 +222,31 @@ Before deleting files:
 - confirm they are boilerplate or unwanted
 - verify paths are inside the workspace
 
+## Current Progress
+
+**Completed Topics:**
+- `intro`: what-is-python, setup-python, python-execution-flow, first-python-program
+- `fundamentals`: variables, data-types, operators, input-output, type-conversion, comments-docstrings
+- `control-flow`: if-else, nested-conditions, loops, break-continue-pass, pattern-programs, match-case
+
+**Pending Topics (Next Up):**
+- `functions`: functions-basics, arguments-parameters, return-values, lambda-functions, recursion, decorators, generators, iterators, closures
+- `collections`: all topics
+- `strings`: all topics
+- `oops`: all topics
+- `error-handling`: all topics
+- `file-handling`: all topics
+- `modules-packages`: all topics
+- `advanced-python`: all topics
+- `concurrency`: all topics
+- `api-development`: all topics
+- `databases`: all topics
+- `testing`: all topics
+- `performance`: all topics
+- `system-design`: all topics
+- `ai-engineering`: all topics
+- `best-practices`: all topics
+
 ## Current User Preferences
 
 - Work topic by topic when creating course content.

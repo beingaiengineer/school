@@ -4,4 +4,140 @@ sidebar_position: 4
 
 # Lambda Functions
 
-Placeholder: introduce Lambda Functions.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Python Lambda Functions |
+| Difficulty | Intermediate |
+| Used For | Creating small, anonymous, one-line functions |
+| Core Idea | A function without a name, used for a brief moment and thrown away |
+| Common Mistake | Trying to write complex multi-line logic inside a lambda |
+| Performance | Identical to a regular `def` function |
+
+Bro, sometimes you just need a tiny function for a single line of code, and creating a whole `def my_func():` feels like overkill. That's where Lambdas come in.
+
+## 2. Real-World Analogy
+
+Think of a regular `def` function as buying a high-quality ceramic coffee mug. It has a name, it sits in your cupboard, and you reuse it every day.
+
+A **lambda function** is like a paper cup. You use it once, right there on the spot, and then you throw it away.
+
+## 3. Concept Explanation
+
+A lambda function is an anonymous (nameless) function.
+It can take any number of arguments, but it can only have **one single expression**.
+
+You do not use the `return` keyword in a lambda; the result of the expression is returned automatically. You usually pass lambdas directly into other functions (like `map()`, `filter()`, or `sorted()`).
+
+## 4. Syntax Table
+
+| Concept | Syntax | Equivalent `def` |
+|---|---|---|
+| Single argument | `lambda x: x * 2` | `def f(x): return x * 2` |
+| Multiple arguments | `lambda x, y: x + y` | `def f(x,y): return x + y` |
+| No arguments | `lambda: print("hi")` | `def f(): print("hi")` |
+| With an If/Else | `lambda x: "Yes" if x>5 else "No"` | `def f(x): return "Yes" if x>5 else "No"` |
+
+## 5. Beginner Example
+
+Let's look at standard sorting.
+
+```python
+# We have a list of tuples (Name, Age)
+people = [("Rahul", 30), ("Asha", 25), ("Priya", 28)]
+
+# We want to sort by Age (the 2nd item in the tuple).
+# Instead of writing a whole function to extract the age, we use a lambda!
+sorted_people = sorted(people, key=lambda person: person[1])
+
+print(sorted_people)
+```
+
+**Output:**
+```text
+[('Asha', 25), ('Priya', 28), ('Rahul', 30)]
+```
+
+## 6. Real-World Engineering Example
+
+Bro, in data engineering, you use lambdas constantly with Pandas DataFrames to apply quick transformations to columns.
+
+```python
+import pandas as pd
+
+df = pd.DataFrame({
+    'price': [100, 200, 300]
+})
+
+# Apply a 10% tax to the price column using a lambda
+df['price_with_tax'] = df['price'].apply(lambda x: x * 1.10)
+
+print(df)
+```
+
+## 7. Internal Working
+
+When Python parses a `lambda` keyword, it generates the exact same bytecode and creates the exact same `<function>` object in memory as a `def` statement does.
+The only difference is that the function's internal `__name__` attribute is set to `<lambda>` instead of a real name, and it is syntactically restricted to a single expression.
+
+## 8. Performance Table
+
+| Operation | Complexity | Note |
+|---|---|---|
+| Execution | O(1) | Same speed as a normal function. |
+| Memory | O(1) | Creates a function object. |
+| Use with `map()` / `filter()` | O(n) | Faster than a standard `for` loop because it runs in C. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why do we call them anonymous functions? | Because they are created without a name (no `def` identifier). |
+| Can a lambda contain a `while` loop? | No. Lambdas can only contain expressions, not statements (like `while`, `for`, `return`, `pass`). |
+| Can a lambda have multiple arguments? | Yes, just comma-separate them: `lambda a, b, c: a + b + c`. |
+| Are lambdas faster than `def`? | No, they compile to the exact same bytecode. |
+
+## 10. Tricky Questions & Edge Cases
+
+What is wrong with this code?
+
+```python
+multiply = lambda x, y: x * y
+print(multiply(5, 5))
+```
+
+Bro, this code *works*, but it violates Python's PEP-8 style guide. If you are going to assign a name (`multiply`) to a function, you should just use `def multiply(x, y):`.
+Lambdas are meant to be passed immediately into other functions, not bound to variables!
+
+## 11. Real-World Usage
+
+- **Data Processing:** Used heavily inside `map()`, `filter()`, `reduce()`, and Pandas `apply()`.
+- **UI Frameworks:** Passing small callback functions to button clicks in Tkinter or PyQt (`command=lambda: do_something()`).
+- **Custom Sorting:** Providing a dynamic `key` to `list.sort()` or `sorted()`.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use them for simple, one-off operations | Write complex math or deeply nested logic inside a lambda |
+| Pass them directly to `sorted()`, `map()`, etc. | Assign them to variables (`my_func = lambda: ...`) |
+| Replace them with List Comprehensions if possible | Use them just to look "smart" |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Lambdas are terrible for debugging.
+
+Because lambdas have no name, if your production code crashes inside one, the stack trace will just say `File "app.py", line 42, in <lambda>`. It won't tell you the name of the function that failed. If the logic is important, use a `def` so you get a proper name in your error logs.
+
+## 14. Common Mistakes
+
+- Trying to write an `if/elif/else` block inside a lambda (you can only use the ternary operator `A if cond else B`).
+- Adding a `return` keyword inside the lambda (it's implicit).
+- Using lambdas where a simple list comprehension would be much more readable.
+
+## 15. Related Topics
+- Functions Basics
+- List Comprehension
+- Built-in Functions (`map`, `filter`)
