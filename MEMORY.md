@@ -224,8 +224,29 @@ Before deleting files:
 
 ## Current Progress
 
-- `fundamentals` section fleshed out completely (Variables, Data Types, Operators, Input/Output, Type Conversion, Comments/Docstrings).
-- `control-flow` section started (If-Else completed).
+**Completed Topics:**
+- `intro`: what-is-python, setup-python, python-execution-flow, first-python-program
+- `fundamentals`: variables, data-types, operators, input-output, type-conversion, comments-docstrings
+- `control-flow`: if-else
+
+**Pending Topics (Next Up):**
+- `control-flow`: nested-conditions, loops, break-continue-pass, pattern-programs, match-case
+- `functions`: all topics
+- `collections`: all topics
+- `strings`: all topics
+- `oops`: all topics
+- `error-handling`: all topics
+- `file-handling`: all topics
+- `modules-packages`: all topics
+- `advanced-python`: all topics
+- `concurrency`: all topics
+- `api-development`: all topics
+- `databases`: all topics
+- `testing`: all topics
+- `performance`: all topics
+- `system-design`: all topics
+- `ai-engineering`: all topics
+- `best-practices`: all topics
 
 ## Current User Preferences
 

@@ -2,6 +2,171 @@
 sidebar_position: 3
 ---
 
-# Loops
+# Loops (`for` and `while`)
 
-Placeholder: introduce Loops.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Python Loops (`for` and `while`) |
+| Difficulty | Beginner |
+| Used For | Repeating a block of code multiple times |
+| Core Idea | `for` loops iterate over a collection; `while` loops run until a condition becomes False |
+| Common Mistake | Creating an infinite `while` loop that crashes your program |
+| Performance | O(n) where n is the number of iterations |
+
+Bro, writing the same code 10 times is terrible. Loops let you write the code once and tell Python to repeat it for you.
+
+## 2. Real-World Analogy
+
+Think of an automated car wash.
+
+A **`for` loop** is like a factory assembly line. "For every car in the queue, wash it, dry it, and send it out." You know exactly how many cars there are.
+
+A **`while` loop** is like filling a bucket with a hose. "While the bucket is not full, keep the water running." You don't know exactly how many seconds it will take; you just wait for the condition to change.
+
+## 3. Concept Explanation
+
+Python has two main loops:
+
+1. **`for` loop:** Used for iterating over a sequence (like a list, tuple, dictionary, set, or string). You use this 95% of the time.
+2. **`while` loop:** Used to execute a block of statements repeatedly as long as a condition is true. Use this when you don't know in advance how many times you need to loop.
+
+## 4. Syntax Table
+
+| Loop Type | Syntax | Example |
+|---|---|---|
+| `for` over list | `for item in items:` | `for name in names:` |
+| `for` with range | `for i in range(n):` | `for i in range(5):` |
+| `while` loop | `while condition:` | `while count < 10:` |
+
+## 5. Beginner Example
+
+**Using a `for` loop:**
+
+```python
+fruits = ["apple", "banana", "mango"]
+
+for fruit in fruits:
+    print(f"Eating {fruit}")
+```
+
+**Using a `while` loop:**
+
+```python
+count = 3
+
+while count > 0:
+    print(count)
+    count -= 1  # Don't forget this!
+
+print("Go!")
+```
+
+**Output:**
+```text
+Eating apple
+Eating banana
+Eating mango
+3
+2
+1
+Go!
+```
+
+## 6. Real-World Engineering Example
+
+Bro, in a real system, you use loops to process batches of data from a database or an API.
+
+```python
+def process_emails(email_list):
+    success_count = 0
+
+    for email in email_list:
+        try:
+            send_marketing_email(email)
+            success_count += 1
+        except Exception as e:
+            print(f"Failed to send to {email}: {e}")
+
+    return success_count
+```
+This processes a list of emails one by one and safely skips the ones that fail.
+
+## 7. Internal Working
+
+When you write `for item in list:`, Python actually asks the list for an `Iterator` object.
+The loop repeatedly calls a hidden `__next__()` method on the iterator to get the next item. When the list is empty, it raises a hidden `StopIteration` error, which Python catches quietly to end the loop.
+
+A `while` loop simply evaluates its boolean condition. If `True`, it runs the block and jumps back to the top. If `False`, it jumps past the block.
+
+## 8. Performance Table
+
+| Operation | Complexity | Note |
+|---|---|---|
+| `for` loop over list | O(n) | Standard iteration |
+| `for` over dictionary keys | O(n) | Iterates over hash keys |
+| Nested `for` loops | O(n * m) | Be careful, O(N²) can crash servers if N is huge. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Does Python have a standard `for(int i=0; i<n; i++)` loop? | No. Python uses `for i in range(n):` instead. |
+| Can a `for` loop have an `else` block? | Yes. The `else` block runs if the loop finishes *without* hitting a `break`. |
+| What happens if you modify a list while iterating over it? | Bugs! Never modify a list you are currently looping over. Loop over a copy instead. |
+| When should you use `while True:`? | Usually for daemon threads or main game loops, combined with a `break` condition inside. |
+
+## 10. Tricky Questions & Edge Cases
+
+What does the `else` do here?
+
+```python
+for item in [1, 2, 3]:
+    if item == 5:
+        print("Found 5!")
+        break
+else:
+    print("5 was not found.")
+```
+
+**Output:**
+```text
+5 was not found.
+```
+
+Bro, Python is one of the only languages with a `for...else` construct. The `else` block executes *only* if the loop completed normally without hitting a `break` statement. It's incredibly useful for search operations.
+
+## 11. Real-World Usage
+
+Where do we use loops?
+- **Data Engineering:** Looping through thousands of CSV rows to clean data.
+- **Web Scraping:** Looping through pagination URLs (`while next_page_exists:`).
+- **Retry Logic:** `while retries < 3:` trying to connect to a flaky API.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `for item in items:` | Use `for i in range(len(items)):` just to get the items |
+| Use `enumerate(items)` if you need the index | Manually maintain an index counter `i += 1` inside a `for` loop |
+| Ensure `while` loops have a clear exit condition | Create infinite loops by forgetting `count -= 1` |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Watch out for O(N²) nested loops on big datasets.
+
+If you have a list of 10,000 users and a list of 10,000 orders, and you do a nested `for` loop to match them, your server will do 100,000,000 checks and likely timeout. In production, use dictionaries (Hash Maps) for lookups instead of nested loops.
+
+## 14. Common Mistakes
+
+- Forgetting to increment/decrement the counter in a `while` loop (infinite loop!).
+- Modifying a dictionary (adding/removing keys) while iterating over it (Python throws a `RuntimeError`).
+- Writing C-style loops using `range(len(list))` instead of iterating directly.
+
+## 15. Related Topics
+- Break, Continue, Pass
+- Range Function
+- Iterators and Generators
+- List Comprehension

@@ -2,6 +2,163 @@
 sidebar_position: 4
 ---
 
-# Break Continue Pass
+# Break, Continue, Pass
 
-Placeholder: introduce Break Continue Pass.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Python Loop Control Statements (`break`, `continue`, `pass`) |
+| Difficulty | Beginner |
+| Used For | Altering the standard flow of loops and functions |
+| Core Idea | `break` stops the loop, `continue` skips an iteration, `pass` does nothing |
+| Common Mistake | Using `pass` when you meant to use `continue` |
+| Performance | Instantaneous flow control |
+
+Bro, sometimes a loop needs to stop early, or skip a bad item, or you just need an empty block of code to prevent a crash. That's what these three keywords are for.
+
+## 2. Real-World Analogy
+
+Think of a music playlist.
+
+- **`break`**: You unplug the speaker. The music stops completely.
+- **`continue`**: You don't like the current song, so you press "Next Track". The playlist keeps playing, but that specific song is skipped.
+- **`pass`**: You let the song play while you just sit there doing absolutely nothing.
+
+## 3. Concept Explanation
+
+- **`break`**: Immediately terminates the innermost loop it is placed in. Execution jumps to the first line of code *after* the loop.
+- **`continue`**: Immediately stops the *current* iteration of the loop and jumps back to the top of the loop to process the next item.
+- **`pass`**: A null operation. Python syntax requires an indented block after `if`, `for`, `while`, or `def`. If you haven't written the code yet, you use `pass` to avoid a `IndentationError`.
+
+## 4. Syntax Table
+
+| Keyword | Action | Example Context |
+|---|---|---|
+| `break` | Exits the loop entirely | Found the item you were searching for. |
+| `continue` | Skips to the next iteration | Ignoring invalid data in a list. |
+| `pass` | Acts as a placeholder | Writing an empty function skeleton. |
+
+## 5. Beginner Example
+
+```python
+# Break example
+for i in range(5):
+    if i == 3:
+        break
+    print(f"Break loop: {i}")
+
+# Continue example
+for i in range(5):
+    if i == 3:
+        continue
+    print(f"Continue loop: {i}")
+```
+
+**Output:**
+```text
+Break loop: 0
+Break loop: 1
+Break loop: 2
+Continue loop: 0
+Continue loop: 1
+Continue loop: 2
+Continue loop: 4
+```
+
+Notice how `continue` skipped the number `3`, but `break` stopped everything when it hit `3`.
+
+## 6. Real-World Engineering Example
+
+Bro, imagine you are processing a batch of user uploads. Some files might be corrupt.
+
+```python
+def process_uploads(files):
+    for file in files:
+        if not file.is_valid():
+            print(f"Skipping corrupt file: {file.name}")
+            continue  # Jump to the next file!
+
+        if file.contains_virus():
+            print(f"DANGER! Halting all processing.")
+            break  # Stop the entire loop immediately!
+
+        save_to_database(file)
+```
+
+## 7. Internal Working
+
+These statements compile down to absolute jump instructions in Python's bytecode.
+- `break` tells the interpreter to jump the instruction pointer to the end of the loop structure.
+- `continue` tells the interpreter to jump the instruction pointer back to the loop's condition check (or iterator advancement).
+- `pass` literally generates no bytecode instructions that do anything. It exists purely to satisfy the CPython parser.
+
+## 8. Performance Table
+
+| Operation | Complexity | Note |
+|---|---|---|
+| `break` | O(1) | Can turn an O(N) loop into O(1) if triggered early! |
+| `continue` | O(1) | Avoids executing the rest of the loop body. |
+| `pass` | O(1) | Does absolutely nothing. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Does `break` stop all loops if they are nested? | No, `break` only stops the *innermost* loop it is inside of. |
+| Can you use `continue` inside an `if` statement? | Only if that `if` statement is inside a loop. |
+| Difference between `pass` and `continue`? | `continue` skips to the next loop iteration. `pass` just does nothing and lets the current iteration finish. |
+| Does `break` trigger the `else` block of a `for` loop? | No! A `break` bypasses the `else` block entirely. |
+
+## 10. Tricky Questions & Edge Cases
+
+What happens here with nested loops?
+
+```python
+for outer in range(2):
+    for inner in range(3):
+        if inner == 1:
+            break
+        print(f"Outer: {outer}, Inner: {inner}")
+```
+
+**Output:**
+```text
+Outer: 0, Inner: 0
+Outer: 1, Inner: 0
+```
+
+Bro, notice that the `break` only killed the `inner` loop. The `outer` loop kept running perfectly fine. If you want to break out of *both* loops, you usually have to refactor it into a function and use `return`.
+
+## 11. Real-World Usage
+
+- **Web Crawlers:** Using `break` to stop downloading if the server returns a 429 Too Many Requests.
+- **Data Cleaning:** Using `continue` to skip rows in a CSV that have missing columns.
+- **TDD (Test Driven Development):** Using `pass` to stub out 50 function definitions before actually writing the code.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `continue` to avoid deep nesting in loops | Put 50 lines of code inside an `if` when you could just `continue` early |
+| Use `pass` for empty classes (`class CustomError(Exception): pass`) | Leave `pass` in production code meant to do actual work |
+| Use `break` to exit `while True:` loops | Use complicated flags like `should_stop = True` if a simple `break` works |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Using `continue` as a Guard Clause inside loops makes your code much cleaner.
+
+Instead of wrapping your whole loop in an `if data_is_good:`, just check `if not data_is_good: continue`. This keeps your core logic un-indented and easy to read.
+
+## 14. Common Mistakes
+
+- Thinking `break` exits a function (it doesn't, that's what `return` does).
+- Using `pass` instead of `continue`, causing the rest of the loop block to execute and crash on bad data.
+- Forgetting that `break` bypasses the `for...else` block.
+
+## 15. Related Topics
+- Loops (`for` and `while`)
+- If Else
+- Functions Basics
+- Exceptions (Custom Exceptions often use `pass`)
