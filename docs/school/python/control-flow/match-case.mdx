@@ -4,4 +4,162 @@ sidebar_position: 6
 
 # Match Case
 
-Placeholder: introduce Match Case.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Python `match-case` (Structural Pattern Matching) |
+| Difficulty | Intermediate |
+| Used For | Cleaner alternative to long `if-elif` chains |
+| Core Idea | Matches a variable against a series of patterns and extracts data |
+| Common Mistake | Using it like a basic C++ `switch` statement (it's much more powerful) |
+| Performance | Roughly the same as `if-elif`, but highly optimized in CPython |
+
+Bro, Python didn't have a `switch` statement for 30 years. In Python 3.10, they finally added `match-case`, but they didn't just copy `switch`—they built a powerful structural pattern matching engine.
+
+## 2. Real-World Analogy
+
+Think of a post office sorting machine.
+
+Packages come in all shapes and sizes. The machine looks at the package:
+- *Matches a flat envelope?* Send to the document bin.
+- *Matches a medium box with a "Fragile" sticker?* Send to the careful handling belt.
+- *Doesn't match anything known?* Send to the default manual inspection bin.
+
+## 3. Concept Explanation
+
+`match-case` allows you to take a variable (often a dictionary, list, or object) and check its "shape" against multiple patterns.
+
+If it matches a pattern, it executes that block. Even better, it can unpack variables directly out of the matched pattern! It is much cleaner than writing 10 `elif` statements with `isinstance()` checks and dictionary lookups.
+
+## 4. Syntax Table
+
+| Concept | Syntax | Meaning |
+|---|---|---|
+| The Match | `match subject:` | The variable you are checking |
+| Literal Case | `case 200:` | Matches exact values |
+| OR pattern | `case 401 \| 403:` | Matches multiple values |
+| Unpacking | `case [x, y]:` | Matches a 2-item list and extracts variables |
+| Default Case | `case _:` | The fallback (like `else`) |
+
+## 5. Beginner Example
+
+Let's handle simple HTTP status codes.
+
+```python
+status = 404
+
+match status:
+    case 200:
+        print("Success!")
+    case 400 | 404:
+        print("Client Error!")
+    case 500:
+        print("Server Error!")
+    case _:  # The wildcard/default case
+        print("Unknown Status")
+```
+
+**Output:**
+```text
+Client Error!
+```
+
+## 6. Real-World Engineering Example
+
+Bro, here is where `match-case` shines: parsing JSON payloads from APIs where the structure might change.
+
+```python
+event = {"type": "payment", "amount": 500, "currency": "USD"}
+
+match event:
+    case {"type": "login", "user": user}:
+        print(f"User {user} logged in.")
+
+    case {"type": "payment", "amount": amt, "currency": "USD"}:
+        print(f"Received {amt} Dollars!")
+
+    case {"type": "payment", "amount": amt, "currency": curr}:
+        print(f"Received foreign currency: {curr}")
+
+    case _:
+        print("Unknown event format.")
+```
+
+Notice how we simultaneously check the dictionary keys *and* extract the `amt` and `curr` variables? That's structural pattern matching!
+
+## 7. Internal Working
+
+When Python compiles `match-case`, it doesn't just build a giant `if-elif` chain. The CPython compiler analyzes the patterns and creates an optimized sequence of type checks, length checks, and equality checks.
+
+The wildcard `_` is a special throwaway variable that matches anything.
+
+## 8. Performance Table
+
+| Operation | Complexity | Note |
+|---|---|---|
+| Basic literal match | O(1) | Similar to dictionary lookup or `if-elif`. |
+| Complex structural match | O(k) | k is the depth/complexity of the pattern. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| When was `match-case` introduced? | Python 3.10. |
+| Is it just a `switch` statement? | No, it is "Structural Pattern Matching" because it can unpack data and check types. |
+| Does it fall through like in C/Java? | No! Once a case matches and executes, it automatically breaks. No `break` keyword needed. |
+| What does `case _:` mean? | It's the wildcard or default case. It catches anything that wasn't matched above. |
+
+## 10. Tricky Questions & Edge Cases
+
+Can you add conditions to a case? Yes, using a "Guard".
+
+```python
+user = {"name": "Asha", "age": 16}
+
+match user:
+    case {"name": name, "age": age} if age >= 18:
+        print(f"{name} is an adult.")
+    case {"name": name, "age": age}:
+        print(f"{name} is a minor.")
+```
+
+**Output:**
+```text
+Asha is a minor.
+```
+
+Bro, the `if age >= 18` is a guard. The pattern matches first, then the `if` statement is evaluated.
+
+## 11. Real-World Usage
+
+- **Event-Driven Architectures:** Parsing different types of messages from Kafka or RabbitMQ.
+- **Parsers & Compilers:** Matching Abstract Syntax Tree (AST) nodes.
+- **Command Line Interfaces:** Parsing complex user commands (`match command.split(): case ["drop", table_name]:`).
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use it for parsing complex, nested dictionaries | Use it for simple true/false checks (just use `if`) |
+| Always include a `case _:` default block | Assume your data will always match a specific pattern |
+| Use guards (`if`) for complex logic inside a pattern | Try to do math inside the pattern definition itself |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Make sure your production servers are actually running Python 3.10+.
+
+If you write `match-case` code and deploy it to an AWS Lambda or a Docker container running Python 3.9, your app will immediately crash with a `SyntaxError`. Always check your deployment environment versions!
+
+## 14. Common Mistakes
+
+- Forgetting that `match-case` doesn't exist in Python 3.9 and older.
+- Putting a `break` at the end of every `case` (not needed in Python!).
+- Misunderstanding that `case {"type": "auth"}:` will still match if the dictionary has *extra* keys. (It checks if the required keys exist, it doesn't enforce an exact match of the whole dictionary).
+
+## 15. Related Topics
+- If Else
+- Dictionaries
+- Lists
+- Exceptions (for handling unknown cases)
