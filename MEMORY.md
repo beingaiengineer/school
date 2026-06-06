@@ -222,9 +222,15 @@ Before deleting files:
 - confirm they are boilerplate or unwanted
 - verify paths are inside the workspace
 
+## Current Progress
+
+- `fundamentals` section fleshed out completely (Variables, Data Types, Operators, Input/Output, Type Conversion, Comments/Docstrings).
+- `control-flow` section started (If-Else completed).
+
 ## Current User Preferences
 
 - Work topic by topic when creating course content.
+- Create PR's once 5 topics are done.
 - Content should have "bro feel."
 - Avoid very lengthy topic pages.
 - Diagrams should be professional and topic-specific.
