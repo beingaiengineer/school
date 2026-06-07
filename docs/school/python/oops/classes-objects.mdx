@@ -2,6 +2,235 @@
 sidebar_position: 1
 ---
 
-# Classes Objects
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Classes Objects.
+# Classes & Objects
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Classes & Objects in Object-Oriented Programming (OOP) |
+| Difficulty | Beginner / Intermediate |
+| Used For | Structuring code into logical, reusable "things" with data and behavior |
+| Common Mistake | Forgetting to pass `self` as the first parameter in class methods |
+| Performance | Class instantiation has minor overhead; slots can optimize memory |
+
+---
+
+# 2. Real-World Analogy
+
+Think of a **Class** like an architectural blueprint for a house. The blueprint itself is not a house. You can't live in a blueprint, and you can't open its doors. It just describes exactly what a house *should* have: 3 bedrooms, 2 bathrooms, and a front door.
+
+Think of an **Object** (also called an Instance) as the actual physical house built from that blueprint. You can build 100 different houses from the same blueprint. Some might be painted blue, some might be red, but they all follow the same underlying structure defined by the Class.
+
+---
+
+# 3. Concept Explanation
+
+Object-Oriented Programming (OOP) is a way of writing code that groups related **Data** (attributes/variables) and **Behavior** (methods/functions) together into a single unit called an **Object**.
+
+- **Class:** The template or blueprint. It defines the rules.
+- **Object:** A concrete instance created using the class.
+- **Attributes:** Variables that belong to the object (the data).
+- **Methods:** Functions that belong to the object (the behavior).
+
+Why do we use OOP? Because as a codebase grows to 100,000 lines, writing loose functions and scattered variables becomes impossible to track. OOP keeps everything organized.
+
+---
+
+# 4. Syntax Table
+
+| Concept | Code | Note |
+|---|---|---|
+| Define a Class | `class Car:` | Use CamelCase for class names. |
+| Constructor | `def __init__(self):` | The setup method called when an object is created. |
+| The `self` parameter | `def drive(self):` | Mandatory first argument. Refers to the specific object. |
+| Instantiate Object | `my_car = Car()` | Building the actual object from the blueprint. |
+| Access Attribute | `my_car.color = "red"` | Setting or getting data on the object. |
+
+---
+
+# 5. Beginner Example
+
+Let's build a simple `Dog` class.
+
+```python
+# 1. Define the Blueprint (Class)
+class Dog:
+    # 2. The constructor sets up the initial state
+    def __init__(self, name, breed):
+        self.name = name       # Attribute
+        self.breed = breed     # Attribute
+        self.is_hungry = True  # Attribute with a default value
+
+    # 3. A method (behavior)
+    def bark(self):
+        print(f"{self.name} says WOOF!")
+
+    def feed(self):
+        self.is_hungry = False
+        print(f"{self.name} is eating.")
+
+# 4. Create actual Objects (Instances)
+dog1 = Dog("Buddy", "Golden Retriever")
+dog2 = Dog("Max", "Bulldog")
+
+# 5. Use the Objects
+dog1.bark()  # Buddy says WOOF!
+print(dog2.is_hungry) # True
+dog2.feed()  # Max is eating.
+```
+
+Bro, notice how `dog1` and `dog2` are completely independent? Feeding `dog2` does not make `dog1` full! They are separate objects built from the same blueprint.
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Blueprint (Class)', detail: 'class User:', kind: 'tool', x: 250, y: 50 },
+    { id: '2', title: 'Object 1', detail: 'name="Alice", role="Admin"', kind: 'data', x: 0, y: 200 },
+    { id: '3', title: 'Object 2', detail: 'name="Bob", role="Guest"', kind: 'data', x: 500, y: 200 },
+    { id: '4', title: 'Method', detail: 'def login(self):', kind: 'process', x: 250, y: 350 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'instantiates' },
+    { source: '1', target: '3', label: 'instantiates' },
+    { source: '2', target: '4', label: 'calls (self=Alice)' },
+    { source: '3', target: '4', label: 'calls (self=Bob)' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+In a real production system, classes are used to represent business entities like Database Connections, HTTP Requests, or User Accounts.
+
+```python
+class BankAccount:
+    def __init__(self, owner: str, initial_balance: float):
+        self.owner = owner
+        self.balance = initial_balance
+
+    def deposit(self, amount: float):
+        if amount <= 0:
+            raise ValueError("Deposit must be positive")
+        self.balance += amount
+        print(f"Deposited ${amount}. New balance: ${self.balance}")
+
+    def withdraw(self, amount: float):
+        if amount > self.balance:
+            print("Insufficient funds!")
+            return False
+        self.balance -= amount
+        print(f"Withdrew ${amount}. Remaining: ${self.balance}")
+        return True
+
+# Enterprise usage
+account = BankAccount("Corporate Corp", 10000.0)
+account.withdraw(5000)
+account.withdraw(90000) # Prevents bad state!
+```
+
+---
+
+# 7. Internal Working
+
+Everything in Python is an object! Even an integer `5` is an instance of the `int` class.
+
+When you do `my_car = Car()`, Python does two things under the hood:
+1. It calls `Car.__new__()` to allocate a chunk of raw memory in RAM for the new object.
+2. It passes that memory space to `Car.__init__(self)` so you can attach your specific attributes (like `.color`) to it.
+
+The object itself is essentially just a hidden dictionary (`__dict__`) holding your variables!
+
+---
+
+# 8. Performance Table
+
+| Operation | Complexity | Note |
+|---|---|---|
+| Object Creation | O(1) | Fast, but heavier than creating a simple tuple. |
+| Attribute Access | O(1) | Internally looking up a key in a dictionary. |
+| Method Call | O(1) | Resolves the function reference and passes `self`. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the `self` keyword in Python? | `self` represents the specific instance of the class. It allows methods to access the attributes of that exact object. |
+| Is `self` a reserved keyword? | Technically, no. You could name it `this` or `apple`, but using anything other than `self` is a massive violation of Python standards. Don't do it. |
+| What is the difference between a Class Variable and an Instance Variable? | Instance variables (`self.name`) are unique to each object. Class variables are declared outside `__init__` and are shared globally across all objects of that class. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+The Shared State Trap!
+
+```python
+class BuggyEmployee:
+    # This is a CLASS variable. It is shared by ALL instances!
+    skills = []
+
+    def __init__(self, name):
+        self.name = name
+
+e1 = BuggyEmployee("Alice")
+e2 = BuggyEmployee("Bob")
+
+e1.skills.append("Python")
+
+# Wait, Bob suddenly knows Python too?!
+print(e2.skills) # Output: ['Python']
+```
+Bro, never use mutable objects (like lists or dictionaries) as class variables unless you specifically want all objects to share them. Always put them inside `__init__` using `self` so each object gets its own copy.
+
+---
+
+# 11. Real-World Usage
+
+- **Web Frameworks:** In Django or FastAPI, every database table is defined as a Class (Models).
+- **API Clients:** Creating an `AWSClient` class that holds the connection token and has methods like `.upload_file()`.
+- **Game Development:** Every player, enemy, and bullet is its own Object with `x, y` coordinates and an `.update()` method.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use CamelCase for Class names (`UserService`). | Use snake_case for Class names (`user_service`). |
+| Put all attributes inside `__init__` using `self`. | Declare attributes outside of methods randomly. |
+| Keep classes focused on one responsibility (Single Responsibility Principle). | Create a massive `GodClass` with 5,000 lines and 50 methods. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+While OOP is great for organization, creating millions of small Python objects can consume a massive amount of RAM because every object has an internal `__dict__` overhead. In high-performance data engineering, we often use `__slots__`, `namedtuples`, or libraries like Pandas/NumPy which bypass Python objects in favor of flat C-arrays.
+
+---
+
+# 14. Common Mistakes
+
+- **Forgetting `self` in method definitions:**
+  ```python
+  def bark(): # ERROR! Missing self
+      print("Woof")
+  ```
+  Python will throw a `TypeError` saying "bark() takes 0 positional arguments but 1 was given" because Python automatically passes the object as the first argument when you call it.
+- **Calling methods incorrectly:** Doing `Dog.bark()` instead of creating an instance first `my_dog = Dog(); my_dog.bark()`.
+
+---
+
+# 15. Related Topics
+
+- Constructors (`__init__`)
+- Inheritance
+- Encapsulation
+- Dataclasses

@@ -2,6 +2,233 @@
 sidebar_position: 3
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Inheritance
 
-Placeholder: introduce Inheritance.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Inheritance in Python |
+| Difficulty | Intermediate |
+| Used For | Reusing code by allowing a child class to inherit attributes and methods from a parent class |
+| Common Mistake | Forgetting to call `super().__init__()` in the child class |
+| Performance | Method resolution adds a tiny overhead (MRO lookup), but generally negligible |
+
+---
+
+# 2. Real-World Analogy
+
+Think of Inheritance like a fast-food restaurant franchise, bro.
+
+The main corporation creates a **Base Blueprint** for "Burger Joint". It includes instructions on how to make burgers, how to run the cash register, and the company logo.
+
+When you open a local branch, you don't rewrite all those instructions from scratch. You **Inherit** the Base Blueprint. But you can also add your own specific things, like a local "Spicy Burger" that only your branch sells, or you can even *override* the uniform color. You get all the parent's features for free, but you still have the power to customize!
+
+---
+
+# 3. Concept Explanation
+
+Inheritance allows one class (the **Child** or Subclass) to acquire the properties and methods of another class (the **Parent** or Superclass).
+
+Why do we use it? **Code Reusability**. If you have an `Animal` class with a `sleep()` method, you shouldn't have to rewrite the `sleep()` method for the `Dog`, `Cat`, and `Bird` classes. They can all just inherit it from `Animal`.
+
+- **Child Class:** The new class being created.
+- **Parent Class:** The existing class being inherited from.
+- **Overriding:** When the child replaces a parent's method with its own version.
+- **`super()`:** A special function that allows the child to call methods from the parent.
+
+---
+
+# 4. Syntax Table
+
+| Concept | Code | Note |
+|---|---|---|
+| Parent Class | `class Animal:` | Standard class definition. |
+| Child Class | `class Dog(Animal):` | Pass the parent class inside parentheses. |
+| Overriding | `def make_sound(self):` | Define a method with the same name as the parent. |
+| Calling Parent | `super().__init__()` | Triggers the parent's constructor or method. |
+
+---
+
+# 5. Beginner Example
+
+Let's look at a simple Employee structure.
+
+```python
+# The Parent Class
+class Employee:
+    def __init__(self, name, salary):
+        self.name = name
+        self.salary = salary
+
+    def work(self):
+        print(f"{self.name} is working.")
+
+# The Child Class
+class Developer(Employee):
+    def __init__(self, name, salary, programming_language):
+        # 1. Call the Parent's constructor to handle name & salary
+        super().__init__(name, salary)
+        # 2. Add the Child's specific attribute
+        self.programming_language = programming_language
+
+    # Overriding the parent's work method
+    def work(self):
+        print(f"{self.name} is writing {self.programming_language} code.")
+
+# Instantiation
+dev = Developer("Alex", 80000, "Python")
+
+# Using inherited and overridden methods
+print(dev.salary) # Inherited attribute (80000)
+dev.work()        # Overridden method (Alex is writing Python code.)
+```
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Parent: Animal', detail: 'def eat(self):', kind: 'core', x: 250, y: 50 },
+    { id: '2', title: 'Child: Dog', detail: 'def bark(self):', kind: 'process', x: 100, y: 200 },
+    { id: '3', title: 'Child: Cat', detail: 'def meow(self):', kind: 'process', x: 400, y: 200 },
+    { id: '4', title: 'Dog Instance', detail: 'Can eat() AND bark()', kind: 'output', x: 100, y: 350 },
+    { id: '5', title: 'Cat Instance', detail: 'Can eat() AND meow()', kind: 'output', x: 400, y: 350 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'inherits' },
+    { source: '1', target: '3', label: 'inherits' },
+    { source: '2', target: '4', label: 'instantiates', type: 'smoothstep' },
+    { source: '3', target: '5', label: 'instantiates', type: 'smoothstep' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+In web frameworks like Django or Django REST Framework, inheritance is the core architecture. You inherit from a base `View` or `Model` class, which handles 90% of the complex database or HTTP logic for you.
+
+```python
+# Simulating a Web Framework's Base Class
+class BaseAPIView:
+    def check_permissions(self, user):
+        return True # Default allows everyone
+
+    def execute(self, user):
+        if not self.check_permissions(user):
+            return "403 Forbidden"
+        return self.handle_request()
+
+    def handle_request(self):
+        raise NotImplementedError("Child must implement this!")
+
+# Your custom Child Class
+class SecureDataView(BaseAPIView):
+    # Override permission check
+    def check_permissions(self, user):
+        return user == "admin"
+
+    # Override the request logic
+    def handle_request(self):
+        return "200 OK: Secret Data"
+
+view = SecureDataView()
+print(view.execute("guest")) # 403 Forbidden
+print(view.execute("admin")) # 200 OK: Secret Data
+```
+Bro, notice how the parent class `execute()` method calls the child's overridden methods? That's the power of OOP frameworks!
+
+---
+
+# 7. Internal Working
+
+How does Python know which method to run? It uses **MRO (Method Resolution Order)**.
+
+When you call `dev.work()`, Python looks inside the `Developer` class first. If it finds the method, it runs it. If it doesn't find it, it moves *up* the chain to the `Employee` parent class. If it's not there, it moves up to Python's ultimate base `object` class. If it still can't find it, it throws an `AttributeError`.
+
+You can view this path by calling `print(Developer.__mro__)`.
+
+---
+
+# 8. Performance Table
+
+| Operation | Complexity | Note |
+|---|---|---|
+| Method Lookup (Direct) | O(1) | Found instantly in the child class. |
+| Method Lookup (Inherited) | O(depth) | Python has to search up the inheritance tree (MRO). |
+| `super()` overhead | Minimal | Negligible in 99% of applications. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does `super()` do? | It returns a temporary object of the parent class, allowing you to call its methods (most commonly `super().__init__()`). |
+| Does Python support Multiple Inheritance? | Yes! A class can inherit from multiple parents: `class Child(Father, Mother):`. It resolves conflicts using the C3 Linearization algorithm (MRO). |
+| What happens if a child doesn't define an `__init__` method? | Python will automatically use the parent's `__init__` method when the child object is created. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+The Missing `super()` Bug!
+
+```python
+class Parent:
+    def __init__(self):
+        self.surname = "Smith"
+
+class Child(Parent):
+    def __init__(self):
+        self.first_name = "John"
+        # FORGOT TO CALL super().__init__()!
+
+kid = Child()
+print(kid.first_name) # John
+# print(kid.surname) # AttributeError: 'Child' object has no attribute 'surname'
+```
+Bro, if the child defines its own `__init__`, it **completely overwrites** the parent's setup. The parent's `__init__` does NOT run automatically. You MUST call `super().__init__()` manually inside the child if you want the parent's attributes!
+
+---
+
+# 11. Real-World Usage
+
+- **Custom Exceptions:** Creating a specific error like `class DatabaseTimeoutError(Exception):` which inherits from Python's base `Exception` class.
+- **UI Components:** A `SubmitButton` class inheriting from a base `Button` class.
+- **Data Models:** A `PremiumUser` inheriting from a base `User` model in a database schema.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use inheritance when there is a strict "IS-A" relationship (A Dog *is an* Animal). | Use inheritance just to share a utility function. Use Composition instead. |
+| Call `super().__init__()` at the very beginning of the child's constructor. | Create massive inheritance trees 10 levels deep. It makes code impossible to read. |
+| Check `__mro__` if you get confused about method resolution. | Overuse Multiple Inheritance (it causes the dreaded "Diamond Problem"). |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Modern software engineering actually heavily favors **Composition over Inheritance**. Deep inheritance trees (e.g., `Class -> Parent -> GrandParent -> BaseEntity -> Object`) make code extremely brittle. If you change a method in `BaseEntity`, it might break 50 child classes in unexpected ways. Only use inheritance for simple, shallow relationships. For complex features, pass objects into other objects (Composition).
+
+---
+
+# 14. Common Mistakes
+
+- **Wrong order in multiple inheritance:** `class Child(ParentB, ParentA):` changes which parent gets priority if they both have a method with the same name. Order matters!
+- **Overriding without realizing:** Accidentally giving a child method the exact same name as a crucial parent method, destroying the parent's behavior.
+
+---
+
+# 15. Related Topics
+
+- Classes & Objects
+- Polymorphism
+- Exceptions (Inheriting from Exception)
+- Composition vs Inheritance

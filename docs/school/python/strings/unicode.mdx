@@ -2,6 +2,203 @@
 sidebar_position: 5
 ---
 
-# Unicode
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Unicode.
+# Unicode & Encodings
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Unicode and String Encoding |
+| Difficulty | Intermediate |
+| Used For | Handling international text, emojis, and file/network I/O |
+| Common Mistake | Confusing strings (text) with bytes (binary data) |
+| Performance | UTF-8 encoding/decoding is highly optimized in Python |
+
+---
+
+# 2. Real-World Analogy
+
+Think of **Unicode** as an international dictionary that assigns a unique ID number to every single letter, symbol, and emoji in human existence. In this dictionary, "A" is 65, and the "🔥" emoji is 128293.
+
+Think of **UTF-8 (Encoding)** as the Morse code used to transmit those ID numbers over a wire.
+
+Python Strings live purely in the dictionary world (Unicode). But to save a string to a hard drive or send it over the internet, you must translate it into Morse code (Bytes) using UTF-8.
+
+---
+
+# 3. Concept Explanation
+
+In Python 3, all strings are **Unicode** by default. This is a massive upgrade from Python 2.
+
+However, computers only understand 1s and 0s (bytes).
+- **Encoding:** Converting a Python String (Unicode) into Bytes so it can be saved to a file or sent over a network.
+- **Decoding:** Converting Bytes received from a file or network back into a Python String.
+
+The most common set of rules for this translation is **UTF-8**. It is the standard of the internet.
+
+---
+
+# 4. Syntax Table
+
+| Operation | Code | Returns |
+|---|---|---|
+| Encode (String to Bytes) | `"hello".encode("utf-8")` | `b"hello"` |
+| Decode (Bytes to String) | `b"hello".decode("utf-8")` | `"hello"` |
+| Get Unicode Code Point | `ord("A")` | `65` |
+| Get Char from Code Point| `chr(65)` | `"A"` |
+| Byte literal | `b"raw_data"` | `<class 'bytes'>` |
+
+---
+
+# 5. Beginner Example
+
+Let's look at how strings and bytes differ.
+
+```python
+# This is a normal Unicode String
+text = "Hello 🔥"
+
+# Encode it to bytes (what we send over the network)
+byte_data = text.encode("utf-8")
+
+print(type(byte_data)) # <class 'bytes'>
+print(byte_data)       # b'Hello \xf0\x9f\x94\xa5'
+
+# Notice the emoji became a sequence of hex bytes: \xf0\x9f\x94\xa5
+
+# Decode it back to a string (what we use in our app)
+restored_text = byte_data.decode("utf-8")
+
+print(restored_text)   # Hello 🔥
+```
+Bro, that `b` prefix in `b'Hello'` means it is a **byte string**, not a normal text string!
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Python String', detail: '"Hello 🔥"', kind: 'core', x: 0, y: 150 },
+    { id: '2', title: '.encode("utf-8")', detail: 'Translating to binary', kind: 'process', x: 250, y: 50 },
+    { id: '3', title: 'Bytes Object', detail: 'b"Hello \\xf0\\x9f\\x94\\xa5"', kind: 'data', x: 500, y: 150 },
+    { id: '4', title: '.decode("utf-8")', detail: 'Translating to text', kind: 'process', x: 250, y: 250 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'Network/Disk Write' },
+    { source: '2', target: '3', label: 'produces', type: 'smoothstep' },
+    { source: '3', target: '4', label: 'Network/Disk Read' },
+    { source: '4', target: '1', label: 'restores', type: 'smoothstep' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+When you fetch a webpage using an HTTP library (like `requests` or `urllib`), the network gives you raw bytes. You must decode them before you can search the text.
+
+```python
+import urllib.request
+
+# Fetching the homepage of example.com
+response = urllib.request.urlopen("http://example.com")
+
+# The read() method returns raw bytes sent by the server!
+raw_bytes = response.read()
+
+# We cannot do string operations on bytes directly easily.
+# We must decode the bytes into a Python String.
+html_text = raw_bytes.decode("utf-8")
+
+if "Domain" in html_text:
+    print("Found the text!")
+```
+*(Note: Modern libraries like `requests` do this `.decode()` step for you automatically under the hood, but as an engineer, you must know it's happening!)*
+
+---
+
+# 7. Internal Working
+
+Python 3 internally handles strings flexibly to save memory.
+If your string only contains standard English letters (ASCII), Python uses 1 byte per character in RAM. If you add an emoji or a Chinese character, Python seamlessly upgrades the internal memory array to use 2 or 4 bytes per character to fit the larger Unicode code points.
+
+---
+
+# 8. Performance Table
+
+| Operation | Complexity | Note |
+|---|---|---|
+| ASCII Encoding | O(n) | Extremely fast 1-to-1 mapping. |
+| UTF-8 Encoding | O(n) | Slightly slower as it checks character size dynamically. |
+| Byte comparison | O(n) | Faster than string comparison. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between a string and bytes in Python 3? | Strings (`""`) are sequences of Unicode characters for human text. Bytes (`b""`) are sequences of raw 8-bit values for computer storage/transfer. |
+| What is `UnicodeDecodeError`? | It happens when you try to decode a byte sequence using the wrong dictionary. For example, trying to decode a JPG image as `utf-8` text. |
+| Why did we switch to Python 3? | A major reason was fixing Python 2's broken, confusing handling of strings vs bytes. Python 3 forces explicit boundaries. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+What happens when you try to decode garbage bytes? It crashes your app!
+
+```python
+bad_bytes = b'\xff\xfe\x00'
+
+# This throws a UnicodeDecodeError and crashes!
+# text = bad_bytes.decode("utf-8")
+
+# Safe way: Tell Python how to handle errors
+safe_text = bad_bytes.decode("utf-8", errors="replace")
+print(safe_text)
+# Output:  (Replaces garbage with the Unicode replacement character)
+```
+Bro, if you are building an API that accepts file uploads, always use `errors="replace"` or `errors="ignore"` when logging text, otherwise a malformed file will crash your server!
+
+---
+
+# 11. Real-World Usage
+
+- **File Uploads:** Parsing raw byte streams from multipart form data.
+- **Cryptography:** Hashing passwords (like SHA-256) requires bytes, not strings. You must `.encode()` the password before hashing it.
+- **Sockets/TCP:** Writing low-level network servers requires sending exact byte payloads.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Define file encodings explicitly: `open("data.txt", "w", encoding="utf-8")`. | Rely on the OS default encoding (Windows defaults to cp1252, which breaks emojis). |
+| Convert bytes to strings immediately at the system boundary (API/File read). | Mix bytes and strings together in your core application logic. |
+| Handle `UnicodeDecodeError` in network/file parsers. | Assume all incoming network data is perfectly valid UTF-8. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Always enforce `utf-8` explicitly when interacting with files or databases.
+`open('file.txt', 'r')` uses the OS default encoding. If a Linux developer writes code that assumes `utf-8` and runs it on a Windows Server, the app will suddenly crash with a `UnicodeDecodeError` on the first special character it sees. Fix this by always writing `open('file.txt', 'r', encoding='utf-8')`.
+
+---
+
+# 14. Common Mistakes
+
+- **Concatenating bytes and strings:** `b"hello " + "world"` raises a TypeError. You must decode the bytes first or encode the string first.
+- **Hashing strings directly:** `hashlib.sha256("password")` fails. Hashing algorithms do math on raw numbers, so they require bytes: `hashlib.sha256("password".encode('utf-8'))`.
+
+---
+
+# 15. Related Topics
+
+- File Handling
+- API Development
+- Python Internals

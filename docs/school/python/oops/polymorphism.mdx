@@ -2,6 +2,230 @@
 sidebar_position: 4
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Polymorphism
 
-Placeholder: introduce Polymorphism.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Polymorphism & Duck Typing |
+| Difficulty | Intermediate |
+| Used For | Writing flexible code that can handle different types of objects uniformly |
+| Common Mistake | Hardcoding type checks (`isinstance()`) instead of trusting duck typing |
+| Performance | Resolving method calls at runtime has minor overhead compared to compiled languages |
+
+---
+
+# 2. Real-World Analogy
+
+Think of Polymorphism like the "Play" button on your TV remote, bro.
+
+When you press "Play", you don't care if the TV is connected to a DVD player, a PlayStation, or Netflix. You just press the same button, and the device figures out what to do. The remote treats them all the same way because they all obey the command "Play".
+
+Polymorphism ("many forms") means giving the same instruction to different objects, and each object responds in its own unique way.
+
+---
+
+# 3. Concept Explanation
+
+In Python, Polymorphism is mostly achieved through **Duck Typing**.
+
+*"If it walks like a duck and quacks like a duck, it must be a duck."*
+
+In strict languages like Java, if you have a function that expects a `Bird` object, you CANNOT pass it an `Airplane` object, even if both can `fly()`.
+
+But Python doesn't care about the object's official type. If you have a function that calls `object.fly()`, Python will happily accept a `Bird`, an `Airplane`, or a `Mosquito`. As long as the object *has* the `.fly()` method, Python executes it.
+
+---
+
+# 4. Syntax Table
+
+| Concept | Code Example | Note |
+|---|---|---|
+| Polymorphism | `len("abc")` vs `len([1, 2])` | The same function works on completely different object types. |
+| Duck Typing | `obj.save()` | Python doesn't care what `obj` is, only that it has `.save()`. |
+| Method Overriding| `def speak(self):` | A child class changing a parent's polymorphic method. |
+
+---
+
+# 5. Beginner Example
+
+Let's see how one function can handle completely different classes seamlessly.
+
+```python
+class Dog:
+    def speak(self):
+        return "Woof!"
+
+class Cat:
+    def speak(self):
+        return "Meow!"
+
+class Robot:
+    def speak(self):
+        return "Beep Boop."
+
+# This function exhibits polymorphism!
+# It doesn't care what type of object is passed in.
+def make_it_talk(entity):
+    print(entity.speak())
+
+# Passing different objects to the exact same function
+make_it_talk(Dog())   # Woof!
+make_it_talk(Cat())   # Meow!
+make_it_talk(Robot()) # Beep Boop.
+```
+Bro, notice how `Robot` has zero relation to `Dog` or `Cat`? There is no shared parent class. But because they all have a `speak()` method, duck typing makes it work!
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Input Object', detail: 'Any class with .process()', kind: 'data', x: 250, y: 50 },
+    { id: '2', title: 'Payment Gateway', detail: 'Stripe, PayPal, Crypto', kind: 'process', x: 250, y: 150 },
+    { id: '3', title: 'Duck Typing Check', detail: 'Does obj have .process()?', kind: 'tool', x: 250, y: 250 },
+    { id: '4', title: 'Success', detail: 'Executes method', kind: 'output', x: 100, y: 350 },
+    { id: '5', title: 'Failure', detail: 'AttributeError', kind: 'warning', x: 400, y: 350 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'passes into' },
+    { source: '2', target: '3', label: 'evaluates', type: 'smoothstep' },
+    { source: '3', target: '4', label: 'Yes', type: 'smoothstep' },
+    { source: '3', target: '5', label: 'No', type: 'smoothstep' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+In backend engineering, we use polymorphism heavily to swap out implementations without changing the core business logic. For example, saving files to different cloud providers.
+
+```python
+class AWSS3Storage:
+    def upload(self, file):
+        print(f"Uploading {file} to AWS S3 bucket...")
+
+class LocalStorage:
+    def upload(self, file):
+        print(f"Saving {file} to local hard drive...")
+
+class UserProfileService:
+    # We pass the storage engine in dynamically
+    def __init__(self, storage_engine):
+        self.storage_engine = storage_engine
+
+    def update_avatar(self, file):
+        # Polymorphism! The service doesn't care which engine it is.
+        self.storage_engine.upload(file)
+        print("Avatar updated in DB.")
+
+# In Production, we pass the AWS engine
+prod_service = UserProfileService(AWSS3Storage())
+prod_service.update_avatar("face.jpg")
+
+# In Local Testing, we pass the Local engine
+dev_service = UserProfileService(LocalStorage())
+dev_service.update_avatar("face.jpg")
+```
+
+---
+
+# 7. Internal Working
+
+Python evaluates types at **runtime** (Late Binding).
+
+When Python sees `entity.speak()`, it pauses execution, looks at the specific object currently held in memory, and searches its `__dict__` and `__mro__` for the key `"speak"`. If it finds a function pointer, it calls it. If it doesn't, it crashes with an `AttributeError`. This lookup happens every single time the line is executed.
+
+---
+
+# 8. Performance Table
+
+| Operation | Complexity | Note |
+|---|---|---|
+| Method Lookup | O(1) / O(depth)| Fast dictionary lookup at runtime. |
+| `isinstance` checks | O(1) | C-level type check. |
+| `try/except AttributeError`| O(1) | Pythonic way to handle duck typing misses. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is Duck Typing? | A concept in dynamic languages where the suitability of an object is determined by the presence of certain methods/attributes, rather than the actual type of the object itself. |
+| How does Python achieve Polymorphism? | Through Duck Typing and Method Overriding. |
+| Does Python support Method Overloading? | No. You cannot define `def add(a, b)` and `def add(a, b, c)` in the same class. The second one will overwrite the first. We use default arguments `def add(a, b, c=None)` instead. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+The Anti-Pattern: Defeating Duck Typing.
+
+```python
+def process_data(data):
+    # BAD: This destroys polymorphism!
+    if type(data) == list:
+        print("Processing list...")
+    elif type(data) == dict:
+        print("Processing dict...")
+    else:
+        print("Error!")
+```
+Bro, doing strict `type()` checks defeats the entire purpose of Python! What if the user passes a custom `tuple` or a Pandas `Series` that is iterable like a list?
+
+**The Pythonic Way:**
+```python
+def process_data(data):
+    # GOOD: Assume it behaves like a collection
+    try:
+        for item in data:
+            print(f"Processing {item}")
+    except TypeError:
+        print("Passed item is not iterable!")
+```
+This is known as EAFP (Easier to Ask for Forgiveness than Permission).
+
+---
+
+# 11. Real-World Usage
+
+- **Built-in Functions:** `len()` is polymorphic. It works on strings, lists, dictionaries, and custom classes (if they implement `__len__`).
+- **Web Frameworks:** Serializers in Django don't care if you pass them a dictionary or a database model, as long as the keys/attributes match the expected names.
+- **Testing:** Passing a "Mock" object into a function instead of a real Database object. As long as the Mock has the right methods, the function won't know the difference.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Rely on Duck Typing. Trust that the object passed in has the right methods. | Use massive `if isinstance():` chains to handle different types. |
+| Use `try/except AttributeError` to gracefully handle objects that lack the required method. | Use strict `type(obj) == MyClass` checks. |
+| Use Python's `Protocol` (Type Hinting) if you want to strictly define expected behavior in modern codebases. | |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+In massive enterprise codebases, pure duck typing can become dangerous because there are no compile-time checks. If a developer accidentally passes a `User` object instead of a `Payment` object into a function, it might only crash weeks later in production when that specific line runs. Modern Python teams heavily use **Type Hints** and `typing.Protocol` paired with `mypy` to statically verify duck typing before the code is even run.
+
+---
+
+# 14. Common Mistakes
+
+- **Shadowing built-ins:** Naming a variable `list` or `str`, which overrides the built-in polymorphic functions globally for that file.
+- **Assuming inheritance is required:** Thinking two classes must inherit from the same parent to be used interchangeably. In Java, yes. In Python, no.
+
+---
+
+# 15. Related Topics
+
+- Classes & Objects
+- Inheritance
+- Abstract Base Classes
+- Magic Methods

@@ -2,6 +2,208 @@
 sidebar_position: 4
 ---
 
-# Regex
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Regex.
+# Regular Expressions (Regex)
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Regex (Regular Expressions) in Python |
+| Difficulty | Advanced |
+| Used For | Advanced string searching, validation, and extraction |
+| Common Mistake | Using Regex for simple tasks like checking if a substring exists |
+| Performance | Can be very slow if written poorly (Catastrophic Backtracking) |
+
+---
+
+# 2. Real-World Analogy
+
+Think of standard string methods (like `.find()`) as looking for a specific criminal based on a photo. You know exactly what they look like: "Find John Doe".
+
+Think of **Regex** as giving a sketch artist a complex description: "Find me anyone who is wearing a red hat, is between 5 and 6 feet tall, and has a name that starts with a 'J' and ends with a number." Regex is a mini-language used to describe *patterns* rather than exact matches.
+
+---
+
+# 3. Concept Explanation
+
+Regex (Regular Expressions) is a powerful tool for matching complex text patterns. In Python, it is handled by the built-in `re` module.
+
+You use Regex when standard string methods fail. For example, if you need to find all valid email addresses in a 10,000-page document, `.find("@")` isn't enough, because it will return things like Twitter handles (`@elonmusk`). You need a pattern that says: "text, followed by @, followed by text, followed by .com".
+
+---
+
+# 4. Syntax Table
+
+| Metacharacter | Meaning | Example | Matches |
+|---|---|---|---|
+| `\d` | Any digit (0-9) | `\d\d` | "42", "99" |
+| `\w` | Word character (a-z, A-Z, 0-9, _) | `\w+` | "hello_1" |
+| `.` | Any character (except newline) | `a.c` | "abc", "a!c" |
+| `*` | 0 or more times | `ab*` | "a", "ab", "abb" |
+| `+` | 1 or more times | `ab+` | "ab", "abb" |
+| `^` / `$` | Start / End of string | `^Hello$` | Exact "Hello" |
+
+---
+
+# 5. Beginner Example
+
+Let's extract a phone number from a messy string.
+
+```python
+import re
+
+text = "Call me at 555-1234 or maybe 555-9999 tomorrow."
+
+# Pattern: 3 digits, a dash, 4 digits
+pattern = r"\d\d\d-\d\d\d\d"
+
+# re.findall() returns a list of all matches
+matches = re.findall(pattern, text)
+
+print(matches)
+# Output: ['555-1234', '555-9999']
+```
+Bro, notice the `r` before the pattern string: `r"\d"`. This means "raw string". It stops Python from confusing regex slashes with Python escape characters (like `\n`). Always use raw strings for regex!
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Input Text', detail: '"Order 123 is ready"', kind: 'data', x: 0, y: 150 },
+    { id: '2', title: 'Regex Engine', detail: 'Pattern: r"\\d+"', kind: 'tool', x: 300, y: 150 },
+    { id: '3', title: 'Match Found', detail: '"123"', kind: 'output', x: 600, y: 100 },
+    { id: '4', title: 'Missed', detail: '"Order", "is", "ready"', kind: 'process', x: 600, y: 200 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'feeds into' },
+    { source: '2', target: '3', label: 'extracts', type: 'smoothstep' },
+    { source: '2', target: '4', label: 'ignores', type: 'smoothstep' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+In web development, we constantly use Regex to validate user input before saving it to a database.
+
+```python
+import re
+
+def is_valid_username(username: str) -> bool:
+    """
+    Validates a username. Rules:
+    - Must start with a letter
+    - Can contain letters, numbers, and underscores
+    - Must be 3 to 16 characters long
+    """
+    # ^ : start
+    # [a-zA-Z] : exactly one letter
+    # \w{2,15} : 2 to 15 word characters
+    # $ : end
+    pattern = r"^[a-zA-Z]\w{2,15}$"
+
+    # re.match returns a Match object if true, None if false
+    if re.match(pattern, username):
+        return True
+    return False
+
+print(is_valid_username("alex_99"))  # True
+print(is_valid_username("99_alex"))  # False (starts with number)
+print(is_valid_username("al"))       # False (too short)
+```
+
+---
+
+# 7. Internal Working
+
+Regex engines work by compiling your pattern into a finite state automaton (a mathematical state machine). When it scans text, it moves through states. If it hits a dead end, it "backtracks" to the last known good state and tries a different path.
+
+Because Python has to compile the string pattern into a C-level state machine, compiling regex takes time. That's why `re.compile()` exists!
+
+---
+
+# 8. Performance Table
+
+| Operation | Performance | Note |
+|---|---|---|
+| `re.search("hello", text)` | 🐢 Slower | Use `"hello" in text` instead. |
+| Pre-compiled Regex | 🚀 Faster | Compiling once saves time in loops. |
+| Complex Nested Patterns | 🐌 Very Slow | Can cause Catastrophic Backtracking. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Difference between `re.match()` and `re.search()`? | `match()` only checks the *beginning* of the string. `search()` scans the *entire* string for the pattern. |
+| Why use `re.compile()`? | If you use the same regex inside a loop 10,000 times, compiling it once outside the loop saves significant CPU time. |
+| What is a greedy vs non-greedy match? | `.*` is greedy (grabs as much text as possible). `.*?` is non-greedy (stops at the first match). |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+The Greedy Trap!
+
+```python
+import re
+
+html = "<div>First</div><div>Second</div>"
+
+# Greedy matching (the default)
+greedy = re.search(r"<div>.*</div>", html)
+print(greedy.group())
+# Output: <div>First</div><div>Second</div>
+# It grabbed everything from the first < to the last >!
+
+# Non-greedy matching (using ?)
+lazy = re.search(r"<div>.*?</div>", html)
+print(lazy.group())
+# Output: <div>First</div>
+```
+Bro, always remember: regex is greedy by nature. It will eat your entire string if you aren't careful. Use `?` to make it lazy.
+
+---
+
+# 11. Real-World Usage
+
+- **Log Parsing:** Extracting IP addresses from Nginx logs (`r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"`).
+- **Data Scraping:** Finding all email addresses or URLs on a raw HTML webpage.
+- **Form Validation:** Ensuring a password has a capital letter, a number, and a special character before submitting to the backend.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use raw strings `r""` for patterns. | Use normal strings (escape characters will break your pattern). |
+| Pre-compile patterns with `re.compile()` if used in a loop. | Put `re.search()` with a raw pattern inside a massive loop. |
+| Use `.*?` for non-greedy matching. | Try to parse HTML with Regex. Use BeautifulSoup instead. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+**Catastrophic Backtracking** can take down your production server. If you write a sloppy regex with lots of nested wildcards like `(a+)+$`, and a user inputs a very long malicious string, the regex engine will get stuck trying millions of combinations to find a match. This is a common form of Denial of Service (ReDoS). Keep patterns simple and test them against edge cases!
+
+---
+
+# 14. Common Mistakes
+
+- **Forgetting `import re`:** Regex is built-in, but it's not loaded by default.
+- **Using Regex for simple finds:** If you just need to replace "cat" with "dog", use `text.replace("cat", "dog")`. It is 10x faster than `re.sub()`.
+- **Parsing HTML/XML:** Regex is physically incapable of parsing deeply nested HTML reliably. Use a proper parser.
+
+---
+
+# 15. Related Topics
+
+- String Methods
+- Error Handling (Validation)
+- File Handling (Parsing Logs)
