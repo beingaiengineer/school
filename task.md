@@ -52,18 +52,18 @@ This checklist tracks the implementation of Python School playbook topics. Compl
 
 ## 5. Collections
 - [x] Lists (`collections/lists.mdx`)
-- [ ] Tuples (`collections/tuples.mdx`)
-- [ ] Sets (`collections/sets.mdx`)
-- [ ] Dictionaries (`collections/dictionaries.mdx`)
-- [ ] List Comprehension (`collections/list-comprehension.mdx`)
-- [ ] Dictionary Comprehension (`collections/dictionary-comprehension.mdx`)
-- [ ] Collections Module (`collections/collections-module.mdx`)
-- [ ] Deque (`collections/deque.mdx`)
-- [ ] Counter (`collections/counter.mdx`)
-- [ ] Defaultdict (`collections/defaultdict.mdx`)
+- [x] Tuples (`collections/tuples.mdx`)
+- [x] Sets (`collections/sets.mdx`)
+- [x] Dictionaries (`collections/dictionaries.mdx`)
+- [x] List Comprehension (`collections/list-comprehension.mdx`)
+- [x] Dictionary Comprehension (`collections/dictionary-comprehension.mdx`)
+- [x] Collections Module (`collections/collections-module.mdx`)
+- [x] Deque (`collections/deque.mdx`)
+- [x] Counter (`collections/counter.mdx`)
+- [x] Defaultdict (`collections/defaultdict.mdx`)
 
 ## 6. Strings
-- [ ] String Basics (`strings/string-basics.mdx`)
+- [x] String Basics (`strings/string-basics.mdx`)
 - [ ] String Methods (`strings/string-methods.mdx`)
 - [ ] String Formatting (`strings/string-formatting.mdx`)
 - [ ] Regex (`strings/regex.mdx`)

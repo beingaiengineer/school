@@ -231,12 +231,12 @@ Before deleting files:
 - `fundamentals`: variables, data-types, operators, input-output, type-conversion, comments-docstrings
 - `control-flow`: if-else, nested-conditions, loops, break-continue-pass, pattern-programs, match-case
 - `functions`: functions-basics, arguments-parameters, return-values, lambda-functions, recursion, decorators, generators, iterators, closures
-- `collections`: lists
+- `collections`: lists, tuples, sets, dictionaries, list-comprehension, dictionary-comprehension, collections-module, deque, counter, defaultdict
+- `strings`: string-basics
 - `interview-prep`: top-python-interview-questions, tricky-python-questions, debugging-rounds, coding-round-patterns, system-design-rounds, senior-python-questions
 
 **Pending Topics (Next Up):**
-- `collections`: tuples, sets, dictionaries, list-comprehension, dictionary-comprehension, collections-module, deque, counter, defaultdict
-- `strings`: all topics (string-basics, string-methods, string-formatting, regex, unicode, f-strings)
+- `strings`: string-methods, string-formatting, regex, unicode, f-strings
 - `oops`: all topics (classes-objects, constructors, inheritance, polymorphism, encapsulation, abstraction, magic-methods, dataclasses, solid-principles, composition-vs-inheritance)
 - `error-handling`: all topics (exceptions, custom-exceptions, logging, debugging, production-debugging)
 - `file-handling`: all topics (reading-files, writing-files, csv-files, json-files, pathlib, file-best-practices)

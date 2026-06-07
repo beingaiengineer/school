@@ -2,6 +2,203 @@
 sidebar_position: 8
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Deque
 
-Placeholder: introduce Deque.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | `deque` (Double-Ended Queue) |
+| Difficulty | Intermediate |
+| Used For | Fast appends and pops from *both* the left and right sides |
+| Common Mistake | Using `list.pop(0)` or `list.insert(0, x)` instead of a deque |
+| Performance | O(1) operations at both ends |
+
+---
+
+# 2. Real-World Analogy
+
+Think of a standard Python `list` like a stack of plates. Adding a plate to the top (the right side) is easy. But pulling a plate out from the absolute bottom (the left side) is hard—you have to lift every single plate above it.
+
+Think of a **`deque`** like a hollow tube open at both ends, bro. You can easily shove a tennis ball into the left side, or pull a tennis ball out of the right side, instantly. Neither end is blocked.
+
+---
+
+# 3. Concept Explanation
+
+A `deque` (pronounced "deck") stands for Double-Ended Queue.
+
+It is part of the `collections` module. While standard Python lists are highly optimized for adding and removing items from the *end* (`.append()`, `.pop()`), they are terrible for adding/removing items from the *front*. A deque is a specialized data structure that guarantees O(1) performance for adding or removing items from both the left and right ends.
+
+---
+
+# 4. Syntax Table
+
+| Operation | Code | Speed |
+|---|---|---|
+| Import | `from collections import deque` | - |
+| Create | `d = deque([1, 2, 3])` | - |
+| Add Right | `d.append(4)` | O(1) |
+| Add Left | `d.appendleft(0)` | O(1) |
+| Remove Right | `d.pop()` | O(1) |
+| Remove Left | `d.popleft()` | O(1) |
+
+---
+
+# 5. Beginner Example
+
+```python
+from collections import deque
+
+# Create a queue of customers
+line = deque(["Alex", "Bob", "Charlie"])
+
+# A new customer joins the back of the line
+line.append("David")
+
+# The cashier calls the next customer from the FRONT of the line
+next_customer = line.popleft()
+
+print(f"Serving: {next_customer}") # Serving: Alex
+print(f"Line remaining: {list(line)}") # ['Bob', 'Charlie', 'David']
+```
+
+Bro, notice we used `.popleft()`. If this was a standard list, we would have used `.pop(0)`, which is bad practice!
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Input Left', detail: 'appendleft(A)', kind: 'process', x: 0, y: 120 },
+    { id: '2', title: 'Deque Memory', detail: '[ A, B, C, D ]', kind: 'core', x: 250, y: 120 },
+    { id: '3', title: 'Output Left', detail: 'popleft() -> A', kind: 'output', x: 0, y: 250 },
+    { id: '4', title: 'Input Right', detail: 'append(D)', kind: 'process', x: 500, y: 120 },
+    { id: '5', title: 'Output Right', detail: 'pop() -> D', kind: 'output', x: 500, y: 250 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'O(1) insert' },
+    { source: '2', target: '3', label: 'O(1) remove' },
+    { source: '4', target: '2', label: 'O(1) insert' },
+    { source: '2', target: '5', label: 'O(1) remove' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+Deques are fantastic for keeping track of the "last N events" in a monitoring system. They support a `maxlen` argument. If the deque is full, adding a new item automatically pushes the oldest item out the other end!
+
+```python
+from collections import deque
+import time
+
+# Store the last 5 server temperature readings
+temp_history = deque(maxlen=5)
+
+# Simulate readings coming in over time
+readings = [40, 42, 45, 50, 48, 55, 60]
+
+for temp in readings:
+    temp_history.append(temp)
+    print(f"Current History: {list(temp_history)}")
+
+# Output ends with:
+# Current History: [45, 50, 48, 55, 60]
+# Notice how 40 and 42 were automatically dropped!
+```
+
+---
+
+# 7. Internal Working
+
+Standard Python lists are implemented as contiguous arrays in memory. If you delete the item at index 0, Python must shift every single following item to the left by one space. If you have 1 million items, that is 1 million shifts.
+
+A `deque` is implemented as a **doubly-linked list** of memory blocks. Each block knows where the next block is and where the previous block is. Adding or removing an item at the ends simply updates a couple of pointers, taking the exact same amount of time regardless of whether the deque has 10 items or 10 million items.
+
+---
+
+# 8. Performance Table
+
+| Operation | List | Deque |
+|---|---|---|
+| `append()` (right) | O(1) | O(1) |
+| `pop()` (right) | O(1) | O(1) |
+| `insert(0, x)` (left)| O(n) | O(1) via `appendleft` |
+| `pop(0)` (left) | O(n) | O(1) via `popleft` |
+| `data[50]` (access) | O(1) | O(n) |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| When should you use a deque instead of a list? | Whenever you need a queue (FIFO structure) requiring fast pops/inserts from the front. |
+| Is `deque` faster than `list` for everything? | No. Deques are O(n) for random access (e.g., `d[50]`). Lists are O(1) for random access. |
+| What happens when a `deque(maxlen=3)` gets its 4th item? | The oldest item is automatically dropped from the opposite end to maintain the length. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+What happens if you try to sort a deque?
+
+```python
+from collections import deque
+
+d = deque([3, 1, 2])
+
+# This throws an AttributeError!
+# d.sort()
+
+# You must use the built-in sorted() which returns a LIST
+sorted_list = sorted(d)
+print(sorted_list) # [1, 2, 3]
+```
+
+Deques do not have a `.sort()` method because they are linked lists, not arrays. Sorting them requires converting them to an array first.
+
+---
+
+# 11. Real-World Usage
+
+- **Task Queues:** Building simple background workers or thread pools.
+- **Sliding Windows:** Storing the last N seconds of audio/video frames, or network packets for analysis.
+- **Undo/Redo History:** Storing user actions in a text editor.
+- **Breadth-First Search (BFS):** Deques are the standard data structure used for queueing nodes in graph traversal algorithms.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `deque` for FIFO (First-In, First-Out) queues. | Use a list for FIFO queues (using `.pop(0)` is an anti-pattern). |
+| Use the `maxlen` parameter if you only care about recent history to prevent memory leaks. | Use a deque if you need to frequently access elements in the middle by index. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+If you see an API endpoint timing out or hitting high CPU usage, and the code contains a loop doing `my_list.pop(0)` on a large dataset, change it to `deque.popleft()`. This single change often resolves severe performance bottlenecks in legacy Python applications. However, if your queue needs to be shared across multiple server instances, you must move out of Python memory and use Redis or RabbitMQ.
+
+---
+
+# 14. Common Mistakes
+
+- **Random Access:** Treating a deque exactly like a list and doing heavy lookups like `d[500]`. It has to traverse the linked list node by node to get there, making it very slow.
+- **Missing Import:** Forgetting to `from collections import deque` and getting a `NameError`.
+- **Forgetting `left` methods:** Using `d.insert(0, val)` on a deque instead of `d.appendleft(val)`.
+
+---
+
+# 15. Related Topics
+
+- Lists
+- Collections Module
+- Time Complexity (Big O)
+- Breadth-First Search

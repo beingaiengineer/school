@@ -2,6 +2,199 @@
 sidebar_position: 1
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # String Basics
 
-Placeholder: introduce String Basics.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Python Strings |
+| Difficulty | Beginner |
+| Used For | Storing and manipulating text data |
+| Common Mistake | Trying to modify a string in-place |
+| Performance | Immutable; every modification creates a brand new string in memory |
+
+---
+
+# 2. Real-World Analogy
+
+Think of a Python list like a Lego tower. You can easily pull a blue block out of the middle and snap a red block into its place.
+
+Think of a **Python String** like a neon sign made of glass tubing, bro. Once it's blown and lit up, you cannot change a single letter. If you want it to say something else, you have to smash the old sign and build a completely new glass sign. This property is called **immutability**.
+
+---
+
+# 3. Concept Explanation
+
+A string in Python is a sequence of characters enclosed in quotes.
+- **Ordered:** Each character has a specific index, starting at 0.
+- **Immutable:** You cannot change characters inside an existing string.
+- **Unicode:** Python 3 strings fully support emojis and international characters out of the box.
+
+Because strings are immutable, operations that appear to change a string (like replacing a word or making it uppercase) actually return a *brand new string* in memory, leaving the original untouched.
+
+---
+
+# 4. Syntax Table
+
+| Operation | Code | Result |
+|---|---|---|
+| Single Quotes | `'hello'` | `'hello'` |
+| Double Quotes | `"hello"` | `"hello"` |
+| Multi-line | `"""Line 1\nLine 2"""` | String with newlines |
+| Concatenation | `"A" + "B"` | `"AB"` |
+| Repetition | `"A" * 3` | `"AAA"` |
+
+---
+
+# 5. Beginner Example
+
+```python
+# Creating strings
+greeting = "Hello, Python!"
+name = 'Alex'
+
+# Accessing characters by index
+first_letter = greeting[0]  # 'H'
+last_letter = greeting[-1]  # '!'
+
+# Attempting to change a string causes an error!
+# greeting[0] = "J"  <-- TypeError: object does not support item assignment
+
+# Correct way: Create a new string
+new_greeting = "J" + greeting[1:]
+
+print(new_greeting) # Jello, Python!
+```
+
+Bro, Python treats single quotes `''` and double quotes `""` exactly the same. Just be consistent, and use one to wrap the other if you need quotes inside your string (e.g., `text = "He said 'Hello'"`).
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Original String', detail: 's = "cat"', kind: 'data', x: 0, y: 120 },
+    { id: '2', title: 'Memory Block A', detail: '[ c, a, t ] Locked', kind: 'core', x: 250, y: 50 },
+    { id: '3', title: 'Mutation Attempt', detail: 's[0] = "b"', kind: 'warning', x: 500, y: 50 },
+    { id: '4', title: 'Correct Update', detail: 's = "b" + s[1:]', kind: 'process', x: 250, y: 200 },
+    { id: '5', title: 'Memory Block B', detail: '[ b, a, t ] New!', kind: 'output', x: 500, y: 200 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'assign' },
+    { source: '2', target: '3', label: 'fails', type: 'smoothstep' },
+    { source: '1', target: '4', label: 'reassign', type: 'step' },
+    { source: '4', target: '5', label: 'allocates', type: 'step' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+In backend engineering, we constantly deal with strings from HTTP requests, database URLs, and file paths.
+
+```python
+# Parsing a raw database connection string
+db_url = "postgres://admin:secret@localhost:5432/mydb"
+
+# We can split the string to extract info
+protocol, rest = db_url.split("://")
+credentials, host_info = rest.split("@")
+
+username, password = credentials.split(":")
+
+print(f"Connecting to {protocol} as user: {username}")
+# Output: Connecting to postgres as user: admin
+```
+
+---
+
+# 7. Internal Working
+
+Python strings are implemented as C arrays of characters.
+
+Because they are immutable, Python does a memory optimization called **String Interning**. If you create two variables `a = "hello"` and `b = "hello"`, Python doesn't create two strings in memory. It creates one "hello" block and points both `a` and `b` to it. This saves memory and makes string comparisons extremely fast.
+
+---
+
+# 8. Performance Table
+
+| Operation | Complexity | Note |
+|---|---|---|
+| Access `s[i]` | O(1) | Direct array access |
+| Length `len(s)` | O(1) | Stored internally in the C struct |
+| Concatenate `+` | O(n) | Must allocate new memory and copy |
+| Substring `in` | O(n*m) | Average case much faster via Boyer-Moore |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Are strings mutable in Python? | No, they are strictly immutable. |
+| Why is `+` concatenation in a loop bad? | Because it allocates a new string in memory every iteration. Use `"".join(list)`. |
+| Difference between `==` and `is` with strings? | `==` checks if values are equal. `is` checks if they point to the exact same memory block. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+What happens when you slice a string out of bounds?
+
+```python
+word = "Python"
+
+# Accessing a single index out of bounds crashes!
+# print(word[100]) # IndexError
+
+# Slicing out of bounds does NOT crash!
+print(word[2:100])
+# Output: 'thon'
+```
+
+Python is very forgiving with slices. It just grabs everything it can up to the end of the string. But direct index access is strict.
+
+---
+
+# 11. Real-World Usage
+
+- **JSON Payloads:** All network communication is basically just sending giant strings of JSON back and forth.
+- **Regex:** Searching for email patterns or phone numbers inside large blocks of text.
+- **Templating:** Injecting variables into HTML strings (like Django or Jinja2 templates) before sending them to the browser.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `.join()` when combining a large list of strings. | Use `+` inside a massive `for` loop to build a string. |
+| Use multi-line strings `"""` for SQL queries or large text blocks. | Try to cram a complex SQL query into one line with `\n` characters. |
+| Use negative indexing `s[-1]` to get the last character. | Calculate length manually `s[len(s)-1]`. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+String building in a loop (`text += new_word`) is one of the most common performance killers in legacy Python code. Because strings are immutable, adding 1 character to a 10MB string requires allocating a *new* 10MB block of RAM and copying all the data over. Always collect your strings in a Python `list` first, and then merge them at the very end using `"".join(my_list)`.
+
+---
+
+# 14. Common Mistakes
+
+- **TypeError on concatenation:** Trying to do `"Age: " + 25`. You cannot concatenate strings and integers. You must cast it: `"Age: " + str(25)` (or use f-strings).
+- **Mutating strings:** Writing functions that expect string parameters to be modified in place. It won't work. You must `return` the new string.
+- **Escape character traps:** Writing Windows file paths like `"C:\new_folder"`. The `\n` becomes a newline! Always use raw strings for paths: `r"C:\new_folder"`.
+
+---
+
+# 15. Related Topics
+
+- String Methods
+- F-Strings
+- Regex
+- Memory Management

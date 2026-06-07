@@ -2,6 +2,195 @@
 sidebar_position: 6
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Dictionary Comprehension
 
-Placeholder: introduce Dictionary Comprehension.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Dictionary Comprehension |
+| Difficulty | Intermediate |
+| Used For | Creating new dictionaries dynamically in one line |
+| Common Mistake | Forgetting the `key: value` syntax inside the brackets |
+| Performance | Faster than standard `for` loops updating a dictionary |
+
+---
+
+# 2. Real-World Analogy
+
+Think of Dictionary Comprehension like translating a menu at a restaurant, bro.
+
+Instead of looking at an English menu item, grabbing a blank piece of paper, writing the translation, and moving to the next item slowly... you run the whole menu through a scanner that outputs a perfectly mapped `English -> Spanish` menu instantly. It's a bulk key-value mapping tool.
+
+---
+
+# 3. Concept Explanation
+
+Just like List Comprehensions build lists, **Dictionary Comprehensions** build dictionaries (`dict`).
+
+It allows you to iterate over data, optionally filter it, and output a `key: value` pair into a new dictionary. This is extremely useful for flipping keys and values, transforming data from two lists into a dictionary mapping, or cleaning up data from an API.
+
+---
+
+# 4. Syntax Table
+
+| Concept | Structure | Example |
+|---|---|---|
+| Basic | `{key: value for item in iterable}` | `{x: x**2 for x in range(3)}` |
+| With Condition | `{k: v for k, v in iterable if cond}` | `{k: v for k,v in data.items() if v > 0}` |
+| Zip Lists | `{k: v for k, v in zip(list1, list2)}` | `{name: age for name, age in zip(names, ages)}` |
+
+---
+
+# 5. Beginner Example
+
+Let's map numbers to their square values.
+
+**The Old Way:**
+```python
+squares = {}
+for x in range(1, 4):
+    squares[x] = x ** 2
+
+print(squares) # Output: {1: 1, 2: 4, 3: 9}
+```
+
+**Dictionary Comprehension:**
+```python
+squares = {x: x ** 2 for x in range(1, 4)}
+
+print(squares) # Output: {1: 1, 2: 4, 3: 9}
+```
+
+Bro, notice we use curly braces `{}` and the colon `:` to separate the key and the value, exactly like writing a standard dictionary.
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Input Data', detail: "['Alex', 'Bob']", kind: 'data', x: 0, y: 120 },
+    { id: '2', title: 'Iteration', detail: 'for name in list', kind: 'process', x: 250, y: 120 },
+    { id: '3', title: 'Map Key:Value', detail: 'name: len(name)', kind: 'core', x: 500, y: 120 },
+    { id: '4', title: 'Output Dict', detail: "{'Alex': 4, 'Bob': 3}", kind: 'output', x: 750, y: 120 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'read' },
+    { source: '2', target: '3', label: 'apply logic' },
+    { source: '3', target: '4', label: 'construct' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+In backend engineering, you often receive data from a database that contains sensitive fields (like passwords or internal IDs) that you need to filter out before sending a JSON response to the user.
+
+```python
+# Raw user data from a database
+user_data = {
+    "username": "coder_bro",
+    "email": "bro@example.com",
+    "password_hash": "x8f9a2...",
+    "internal_id": 9942,
+    "role": "admin"
+}
+
+# Fields we do NOT want to send to the frontend
+hidden_fields = {"password_hash", "internal_id"}
+
+# Clean the dictionary in one line!
+safe_response = {k: v for k, v in user_data.items() if k not in hidden_fields}
+
+print(safe_response)
+# Output: {'username': 'coder_bro', 'email': 'bro@example.com', 'role': 'admin'}
+```
+
+This is clean, highly readable, and safe.
+
+---
+
+# 7. Internal Working
+
+Just like list comprehensions, dictionary comprehensions execute highly optimized C code under the hood via the `DICT_MERGE` and `MAP_ADD` bytecode instructions. This completely avoids the overhead of calling the `__setitem__` method (the `my_dict[key] = value` operation) inside a python-level loop.
+
+---
+
+# 8. Performance Table
+
+| Code Type | Speed | Memory |
+|---|---|---|
+| For loop + assignment | Slower | Standard dict allocation |
+| Dict Comprehension | Faster | Optimized dict allocation |
+| `dict(zip())` | Fastest | C-level built-in |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| How do you swap keys and values in a dictionary? | `{v: k for k, v in my_dict.items()}` |
+| Can dictionary comprehension replace all `for` loops? | No. Only use it when building a *new* dictionary. Do not use it if your loop causes side effects (like saving to a DB). |
+| How do you combine two lists into a dictionary? | Use `zip()`: `{k: v for k, v in zip(list_keys, list_values)}`. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+What happens if you use dict comprehension to swap keys and values, but the original dictionary had duplicate values?
+
+```python
+# Two users with the same role
+data = {"Alex": "admin", "Bob": "admin"}
+
+# Attempting to flip keys and values
+flipped = {role: name for name, role in data.items()}
+
+print(flipped)
+# Output: {'admin': 'Bob'}
+```
+
+**The Trap:** Because dictionary keys must be unique, the second iteration (`"admin": "Bob"`) completely overwrites the first one (`"admin": "Alex"`). You silently lose data!
+
+---
+
+# 11. Real-World Usage
+
+- **Flipping Lookups:** Converting a `{"ID": "Name"}` dict to a `{"Name": "ID"}` dict for reverse lookups.
+- **Data Serialization:** Converting object attributes into a dictionary before returning it as JSON.
+- **Filtering Configurations:** Removing null or empty values from a configuration dictionary before passing it to an API.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `.items()` when you need both the key and the value from an existing dictionary. | Forget `.items()` and try to iterate over just the dict (`for k,v in my_dict:` will fail). |
+| Use `dict(zip(keys, values))` if no filtering or logic is needed, as it is faster. | Use dict comprehension for heavy nested logic. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+If you are processing hundreds of megabytes of configuration or JSON files, dictionary comprehensions will allocate the entire resulting dictionary in memory. If memory is tight, you might need to process the data iteratively or write it to a database rather than holding the massive dictionary in RAM.
+
+---
+
+# 14. Common Mistakes
+
+- **Forgetting `.items()`:** Writing `{k: v for k, v in my_dict}`. By default, iterating over `my_dict` only gives you keys. You must use `my_dict.items()` to get the pairs.
+- **Syntax mixups:** Using `[]` instead of `{}` (creates a list instead of a dict) or using a comma `k, v` instead of a colon `k: v` inside the braces (creates a set of tuples).
+
+---
+
+# 15. Related Topics
+
+- List Comprehension
+- Dictionaries
+- Python `zip()` function
+- Data Cleaning
