@@ -2,6 +2,210 @@
 sidebar_position: 2
 ---
 
-# Constructors
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Constructors.
+# Constructors (`__init__`)
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Python Constructors (`__init__`) |
+| Difficulty | Beginner |
+| Used For | Initializing an object's state the moment it is created |
+| Common Mistake | Using `return` inside the `__init__` method |
+| Performance | Fast, executes immediately upon instantiation |
+
+---
+
+# 2. Real-World Analogy
+
+Think of a **Constructor** like the factory setup process for a brand new smartphone.
+
+When you buy a phone, it doesn't arrive as a blank piece of plastic. The factory *constructs* it and runs an initial setup script: it installs the OS, sets the default battery level to 50%, and assigns it a unique serial number.
+
+In Python, the `__init__` method is that factory setup script. The moment you say "give me a new object", Python hands that blank object over to `__init__` to assign its starting variables before handing it back to you.
+
+---
+
+# 3. Concept Explanation
+
+In Python, the constructor method is always named `__init__` (short for initialize). It is a "magic method" (indicated by the double underscores, or "dunder").
+
+It is called automatically when you create a new instance of a class. Its primary job is to attach variables (attributes) to the `self` object so that the object is ready to be used immediately.
+
+---
+
+# 4. Syntax Table
+
+| Concept | Code | Note |
+|---|---|---|
+| Constructor Name | `def __init__(self):` | Must be named exactly this. |
+| Parameterized | `def __init__(self, name):` | Accepts arguments passed during creation. |
+| Setting state | `self.name = name` | Attaches the value to the specific object. |
+| Default Values | `def __init__(self, age=0):` | Can use standard default arguments. |
+
+---
+
+# 5. Beginner Example
+
+Let's look at how we pass arguments directly into the constructor.
+
+```python
+class Smartphone:
+    # The Constructor
+    def __init__(self, brand, model):
+        # Attach the provided arguments to the object
+        self.brand = brand
+        self.model = model
+        # Set a default starting state
+        self.battery_level = 100
+        print(f"{self.brand} {self.model} created!")
+
+# Creating the object triggers __init__ automatically
+phone1 = Smartphone("Apple", "iPhone 15")
+# Output: Apple iPhone 15 created!
+
+phone2 = Smartphone("Samsung", "Galaxy S24")
+# Output: Samsung Galaxy S24 created!
+
+print(phone1.battery_level) # 100
+```
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Code', detail: 'User("Alex")', kind: 'process', x: 0, y: 150 },
+    { id: '2', title: 'Memory Allocation', detail: 'Blank Object Created', kind: 'core', x: 250, y: 50 },
+    { id: '3', title: '__init__(self, "Alex")', detail: 'self.name = "Alex"', kind: 'tool', x: 500, y: 150 },
+    { id: '4', title: 'Final Object', detail: 'Ready for use', kind: 'output', x: 750, y: 150 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'triggers' },
+    { source: '2', target: '3', label: 'passes to', type: 'smoothstep' },
+    { source: '3', target: '4', label: 'returns object' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+In backend development, constructors are heavily used to establish connections or load configurations when a service starts up.
+
+```python
+import time
+
+class DatabaseConnection:
+    def __init__(self, connection_string: str):
+        self.connection_string = connection_string
+        self.is_connected = False
+        self.connect() # Trigger a method immediately during setup!
+
+    def connect(self):
+        print(f"Connecting to {self.connection_string}...")
+        # Simulate network delay
+        time.sleep(0.5)
+        self.is_connected = True
+        print("Connected successfully!")
+
+# The moment we instantiate this, it connects to the DB!
+db = DatabaseConnection("postgres://localhost:5432/prod_db")
+```
+Bro, this is a very common pattern: use the constructor to grab the API keys or connection strings, and immediately prep the object to do its job.
+
+---
+
+# 7. Internal Working
+
+Technically, `__init__` is NOT the method that actually creates the object in memory.
+
+The true creator is another magic method called `__new__`. When you type `obj = MyClass()`, Python first calls `MyClass.__new__()` which allocates the raw RAM. Then, Python passes that empty chunk of RAM to `__init__(self)` as the `self` argument. `__init__` just decorates the empty house with furniture.
+
+*(Note: You rarely need to touch `__new__` unless you are doing advanced metaclass programming).*
+
+---
+
+# 8. Performance Table
+
+| Operation | Complexity | Note |
+|---|---|---|
+| Calling `__init__` | O(1) | Executes instantly. |
+| Doing heavy work inside `__init__` | Varies | Can block the thread if you do network calls inside it. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Can `__init__` return a value? | No! It strictly returns `None`. It modifies the object in place. If you type `return 5` inside `__init__`, Python throws a TypeError. |
+| Can a Python class have multiple constructors? | Not natively. Unlike Java or C++, you cannot define `__init__` twice. To achieve multiple ways of creating an object, we use `@classmethod` factories. |
+| What is the difference between `__init__` and `__new__`? | `__new__` allocates the memory and creates the object. `__init__` takes that created object and initializes its variables. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Wait, what if you forget the `__init__` method entirely? Does the code crash?
+
+```python
+class EmptyBox:
+    pass
+
+# This works perfectly fine!
+box = EmptyBox()
+print(box) # <__main__.EmptyBox object at 0x...>
+```
+
+Bro, Python provides a default, invisible constructor for every class under the hood. If you don't write `__init__`, Python just gives you a blank object with no attributes.
+
+---
+
+# 11. Real-World Usage
+
+- **Configuration Injection:** Passing environment variables, API keys, or logger objects into a class via the constructor so the class can use them later.
+- **Dependency Injection:** In complex systems, passing a database object into the constructor of a User Service object.
+- **Validation:** Checking if the inputs are valid immediately. If a user tries `Age(-5)`, the constructor can raise a `ValueError` immediately.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Set all instance variables inside `__init__`. | Define new instance variables in random methods later on (makes debugging a nightmare). |
+| Keep `__init__` fast and simple. | Put massive data processing or 10-second file downloads inside `__init__`. |
+| Use type hints for constructor arguments. | Use mutable defaults like `def __init__(self, items=[])` (creates shared state bugs). |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Avoid putting blocking I/O (like making an HTTP request or heavy DB query) directly inside `__init__` if possible. If the network is down, simply *creating* the object will crash the app or freeze the thread. It is often better to have a lightweight constructor, and a separate explicit `.connect()` or `.load()` method that the user calls when they are ready to handle the I/O.
+
+---
+
+# 14. Common Mistakes
+
+- **Returning a value:**
+  ```python
+  def __init__(self):
+      self.value = 10
+      return self.value # ERROR! __init__ should return None
+  ```
+- **Mutable default arguments:**
+  ```python
+  def __init__(self, data=[]): # DANGEROUS!
+  ```
+  Every instance created without an argument will share the exact same list! Always use `data=None` and then do `if data is None: self.data = []`.
+
+---
+
+# 15. Related Topics
+
+- Classes & Objects
+- Magic Methods (`__str__`, `__repr__`)
+- Inheritance (using `super().__init__()`)

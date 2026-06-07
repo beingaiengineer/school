@@ -64,18 +64,18 @@ This checklist tracks the implementation of Python School playbook topics. Compl
 
 ## 6. Strings
 - [x] String Basics (`strings/string-basics.mdx`)
-- [ ] String Methods (`strings/string-methods.mdx`)
-- [ ] String Formatting (`strings/string-formatting.mdx`)
-- [ ] Regex (`strings/regex.mdx`)
-- [ ] Unicode (`strings/unicode.mdx`)
-- [ ] F-Strings (`strings/f-strings.mdx`)
+- [x] String Methods (`strings/string-methods.mdx`)
+- [x] String Formatting (`strings/string-formatting.mdx`)
+- [x] Regex (`strings/regex.mdx`)
+- [x] Unicode (`strings/unicode.mdx`)
+- [x] F-Strings (`strings/f-strings.mdx`)
 
 ## 7. OOPs
-- [ ] Classes & Objects (`oops/classes-objects.mdx`)
-- [ ] Constructors (`oops/constructors.mdx`)
-- [ ] Inheritance (`oops/inheritance.mdx`)
-- [ ] Polymorphism (`oops/polymorphism.mdx`)
-- [ ] Encapsulation (`oops/encapsulation.mdx`)
+- [x] Classes & Objects (`oops/classes-objects.mdx`)
+- [x] Constructors (`oops/constructors.mdx`)
+- [x] Inheritance (`oops/inheritance.mdx`)
+- [x] Polymorphism (`oops/polymorphism.mdx`)
+- [x] Encapsulation (`oops/encapsulation.mdx`)
 - [ ] Abstraction (`oops/abstraction.mdx`)
 - [ ] Magic Methods (`oops/magic-methods.mdx`)
 - [ ] Dataclasses (`oops/dataclasses.mdx`)

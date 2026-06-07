@@ -232,12 +232,12 @@ Before deleting files:
 - `control-flow`: if-else, nested-conditions, loops, break-continue-pass, pattern-programs, match-case
 - `functions`: functions-basics, arguments-parameters, return-values, lambda-functions, recursion, decorators, generators, iterators, closures
 - `collections`: lists, tuples, sets, dictionaries, list-comprehension, dictionary-comprehension, collections-module, deque, counter, defaultdict
-- `strings`: string-basics
+- `strings`: string-basics, string-methods, string-formatting, regex, unicode, f-strings
+- `oops`: classes-objects, constructors, inheritance, polymorphism, encapsulation
 - `interview-prep`: top-python-interview-questions, tricky-python-questions, debugging-rounds, coding-round-patterns, system-design-rounds, senior-python-questions
 
 **Pending Topics (Next Up):**
-- `strings`: string-methods, string-formatting, regex, unicode, f-strings
-- `oops`: all topics (classes-objects, constructors, inheritance, polymorphism, encapsulation, abstraction, magic-methods, dataclasses, solid-principles, composition-vs-inheritance)
+- `oops`: abstraction, magic-methods, dataclasses, solid-principles, composition-vs-inheritance
 - `error-handling`: all topics (exceptions, custom-exceptions, logging, debugging, production-debugging)
 - `file-handling`: all topics (reading-files, writing-files, csv-files, json-files, pathlib, file-best-practices)
 - `modules-packages`: all topics (modules, packages, virtual-environments, pip, pyproject-toml, dependency-management)

@@ -2,6 +2,252 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Encapsulation
 
-Placeholder: introduce Encapsulation.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Encapsulation & Data Hiding |
+| Difficulty | Intermediate |
+| Used For | Protecting object data from being accidentally modified by outside code |
+| Common Mistake | Using double underscores `__` just because it looks like Java's `private` |
+| Performance | Property decorators add a tiny function call overhead on attribute access |
+
+---
+
+# 2. Real-World Analogy
+
+Think of Encapsulation like a bank ATM, bro.
+
+The ATM holds millions of dollars (the data). But you are not allowed to open the machine, grab the money, and update your balance in a spreadsheet yourself. That would be chaotic and dangerous.
+
+Instead, the bank hides the money inside a vault. They force you to use a very specific interface (the ATM screen and keypad). You say `withdraw(100)`, and the ATM internally checks if you have enough funds, dispenses the cash, and securely updates your balance. You are interacting with the data, but the bank strictly controls *how* you do it.
+
+---
+
+# 3. Concept Explanation
+
+Encapsulation is the practice of bundling data (attributes) and the methods that operate on that data into a single unit (a Class), and restricting direct access to some of that data.
+
+Python philosophy states: *"We are all consenting adults here."*
+Python does not have strict `public`, `private`, or `protected` keywords like Java. Instead, Python relies on naming conventions to signal intent:
+- **Public (`self.name`):** Anyone can read or modify this.
+- **Protected (`self._name`):** Internal use only. Please don't touch this from the outside.
+- **Private (`self.__name`):** Strictly internal. Python will actually mangle the name to make it hard to access.
+
+---
+
+# 4. Syntax Table
+
+| Concept | Code | Meaning in Python |
+|---|---|---|
+| Public Attribute | `self.age = 25` | Fully accessible from anywhere. |
+| Protected Attribute | `self._age = 25` | Convention: "Private, but I won't stop you." |
+| Private Attribute | `self.__age = 25` | Name Mangling: Harder to access accidentally. |
+| Getter Method | `@property def age(self):` | A clean way to read a private variable. |
+| Setter Method | `@age.setter def age(self, val):` | A clean way to validate & write to a private variable. |
+
+---
+
+# 5. Beginner Example
+
+Let's protect a sensitive variable using the `_` convention and getter/setter methods.
+
+```python
+class BankAccount:
+    def __init__(self, owner):
+        self.owner = owner
+        # A single underscore means "protected". Don't touch directly!
+        self._balance = 0
+
+    # Getter: Safely read the balance
+    def get_balance(self):
+        return self._balance
+
+    # Setter: Safely modify the balance with validation
+    def deposit(self, amount):
+        if amount <= 0:
+            print("Error: Deposit must be positive.")
+            return
+        self._balance += amount
+
+account = BankAccount("Alex")
+
+# Using the controlled interface
+account.deposit(100)
+print(account.get_balance()) # 100
+
+# Python won't physically stop you from doing this, but it's a massive violation!
+account._balance = -999999
+```
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'External Code', detail: 'account.balance = 500', kind: 'tool', x: 0, y: 150 },
+    { id: '2', title: '@balance.setter', detail: 'Validation Logic', kind: 'process', x: 250, y: 150 },
+    { id: '3', title: 'Internal State', detail: 'self._balance', kind: 'core', x: 500, y: 150 },
+    { id: '4', title: 'Rejected', detail: 'ValueError("Negative!")', kind: 'warning', x: 250, y: 300 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'triggers' },
+    { source: '2', target: '3', label: 'updates safely', type: 'smoothstep' },
+    { source: '2', target: '4', label: 'if invalid', type: 'smoothstep' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+In Python, we hate writing clunky `account.get_balance()` and `account.set_balance(50)` methods like Java. Instead, we use the `@property` decorator. This gives us the security of a setter method, but the clean syntax of a public attribute!
+
+```python
+class TemperatureSensor:
+    def __init__(self):
+        self._celsius = 0
+
+    # The Getter
+    @property
+    def temperature(self):
+        return self._celsius
+
+    # The Setter
+    @temperature.setter
+    def temperature(self, value):
+        if value < -273.15:
+            raise ValueError("Temperature below absolute zero is impossible!")
+        self._celsius = value
+
+sensor = TemperatureSensor()
+
+# Looks like we are accessing a raw attribute...
+sensor.temperature = 25
+print(sensor.temperature) # 25
+
+# But it's actually running the validation method under the hood!
+# sensor.temperature = -500 # This correctly raises a ValueError!
+```
+Bro, this is the Pythonic way to do encapsulation.
+
+---
+
+# 7. Internal Working
+
+What does the double underscore `__` actually do?
+
+It triggers **Name Mangling**. When Python compiles the class, it changes the variable name from `__secret` to `_ClassName__secret`.
+
+```python
+class Vault:
+    def __init__(self):
+        self.__password = "123"
+
+v = Vault()
+# print(v.__password) # AttributeError!
+
+# But you can still hack it if you know the mangled name!
+print(v._Vault__password) # Output: 123
+```
+This proves Python has no true "private" variables. The `__` just protects against accidental inheritance conflicts, it's not meant for security!
+
+---
+
+# 8. Performance Table
+
+| Operation | Complexity | Note |
+|---|---|---|
+| Accessing `self.x` | O(1) | Direct dictionary lookup. Fastest. |
+| Accessing `@property x` | O(1) | Tiny overhead of a function call. |
+| Name Mangling `__x` | O(1) | Resolved during compile time, no runtime penalty. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| How do you make a variable private in Python? | By prefixing it with an underscore `_` (convention) or double underscore `__` (name mangling). However, true privacy doesn't exist in Python. |
+| Why use `@property` instead of getter/setter methods? | Because `@property` allows you to add validation logic to an attribute without breaking existing code that accesses the attribute using dot notation (e.g., `obj.val = 5`). |
+| What is name mangling? | It's Python's mechanism for preventing subclasses from accidentally overwriting a parent's "private" `__` variables. It changes the variable's internal name. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Can you bypass property validation? Yes, if you touch the internal variable directly!
+
+```python
+class Safe:
+    def __init__(self):
+        self._pin = 1234
+
+    @property
+    def pin(self):
+        return self._pin
+
+    @pin.setter
+    def pin(self, value):
+        if len(str(value)) != 4:
+            raise ValueError("PIN must be 4 digits!")
+        self._pin = value
+
+s = Safe()
+# Validating through the setter
+# s.pin = 12 # ValueError!
+
+# Bypassing the setter completely!
+s._pin = 12
+print(s.pin) # Output: 12. You broke the safe!
+```
+This is why the `_` convention matters. If a developer accesses a `_` variable directly, they take full responsibility for breaking the system.
+
+---
+
+# 11. Real-World Usage
+
+- **ORM Models (Django/SQLAlchemy):** Using properties to format data dynamically, like having `first_name` and `last_name` columns, but exposing a `@property def full_name(self)` that combines them.
+- **API Clients:** Hiding the raw `_session` or `_auth_token` inside the class, only exposing a clean `fetch_data()` method to the user.
+- **Read-Only Fields:** Creating a `@property` without a setter makes the attribute read-only from the outside!
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `_` for variables meant to be private. Trust the convention. | Use `__` for privacy. Only use `__` if you specifically fear a subclass will accidentally use the same variable name. |
+| Start with simple public variables (`self.age`). | Prematurely write `@property` getters for every single variable like Java. |
+| Refactor public variables into `@property` only when validation or logic is needed later. | Write `get_age()` and `set_age()` methods. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+In huge teams, violating the `_` convention causes massive technical debt. If developer A builds a class with `_db_connection`, and developer B directly modifies `_db_connection` from an outside script to fix a bug quickly, developer A can never refactor their class safely because developer B's script will break. Always respect the underscore!
+
+---
+
+# 14. Common Mistakes
+
+- **Infinite recursion in setters:**
+  ```python
+  @age.setter
+  def age(self, value):
+      self.age = value # ERROR! This calls the setter again! Infinite Loop!
+  ```
+  You must save it to the protected internal variable: `self._age = value`.
+- **Misunderstanding `__`:** Believing `__password` makes the variable cryptographically secure. It does not. It's just a mild syntax hurdle.
+
+---
+
+# 15. Related Topics
+
+- Classes & Objects
+- Decorators
+- Inheritance
