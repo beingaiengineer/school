@@ -2,6 +2,219 @@
 sidebar_position: 4
 ---
 
-# Dictionaries
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Dictionaries.
+# Python Dictionaries
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Python Dictionaries (`dict`) |
+| Difficulty | Beginner |
+| Used For | Storing key-value pairs for ultra-fast lookups |
+| Common Mistake | Using mutable objects (like lists) as keys |
+| Performance | O(1) for adding, updating, and fetching by key |
+
+---
+
+# 2. Real-World Analogy
+
+Think of a Python list like a book with page numbers. To find chapter 5, you go to page 5. Think of a **Python dictionary** like an actual phonebook or contact list, bro.
+
+You don't care what "page" your friend's number is on. You look up their **Name** (the Key) to instantly find their **Phone Number** (the Value). Dictionaries allow you to map meaningful keys to specific data, bypassing the need for indexes altogether.
+
+---
+
+# 3. Concept Explanation
+
+A dictionary in Python is a mutable, ordered (as of Python 3.7+) collection of key-value pairs.
+- **Key-Value mapping:** Every value is tied to a unique key.
+- **Keys must be unique and immutable:** Strings, numbers, and tuples make great keys. Lists and other dictionaries do not.
+- **Values can be anything:** Integers, strings, lists, custom objects, or even other dictionaries.
+
+Dictionaries are the backbone of Python. Internally, almost everything in Python (modules, classes, objects) is stored as a dictionary.
+
+---
+
+# 4. Syntax Table
+
+| Operation | Example |
+|---|---|
+| Create | `user = {"name": "Alex", "age": 25}` |
+| Read | `user["name"]` |
+| Safe Read | `user.get("email", "N/A")` |
+| Add / Update| `user["age"] = 26` |
+| Delete | `del user["age"]` |
+
+---
+
+# 5. Beginner Example
+
+```python
+# Create a dictionary representing a player
+player = {
+    "username": "coder_bro",
+    "level": 10,
+    "is_premium": True
+}
+
+# Fetching values using keys
+print(f"Player: {player['username']}")
+
+# Updating a value
+player["level"] = 11
+
+# Adding a new key-value pair
+player["guild"] = "Python Ninjas"
+
+print(player)
+```
+
+Bro, notice how we don't use numbers like `player[0]` to get data. We ask for it by its exact name: `player["username"]`.
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Lookup Key', detail: 'dict["user_101"]', kind: 'data', x: 0, y: 120 },
+    { id: '2', title: 'Hash Function', detail: 'Hash("user_101")', kind: 'process', x: 250, y: 120 },
+    { id: '3', title: 'Memory Array', detail: 'Index mapping', kind: 'core', x: 500, y: 120 },
+    { id: '4', title: 'Fetch Value', detail: '{"name": "Alex", ...}', kind: 'output', x: 750, y: 120 },
+    { id: '5', title: 'KeyError', detail: 'Not Found', kind: 'warning', x: 500, y: 250 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'request' },
+    { source: '2', target: '3', label: 'find memory index' },
+    { source: '3', target: '4', label: 'if exists', type: 'step' },
+    { source: '3', target: '5', label: 'if missing', type: 'smoothstep' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+Dictionaries are heavily used when parsing JSON data from APIs. Let's look at how we might process a web request payload.
+
+```python
+# Simulated JSON payload from an HTTP POST request
+api_payload = {
+    "event_type": "checkout",
+    "user_id": 9942,
+    "items": ["keyboard", "mouse"],
+    "metadata": {
+        "browser": "Chrome",
+        "ip": "192.168.1.1"
+    }
+}
+
+# Safe lookup using .get() to avoid crashing if metadata is missing
+user = api_payload.get("user_id")
+ip_address = api_payload.get("metadata", {}).get("ip", "Unknown IP")
+
+print(f"Processing checkout for User {user} from IP {ip_address}")
+```
+
+Using `.get()` is a massive engineering best practice. It prevents the application from throwing a `KeyError` and crashing if the client sends incomplete JSON.
+
+---
+
+# 7. Internal Working
+
+Python dictionaries are implemented using **Hash Tables**.
+
+When you write `my_dict["name"] = "Alex"`, Python hashes the string `"name"` into a number. It uses this number as a direct memory address to store the value `"Alex"`.
+
+When you want to read `my_dict["name"]`, Python hashes `"name"` again, goes directly to that memory address, and grabs the value. There is no searching or looping involved. This is why dictionaries are consistently fast (O(1)) whether they have 10 items or 10 million items.
+
+As of Python 3.7, dictionaries are officially **ordered**. They remember the exact order in which you inserted the keys.
+
+---
+
+# 8. Performance Table
+
+| Operation | Complexity | Note |
+|---|---|---|
+| Fetch `d[key]` | O(1) | Direct memory access via hash |
+| Set `d[key] = v`| O(1) | Extremely fast |
+| Delete `del d[k]`| O(1) | Extremely fast |
+| Iterate `.keys()`| O(n) | Must loop through all keys |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Are dictionaries ordered in Python? | Yes, since Python 3.7, dicts maintain insertion order. |
+| Difference between `dict["key"]` and `dict.get("key")`? | Direct access throws `KeyError` if missing; `.get()` returns `None` (or a default). |
+| What can be used as a dictionary key? | Any immutable, hashable object (strings, numbers, tuples). |
+| How do you merge two dictionaries? | Python 3.9+: `dict1 \| dict2`. Older: `**dict1, **dict2` |
+| What is a Hash Collision? | When two different keys hash to the same memory index. Python handles this internally using open addressing. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Can a tuple be a key? What about a tuple containing a list?
+
+```python
+# GOOD: Tuple of strings is immutable
+locations = {
+    ("New York", "USA"): "Active",
+    ("London", "UK"): "Inactive"
+}
+
+# BAD: Tuple contains a mutable list
+# This will throw a TypeError!
+bad_locations = {
+    ("New York", ["USA"]): "Active"
+}
+```
+
+Even though tuples are immutable, if they *contain* a mutable object (like a list), the overall structure becomes unhashable, and Python will refuse to use it as a dictionary key.
+
+---
+
+# 11. Real-World Usage
+
+- **JSON & APIs:** Every REST API request and response is essentially a dictionary.
+- **In-Memory Caching:** Storing database query results where the key is the SQL query string, and the value is the result set (Redis works similarly).
+- **Configuration Parsing:** Reading `.yaml` or `.toml` files loads the settings into dictionaries.
+- **Switch/Case Replacements:** Using dictionaries to map string commands to function references (common before Python 3.10 match-case).
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `.get("key", default)` for safe lookups of optional data. | Use `dict["key"]` unless you are 100% sure the key exists. |
+| Use `dict.items()` to loop through both keys and values simultaneously. | Loop through keys to manually fetch values (`for k in d: val = d[k]`). |
+| Use the `|` operator to merge dictionaries in modern Python (3.9+). | Use complex nested lists when a dictionary map would be cleaner. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+While dictionaries are O(1) for lookups, they are memory-heavy because the hash table allocates empty space to avoid collisions (usually 1/3 of the table is kept empty). If you are storing millions of uniform objects in memory, standard dicts might exhaust your RAM. In those cases, consider `__slots__` in classes, Dataclasses, or moving the dataset to an external store like Redis.
+
+---
+
+# 14. Common Mistakes
+
+- **KeyError Crashes:** Trying to access a non-existent key with `[]` instead of `.get()`. This is the #1 cause of crashes in Python API servers.
+- **Mutable Keys:** Trying to use a list `[1, 2]` as a key.
+- **Iterating Modification:** Adding or removing keys from a dictionary while iterating over it will throw a `RuntimeError: dictionary changed size during iteration`. Always iterate over a copy of the keys `list(d.keys())` if you need to delete items.
+
+---
+
+# 15. Related Topics
+
+- Dictionary Comprehensions
+- Sets
+- JSON Handling
+- Defaultdict
+- Counter

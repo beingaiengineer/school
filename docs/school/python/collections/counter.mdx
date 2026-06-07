@@ -2,6 +2,206 @@
 sidebar_position: 9
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Counter
 
-Placeholder: introduce Counter.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | `Counter` |
+| Difficulty | Beginner |
+| Used For | Quickly counting the frequency of items in an iterable |
+| Common Mistake | Using a standard dictionary with a `for` loop to count items |
+| Performance | Optimized C-level counting, much faster than pure Python loops |
+
+---
+
+# 2. Real-World Analogy
+
+Think of using a standard dictionary to count items like manually tallying votes on a whiteboard. You look at a ballot, find the candidate's name, erase the old number, and write the new number.
+
+Think of a **`Counter`** like a professional electronic vote-counting machine, bro. You just dump the entire box of ballots into the hopper, hit a button, and it instantly spits out a printed report of exactly how many votes everyone got, sorted by the winners.
+
+---
+
+# 3. Concept Explanation
+
+`Counter` is a specialized subclass of the dictionary, available in the `collections` module.
+
+It is designed to do exactly one thing: count hashable objects. You pass it a list, string, or any iterable, and it returns a dictionary-like object where the elements are the keys, and the counts are the values. It eliminates the need for boilerplate `if key in dict` checks.
+
+---
+
+# 4. Syntax Table
+
+| Operation | Code | Result |
+|---|---|---|
+| Import | `from collections import Counter` | - |
+| Count a list | `c = Counter(['a', 'a', 'b'])` | `Counter({'a': 2, 'b': 1})` |
+| Count a string | `c = Counter("hello")` | `Counter({'l': 2, 'h': 1, 'e': 1, 'o': 1})` |
+| Get top N items| `c.most_common(1)` | `[('a', 2)]` |
+
+---
+
+# 5. Beginner Example
+
+Let's find the frequency of words in a sentence.
+
+```python
+from collections import Counter
+
+sentence = "apple banana apple mango banana apple"
+words_list = sentence.split()
+
+# Dump the list straight into the Counter
+fruit_counts = Counter(words_list)
+
+print(fruit_counts)
+# Output: Counter({'apple': 3, 'banana': 2, 'mango': 1})
+
+# How many apples do we have? It acts just like a dict.
+print(f"Apples: {fruit_counts['apple']}")
+```
+
+Bro, if you ask a `Counter` for an item that doesn't exist, it doesn't crash with a `KeyError`. It just gracefully returns `0`.
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Raw Data', detail: "['A', 'B', 'A']", kind: 'data', x: 0, y: 120 },
+    { id: '2', title: 'Counter()', detail: 'Process elements', kind: 'tool', x: 250, y: 120 },
+    { id: '3', title: 'Frequency Map', detail: "{'A': 2, 'B': 1}", kind: 'core', x: 500, y: 120 },
+    { id: '4', title: '.most_common(1)', detail: 'Sort & Slice', kind: 'process', x: 750, y: 120 },
+    { id: '5', title: 'Result', detail: "[('A', 2)]", kind: 'output', x: 1000, y: 120 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'ingest' },
+    { source: '2', target: '3', label: 'aggregate', type: 'step' },
+    { source: '3', target: '4', label: 'query' },
+    { source: '4', target: '5', label: 'return' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+In data analytics or security, you often need to find anomalies or top offenders. Let's find the most common error codes in a log file.
+
+```python
+from collections import Counter
+
+# Simulated HTTP status codes from a server log
+status_codes = [200, 404, 200, 500, 200, 404, 403, 500, 500, 500]
+
+counter = Counter(status_codes)
+
+# Get the top 2 most frequent status codes
+top_errors = counter.most_common(2)
+
+for code, frequency in top_errors:
+    print(f"Status {code} occurred {frequency} times.")
+
+# Output:
+# Status 500 occurred 4 times.
+# Status 200 occurred 3 times.
+```
+
+---
+
+# 7. Internal Working
+
+`Counter` inherits directly from Python's built-in `dict`. It overrides the dictionary's missing-key behavior to return `0` instead of throwing an error.
+
+The `.most_common(n)` method is highly optimized. If `n` is small compared to the total number of items, it uses the `heapq` module internally to find the top elements without sorting the entire dictionary, making it exceptionally fast.
+
+---
+
+# 8. Performance Table
+
+| Operation | Complexity | Note |
+|---|---|---|
+| Initialize | O(n) | Must read every item in the iterable |
+| Get item `c[key]` | O(1) | Hash table lookup |
+| `most_common()` (all) | O(k log k) | Sorts all unique keys (k) |
+| `most_common(n)` | O(k log n) | Uses a heap if n is small |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| How do you find the most frequent item in a list? | `Counter(my_list).most_common(1)[0][0]` |
+| Does `Counter` raise a KeyError if an item isn't found? | No, it returns `0`. |
+| Can you use math on Counters? | Yes, you can add, subtract, and find intersections (`&`) of Counter objects. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+What happens when you subtract two Counters and a value drops to zero or negative?
+
+```python
+from collections import Counter
+
+inventory = Counter(apples=5, bananas=2)
+sales = Counter(apples=3, bananas=5)
+
+# Standard subtraction
+remaining = inventory - sales
+print(remaining)
+# Output: Counter({'apples': 2})
+# Note: bananas completely disappeared! Counter drops zero or negative values.
+
+# If you actually need to see negative inventory, use .subtract()
+inventory.subtract(sales)
+print(inventory)
+# Output: Counter({'apples': 2, 'bananas': -3})
+```
+
+This is a huge trap in inventory/cart systems!
+
+---
+
+# 11. Real-World Usage
+
+- **NLP (Natural Language Processing):** Finding the most frequent words in a document (Bag of Words model).
+- **Log Parsing:** Counting IP addresses, user agents, or error codes.
+- **E-Commerce Carts:** Tracking how many of each item a user has in their shopping cart (where items can be added or removed).
+- **Polling/Voting Systems:** Tallying votes instantly.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `Counter(iterable)` instead of writing a manual `for` loop with a dictionary. | Use `Counter` if you only need to know *if* duplicates exist, not *how many* (use a `set` instead). |
+| Use `.most_common(n)` to find top elements quickly. | Sort a Counter manually using `sorted(c.items())` unless you specifically need to sort alphabetically. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+While `Counter` is fast, counting a list of 50 million items still requires loading all 50 million items into RAM. If you are processing massive files (like gigabyte-sized server logs), do not read the entire file into a list first. Pass a generator expression to the Counter, or process the file line-by-line and update the Counter incrementally to keep your memory footprint low.
+
+---
+
+# 14. Common Mistakes
+
+- **Forgetting it returns a list of tuples:** Calling `.most_common(1)` returns `[('item', count)]`, not just the item. Beginners often forget to unpack it using `[0][0]`.
+- **Assuming order:** Prior to Python 3.7, Counters (like dicts) did not guarantee insertion order. Now they do, but if you do math on them (like `c1 + c2`), the order of the resulting Counter can change.
+
+---
+
+# 15. Related Topics
+
+- Dictionaries
+- Defaultdict
+- Heapq
+- Sets
