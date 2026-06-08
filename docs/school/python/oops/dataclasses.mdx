@@ -2,6 +2,181 @@
 sidebar_position: 8
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Dataclasses
 
-Placeholder: introduce Dataclasses.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Python Dataclasses |
+| Difficulty | Beginner / Intermediate |
+| Used For | Creating classes primarily to store data |
+| Built-in module | `dataclasses` (Python 3.7+) |
+| Main benefit | Auto-generates boilerplate code like `__init__`, `__repr__`, `__eq__` |
+
+## 2. Real-World Analogy
+
+Bro, imagine you have to fill out a shipping label for a package. If you do it the old way, you have to write down: "Name: John, Address: 123 Main, Weight: 5kg" manually on every single box, double-checking everything.
+
+Dataclasses are like having a pre-printed sticker template where you just provide the values. Python automatically generates the standard label (the boilerplate code) for you, saving you time and reducing typos.
+
+## 3. Concept Explanation
+
+A Dataclass is a decorator (`@dataclass`) that automatically adds generated special methods to user-defined classes. When you create a class to act purely as a data container, writing `__init__`, `__repr__`, and `__eq__` methods over and over is tedious.
+
+Dataclasses look at your class variables (which must have type hints) and generate those boilerplate magic methods for you under the hood.
+
+## 4. Syntax Table
+
+| Approach | Code |
+|---|---|
+| Old Way (Boilerplate) | `def __init__(self, name: str, age: int): ...` |
+| Import | `from dataclasses import dataclass` |
+| Define Dataclass | `@dataclass`<br/>`class User:`<br/>&nbsp;&nbsp;&nbsp;&nbsp;`name: str`<br/>&nbsp;&nbsp;&nbsp;&nbsp;`age: int` |
+
+## 5. Beginner Example
+
+Let's see the magic of removing boilerplate.
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class Product:
+    name: str
+    price: float
+    in_stock: bool = True  # Default value
+
+# Look ma, no __init__ required!
+p1 = Product("Laptop", 999.99)
+p2 = Product("Laptop", 999.99)
+
+# __repr__ is auto-generated!
+print(p1)  # Output: Product(name='Laptop', price=999.99, in_stock=True)
+
+# __eq__ is auto-generated!
+print(p1 == p2)  # Output: True (compares values, not memory)
+```
+
+## 6. Real-World Engineering Example
+
+Bro, in backend engineering, we often parse JSON payloads from APIs into Python objects. Dataclasses are perfect for representing these API models. Let's look at a complex example with `field` configurations.
+
+```python
+from dataclasses import dataclass, field
+import uuid
+
+def generate_id():
+    return str(uuid.uuid4())
+
+@dataclass
+class APIResponse:
+    status: int
+    data: dict
+    # We want a default unique ID, but we can't use `id: str = generate_id()`
+    # directly because it would evaluate once at class definition.
+    # We use default_factory instead!
+    request_id: str = field(default_factory=generate_id)
+
+    # Exclude from the auto-generated __repr__ output
+    secret_token: str = field(default="hidden", repr=False)
+
+response = APIResponse(status=200, data={"user": "admin"})
+print(response)
+# Output: APIResponse(status=200, data={'user': 'admin'}, request_id='<uuid>')
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: "Dataclass Generation Flow",
+    nodes: [
+      { id: "1", title: "@dataclass Decorator", detail: "Scans class annotations", x: 100, y: 50, kind: "core" },
+      { id: "2", title: "Extract Fields", detail: "Finds 'name: str', 'age: int'", x: 100, y: 150, kind: "process" },
+      { id: "3", title: "Generate __init__", detail: "def __init__(self, name, age):", x: -100, y: 250, kind: "tool" },
+      { id: "4", title: "Generate __repr__", detail: "def __repr__(self):", x: 100, y: 250, kind: "tool" },
+      { id: "5", title: "Generate __eq__", detail: "def __eq__(self, other):", x: 300, y: 250, kind: "tool" },
+      { id: "6", title: "Modified Class", detail: "Ready to use", x: 100, y: 350, kind: "output" }
+    ],
+    edges: [
+      { source: "1", target: "2", type: "straight" },
+      { source: "2", target: "3", type: "smoothstep" },
+      { source: "2", target: "4", type: "smoothstep" },
+      { source: "2", target: "5", type: "smoothstep" },
+      { source: "3", target: "6", type: "smoothstep" },
+      { source: "4", target: "6", type: "smoothstep" },
+      { source: "5", target: "6", type: "smoothstep" }
+    ]
+  }}
+/>
+
+When Python processes the `@dataclass` decorator, it dynamically inspects the class attributes that have type hints. It then dynamically writes and attaches methods like `__init__`, `__repr__`, and `__eq__` to your class behind the scenes before returning it.
+
+## 8. Performance Table
+
+| Aspect | Impact |
+|---|---|
+| Class Creation Time | Slightly slower (decorator runs once at import) |
+| Object Instantiation | Same speed as a normal class |
+| Memory Usage | Same as normal classes (unless `slots=True` is used) |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why use `@dataclass` instead of a regular class? | It removes boilerplate code, automatically generating `__init__`, `__repr__`, and `__eq__`. |
+| Are dataclasses immutable? | By default, no. You can make them immutable by passing `@dataclass(frozen=True)`. |
+| What is `default_factory`? | It's used in `field()` to provide a function that generates a default value (like an empty list or UUID) per instance, preventing mutable default bug. |
+| Difference between NamedTuple and Dataclass? | NamedTuples are immutable and act like tuples (iterable, unpackable). Dataclasses are mutable by default and act like normal objects. |
+
+## 10. Tricky Questions & Edge Cases
+
+What happens if you use a mutable default like an empty list, bro?
+
+```python
+from dataclasses import dataclass
+
+# THIS WILL THROW A VALUEERROR
+# @dataclass
+# class Student:
+#     grades: list = []
+```
+
+**Answer:** Python's dataclass decorator will literally refuse to run and throw a `ValueError: mutable default <class 'list'> for field grades is not allowed`.
+
+To fix this, you *must* use `field(default_factory=list)` to ensure every instance gets a *new* list, avoiding the classic Python shared-reference trap!
+
+## 11. Real-World Usage
+
+- **FastAPI / Pydantic:** Heavily inspired by dataclasses. Pydantic models are basically dataclasses with auto-validation.
+- **Data Engineering:** Passing structured row data between ETL pipeline stages.
+- **Configuration Management:** Creating typed, structured configuration objects parsed from YAML files.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `@dataclass(frozen=True)` if the data shouldn't change, making it hashable for sets/dicts | Don't use dataclasses if you have heavy custom logic inside `__init__` (use normal classes) |
+| Use `default_factory=list` or `dict` for mutable defaults | Never use `[]` or `{}` as default values |
+| Use `kw_only=True` (Python 3.10+) to force keyword arguments | Don't rely on positional arguments for classes with many fields |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+Bro, if you are creating hundreds of thousands of dataclass instances (like processing massive CSV files), normal dataclasses take up as much memory as normal dict-backed classes. Use `@dataclass(slots=True)` (available in Python 3.10+) to dramatically reduce memory footprint and increase attribute access speed!
+
+## 14. Common Mistakes
+
+- **Forgetting Type Hints:** If you write `name = "John"` instead of `name: str = "John"`, the dataclass will ignore the field entirely! Dataclasses *require* type annotations to work.
+- **Order of defaults:** You cannot place a field without a default *after* a field with a default, just like standard function arguments.
+- **Overusing them:** If your class does heavy computing, database connections, or IO, use a normal class. Dataclasses are for *data containers*.
+
+## 15. Related Topics
+
+- Magic Methods (Dunder Methods)
+- Type Hinting
+- Tuples and NamedTuples
+- Pydantic (external library)

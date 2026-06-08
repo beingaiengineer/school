@@ -2,6 +2,213 @@
 sidebar_position: 9
 ---
 
-# Solid Principles
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Solid Principles.
+# SOLID Principles
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | SOLID Principles in Python |
+| Difficulty | Advanced |
+| Used For | Writing clean, maintainable, and scalable Object-Oriented code |
+| Core Idea | 5 design principles that prevent spaghetti code |
+| Focus | Software Architecture and Design |
+
+## 2. Real-World Analogy
+
+Bro, imagine running a professional kitchen.
+- You don't want the chef also taking out the trash and fixing the plumbing (Single Responsibility).
+- You want to be able to add a new dessert to the menu without changing how the ovens work (Open/Closed).
+- If a recipe calls for a "Knife", a "Butter Knife" shouldn't be used to chop bones (Liskov Substitution).
+- The dishwasher shouldn't be forced to learn how to use the grill just to work in the kitchen (Interface Segregation).
+- The chef should depend on "Ingredients", not a specific "Farm in Ohio" (Dependency Inversion).
+
+## 3. Concept Explanation
+
+SOLID is an acronym for five design principles intended to make software designs more understandable, flexible, and maintainable.
+
+1. **S**ingle Responsibility Principle (SRP)
+2. **O**pen/Closed Principle (OCP)
+3. **L**iskov Substitution Principle (LSP)
+4. **I**nterface Segregation Principle (ISP)
+5. **D**ependency Inversion Principle (DIP)
+
+Applying these in Python helps senior engineers build robust systems that don't break when requirements change.
+
+## 4. Syntax Table
+
+| Principle | Concept Summary |
+|---|---|
+| **SRP** | A class should have one, and only one, reason to change. |
+| **OCP** | Open for extension, closed for modification. |
+| **LSP** | Subclasses should be substitutable for their base classes. |
+| **ISP** | Don't force clients to implement interfaces they don't use. |
+| **DIP** | Depend on abstractions (interfaces/ABCs), not concretions. |
+
+## 5. Beginner Example: Single Responsibility (SRP)
+
+Let's look at SRP. A common mistake is putting business logic and database logic in the same class.
+
+```python
+# BAD: This class does two things: creates user data AND saves it to DB.
+class UserBad:
+    def __init__(self, name):
+        self.name = name
+
+    def save_to_db(self):
+        print(f"Connecting to SQL... saving {self.name}")
+
+# GOOD: Split the responsibilities!
+class User:
+    def __init__(self, name):
+        self.name = name
+
+class UserRepository:
+    def save(self, user: User):
+        print(f"Connecting to SQL... saving {user.name}")
+
+user = User("Bro")
+repo = UserRepository()
+repo.save(user)
+```
+
+## 6. Real-World Engineering Example: Dependency Inversion (DIP)
+
+Bro, imagine building a notification system. You shouldn't hardcode `EmailSender` inside your `OrderProcessor`. You should depend on an abstraction!
+
+```python
+from abc import ABC, abstractmethod
+
+# The Abstraction (Interface)
+class NotificationService(ABC):
+    @abstractmethod
+    def send(self, message: str):
+        pass
+
+# The Concretions (Implementations)
+class EmailService(NotificationService):
+    def send(self, message: str):
+        print(f"Sending Email: {message}")
+
+class SMSService(NotificationService):
+    def send(self, message: str):
+        print(f"Sending SMS: {message}")
+
+# High-level module depends on abstraction, NOT concretion!
+class OrderProcessor:
+    def __init__(self, notifier: NotificationService):
+        self.notifier = notifier
+
+    def process(self):
+        print("Processing order...")
+        self.notifier.send("Order processed successfully!")
+
+# Usage: We can swap Email for SMS without changing OrderProcessor!
+email_sender = EmailService()
+processor = OrderProcessor(email_sender)
+processor.process()
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: "Dependency Inversion in Action",
+    nodes: [
+      { id: "1", title: "High Level Module", detail: "OrderProcessor", x: 100, y: 50, kind: "core" },
+      { id: "2", title: "Abstraction", detail: "NotificationService (ABC)", x: 100, y: 150, kind: "warning" },
+      { id: "3", title: "Low Level Module", detail: "EmailService", x: -50, y: 250, kind: "process" },
+      { id: "4", title: "Low Level Module", detail: "SMSService", x: 250, y: 250, kind: "process" }
+    ],
+    edges: [
+      { source: "1", target: "2", label: "Depends on", type: "straight" },
+      { source: "3", target: "2", label: "Implements", type: "smoothstep" },
+      { source: "4", target: "2", label: "Implements", type: "smoothstep" }
+    ]
+  }}
+/>
+
+Notice how the dependency arrows point towards the abstraction. The High-Level module doesn't know about the Low-Level details. They both agree on the contract (the ABC).
+
+## 8. Performance Table
+
+| Aspect | Impact |
+|---|---|
+| Execution Speed | Very slight overhead due to abstractions/interfaces |
+| Development Speed | Slower initially, but *massively* faster for long-term maintenance |
+| Testing Speed | Faster! Interfaces make unit testing and mocking trivial |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does Open/Closed mean? | A class should be open for extension (you can add new features) but closed for modification (you shouldn't have to edit existing tested code). |
+| Explain Liskov Substitution with an example. | If `Bird` has a `fly()` method, and `Ostrich` inherits `Bird` but throws an error on `fly()`, LSP is violated. |
+| How do you achieve Interface Segregation in Python? | By using multiple small Abstract Base Classes instead of one giant ABC with 20 methods. |
+| Why is SRP important? | It prevents merge conflicts, makes testing easier, and ensures changes in one feature don't break unrelated features. |
+
+## 10. Tricky Questions & Edge Cases
+
+Look at this violation of Liskov Substitution Principle (LSP), bro:
+
+```python
+class Rectangle:
+    def set_width(self, w): self.w = w
+    def set_height(self, h): self.h = h
+    def area(self): return self.w * self.h
+
+class Square(Rectangle):
+    def set_width(self, w):
+        self.w = w
+        self.h = w  # Hack to force square shape
+    def set_height(self, h):
+        self.h = h
+        self.w = h
+
+def test_area(rect: Rectangle):
+    rect.set_width(5)
+    rect.set_height(4)
+    # We expect area to be 20
+    assert rect.area() == 20
+
+# Passes!
+test_area(Rectangle())
+
+# FAILS! Square violates LSP because its behavior breaks the parent's contract.
+test_area(Square())
+```
+A Square is mathematically a Rectangle, but behaviorally in code, it is *not* a substitute for a Rectangle if the interface expects independent width/height modification!
+
+## 11. Real-World Usage
+
+- **Django / Flask:** They use SRP heavily. Models handle database, Views handle HTTP requests, Templates handle HTML.
+- **Boto3 (AWS SDK):** Uses DIP. You interact with abstracted `Client` objects rather than raw HTTP requests.
+- **Enterprise Codebases:** Every senior engineer uses SOLID to ensure code written today doesn't become a nightmare to maintain next year.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Write classes that do exactly one thing well (SRP) | Don't create "God Classes" (`SystemManager`, `AppUtils`) |
+| Use Dependency Injection to pass dependencies | Don't hardcode `import` instantiations deep inside your classes |
+| Use small, focused ABCs for interfaces | Don't force subclasses to implement methods they leave empty with `pass` |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+Bro, be careful not to over-engineer. SOLID principles are guidelines, not laws. If you are writing a quick 50-line script to parse a CSV, don't build 5 interfaces and 10 classes. Apply SOLID when building long-lived applications that multiple developers will maintain.
+
+## 14. Common Mistakes
+
+- **Violation of OCP:** Using massive `if/elif/elif` chains to check types instead of using polymorphism.
+- **Violation of ISP:** Creating a generic `IWorker` interface with `code()`, `test()`, and `sell()`, forcing a `Developer` class to implement `sell()`.
+- **Dogmatism:** Forcing SOLID into simple problems, making the codebase unreadable due to excessive abstraction.
+
+## 15. Related Topics
+
+- Abstraction
+- Interfaces and ABCs
+- Composition vs Inheritance
+- Design Patterns (Strategy, Factory, etc.)

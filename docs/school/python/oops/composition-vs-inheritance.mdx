@@ -2,6 +2,185 @@
 sidebar_position: 10
 ---
 
-# Composition Vs Inheritance
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Composition Vs Inheritance.
+# Composition vs Inheritance
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Composition vs Inheritance |
+| Difficulty | Intermediate / Advanced |
+| Used For | Deciding how objects should share behavior |
+| Core Rule | "Favor composition over inheritance" |
+| Relationship Type | Inheritance is "IS-A", Composition is "HAS-A" |
+
+## 2. Real-World Analogy
+
+Bro, imagine building a smartphone.
+
+**Inheritance approach:** You think, "A smartphone IS A camera, and it IS A phone, and it IS A computer." So you try to inherit from `Camera`, `Phone`, and `Computer`. It gets messy fast. What if the `Computer` class and `Camera` class both have a `power_on()` method? Collision!
+
+**Composition approach:** You think, "A smartphone HAS A camera, HAS A phone chip, and HAS A CPU." You build a `Smartphone` class and just inject a `Camera` object inside it. Much cleaner!
+
+## 3. Concept Explanation
+
+**Inheritance** defines an "IS-A" relationship. A `Dog` IS A `Animal`. It creates a tight coupling between the parent and child classes. Changing the parent often breaks the child.
+
+**Composition** defines a "HAS-A" relationship. A `Car` HAS An `Engine`. Instead of inheriting, a class holds an instance of another class as an attribute, delegating work to it. This creates loose coupling and extreme flexibility.
+
+In modern software engineering, the golden rule is: **Favor composition over inheritance.**
+
+## 4. Syntax Table
+
+| Approach | Code Pattern |
+|---|---|
+| **Inheritance** (IS-A) | `class Dog(Animal):` |
+| **Composition** (HAS-A) | `class Car:`<br/>&nbsp;&nbsp;&nbsp;&nbsp;`def __init__(self, engine):`<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`self.engine = engine` |
+
+## 5. Beginner Example
+
+Let's look at the difference in code.
+
+```python
+# --- INHERITANCE (Tight Coupling) ---
+class Engine:
+    def start(self): print("Vroom!")
+
+class CarInherit(Engine):  # Car IS an Engine? Doesn't make sense!
+    def drive(self):
+        self.start()  # Inherited method
+        print("Driving...")
+
+# --- COMPOSITION (Loose Coupling) ---
+class CarCompose:
+    def __init__(self, engine):
+        self.engine = engine  # Car HAS an Engine. Makes sense!
+
+    def drive(self):
+        self.engine.start()  # Delegating to the composed object
+        print("Driving...")
+
+# Usage
+v8_engine = Engine()
+my_car = CarCompose(v8_engine)
+my_car.drive()
+```
+
+## 6. Real-World Engineering Example
+
+Bro, imagine you are building game characters. Some can walk, some can fly, some can swim. If you use inheritance, you get the dreaded "Diamond Problem" and massive class hierarchies (e.g., `FlyingWalkingSwimmingCharacter`).
+
+Using Composition, we use the **Strategy Pattern**.
+
+```python
+# Behaviors (Components)
+class FlyBehavior:
+    def move(self): print("Flying through the sky!")
+
+class WalkBehavior:
+    def move(self): print("Walking on dirt.")
+
+# The Main Class uses Composition
+class Character:
+    def __init__(self, name, movement_behavior):
+        self.name = name
+        self.movement = movement_behavior  # HAS-A relationship
+
+    def navigate(self):
+        print(f"{self.name} is moving:")
+        self.movement.move()  # Delegate
+
+# Look how easy it is to mix and match!
+bird = Character("Eagle", FlyBehavior())
+human = Character("Bro", WalkBehavior())
+
+bird.navigate()
+human.navigate()
+
+# Best part? We can change behavior at runtime!
+bird.movement = WalkBehavior() # Eagle landed and is now walking
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: "Inheritance vs Composition",
+    nodes: [
+      { id: "1", title: "Inheritance", detail: "Tight Coupling (IS-A)", x: -100, y: 50, kind: "warning" },
+      { id: "2", title: "Parent", detail: "Base logic", x: -100, y: 150, kind: "process" },
+      { id: "3", title: "Child", detail: "Forced to take everything", x: -100, y: 250, kind: "output" },
+      { id: "4", title: "Composition", detail: "Loose Coupling (HAS-A)", x: 250, y: 50, kind: "core" },
+      { id: "5", title: "Container", detail: "Holds references", x: 250, y: 150, kind: "process" },
+      { id: "6", title: "Component A", detail: "Specific logic", x: 150, y: 250, kind: "tool" },
+      { id: "7", title: "Component B", detail: "Specific logic", x: 350, y: 250, kind: "tool" }
+    ],
+    edges: [
+      { source: "2", target: "3", label: "Extends", type: "straight" },
+      { source: "5", target: "6", label: "Delegates to", type: "smoothstep" },
+      { source: "5", target: "7", label: "Delegates to", type: "smoothstep" }
+    ]
+  }}
+/>
+
+Inheritance hardcodes the relationship at compile-time (or definition time in Python). Composition resolves relationships dynamically at runtime by passing object instances in memory.
+
+## 8. Performance Table
+
+| Aspect | Inheritance | Composition |
+|---|---|---|
+| Speed | Slightly faster (direct method resolution) | Very slightly slower (extra pointer lookup) |
+| Memory | Standard | Slightly higher (multiple separate objects) |
+| Flexibility | Very Low (Rigid structure) | Extremely High (Change at runtime) |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why favor composition over inheritance? | Inheritance creates rigid, tightly coupled code that breaks easily. Composition allows flexible, reusable, and loosely coupled code. |
+| What is the "Gorilla Banana" problem? | "You wanted a banana but what you got was a gorilla holding the banana and the entire jungle." (Side effect of deep inheritance trees). |
+| Does Python support multiple inheritance? | Yes, but it is dangerous and leads to the Diamond Problem. Composition avoids this entirely. |
+| Give an example of IS-A vs HAS-A. | `Dog` IS-A `Animal` (Inheritance). `Car` HAS-A `Engine` (Composition). |
+
+## 10. Tricky Questions & Edge Cases
+
+When *should* you use inheritance, bro?
+
+**Answer:** Use inheritance ONLY when:
+1. Both classes are in the same logical domain.
+2. The IS-A relationship holds true perfectly (A Cat is genuinely an Animal).
+3. The subclass primarily *adds* features rather than *overriding/deleting* parent features.
+4. You are building a framework using the Template Method pattern (e.g., inheriting from `unittest.TestCase` or `django.views.View`).
+
+## 11. Real-World Usage
+
+- **React / Frontend:** React explicitly moved away from class-based inheritance to function-based Composition (Hooks) because UI components are easier to compose than inherit.
+- **Microservices:** A microservice architecture is essentially composition at the infrastructure level.
+- **Logging Systems:** A `Logger` class usually *has a* `FileHandler` and *has a* `StreamHandler` rather than inheriting from them.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use Composition to share behavior across unrelated classes | Don't use Inheritance just to reuse a few utility methods |
+| Inject dependencies (components) via the `__init__` method | Don't hardcode the instantiation of components inside the container class |
+| Use interfaces/ABCs alongside composition | Don't create inheritance trees deeper than 2 or 3 levels |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+Bro, deep inheritance trees (e.g., `class A(B)`, `class B(C)`, `class C(D)`) are a nightmare to debug in production. When a bug occurs in method `x()`, you have to jump through 4 files just to figure out which parent class actually implemented it. Composition keeps logic flat and explicit.
+
+## 14. Common Mistakes
+
+- **Inheriting for convenience:** Inheriting from `list` or `dict` just to get some free methods, but accidentally inheriting 20 other methods that break your class's expected interface.
+- **God Objects:** Creating a container object in composition that holds *too many* components and orchestrates too much logic (violates Single Responsibility Principle).
+
+## 15. Related Topics
+
+- Inheritance
+- Single Responsibility Principle (SOLID)
+- Dependency Injection
+- Design Patterns (Strategy Pattern, Decorator Pattern)

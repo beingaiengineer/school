@@ -2,6 +2,192 @@
 sidebar_position: 7
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Magic Methods
 
-Placeholder: introduce Magic Methods.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Python Magic Methods (Dunder Methods) |
+| Difficulty | Intermediate |
+| Used For | Operator overloading and customizing built-in behavior |
+| Common Mistake | Calling them directly like `obj.__str__()` instead of `str(obj)` |
+| Nickname | Dunder methods (Double UNDERscore) |
+
+## 2. Real-World Analogy
+
+Bro, think of magic methods like secret hooks built into a smart home system. When you walk into a room, the lights turn on automatically. You don't press a button called `turn_on_lights()`; the system just hooks into the "entered room" event.
+
+Similarly, in Python, when you use the `+` operator, Python internally looks for a secret hook called `__add__` in your object. Magic methods let your custom objects behave like built-in Python types.
+
+## 3. Concept Explanation
+
+Magic methods (or dunder methods) are special methods with double underscores at the beginning and end of their names (e.g., `__init__`, `__str__`). They are rarely called directly by you. Instead, Python calls them under the hood when you use standard operators (like `+`, `==`, `len()`) or built-in functions.
+
+They allow you to implement operator overloading, meaning you can define what `+` or `*` means for your custom classes.
+
+## 4. Syntax Table
+
+| Built-in syntax | Magic Method Called |
+|---|---|
+| `x + y` | `x.__add__(y)` |
+| `x == y` | `x.__eq__(y)` |
+| `len(x)` | `x.__len__()` |
+| `str(x)` | `x.__str__()` |
+| `x[key]` | `x.__getitem__(key)` |
+
+## 5. Beginner Example
+
+Let's make a custom `Point` class that supports the `+` operator and has a nice string representation.
+
+```python
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def __add__(self, other):
+        # Defines what + means for Points
+        return Point(self.x + other.x, self.y + other.y)
+
+    def __str__(self):
+        # Defines what str() or print() does
+        return f"({self.x}, {self.y})"
+
+p1 = Point(1, 2)
+p2 = Point(3, 4)
+
+p3 = p1 + p2  # Calls p1.__add__(p2)
+print(p3)     # Calls p3.__str__()
+```
+
+## 6. Real-World Engineering Example
+
+Bro, imagine you are building a custom shopping cart system. You want to be able to easily check if the cart is empty using `if cart:` and get the total number of items using `len(cart)`.
+
+```python
+class ShoppingCart:
+    def __init__(self):
+        self.items = []
+
+    def add_item(self, item):
+        self.items.append(item)
+
+    def __len__(self):
+        """Allows len(cart)"""
+        return len(self.items)
+
+    def __bool__(self):
+        """Allows if cart:"""
+        return len(self.items) > 0
+
+    def __getitem__(self, index):
+        """Allows cart[0]"""
+        return self.items[index]
+
+cart = ShoppingCart()
+print(bool(cart))  # False
+
+cart.add_item("Laptop")
+cart.add_item("Mouse")
+
+print(len(cart))   # 2
+print(cart[0])     # Laptop
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: "Magic Method Execution Flow",
+    nodes: [
+      { id: "1", title: "User Code", detail: "p1 + p2", x: 100, y: 50, kind: "core" },
+      { id: "2", title: "Python Interpreter", detail: "Sees '+' operator", x: 100, y: 150, kind: "process" },
+      { id: "3", title: "Lookup", detail: "Checks p1.__add__", x: -50, y: 250, kind: "warning" },
+      { id: "4", title: "Execution", detail: "Calls p1.__add__(p2)", x: 250, y: 250, kind: "tool" },
+      { id: "5", title: "Result", detail: "Returns new object", x: 100, y: 350, kind: "output" }
+    ],
+    edges: [
+      { source: "1", target: "2", type: "straight" },
+      { source: "2", target: "3", label: "Inspect Left Operand", type: "smoothstep" },
+      { source: "3", target: "4", label: "Found method", type: "smoothstep" },
+      { source: "4", target: "5", type: "smoothstep" }
+    ]
+  }}
+/>
+
+When Python sees an operator like `+`, it first looks at the left operand to see if it has an `__add__` method. If it does, Python calls it. If it doesn't, or if it returns `NotImplemented`, Python then checks the right operand for an `__radd__` (reverse add) method.
+
+## 8. Performance Table
+
+| Magic Method | Performance Impact |
+|---|---|
+| `__slots__` | Improves memory significantly (removes `__dict__`) |
+| `__getattr__` | Slower than normal attribute access (fallback) |
+| `__getattribute__` | Intercepts *every* access, adds overhead |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Difference between `__str__` and `__repr__`? | `__str__` is for users (readable), `__repr__` is for developers (unambiguous, often evaluable). |
+| What does `__new__` do? | It creates the instance *before* `__init__` initializes it. Used mostly in singletons/metaclasses. |
+| How do you make an object callable like a function? | Implement the `__call__` method. |
+| What happens if `__str__` is missing? | Python falls back to calling `__repr__`. |
+| What's the difference between `__getattr__` and `__getattribute__`? | `__getattr__` is called only when an attribute is *missing*. `__getattribute__` is called for *every* attribute access. |
+
+## 10. Tricky Questions & Edge Cases
+
+What does this code print, bro?
+
+```python
+class Trick:
+    def __init__(self, val):
+        self.val = val
+
+    def __eq__(self, other):
+        return True
+
+a = Trick(1)
+b = Trick(2)
+
+print(a == b)
+print(a is b)
+```
+
+**Answer:** `True` and `False`.
+We overrode `__eq__` (the `==` operator) to always return `True`, so `a == b` is `True`. However, `is` checks memory identity. Magic methods cannot override `is`.
+
+## 11. Real-World Usage
+
+- **Pandas:** Overloads arithmetic operators so you can do `df['A'] + df['B']`.
+- **SQLAlchemy:** Overloads operators for building SQL queries in Python, like `User.age > 18`.
+- **Pathlib:** Overloads `/` so you can join paths like `Path('/usr') / 'bin'`.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Implement `__repr__` for all your custom classes for easier debugging | Don't invent custom meanings for operators (e.g., using `+` to mean deletion) |
+| Return `NotImplemented` if your operator doesn't support the other type | Don't raise `TypeError` in operators, let Python handle the fallback |
+| Use `__slots__` if you are creating millions of instances to save memory | Don't use magic methods for normal public APIs. `user.save()` is better than `user()` |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+Bro, be very careful with `__getattribute__` and `__setattr__`. It's extremely easy to cause infinite recursions in production if you access `self.something` inside them without calling `super().__getattribute__`. This causes stack overflows and crashes your app.
+
+## 14. Common Mistakes
+
+- **Calling magic methods directly:** Writing `obj.__len__()` instead of `len(obj)`.
+- **Infinite recursion in `__str__`:** Doing `return str(self)` inside `__str__`.
+- **Returning wrong types:** `__len__` *must* return an integer. `__bool__` *must* return a boolean. If they don't, Python will crash.
+
+## 15. Related Topics
+
+- Object-Oriented Programming (OOP)
+- Operator Overloading
+- Iterators (uses `__iter__` and `__next__`)
+- Context Managers (uses `__enter__` and `__exit__`)

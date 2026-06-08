@@ -2,6 +2,206 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Production Debugging
 
-Placeholder: introduce Production Debugging.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Production Debugging in Python |
+| Difficulty | Advanced |
+| Used For | Finding bugs in live, running environments without crashing them |
+| Core Tools | Sentry, Datadog, APM, cProfile, Tracemalloc |
+| Golden Rule | You cannot use `breakpoint()` in production! |
+
+## 2. Real-World Analogy
+
+Bro, debugging locally is like fixing a car in your garage. You can turn off the engine, open the hood, take it apart piece by piece, and take all the time you need.
+
+Production debugging is like fixing a jet engine *while it is flying at 30,000 feet*. You cannot stop the engine. You cannot attach a physical debugger. You must rely purely on the telemetry, dials, black box recordings, and instrument panels to figure out why it's vibrating.
+
+## 3. Concept Explanation
+
+When code runs on your laptop, you have full control. When it runs in a Kubernetes cluster handling 10,000 requests per minute, you are blind.
+
+Production debugging relies on **Observability**:
+1. **Logs:** What happened? (e.g., `logging` module)
+2. **Metrics:** How often did it happen? (e.g., Prometheus, Datadog)
+3. **Traces:** Where is the bottleneck? (e.g., OpenTelemetry)
+4. **Exception Trackers:** What is the stack trace of the crash? (e.g., Sentry)
+
+## 4. Syntax Table
+
+| Tool / Concept | Used For |
+|---|---|
+| **Sentry** | Automatically captures exceptions and stack traces. |
+| **OpenTelemetry** | Traces a single request as it jumps between Microservices. |
+| **cProfile** | Profiling CPU usage (finding slow functions). |
+| **tracemalloc** | Finding memory leaks. |
+| **`faulthandler`** | Catching hard C-level crashes (Segfaults). |
+
+## 5. Beginner Example: The Memory Leak
+
+Imagine your API starts eating RAM until the server crashes (Out of Memory - OOM). How do you find it? You use the built-in `tracemalloc`.
+
+```python
+import tracemalloc
+import time
+
+# Start tracing memory allocations
+tracemalloc.start()
+
+# A simulated memory leak (appending to a global list)
+leaky_cache = []
+
+def process_request():
+    leaky_cache.append("x" * 10**6) # Adds 1MB to list every time!
+
+# Simulate running the server
+for _ in range(5):
+    process_request()
+
+# Get the memory snapshot
+snapshot = tracemalloc.take_snapshot()
+top_stats = snapshot.statistics('lineno')
+
+print("[ Top 3 Memory Hogs ]")
+for stat in top_stats[:3]:
+    print(stat)
+```
+**Output:**
+```
+[ Top 3 Memory Hogs ]
+script.py:11: size=5000 KiB, count=5, average=1000 KiB
+```
+Bro, it tells you the exact file and line number (`script.py:11`) that is consuming all the RAM!
+
+## 6. Real-World Engineering Example: APM and Tracing
+
+Bro, imagine a user clicks "Checkout" and it takes 15 seconds. Is the database slow? Is the 3rd party payment API slow? Is the Python loop slow?
+
+Without tracing, you are guessing. With APM (Application Performance Monitoring), you wrap your functions to measure time.
+
+```python
+import time
+import logging
+
+# Simulated APM Tracer Decorator
+def trace(name):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            start = time.time()
+            result = func(*args, **kwargs)
+            duration = time.time() - start
+            logging.info(f"[TRACE] {name} took {duration:.2f}s")
+            return result
+        return wrapper
+    return decorator
+
+@trace("database_query")
+def fetch_cart():
+    time.sleep(0.5) # Fast DB
+    return ["Laptop"]
+
+@trace("stripe_api")
+def charge_card():
+    time.sleep(4.0) # SLOW API!
+
+@trace("checkout_flow")
+def checkout():
+    fetch_cart()
+    charge_card()
+    print("Done!")
+
+logging.basicConfig(level=logging.INFO)
+checkout()
+```
+In a real production environment, tools like Datadog do this automatically and draw visual graphs of the latency!
+
+## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: "Production Observability Flow",
+    nodes: [
+      { id: "1", title: "Web App (Python)", detail: "Handles Request", x: 100, y: 50, kind: "core" },
+      { id: "2", title: "Exception Occurs", detail: "Code Crashes", x: -50, y: 150, kind: "warning" },
+      { id: "3", title: "Slow DB Query", detail: "Performance Bottleneck", x: 250, y: 150, kind: "warning" },
+      { id: "4", title: "Sentry SDK", detail: "Captures Stacktrace", x: -50, y: 250, kind: "tool" },
+      { id: "5", title: "Datadog Agent", detail: "Captures Latency Trace", x: 250, y: 250, kind: "tool" },
+      { id: "6", title: "Engineer's Dashboard", detail: "Visualizes the problem", x: 100, y: 350, kind: "output" }
+    ],
+    edges: [
+      { source: "1", target: "2", type: "smoothstep" },
+      { source: "1", target: "3", type: "smoothstep" },
+      { source: "2", target: "4", type: "straight" },
+      { source: "3", target: "5", type: "straight" },
+      { source: "4", target: "6", type: "smoothstep" },
+      { source: "5", target: "6", type: "smoothstep" }
+    ]
+  }}
+/>
+
+When a crash happens, the Sentry SDK hooks into `sys.excepthook`, grabs the traceback, local variables, and HTTP headers, and ships it via a background thread to the Sentry server before the Python worker dies.
+
+## 8. Performance Table
+
+| Tool | Production Impact | Recommendation |
+|---|---|---|
+| Datadog / NewRelic APM | Low (~2-5% overhead) | Safe for Production |
+| Sentry | Very Low (Runs on crash) | Mandatory for Production |
+| `cProfile` | High (Halves execution speed) | Run locally or via specific flags |
+| `logging.debug` | High (If writing to disk) | Turn off in Production (Use INFO/ERROR) |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| How do you debug an API that randomly hangs and times out? | Add tracing (APM) to see which external call is blocking. Check connection pools (DB/Redis) to see if they are exhausted. |
+| What causes a Python application to run out of memory? | Memory leaks (global variables keeping objects alive), loading massive files into RAM instead of streaming them, or C-extension leaks. |
+| If a Python script crashes with a Segmentation Fault, how do you debug it? | Python's standard traceback won't catch segfaults (C-level crashes). You must use the `faulthandler` module (`python -X faulthandler script.py`) to dump the C stack trace. |
+| Why shouldn't you log inside a tight loop in production? | Because disk I/O is slow. Logging 1 million lines will block the thread and slow down the entire request. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, you deployed your app. Users report they are getting "Internal Server Error 500". But when you check your server logs, the files are completely empty. What happened?
+
+**Answer:**
+Several possibilities:
+1. The app ran out of memory (OOM Killer) and the OS killed the process instantly before Python could even write the log.
+2. The error happened at the Nginx/Gunicorn level (e.g., request timeout), so the request never even reached the Python application code.
+3. Your Python logger was configured to write to `stdout`, but the production environment only captures `stderr`.
+
+## 11. Real-World Usage
+
+- **Sentry:** Almost every major Python startup uses Sentry. It groups identical errors together and alerts you via Slack before the users even complain.
+- **Profiling in Prod:** Sometimes companies enable profiling (`cProfile` or `py-spy`) on exactly 1% of production traffic to find performance bottlenecks without taking down the whole system.
+- **Correlation IDs:** Injecting a unique `X-Request-ID` header into every log line so you can trace a single user's journey through 5 different microservices.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Add context variables to logs (User ID, Request ID) | Don't log passwords, credit cards, or PII (Personally Identifiable Information) |
+| Setup alerts for spikes in 500 errors | Don't ignore exceptions (No `except Exception: pass`) |
+| Use APM tools to visualize database query times | Don't attempt to `pdb` a live production server via a remote shell |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+Bro, the hardest bugs in production are Race Conditions in concurrent code (Threading/Asyncio). They are impossible to reproduce locally. The only way to solve them is by writing crystal clear logs with exact timestamps and thread IDs (`%(threadName)s`), and heavily reviewing the execution order.
+
+## 14. Common Mistakes
+
+- **Swallowing Errors:** Catching an error and returning a generic JSON response `{ "success": false }` WITHOUT logging the actual traceback. You will have no idea why it failed.
+- **Log Spam:** Leaving a `logger.info("Inside loop")` inside a `while True` loop. This will fill up a 100GB hard drive in a few hours and crash the server.
+- **Ignoring 3rd Party Failures:** Assuming the Database or AWS will always be up. You must implement timeouts and retries, and log when those external services fail.
+
+## 15. Related Topics
+
+- Logging
+- Debugging (Local)
+- Performance Profiling
+- Exception Handling

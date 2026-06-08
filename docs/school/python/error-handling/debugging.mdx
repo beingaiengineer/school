@@ -2,6 +2,182 @@
 sidebar_position: 4
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Debugging
 
-Placeholder: introduce Debugging.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Debugging in Python |
+| Difficulty | Beginner / Intermediate |
+| Used For | Finding and fixing logic errors and crashes |
+| Built-in Tool | `pdb` (Python Debugger) |
+| Modern Built-in | `breakpoint()` (Python 3.7+) |
+
+## 2. Real-World Analogy
+
+Bro, imagine you are a detective trying to figure out why a cake tastes terrible.
+
+Using `print()` statements is like tasting the cake only after it comes out of the oven. You know it's bad, but you don't know *when* it went wrong.
+
+Using a Debugger (`pdb`) is like freezing time in the kitchen. You can taste the batter before the sugar goes in, taste it right after, and watch the chef step-by-step. You find the exact moment they added salt instead of sugar.
+
+## 3. Concept Explanation
+
+Debugging is the process of identifying and removing errors from software. While `print()` debugging is common for quick scripts, professional engineers use Interactive Debuggers.
+
+An interactive debugger allows you to pause the execution of your program at a specific line (a "breakpoint"), inspect the current values of all variables, run custom code in that exact frozen state, and step through the code one line at a time.
+
+## 4. Syntax Table
+
+| Command (pdb) | Action |
+|---|---|
+| `breakpoint()` | Halts execution and opens the interactive debugger |
+| `n` (next) | Executes the current line and goes to the next line |
+| `s` (step) | Steps *into* a function call |
+| `c` (continue) | Resumes execution until the next breakpoint |
+| `p <var>` | Prints the value of a variable |
+| `q` (quit) | Aborts the program |
+
+## 5. Beginner Example
+
+Let's look at a buggy script and how we insert a breakpoint.
+
+```python
+def calculate_discount(price, discount_percent):
+    # BUG: We are adding the discount instead of subtracting it!
+    discount_amount = price * (discount_percent / 100)
+
+    # We pause time here!
+    breakpoint()
+
+    final_price = price + discount_amount
+    return final_price
+
+print(calculate_discount(100, 20))
+```
+
+When you run this script, it pauses at `breakpoint()`. Your terminal turns into an interactive prompt `(Pdb)`. You can type `p discount_amount` to see `20.0`, type `n` to go to the next line, and immediately see that `final_price` becomes `120.0` instead of `80.0`. Bug found!
+
+## 6. Real-World Engineering Example
+
+Bro, in backend engineering, you often deal with complex nested dictionaries from APIs. Finding a `KeyError` can be a nightmare.
+
+```python
+def process_webhook(payload):
+    try:
+        user_id = payload['event']['data']['user']['id']
+        amount = payload['event']['data']['transaction']['amount']
+
+        # Complex logic...
+        if amount > 1000:
+            print("High value transaction!")
+
+    except KeyError as e:
+        print(f"Failed to parse payload. Missing key: {e}")
+        # Drop a breakpoint RIGHT when the exception happens!
+        # Now we can inspect the 'payload' dictionary live.
+        import pdb; pdb.set_trace() # Old way (pre-3.7), still widely used
+
+# A malformed payload from a 3rd party API
+bad_payload = {
+    "event": {
+        "data": {
+            "user": {"id": "u_123"},
+            # Notice 'transaction' is missing!
+        }
+    }
+}
+
+process_webhook(bad_payload)
+```
+When it crashes, you are dropped into `pdb`. You can type `payload.keys()` or `payload['event']['data'].keys()` to manually navigate the dict and see exactly what the API sent you.
+
+## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: "How pdb Freezes Execution",
+    nodes: [
+      { id: "1", title: "Python Interpreter", detail: "Executing lines normally", x: 100, y: 50, kind: "process" },
+      { id: "2", title: "breakpoint()", detail: "Interrupt triggered", x: 100, y: 150, kind: "warning" },
+      { id: "3", title: "sys.settrace()", detail: "Pdb hooks into interpreter", x: -100, y: 250, kind: "tool" },
+      { id: "4", title: "REPL Loop", detail: "Waits for user input (n, s, c)", x: 300, y: 250, kind: "core" },
+      { id: "5", title: "Resume", detail: "User types 'c'", x: 100, y: 350, kind: "output" }
+    ],
+    edges: [
+      { source: "1", target: "2", type: "straight" },
+      { source: "2", target: "3", type: "smoothstep" },
+      { source: "3", target: "4", type: "smoothstep" },
+      { source: "4", target: "5", label: "Continue execution", type: "smoothstep" }
+    ]
+  }}
+/>
+
+Under the hood, `pdb` uses `sys.settrace()`. This tells the Python interpreter to call a specific tracing function before executing *every single line of code*. When it hits your breakpoint, it halts the C-level execution loop and hands control over to a standard Python input REPL.
+
+## 8. Performance Table
+
+| Aspect | Impact |
+|---|---|
+| Running code normally | Fast |
+| Running with `pdb` attached | Extremely Slow (Tracing every line has massive overhead) |
+| Using `print()` | Fast (but requires re-running the script constantly) |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Difference between `step` and `next` in pdb? | `next` executes the current line. If it's a function call, it runs the whole function and stops at the next line. `step` goes *inside* the function call so you can debug it line-by-line. |
+| What does `breakpoint()` actually do? | In Python 3.7+, it calls `sys.breakpointhook()`, which defaults to calling `import pdb; pdb.set_trace()`. |
+| Can you change a variable's value during a debugging session? | Yes! In the `pdb` prompt, you can just type `my_var = 100` and it will affect the running program. |
+| How do you debug an infinite loop? | Press `Ctrl+C`. If running in terminal, it raises a `KeyboardInterrupt`. If you run the script as `python -m pdb script.py`, `Ctrl+C` drops you directly into the debugger! |
+
+## 10. Tricky Questions & Edge Cases
+
+What happens if you type `c` as a variable name in your code, and try to inspect it in `pdb`?
+
+```python
+a = 10
+b = 20
+c = 30  # Uh oh!
+breakpoint()
+```
+
+**Answer:** If you type `c` in the pdb prompt, pdb will interpret it as the `continue` command, and your program will resume execution!
+
+To print the variable `c` (or any variable that shares a name with a pdb command like `n`, `s`, `l`), you MUST prefix it with `p` or `!`. So, type `p c` or `!c`.
+
+## 11. Real-World Usage
+
+- **VS Code / PyCharm:** Most developers use the visual debuggers built into their IDEs. These visual debuggers actually run `pdb` (or `pydevd`) under the hood!
+- **Django Debug Toolbar:** A tool used to inspect SQL queries and context variables on the fly while rendering a web page.
+- **Post-mortem debugging:** Running `python -m pdb script.py`. If the script crashes, pdb automatically opens *at the exact line of the crash*, with all variables still in memory.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use IDE visual debuggers for complex codebases | Don't rely solely on `print("Here 1")`, `print("Here 2")` |
+| Use `breakpoint()` conditionally: `if x == bad_val: breakpoint()` | Don't commit `breakpoint()` to Git/Production! |
+| Use `l` (list) or `ll` (longlist) in pdb to see where you are | Don't forget that you can execute arbitrary Python functions inside pdb |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+Bro, NEVER deploy code with `breakpoint()` or `pdb.set_trace()` in it. If a production server hits a breakpoint, the request will hang indefinitely waiting for standard input from a terminal that doesn't exist, eventually crashing your web workers (like Gunicorn) due to timeouts. Always use Linters (like `flake8`) in your CI/CD pipeline to catch rogue breakpoints before merging!
+
+## 14. Common Mistakes
+
+- **Committing breakpoints:** Leaving `breakpoint()` in code and pushing to GitHub.
+- **Forgetting `p`:** Typing variable names that clash with pdb commands (like `a`, `c`, `s`) and accidentally triggering commands.
+- **Stepping too deep:** Repeatedly pressing `s` (step) and accidentally stepping into Python's built-in C-library code or massive 3rd party libraries like Pandas, getting completely lost. Use `n` (next) unless you specifically want to enter *your own* function.
+
+## 15. Related Topics
+
+- Exceptions
+- Production Debugging
+- Logging
+- Pytest (using `--pdb` on test failure)

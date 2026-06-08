@@ -2,6 +2,188 @@
 sidebar_position: 2
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Custom Exceptions
 
-Placeholder: introduce Custom Exceptions.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Custom Exceptions in Python |
+| Difficulty | Intermediate |
+| Used For | Creating domain-specific error types |
+| Best Practice | Inherit from `Exception`, not `BaseException` |
+| Benefit | Makes debugging and error handling highly specific |
+
+## 2. Real-World Analogy
+
+Bro, imagine calling customer support for your internet provider. If the automated voice just says "Error occurred," you have no idea if your router is broken, if you forgot to pay your bill, or if a storm took out the tower.
+
+But if the system says "UnpaidBillError", you know exactly what to do. Custom exceptions are like giving your errors highly specific, meaningful names so other developers know exactly what broke in your business logic.
+
+## 3. Concept Explanation
+
+Python has built-in exceptions like `ValueError` and `TypeError`. But these are generic. When building a large application, you often have domain-specific rules.
+
+Custom exceptions allow you to define your own error classes by inheriting from Python's base `Exception` class. This allows you to catch specific business-logic failures without catching unrelated standard errors.
+
+## 4. Syntax Table
+
+| Concept | Example |
+|---|---|
+| Define Custom Exception | `class MyError(Exception): pass` |
+| Raise Custom Exception | `raise MyError("Something went wrong")` |
+| Catch Custom Exception | `except MyError as e:` |
+
+## 5. Beginner Example
+
+Let's create a custom exception for a bank account.
+
+```python
+# 1. Define the custom exception
+class InsufficientFundsError(Exception):
+    pass
+
+class BankAccount:
+    def __init__(self, balance):
+        self.balance = balance
+
+    def withdraw(self, amount):
+        if amount > self.balance:
+            # 2. Raise the custom exception
+            raise InsufficientFundsError(f"Cannot withdraw {amount}. Balance is {self.balance}.")
+        self.balance -= amount
+        return self.balance
+
+account = BankAccount(100)
+
+try:
+    account.withdraw(500)
+except InsufficientFundsError as e:
+    # 3. Catch our exact error
+    print(f"Transaction failed: {e}")
+```
+
+## 6. Real-World Engineering Example
+
+Bro, in a real API codebase, you usually create a Base Exception for your entire project, and then inherit from *that*. This allows you to easily attach extra data (like HTTP status codes or error codes) to your exceptions.
+
+```python
+# The Base Exception for our entire App
+class AppBaseError(Exception):
+    def __init__(self, message, error_code):
+        super().__init__(message)
+        self.error_code = error_code
+
+# Specific Error 1
+class UserNotFoundError(AppBaseError):
+    def __init__(self, user_id):
+        super().__init__(f"User {user_id} does not exist.", error_code=404)
+
+# Specific Error 2
+class RateLimitExceededError(AppBaseError):
+    def __init__(self, user_id):
+        super().__init__(f"User {user_id} made too many requests.", error_code=429)
+
+def fetch_user(user_id):
+    if user_id == 0:
+        raise UserNotFoundError(user_id)
+    if user_id == 999:
+        raise RateLimitExceededError(user_id)
+    return {"id": user_id, "name": "Bro"}
+
+# Top-level API Error Handler
+try:
+    fetch_user(0)
+except AppBaseError as e:
+    # We catch ANY error from our app, and handle it gracefully
+    print(f"API Failed! Status: {e.error_code}, Message: {e}")
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: "Custom Exception Hierarchy",
+    nodes: [
+      { id: "1", title: "Exception (Built-in)", detail: "Python Base Class", x: 100, y: 50, kind: "core" },
+      { id: "2", title: "AppBaseError", detail: "Your Project Base", x: 100, y: 150, kind: "process" },
+      { id: "3", title: "UserNotFoundError", detail: "Specific Error A", x: -50, y: 250, kind: "warning" },
+      { id: "4", title: "DatabaseTimeoutError", detail: "Specific Error B", x: 250, y: 250, kind: "warning" }
+    ],
+    edges: [
+      { source: "1", target: "2", label: "Inherits", type: "straight" },
+      { source: "2", target: "3", label: "Inherits", type: "smoothstep" },
+      { source: "2", target: "4", label: "Inherits", type: "smoothstep" }
+    ]
+  }}
+/>
+
+Because `UserNotFoundError` inherits from `AppBaseError`, which inherits from `Exception`, you can catch it using `except UserNotFoundError`, or `except AppBaseError`, or `except Exception`. It bubbles up the inheritance tree.
+
+## 8. Performance Table
+
+| Aspect | Impact |
+|---|---|
+| Definition | No performance impact |
+| Raising/Catching | Same overhead as built-in exceptions (expensive, use only for actual errors) |
+| Adding custom attributes | Very slight memory increase per exception instance |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why should you inherit from `Exception` and not `BaseException`? | `BaseException` catches system exits like `SystemExit` and `KeyboardInterrupt` (Ctrl+C). If you inherit from it, a bare `except` might prevent the user from killing the script! |
+| How do you pass multiple arguments to a custom exception? | By overriding the `__init__` method and calling `super().__init__(arg1, arg2)`. |
+| Is it a good idea to use exceptions for control flow? | No. Exceptions should be used for exceptional, unexpected states, not for normal `if/else` logic routing. |
+| Can you catch multiple custom exceptions at once? | Yes, using a tuple: `except (ErrorA, ErrorB):`. |
+
+## 10. Tricky Questions & Edge Cases
+
+What happens if you raise a custom exception but catch a built-in one?
+
+```python
+class MyError(Exception): pass
+
+try:
+    raise MyError("Oops")
+except ValueError:
+    print("Caught ValueError")
+except Exception:
+    print("Caught Exception")
+```
+
+**Answer:** It prints `"Caught Exception"`.
+Since `MyError` does not inherit from `ValueError`, the first block is skipped. But since `MyError` *does* inherit from `Exception`, the second block catches it. Order of `except` blocks matters! Always put specific exceptions at the top, and generic ones at the bottom.
+
+## 11. Real-World Usage
+
+- **Requests Library:** Has `ConnectionError`, `Timeout`, and `TooManyRedirects`, all inheriting from `RequestException`.
+- **SQLAlchemy:** Has `IntegrityError` (like unique constraint failures) and `OperationalError` (like DB connection dropped).
+- **Stripe API:** Returns specific errors like `CardError` or `RateLimitError` so your billing system can react correctly.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Create a base exception class for your specific project/module | Don't create a custom exception if a built-in one (`ValueError`, `TypeError`) describes the problem perfectly |
+| Give exceptions clear, descriptive names ending in `Error` | Don't name them like `CustomException1` |
+| Attach useful debugging context to the exception via `__init__` | Don't put heavy logic or network calls inside an Exception's `__init__` |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+Bro, in microservices, custom exceptions are crucial. When Service A fails, it should raise a specific exception (e.g., `InventoryShortageError`). The API layer catches this specific error and translates it into a standard HTTP 400 response with an exact `error_code`, rather than crashing and returning a generic HTTP 500.
+
+## 14. Common Mistakes
+
+- **Forgetting `pass` or `super().__init__`:** If you don't define an `__init__`, you must put `pass` in the class body. If you do define `__init__`, you must call `super().__init__(message)` so Python's base Exception can store the message string properly.
+- **Using them for everything:** Raising a `UserDidNotClickButtonError` is terrible design. Use standard boolean returns for normal user flows.
+
+## 15. Related Topics
+
+- Exceptions (try/except)
+- Logging
+- Classes & Inheritance
+- API Development (FastAPI error handling)
