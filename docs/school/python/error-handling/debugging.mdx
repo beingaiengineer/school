@@ -2,6 +2,222 @@
 sidebar_position: 4
 ---
 
-# Debugging
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Debugging.
+# Debugging (pdb)
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Python Debugging (`pdb` / `breakpoint()`) |
+| Difficulty | Intermediate |
+| Used For | Pausing code execution to inspect variables and step through logic line-by-line |
+| Common Mistake | Forgetting to remove `breakpoint()` before pushing code to production |
+| Performance | Stops execution completely. Do not use in active production environments! |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, imagine you are a mechanic trying to figure out why a car engine is making a weird noise.
+
+Using `print()` statements is like driving the car past you at 60 MPH, yelling out the window, and trying to hear the engine. It's fast, but you miss details.
+
+Using a Debugger is like putting the car on a lift in the garage. You pause everything. You open the hood, inspect every single wire, turn the engine manually one gear at a time, and watch exactly what happens. It gives you complete control over time and state.
+
+---
+
+# 3. Concept Explanation
+
+A debugger is a tool that lets you halt the execution of your Python script at a specific line (a **breakpoint**).
+
+Once paused, Python drops you into an interactive console. In this frozen state, you can check the value of variables, run test functions, and execute your code one line at a time to see exactly where the logic fails.
+
+Python comes with a built-in debugger called `pdb` (Python Debugger). In modern Python (3.7+), you can trigger it simply by writing `breakpoint()` in your code.
+
+---
+
+# 4. Syntax Table
+
+| Command (in PDB) | What it does |
+|---|---|
+| `l` (list) | Shows the code around the current line. |
+| `n` (next) | Executes the current line and goes to the next one. |
+| `s` (step) | Steps *inside* a function call to see what it does. |
+| `c` (continue)| Unpauses the script until the next breakpoint. |
+| `p var_name` | Prints the value of the variable. |
+| `q` (quit) | Kills the debugger and stops the script. |
+
+---
+
+# 5. Beginner Example
+
+Let's debug a script that has a hidden math error.
+
+```python
+def calculate_discount(price, discount):
+    # Imagine this is a complex formula
+    final_price = price - discount
+    return final_price
+
+def process_cart(cart):
+    total = 0
+    for item in cart:
+        # We want to pause execution right here!
+        breakpoint()
+
+        total += calculate_discount(item['price'], item['discount'])
+    return total
+
+cart = [
+    {'name': 'Shoes', 'price': 100, 'discount': 20},
+    {'name': 'Hat', 'price': 50, 'discount': 10}
+]
+
+print(f"Total: {process_cart(cart)}")
+```
+
+When Python hits `breakpoint()`, your terminal will look like this:
+```text
+> /app/script.py(12)process_cart()
+-> total += calculate_discount(item['price'], item['discount'])
+(Pdb) p item
+{'name': 'Shoes', 'price': 100, 'discount': 20}
+(Pdb) n
+> /app/script.py(10)process_cart()
+-> for item in cart:
+(Pdb) c
+```
+You are literally inside the matrix, bro!
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Code Executing', detail: 'Runs normally', kind: 'process', x: 250, y: 50 },
+    { id: '2', title: 'breakpoint()', detail: 'Execution Freezes', kind: 'warning', x: 250, y: 150 },
+    { id: '3', title: '(Pdb) Console', detail: 'Inspect Variables', kind: 'tool', x: 50, y: 250 },
+    { id: '4', title: 'Command: n', detail: 'Go to next line', kind: 'tool', x: 450, y: 250 },
+    { id: '5', title: 'Command: c', detail: 'Resume normal run', kind: 'output', x: 250, y: 350 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'hits line', type: 'step' },
+    { source: '2', target: '3', label: 'drops into', type: 'smoothstep' },
+    { source: '2', target: '4', label: 'drops into', type: 'smoothstep' },
+    { source: '3', target: '5', label: 'if user types c', type: 'smoothstep' },
+    { source: '4', target: '5', label: 'if user types c', type: 'smoothstep' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+Bro, sometimes `print()` is useless because the error happens on the 10,000th iteration of a loop. You don't want to print 9,999 lines of text. You use a **Conditional Breakpoint**.
+
+```python
+def parse_large_csv(rows):
+    valid_data = []
+
+    for index, row in enumerate(rows):
+        try:
+            # Complex parsing logic
+            age = int(row['age'])
+            valid_data.append(age)
+
+        except ValueError:
+            # We ONLY drop into the debugger when the error actually happens!
+            print(f"Error on row {index}!")
+            breakpoint()
+
+    return valid_data
+
+data = [
+    {'name': 'Alex', 'age': '25'},
+    {'name': 'Bob', 'age': 'thirty'}, # This will trigger the breakpoint!
+    {'name': 'Charlie', 'age': '35'},
+]
+
+parse_large_csv(data)
+```
+When it drops into `pdb`, you can inspect `row` and see exactly why it failed ("thirty" is a string, not a number) without printing the entire dataset.
+
+---
+
+# 7. Internal Working
+
+How does `pdb` freeze Python?
+
+Python executes code using an evaluation loop (the CPython interpreter loop). `pdb` utilizes Python's built-in `sys.settrace()` function. This function allows you to inject a "trace callback" that runs *before every single line of Python code is executed*.
+
+When `pdb` is active, it intercepts the execution, pauses the CPython loop, reads input from your terminal (`stdin`), executes your Pdb command, and then releases the loop to run the next line.
+
+---
+
+# 8. Performance Table
+
+| State | Performance Impact | Note |
+|---|---|---|
+| Normal Execution | None | Fast |
+| Active Debugging (Pdb) | Extremely Slow | Tracing every line has massive overhead. |
+| Paused at Breakpoint | Frozen | Process uses 0% CPU while waiting for your input. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between `s` (step) and `n` (next) in pdb? | `next` executes the current line and moves to the next line in the *current function*. `step` will actually jump *into* the function being called on that line so you can debug its internals. |
+| How do you trigger a debugger without modifying the code? | You can run the script via terminal: `python -m pdb my_script.py`. It will pause on the very first line. |
+| What happens if you leave `breakpoint()` in production code? | If the environment does not catch standard input, the application will freeze entirely waiting for keyboard input that will never arrive. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+What happens if you have a variable named `c` and you try to print it using `p c`?
+
+In older versions of pdb, if you typed `c`, pdb would think you meant the command `continue` and unpause the script!
+
+To safely print a variable that shares a name with a Pdb command, always use `p variable_name` (e.g., `p c`). The `p` tells Pdb "evaluate the following expression", preventing command collisions. Alternatively, you can use the `!` prefix (e.g., `!c`) to force execution of Python code.
+
+---
+
+# 11. Real-World Usage
+
+- **IDE Debuggers:** VSCode and PyCharm have visual debuggers. You click the red dot next to the line number. Under the hood, they are doing the exact same thing as `pdb`!
+- **Testing:** Pytest allows you to run `pytest --pdb`. If a test fails, it will immediately drop you into the `pdb` console at the exact line of the failure! This is a massive time saver.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `breakpoint()` conditionally (e.g., `if user_id == 99: breakpoint()`). | Leave `breakpoint()` statements in your Git commits. |
+| Learn to use `s` and `n` effectively to navigate complex call stacks. | Rely on `pdb` for distributed microservices (Use logging instead). |
+| Use `pytest --pdb` to instantly debug failing unit tests. | Use `print()` to debug massive loops; use conditional breakpoints. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Never, ever commit `breakpoint()` to the `main` branch. In a production environment like Docker or AWS Lambda, there is no interactive terminal. If your code hits a `breakpoint()`, the server thread will hang forever waiting for a human to type `c`. This will cause memory leaks, timeout errors, and system degradation!
+
+---
+
+# 14. Common Mistakes
+
+- **Typing `quit()` or `exit()` inside Pdb:** If you want to kill the debugger, type `q`. Typing Python's standard `quit()` command inside Pdb can sometimes behave weirdly depending on the environment.
+- **Forgetting to press Enter:** In Pdb, if you just press `Enter` without typing anything, it repeats your last command. If you hit `n` (next) once, you can just tap `Enter` to keep going line-by-line quickly!
+
+---
+
+# 15. Related Topics
+
+- Logging
+- Production Debugging
+- Exceptions

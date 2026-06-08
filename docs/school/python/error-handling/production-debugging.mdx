@@ -2,6 +2,232 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Production Debugging
 
-Placeholder: introduce Production Debugging.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Production Debugging |
+| Difficulty | Advanced |
+| Used For | Identifying and fixing bugs in live, running environments without stopping the server |
+| Common Mistake | Trying to SSH into a production server to use `pdb` or add `print()` statements |
+| Performance | High reliance on async logging, metrics, and APMs to avoid impacting user experience |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, debugging locally with `pdb` is like fixing a car in your garage. You can turn off the engine, open the hood, and take your time.
+
+Production debugging is like fixing an airplane *while it is flying at 30,000 feet*.
+
+You cannot hit "pause" (no `breakpoint()`). You cannot easily open the hood. You have to rely entirely on the plane's dashboard instruments (Logs, Metrics, Traces) to figure out why the left engine is losing pressure, without crashing the plane.
+
+---
+
+# 3. Concept Explanation
+
+When an application is in production, it is serving real users. You cannot use interactive debuggers (`pdb`) because pausing the thread will cause real users to experience timeouts. You also shouldn't change the code to add `print()` statements because deploying code takes time and requires approvals.
+
+Instead, Production Debugging relies on **Observability**:
+1. **Logs:** Text records of what happened (`logging` module).
+2. **Metrics:** Numbers showing system health (CPU %, Memory, Requests/sec).
+3. **Traces:** The exact path a single request took across multiple microservices.
+
+We use tools like Sentry, Datadog, or ELK (Elasticsearch, Logstash, Kibana) to aggregate this data.
+
+---
+
+# 4. Syntax Table
+
+*Note: Production debugging is less about Python syntax and more about patterns and tools.*
+
+| Tool / Concept | Purpose in Python | Example Usage |
+|---|---|---|
+| **Sentry** | Auto-captures unhandled exceptions | `sentry_sdk.init("https://...")` |
+| **JSON Logging** | Makes logs searchable by machines | `python-json-logger` package |
+| **Trace IDs** | Connects logs across microservices | `logger.info("Msg", extra={"trace_id": x})` |
+| **APM** | Application Performance Monitoring | Datadog agent attached to Python process |
+
+---
+
+# 5. Beginner Example (Using Sentry)
+
+Let's see how easy it is to set up Sentry, the most common error tracking tool for Python.
+
+```python
+import sentry_sdk
+from flask import Flask
+
+# 1. Initialize Sentry with your project's secret key (DSN)
+sentry_sdk.init(
+    dsn="https://your-public-key@sentry.io/project-id",
+    traces_sample_rate=1.0 # Capture 100% of performance traces
+)
+
+app = Flask(__name__)
+
+@app.route("/checkout")
+def checkout():
+    # If this fails, the user gets an HTTP 500 Error
+    # BUT, Sentry automatically catches the exception, grabs the Traceback,
+    # grabs the user's OS, Browser, and variables, and sends an alert to your Slack!
+    result = 10 / 0
+    return "Checkout complete!"
+
+if __name__ == "__main__":
+    app.run()
+```
+Bro, with 2 lines of code, you no longer have to guess what went wrong in production!
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'User Request', detail: 'POST /checkout', kind: 'tool', x: 250, y: 50 },
+    { id: '2', title: 'Python App', detail: 'Raises ValueError', kind: 'process', x: 250, y: 150 },
+    { id: '3', title: 'User Client', detail: 'Gets 500 Error', kind: 'warning', x: 50, y: 300 },
+    { id: '4', title: 'Sentry / APM', detail: 'Captures Stacktrace', kind: 'data', x: 450, y: 300 },
+    { id: '5', title: 'Slack Alert', detail: 'Notifies Engineer', kind: 'output', x: 450, y: 400 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'triggers', type: 'step' },
+    { source: '2', target: '3', label: 'fails gracefully', type: 'smoothstep' },
+    { source: '2', target: '4', label: 'async background send', type: 'smoothstep' },
+    { source: '4', target: '5', label: 'alerts', type: 'smoothstep' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example (Trace IDs)
+
+Bro, imagine a user clicks "Buy". The Frontend calls the Backend API, which calls the Payment Service, which calls the Inventory Service. If Inventory fails, how do you find the logs?
+
+You use a **Trace ID** (Correlation ID).
+
+```python
+import logging
+import uuid
+from contextvars import ContextVar
+
+# Context variables are thread-safe ways to store request-specific data
+request_id: ContextVar[str] = ContextVar('request_id', default='UNKNOWN')
+
+# A custom log filter that automatically injects the request_id into every log
+class RequestIdFilter(logging.Filter):
+    def filter(self, record):
+        record.request_id = request_id.get()
+        return True
+
+logger = logging.getLogger(__name__)
+logger.addFilter(RequestIdFilter())
+
+# In your Web Framework middleware (e.g., FastAPI or Django):
+def middleware(request):
+    # 1. Generate a unique ID for this specific user's click
+    current_id = str(uuid.uuid4())
+    request_id.set(current_id)
+
+    logger.info("Starting request") # Log 1
+
+    try:
+        process_payment()
+    except Exception:
+        logger.error("Payment failed", exc_info=True) # Log 2
+
+def process_payment():
+    logger.info("Connecting to bank...") # Log 3
+```
+Now, in Datadog or ELK, you just search for `request_id:"abc-123"`, and you will see *all three logs* grouped perfectly together, even if 1,000 other users were clicking "Buy" at the exact same millisecond!
+
+---
+
+# 7. Internal Working
+
+How do APMs (Application Performance Monitors) like Datadog inspect Python without changing the code?
+
+They use **Monkey Patching** and **Bytecode Instrumentation**. When you start your Python app with the Datadog agent (`ddtrace-run python app.py`), the agent dynamically rewrites the standard library functions (like `requests.get` or `psycopg2.execute`) in memory.
+
+It wraps those functions in a timer. It records exactly when the function started, when it ended, and what arguments were passed, and sends that data to the dashboard asynchronously. This is how you get beautiful performance graphs with zero code changes!
+
+---
+
+# 8. Performance Table
+
+| Tooling | Overhead | Note |
+|---|---|---|
+| Unhandled Exception Trackers (Sentry) | Very Low | Only runs heavy code when a crash actually happens. |
+| APM Tracing (Datadog) | Low to Medium | Adds a few milliseconds to track times. Sample rates (e.g., track 10% of requests) help. |
+| Extensive DEBUG logging | High | I/O bound. Never leave DEBUG logs on in production. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why can't you use `pdb` in production? | Because `pdb` halts the thread to wait for human input. In a web server, this causes the request to hang forever, consuming resources and eventually causing a denial of service. |
+| What is a Trace ID / Correlation ID? | A unique string generated at the start of a request and passed along to all microservices. It is attached to all logs so a developer can trace the exact path of a single transaction across a distributed system. |
+| What is the purpose of Sentry? | To automatically capture unhandled exceptions, group similar errors together, and provide developers with the full stacktrace and environment context without requiring them to dig through raw log files. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+What happens if the code that sends logs to your logging server crashes?
+
+If your logging relies on synchronous network requests (e.g., making an HTTP request to Datadog on every `logger.info`), and Datadog goes down, your app will freeze waiting for Datadog!
+
+**Solution:** Production logging must be asynchronous. In Python, you can use `logging.handlers.QueueHandler` to put log messages into a queue. A separate background thread reads from the queue and sends them over the network. If the network fails, the main app keeps running!
+
+---
+
+# 11. Real-World Usage
+
+- **Memory Leaks:** Using tools like `tracemalloc` to take snapshots of Python's memory usage in production and compare them over time to see which objects are not being garbage collected.
+- **Profiling:** Running `py-spy` or `cProfile` for a short 60-second window on a live server to see exactly which function is eating 90% of the CPU.
+- **Feature Flags:** If a new feature causes errors in production, you don't redeploy. You flip a switch in LaunchDarkly (or your DB) to instantly turn the feature off.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Output logs as JSON in production so machines can parse and index them easily. | Use interactive debuggers or `print()` statements in a live environment. |
+| Include contextual data (User ID, Trace ID, Tenant ID) in every log. | Log Personally Identifiable Information (PII) like passwords or credit cards. |
+| Set alerts for error spikes (e.g., "Slack the team if > 50 errors occur in 5 minutes"). | Ignore Sentry alerts until there are 10,000 unresolved issues. Fix or mute them! |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+The hardest production bugs are silent data corruptions. The code doesn't crash, Sentry is quiet, but the database is being filled with wrong data. To debug this, you must rely on **Metrics**. Set up dashboards that track business logic (e.g., "Number of successful checkouts per hour"). If that number drops to zero, but there are no code errors, you know the integration with the payment provider changed their API format silently!
+
+---
+
+# 14. Common Mistakes
+
+- **Swallowing Errors:**
+  ```python
+  try:
+      complex_logic()
+  except Exception:
+      pass # WORST MISTAKE IN ENGINEERING
+  ```
+  If this fails in production, you will literally never know. Always log it or send it to Sentry!
+- **Logging too much:** Generating gigabytes of `INFO` logs per hour. Not only does this cost a fortune in AWS/Datadog fees, but it makes finding the actual errors like finding a needle in a haystack.
+
+---
+
+# 15. Related Topics
+
+- Logging
+- Exceptions
+- Debugging (pdb)
+- Python Architecture

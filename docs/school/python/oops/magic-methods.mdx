@@ -2,6 +2,226 @@
 sidebar_position: 7
 ---
 
-# Magic Methods
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Magic Methods.
+# Magic Methods (Dunder Methods)
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Magic Methods (Dunder Methods) |
+| Difficulty | Intermediate |
+| Used For | Customizing how objects behave with built-in Python operators (like `+`, `==`, `len()`) |
+| Common Mistake | Using `__str__` for debugging instead of `__repr__` |
+| Performance | Fast, as they map directly to C-level Python structures under the hood |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, think of Magic Methods like a universal translator inside your object.
+
+Imagine you have two physical boxes. If I ask you to "add" them together, you might just put them next to each other. If I ask a robot to "add" them, it might be confused because it doesn't know what "adding boxes" means.
+
+Magic methods tell Python *exactly* what to do when someone uses a standard operator like `+` on your custom objects. You are teaching Python how your object should behave in the normal Python ecosystem.
+
+---
+
+# 3. Concept Explanation
+
+Magic methods (also called "Dunder" methods because they have **D**ouble **Under**scores, like `__init__`) are special methods that Python calls automatically behind the scenes.
+
+You rarely call them directly (e.g., `obj.__len__()`). Instead, you use the built-in function or operator (e.g., `len(obj)`), and Python automatically routes the call to the corresponding magic method. This is what makes Python objects feel native and intuitive.
+
+---
+
+# 4. Syntax Table
+
+| Operator / Function | Magic Method | Example Trigger |
+|---|---|---|
+| Initialization | `__init__(self)` | `obj = MyClass()` |
+| String (User friendly) | `__str__(self)` | `print(obj)` |
+| Representation (Dev) | `__repr__(self)` | Typing `obj` in console |
+| Length | `__len__(self)` | `len(obj)` |
+| Addition | `__add__(self, other)` | `obj1 + obj2` |
+| Equality | `__eq__(self, other)` | `obj1 == obj2` |
+| Indexing | `__getitem__(self, key)`| `obj[key]` |
+
+---
+
+# 5. Beginner Example
+
+Let's say we have a `Wallet` class. We want to be able to add two wallets together using the `+` operator.
+
+```python
+class Wallet:
+    def __init__(self, amount):
+        self.amount = amount
+
+    # This gets called when we use the + operator
+    def __add__(self, other_wallet):
+        # We return a NEW Wallet with the combined amount
+        new_amount = self.amount + other_wallet.amount
+        return Wallet(new_amount)
+
+    # This gets called when we print the object
+    def __str__(self):
+        return f"Wallet with ${self.amount}"
+
+w1 = Wallet(50)
+w2 = Wallet(100)
+
+# Behind the scenes, Python does: w1.__add__(w2)
+w3 = w1 + w2
+
+print(w3) # Output: Wallet with $150
+```
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Developer Code', detail: 'w1 + w2', kind: 'tool', x: 50, y: 150 },
+    { id: '2', title: 'Python Interpreter', detail: 'Detects + Operator', kind: 'process', x: 250, y: 150 },
+    { id: '3', title: 'w1.__add__(w2)', detail: 'Routes to Dunder Method', kind: 'core', x: 500, y: 150 },
+    { id: '4', title: 'New Wallet(150)', detail: 'Returns new object', kind: 'output', x: 750, y: 150 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'evaluates', type: 'smoothstep' },
+    { source: '2', target: '3', label: 'translates to', type: 'smoothstep' },
+    { source: '3', target: '4', label: 'creates', type: 'smoothstep' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+Bro, when you build APIs, you often need to represent complex database models. A great example is customizing how an object is compared and hashed so it can be used in a `set()`.
+
+```python
+class UserAccount:
+    def __init__(self, user_id, username):
+        self.user_id = user_id
+        self.username = username
+
+    # Define how two objects are considered "Equal"
+    def __eq__(self, other):
+        if not isinstance(other, UserAccount):
+            return False
+        return self.user_id == other.user_id
+
+    # Define a hash so this object can be stored in a Set or Dictionary
+    def __hash__(self):
+        return hash(self.user_id)
+
+    def __repr__(self):
+        return f"<UserAccount id={self.user_id}>"
+
+user1 = UserAccount(99, "alex_dev")
+user2 = UserAccount(99, "alex_updated") # Same ID, different username
+
+# Because of __eq__, Python knows they are the same user entity
+print(user1 == user2) # True
+
+# Because of __hash__, we can enforce uniqueness in a set!
+unique_users = {user1, user2}
+print(unique_users) # Output: {<UserAccount id=99>}
+```
+
+---
+
+# 7. Internal Working
+
+How does Python know which magic method to call?
+
+Python objects have a structure defined in C. When you use the `+` operator, Python's C-level evaluation loop looks at the left object's type structure. It checks the `tp_as_number` suite of functions and looks for the `nb_add` slot. This slot is dynamically mapped to your Python `__add__` method.
+
+If your class doesn't define `__add__`, Python then looks at the right object to see if it has an `__radd__` (Right Add) method. If neither exist, it raises a `TypeError`.
+
+---
+
+# 8. Performance Table
+
+| Magic Method | Cost | Note |
+|---|---|---|
+| `__str__` | O(N) | Depends on how much string formatting you do. |
+| `__eq__` | O(1) | Extremely fast if comparing IDs or hashes. |
+| `__getitem__`| O(1) | Assuming internal lookup is direct list/dict access. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between `__str__` and `__repr__`? | `__str__` is for end-users (readable). `__repr__` is for developers (should ideally contain valid Python code to recreate the object). |
+| What happens if you define `__eq__` but not `__hash__`? | The object becomes unhashable. You won't be able to use it as a dictionary key or put it in a set. |
+| How do you make an object behave like a function? | By implementing the `__call__(self, *args)` magic method. `obj()` will trigger it. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+If you define `__getattr__`, does it catch *all* attribute lookups?
+
+```python
+class Ghost:
+    def __init__(self):
+        self.visible = True
+
+    def __getattr__(self, name):
+        return f"{name} is spooky!"
+
+g = Ghost()
+print(g.visible)   # True (Found it!)
+print(g.scary)     # scary is spooky! (Fell back to __getattr__)
+```
+Bro, `__getattr__` is only called as a **last resort** when an attribute is *not* found in the standard `__dict__`. If you want to intercept *every* attribute lookup, you must use `__getattribute__` (which is highly dangerous and prone to infinite recursion).
+
+---
+
+# 11. Real-World Usage
+
+- **Pandas DataFrames:** Customizing `__getitem__` allows you to do `df['column_name']`.
+- **Pathlib:** Customizing `__truediv__` allows you to join paths using the `/` operator like `Path('/usr') / 'local'`.
+- **SQLAlchemy:** Customizing `__eq__` lets you write queries like `User.age == 25` which translates to a SQL object, not a boolean!
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Implement `__repr__` for every class you write to make debugging easier. | Implement magic methods if standard methods (`add_funds()`) are clearer for your business logic. |
+| Ensure `__eq__` includes a type check using `isinstance()` to avoid crashing. | Use `__getattribute__` unless you are writing advanced metaprogramming libraries. |
+| Return `NotImplemented` in operator methods if you don't know how to handle the other type. | Return `False` in `__eq__` if types don't match, return `NotImplemented` instead. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+When writing custom data structures, if you implement `__len__` and `__getitem__`, your object automatically becomes iterable! Python's `for` loop will start at index 0 and keep calling `__getitem__` until an `IndexError` is raised. This is a very clean way to make your objects behave like lists without actually subclassing `list`.
+
+---
+
+# 14. Common Mistakes
+
+- **Returning wrong types:** `__len__` MUST return an integer. `__str__` MUST return a string. If they don't, Python will crash with a `TypeError`.
+- **Infinite recursion in `__setattr__`:**
+  ```python
+  def __setattr__(self, name, value):
+      self.name = value # ERROR! Calls __setattr__ again!
+  ```
+  Instead, use `super().__setattr__(name, value)` or `self.__dict__[name] = value`.
+
+---
+
+# 15. Related Topics
+
+- Classes & Objects
+- Operator Overloading (which relies on magic methods)
+- Iterators
+- Object Lifecycle (`__new__` and `__init__`)

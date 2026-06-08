@@ -2,6 +2,229 @@
 sidebar_position: 9
 ---
 
-# Solid Principles
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Solid Principles.
+# SOLID Principles
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | SOLID Principles in Python |
+| Difficulty | Advanced |
+| Used For | Writing clean, scalable, and maintainable Object-Oriented software architecture |
+| Common Mistake | Cramming too many unrelated responsibilities into a single "God Class" |
+| Performance | No direct runtime cost, but drastically reduces developer debugging time |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, imagine a restaurant kitchen.
+
+If one guy (the "God Chef") tries to take orders, cook the food, wash the dishes, and fix the plumbing, the restaurant will collapse when things get busy. If he gets sick, the whole business stops.
+
+SOLID principles are like a professional kitchen hierarchy. The waiter only takes orders (Single Responsibility). You can add a new dessert menu without rebuilding the kitchen (Open/Closed). You can swap a junior chef for a senior chef and the food still comes out fine (Liskov Substitution). The pizza chef doesn't need to know how the sushi station works (Interface Segregation). And everyone relies on the head chef's schedule, not each other's random habits (Dependency Inversion).
+
+---
+
+# 3. Concept Explanation
+
+SOLID is an acronym for five design principles that make software designs more understandable, flexible, and maintainable.
+
+- **S** - Single Responsibility Principle (SRP)
+- **O** - Open/Closed Principle (OCP)
+- **L** - Liskov Substitution Principle (LSP)
+- **I** - Interface Segregation Principle (ISP)
+- **D** - Dependency Inversion Principle (DIP)
+
+Applying these principles in Python stops your codebase from turning into spaghetti code as the project grows.
+
+---
+
+# 4. Syntax Table
+
+*Note: SOLID is a design philosophy, not a strict syntax. But here are the tools we use to enforce it.*
+
+| Principle | Python Tool Commonly Used |
+|---|---|
+| Single Responsibility | Breaking classes into smaller, focused classes. |
+| Open/Closed | Inheritance, Abstract Base Classes (ABCs), Strategy Pattern. |
+| Liskov Substitution | Type hinting, ensuring child classes return expected types. |
+| Interface Segregation | Multiple smaller ABCs instead of one massive ABC. |
+| Dependency Inversion | Dependency Injection, passing abstract interfaces to `__init__`. |
+
+---
+
+# 5. Beginner Example (SRP)
+
+Let's look at the **Single Responsibility Principle**. A class should have only one reason to change.
+
+**Bad (Violates SRP):**
+```python
+class User:
+    def __init__(self, name):
+        self.name = name
+
+    def get_user_data(self):
+        return {"name": self.name}
+
+    # Why is a User class talking to a database?!
+    def save_to_database(self):
+        print(f"Connecting to DB... Saving {self.name}")
+```
+
+**Good (Follows SRP):**
+```python
+class User:
+    def __init__(self, name):
+        self.name = name
+
+# The Repository handles DB logic exclusively
+class UserRepository:
+    def save(self, user: User):
+        print(f"Connecting to DB... Saving {user.name}")
+
+u = User("Alex")
+repo = UserRepository()
+repo.save(u)
+```
+Now, if the database changes from PostgreSQL to MongoDB, we only change `UserRepository`. `User` is untouched!
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'High-Level Logic', detail: 'OrderService', kind: 'core', x: 250, y: 50 },
+    { id: '2', title: 'PaymentInterface', detail: 'Abstract Base Class', kind: 'process', x: 250, y: 150 },
+    { id: '3', title: 'Stripe API', detail: 'Concrete Impl', kind: 'tool', x: 50, y: 300 },
+    { id: '4', title: 'PayPal API', detail: 'Concrete Impl', kind: 'tool', x: 450, y: 300 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'depends on (DIP)', type: 'smoothstep' },
+    { source: '3', target: '2', label: 'implements', type: 'step' },
+    { source: '4', target: '2', label: 'implements', type: 'step' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example (OCP & DIP)
+
+Bro, let's look at **Open/Closed** (Classes should be open for extension, closed for modification) and **Dependency Inversion** together.
+
+Imagine a notification system.
+
+```python
+from abc import ABC, abstractmethod
+
+# 1. Dependency Inversion: We define an abstract interface
+class NotificationSender(ABC):
+    @abstractmethod
+    def send(self, message: str): pass
+
+# 2. Open/Closed: We create specific implementations
+class EmailSender(NotificationSender):
+    def send(self, message):
+        print(f"Sending Email: {message}")
+
+class SMSSender(NotificationSender):
+    def send(self, message):
+        print(f"Sending SMS: {message}")
+
+# 3. The Service depends on the ABSTRACTION, not the concrete classes
+class AlertSystem:
+    def __init__(self, sender: NotificationSender):
+        self.sender = sender
+
+    def trigger_alert(self):
+        self.sender.send("Server is down!")
+
+# Usage
+email_alert = AlertSystem(EmailSender())
+email_alert.trigger_alert()
+
+# If tomorrow we want to add Slack notifications, we DO NOT modify AlertSystem!
+# We just create a new SlackSender class (Extension).
+```
+
+---
+
+# 7. Internal Working
+
+Why does Liskov Substitution (LSP) matter to Python's runtime?
+
+LSP says: *Objects of a superclass shall be replaceable with objects of its subclasses without breaking the application.*
+
+If you have a function that expects a `Bird` class, and you pass it a `Penguin` class (which inherits from `Bird`), the function should not crash. If `Bird` has a `fly()` method, but `Penguin` overrides it to raise an `Exception("I can't fly")`, you have violated LSP. At runtime, the caller will crash unexpectedly. You must design hierarchies based on *behavior*, not just taxonomy.
+
+---
+
+# 8. Performance Table
+
+| Aspect | Impact | Note |
+|---|---|---|
+| Initial Development Speed | Slower | Requires more thought, interfaces, and files. |
+| Maintenance Speed | Much Faster | Bugs are isolated. New features don't break old ones. |
+| Runtime Performance | Negligible | Python handles small class abstractions incredibly fast. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does Open/Closed Principle mean? | A class should be open for extension (adding new behaviors via inheritance/plugins) but closed for modification (you shouldn't have to edit existing tested code to add the feature). |
+| How do you achieve Dependency Inversion in Python? | By using Abstract Base Classes (ABCs) as type hints, and passing concrete instances via Dependency Injection in the `__init__` method. |
+| Give an example of violating the Interface Segregation Principle. | Forcing a `RobotWorker` class to implement a `take_lunch_break()` method just because it implements a massive `IWorker` interface meant for humans. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Is SOLID strictly required for all Python scripts?
+
+Bro, NO! If you are writing a 50-line script to parse a CSV file, building 5 abstract classes and a dependency injection container is insane. It's an anti-pattern called **Over-engineering**.
+
+SOLID principles are meant for long-living, complex applications maintained by teams (like web backends, libraries, and large data pipelines). Use them when the complexity of the domain requires it.
+
+---
+
+# 11. Real-World Usage
+
+- **Django Views:** Class-Based Views heavily utilize Open/Closed. You inherit from `ListView`, and just change the `model = MyModel` property to extend behavior without editing Django's core code.
+- **Pytest:** Uses Dependency Injection heavily through its `fixtures` system.
+- **Boto3 (AWS):** Uses Interface Segregation so you only import and use the clients you need (e.g., S3 client vs EC2 client) rather than one massive AWS God Object.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Inject dependencies (pass them to `__init__`) so they can be easily mocked in unit tests. | Hardcode dependencies (`self.db = MySQLConnection()`) inside your classes. |
+| Split large interfaces into smaller, specific ones (Interface Segregation). | Create "God Classes" that handle UI, DB, and Business Logic (Violates SRP). |
+| Favor Composition over Inheritance if you are just trying to reuse small pieces of code. | Force a subclass to implement methods it will never use (Violates LSP/ISP). |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+The biggest benefit of Dependency Inversion is testing. If your `PaymentService` requires a Stripe API object, and you hardcode it, every time you run unit tests, you will hit Stripe's real API. By depending on an interface, you can pass a `FakeStripeClient` during testing that just returns `True`. Instant, offline, reliable tests!
+
+---
+
+# 14. Common Mistakes
+
+- **Misunderstanding SRP:** Thinking SRP means a class can only have *one method*. SRP means a class should have *one responsibility* (e.g., "managing user authentication", which might require 5 different methods).
+- **Violating Liskov Substitution with Types:** Overriding a parent method that returns a `list`, but having the child method return a `dict`. Any code expecting the parent will crash!
+
+---
+
+# 15. Related Topics
+
+- Abstraction
+- Composition vs Inheritance
+- Decorators (Often used to achieve Open/Closed)
+- Unit Testing & Mocking
