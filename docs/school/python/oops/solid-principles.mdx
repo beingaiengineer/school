@@ -2,6 +2,208 @@
 sidebar_position: 9
 ---
 
-# Solid Principles
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Solid Principles.
+# SOLID Principles in Python
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | SOLID Principles |
+| Difficulty | Advanced / Architecture |
+| Used For | Designing scalable, maintainable, and bug-resistant object-oriented systems |
+| Common Mistake | God classes (violating SRP) and tightly coupled dependencies |
+| Key Benefit | Code that is easy to extend but hard to break |
+
+## 2. Real-World Analogy
+
+Bro, think of SOLID principles like designing a modern Indian kitchen.
+- You have a separate station for chopping, cooking, and washing (Single Responsibility).
+- If you buy a new blender, you just plug it into the wall without rewiring the house (Open/Closed).
+- Any chef should be able to use the stove without needing special instructions (Liskov Substitution).
+- You don't force a pastry chef to manage the tandoor oven (Interface Segregation).
+- And the appliances run on electricity from the wall, not from a battery hardcoded inside them (Dependency Inversion).
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', position: { x: 250, y: 0 }, data: { label: 'SOLID Principles' } },
+    { id: 'S', type: 'process', position: { x: 50, y: 150 }, data: { label: 'S: Single Responsibility' } },
+    { id: 'O', type: 'process', position: { x: 150, y: 250 }, data: { label: 'O: Open/Closed' } },
+    { id: 'L', type: 'process', position: { x: 250, y: 350 }, data: { label: 'L: Liskov Substitution' } },
+    { id: 'I', type: 'process', position: { x: 350, y: 250 }, data: { label: 'I: Interface Segregation' } },
+    { id: 'D', type: 'process', position: { x: 450, y: 150 }, data: { label: 'D: Dependency Inversion' } }
+  ]}
+  edges={[
+    { id: 'e1-S', source: '1', target: 'S', type: 'straight' },
+    { id: 'e1-O', source: '1', target: 'O', type: 'straight' },
+    { id: 'e1-L', source: '1', target: 'L', type: 'straight' },
+    { id: 'e1-I', source: '1', target: 'I', type: 'straight' },
+    { id: 'e1-D', source: '1', target: 'D', type: 'straight' }
+  ]}
+/>
+
+## 3. Concept Explanation
+
+SOLID is an acronym for five design principles intended to make software designs more understandable, flexible, and maintainable.
+
+- **S - Single Responsibility Principle (SRP):** A class should have one, and only one, reason to change.
+- **O - Open/Closed Principle (OCP):** Software entities should be open for extension, but closed for modification.
+- **L - Liskov Substitution Principle (LSP):** Subtypes must be substitutable for their base types without altering correctness.
+- **I - Interface Segregation Principle (ISP):** Clients should not be forced to depend on methods they do not use.
+- **D - Dependency Inversion Principle (DIP):** High-level modules should not depend on low-level modules. Both should depend on abstractions.
+
+## 4. Syntax Table
+
+*Note: SOLID isn't a specific syntax, it's an architectural pattern. Here is how Python implements the enablers of SOLID.*
+
+| Concept | Python Implementation Tool |
+|---|---|
+| Separation of Concerns | Modules, separate classes |
+| Extension (OCP) | Inheritance, Composition, Decorators |
+| Substitution (LSP) | Type Hinting, Duck Typing |
+| Interfaces (ISP) | `abc.ABC`, Protocols (Python 3.8+) |
+| Abstractions (DIP) | Dependency Injection, Abstract Classes |
+
+## 5. Beginner Example: Single Responsibility (SRP)
+
+Bro, look at this bad code. The class is doing too much.
+
+**Bad (Violates SRP):**
+```python
+class ReportGenerator:
+    def __init__(self, data):
+        self.data = data
+
+    def generate_report(self):
+        print("Generating report...")
+        return f"Report: {self.data}"
+
+    def save_to_database(self):
+        print("Saving to DB...") # ❌ DB logic mixed with reporting logic
+```
+
+**Good (Follows SRP):**
+```python
+class ReportGenerator:
+    def generate_report(self, data):
+        return f"Report: {data}"
+
+class DatabaseSaver:
+    def save(self, content):
+        print(f"Saving {content} to DB...")
+
+# Usage: Separate classes handle separate concerns
+report = ReportGenerator().generate_report("Sales Q1")
+DatabaseSaver().save(report)
+```
+
+## 6. Real-World Engineering Example: Open/Closed (OCP)
+
+Imagine a discount system in an e-commerce app. If we add new discount types, we shouldn't have to rewrite the core `DiscountCalculator` class.
+
+```python
+from abc import ABC, abstractmethod
+
+# The Abstraction
+class DiscountStrategy(ABC):
+    @abstractmethod
+    def apply_discount(self, price: float) -> float:
+        pass
+
+# Extensions (Adding new rules without touching existing ones)
+class NoDiscount(DiscountStrategy):
+    def apply_discount(self, price: float) -> float:
+        return price
+
+class VIPDiscount(DiscountStrategy):
+    def apply_discount(self, price: float) -> float:
+        return price * 0.80
+
+class FestiveDiscount(DiscountStrategy):
+    def apply_discount(self, price: float) -> float:
+        return price - 50
+
+# Core Calculator is CLOSED for modification, OPEN for extension
+class Checkout:
+    def __init__(self, discount_strategy: DiscountStrategy):
+        self.discount_strategy = discount_strategy
+
+    def calculate_final(self, price: float) -> float:
+        return self.discount_strategy.apply_discount(price)
+
+# Want a new discount? Just write a new class!
+checkout = Checkout(VIPDiscount())
+print(checkout.calculate_final(1000)) # 800.0
+```
+
+## 7. Internal Working
+
+SOLID principles are enforced by developers, not the Python interpreter. However, Python's dynamic typing (duck typing) makes applying principles like Liskov Substitution and Dependency Inversion much easier than in rigid languages like Java, because interfaces are implicit. As long as an object implements the required methods, it can be substituted.
+
+## 8. Performance Table
+
+| Aspect | Impact |
+|---|---|
+| Execution Speed | No direct impact. |
+| Memory Usage | Slightly higher due to more small classes. |
+| Developer Velocity | Slower initially, vastly faster during maintenance and scaling. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does Open/Closed mean? | You should be able to add new functionality (Open) without altering existing, tested code (Closed). |
+| How do you achieve Dependency Inversion in Python? | By passing dependencies via the `__init__` constructor rather than hardcoding them inside the class. |
+| What happens if you violate SRP? | You get "God Classes". Changes to one feature break entirely unrelated features because they are tangled together. |
+| How does Python's Duck Typing relate to LSP? | Since Python doesn't force strict interface inheritance, LSP is achieved by ensuring objects behave identically (same method signatures and return types), regardless of inheritance. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, does this violate the Liskov Substitution Principle (LSP)?
+
+```python
+class Bird:
+    def fly(self):
+        print("I am flying")
+
+class Ostrich(Bird):
+    def fly(self):
+        raise NotImplementedError("I can't fly!")
+```
+
+**Yes! It violates LSP.**
+If a function expects a `Bird` and calls `fly()`, it expects the bird to fly. Passing an `Ostrich` breaks the system because it throws an unexpected exception.
+**The Fix:** Separate the abstractions. Have a `Bird` class, and an `IFlyable` interface. Not all birds are flyable.
+
+## 11. Real-World Usage
+
+Where do big tech companies actually use this?
+- **Django Framework:** Uses OCP heavily with Middleware and Pluggable Apps. You add features without editing Django core.
+- **AWS SDK (Boto3):** Uses Dependency Inversion. You inject different credentials or session configurations into the client rather than hardcoding them.
+- **Microservices:** The ultimate expression of SRP—each service does exactly one thing (Auth, Billing, Notifications).
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Break large functions into smaller classes (SRP) | Force subclasses to implement methods they don't need (Violates ISP) |
+| Inject dependencies (like DB connections) into classes | Hardcode `requests.get()` inside domain logic |
+| Use `typing.Protocol` to define clean interfaces | Over-engineer simple scripts with 5 layers of abstractions |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+Don't apply SOLID blindly on Day 1 of a prototype. "Premature abstraction is the root of all evil." Write the dirty code first to prove the business case. Once you see the pattern or need to change the code for a second time, refactor it using SOLID principles.
+
+## 14. Common Mistakes
+
+- **Dependency Creation:** Instantiating a database connection directly inside an API handler. If you want to test the handler, you are forced to connect to the DB.
+- **The "Swiss Army Knife" Class:** A `UserManager` class that handles password hashing, sending welcome emails, database saving, and JWT token generation.
+- **Fake Interfaces:** Creating an interface with 20 methods, forcing all subclasses to implement a bunch of empty `pass` methods.
+
+## 15. Related Topics
+- Design Patterns (Factory, Strategy, Observer)
+- Dependency Injection
+- Unit Testing & Mocking
+- Abstraction

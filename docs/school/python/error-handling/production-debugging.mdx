@@ -2,6 +2,196 @@
 sidebar_position: 5
 ---
 
-# Production Debugging
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Production Debugging.
+# Production Debugging in Python
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Debugging Python in Production Environments |
+| Difficulty | Advanced |
+| Used For | Finding and fixing bugs when you cannot use `breakpoint()` or IDE debuggers |
+| Common Mistake | Guessing the error instead of capturing the exact `traceback` |
+| Key Benefit | Resolving live user issues with minimal downtime |
+
+## 2. Real-World Analogy
+
+Bro, debugging locally on your laptop is like fixing your bike in your garage. You have all your tools, the lighting is great, and there is no pressure.
+
+Debugging in Production is like trying to fix an airplane engine *while it is flying at 30,000 feet*. You can't just stop the engine (use `breakpoint()`), and you can't see the engine directly. You have to rely purely on the cockpit dials (logs, metrics, and tracebacks) to figure out what is wrong before the plane crashes.
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', position: { x: 250, y: 0 }, data: { label: 'Production Bug Occurs' } },
+    { id: '2', type: 'warning', position: { x: 250, y: 150 }, data: { label: 'Cannot use breakpoint()!' } },
+    { id: '3', type: 'data', position: { x: 0, y: 300 }, data: { label: 'Capture Traceback' } },
+    { id: '4', type: 'process', position: { x: 250, y: 300 }, data: { label: 'Check Sentry / APM' } },
+    { id: '5', type: 'process', position: { x: 500, y: 300 }, data: { label: 'Reproduce Locally' } },
+    { id: '6', type: 'output', position: { x: 250, y: 450 }, data: { label: 'Deploy Fix' } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', type: 'smoothstep' },
+    { id: 'e2-3', source: '2', target: '3', type: 'smoothstep' },
+    { id: 'e2-4', source: '2', target: '4', type: 'smoothstep' },
+    { id: 'e2-5', source: '2', target: '5', type: 'smoothstep' },
+    { id: 'e3-6', source: '3', target: '6', type: 'smoothstep' },
+    { id: 'e4-6', source: '4', target: '6', type: 'smoothstep' },
+    { id: 'e5-6', source: '5', target: '6', type: 'smoothstep' }
+  ]}
+/>
+
+## 3. Concept Explanation
+
+When a Python application is deployed to production (AWS, Heroku, Kubernetes), you lose interactive access. If a user clicks a button and gets a 500 Server Error, you need a systematic way to find the exact line of code that failed.
+
+Production debugging relies on:
+1. **Tracebacks:** The exact call stack showing the files, line numbers, and function names where the error occurred.
+2. **Context:** Knowing *which* user experienced the error, and what data they sent.
+3. **APM Tools:** Using Application Performance Monitoring tools (like Sentry, Datadog, or New Relic) to automatically capture these errors.
+
+## 4. Syntax Table (Traceback Extraction)
+
+When building fault-tolerant systems, you need to catch exceptions and extract their traceback as a string so you can log it or send it to an alert system.
+
+| Tool | Usage | Purpose |
+|---|---|---|
+| `traceback` module | `import traceback` | Standard library tool for formatting errors |
+| `format_exc()` | `traceback.format_exc()` | Returns the full stack trace as a string |
+| `logger.exception()`| `logger.exception("Msg")` | Logs the message AND the full stack trace automatically |
+
+## 5. Beginner Example
+
+If you catch a general Exception but don't log the traceback, you are completely blind.
+
+**Bad (Blind in Production):**
+```python
+def process_data(data):
+    try:
+        return data['user']['address']['city']
+    except Exception as e:
+        # BAD! You only know the error type (e.g., 'KeyError'), but not WHERE it happened!
+        print(f"Error occurred: {e}")
+```
+
+**Good (Production Ready):**
+```python
+import traceback
+import logging
+
+logger = logging.getLogger(__name__)
+
+def process_data(data):
+    try:
+        return data['user']['address']['city']
+    except Exception as e:
+        # GOOD! Logs the exact file and line number.
+        error_details = traceback.format_exc()
+        logger.error(f"Critical failure processing data:\n{error_details}")
+        return None
+```
+
+## 6. Real-World Engineering Example
+
+In modern production systems, you don't read text files to find errors. You use an error tracking service like **Sentry**. When an error occurs, Sentry captures the traceback, the local variables at the time of the crash, and the exact HTTP request that caused it.
+
+```python
+# pip install sentry-sdk
+import sentry_sdk
+from sentry_sdk import capture_exception
+
+# Initialize early in your app startup
+sentry_sdk.init(
+    dsn="https://your_sentry_dsn_key@o0.ingest.sentry.io/0",
+    traces_sample_rate=1.0,
+    environment="production"
+)
+
+def checkout_cart(user_id, cart_data):
+    try:
+        # Simulate a bug: trying to access a missing key
+        total = cart_data['items']['prices']
+        return total
+    except Exception as e:
+        # Adds crucial business context BEFORE sending the error
+        sentry_sdk.set_user({"id": user_id})
+        sentry_sdk.set_context("cart", {"items": cart_data})
+
+        # Ships the full traceback and local variables to Sentry dashboard
+        capture_exception(e)
+
+        return {"error": "Checkout failed. Our engineers have been notified."}
+
+checkout_cart(user_id=123, cart_data={"empty": True})
+```
+
+## 7. Internal Working
+
+A Traceback in Python is an object (`traceback` object) attached to the exception. It contains a linked list of "frame" objects. Each frame represents a function call on the call stack, storing the local variables, the line number, and the compiled bytecode pointer. When you call `traceback.format_exc()`, Python traverses this linked list backwards to build the string you see on your screen.
+
+## 8. Performance Table
+
+| Operation | Performance Impact |
+|---|---|
+| Raising an Exception | Slow (Stack unwinding) |
+| Formatting Traceback | Very Slow (String manipulation and frame inspection) |
+| Sending to APM (e.g., Sentry) | Network I/O (Should be done asynchronously) |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| How do you debug an issue that only happens in production, but not locally? | Ensure local environment matches production (Docker, same DB version, same data scale). Check production logs/APM for tracebacks. Reproduce the exact data state locally using a staging database. |
+| What is a "swallowed exception"? | It's when a developer writes `except Exception: pass`. The error happens, but it is silenced. This is the worst nightmare in production debugging because there are no logs. |
+| Can you attach a debugger to a running production process? | Technically yes (using tools like `py-spy` or `gdb`), but it is highly risky and usually forbidden due to security and the fact that it pauses execution for live users. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, look at this. The logs say a `ValueError` happened, but the line number points to the `raise` inside the `except` block, losing the original error's location!
+
+```python
+def failing_func():
+    try:
+        int("hello") # The real error is here
+    except Exception as e:
+        # Do some cleanup...
+        raise ValueError("Something went wrong") # Traceback points HERE!
+```
+
+**The Fix:** Use `raise ... from`. This chains the exceptions, keeping the original traceback intact!
+```python
+        raise ValueError("Something went wrong") from e
+```
+
+## 11. Real-World Usage
+
+Where do big tech companies actually use this?
+- **Sentry / Rollbar:** Used by almost every major tech company (Disney, GitHub, Slack) to automatically group identical exceptions and alert developers via Slack.
+- **ELK (Elasticsearch, Logstash, Kibana):** Aggregating billions of JSON log lines so engineers can query: *"Show me all ERROR level logs from the Payment service between 2 PM and 3 PM."*
+- **Continuous Profiling:** Tools like Datadog Profiler or `py-spy` that constantly sample the CPU call stack to find out *why* a function is suddenly taking 5 seconds in production without crashing.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use an APM tool like Sentry or Datadog | Rely on SSH-ing into a server to read a `.log` file |
+| Log a unique Request ID for every HTTP request | Swallow exceptions silently |
+| Mask PII (Passwords, Credit Cards) before logging | Restart the server without grabbing the logs first! |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+If your server crashes completely (e.g., OOM - Out of Memory, or a Segmentation Fault in a C-extension), Python's `try/except` will **not** catch it. To debug these, you must rely on the operating system logs (e.g., `dmesg`, `journalctl`, or Kubernetes Pod exit codes like `OOMKilled - Exit Code 137`).
+
+## 14. Common Mistakes
+
+- **Logging PII:** Logging the entire `request.data` dictionary on a failed login attempt, accidentally storing thousands of plain-text passwords in your company's Splunk dashboard.
+- **Log Flooding:** Putting `logger.error("Failed")` inside a while-loop that runs 10,000 times a second, costing your company $5,000 in Datadog ingestion fees in one hour. Add rate-limiting or just raise the exception to break the loop!
+- **Not Reproducing Locally:** Trying to write a fix purely based on reading the code. Always write a unit test locally that triggers the exact bug, *then* fix it.
+
+## 15. Related Topics
+- Exception Handling
+- Logging
+- Docker & Environment Parity
+- Profiling and Performance

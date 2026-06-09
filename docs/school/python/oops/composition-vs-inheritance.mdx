@@ -2,6 +2,204 @@
 sidebar_position: 10
 ---
 
-# Composition Vs Inheritance
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Composition Vs Inheritance.
+# Composition vs Inheritance in Python
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Composition vs Inheritance |
+| Difficulty | Intermediate to Advanced |
+| Used For | Deciding how to reuse code and structure object relationships |
+| Common Mistake | Using deep inheritance hierarchies (e.g., 5 levels deep) to share behavior |
+| Key Benefit | Composition provides high flexibility; Inheritance provides structural hierarchy |
+
+## 2. Real-World Analogy
+
+Bro, think about designing a smartphone.
+
+**Inheritance ("Is-A" relationship):** You build a `BasicPhone`. Then you create a `SmartPhone` that inherits from it. Then a `GamingPhone` that inherits from `SmartPhone`. If the `BasicPhone` changes how its antenna works, all the phones below it break. It's rigid.
+
+**Composition ("Has-A" relationship):** You build a `PhoneFrame`. Inside it, you slot in a `CameraModule`, a `BatteryModule`, and a `ProcessorModule`. If you want a gaming phone, you just swap the `ProcessorModule` for a faster one. The components are independent and interchangeable.
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', position: { x: 250, y: 0 }, data: { label: 'Smartphone' } },
+    { id: '2', type: 'process', position: { x: 0, y: 150 }, data: { label: 'Camera Module (Has-a)' } },
+    { id: '3', type: 'process', position: { x: 250, y: 150 }, data: { label: 'Battery Module (Has-a)' } },
+    { id: '4', type: 'process', position: { x: 500, y: 150 }, data: { label: 'GPS Module (Has-a)' } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', type: 'straight' },
+    { id: 'e1-3', source: '1', target: '3', type: 'straight' },
+    { id: 'e1-4', source: '1', target: '4', type: 'straight' }
+  ]}
+/>
+
+## 3. Concept Explanation
+
+**Inheritance** represents an **"Is-A"** relationship. A Dog *is an* Animal. A Manager *is an* Employee. It's great when objects share core identities, but it tightly couples the child class to the parent class.
+
+**Composition** represents a **"Has-A"** relationship. A Car *has an* Engine. A User *has a* Profile. Instead of inheriting from a class to get its behavior, you instantiate that class as an attribute inside your new class.
+
+*Golden Rule in Modern Software:* **"Favor Composition over Inheritance."**
+
+## 4. Syntax Table
+
+| Concept | Structure | Python Example |
+|---|---|---|
+| Inheritance | Parent -> Child | `class Child(Parent):` |
+| Composition | Container -> Component | `self.component = Component()` |
+
+## 5. Beginner Example
+
+Let's look at the trap of inheritance, and how composition fixes it.
+
+**The Inheritance Trap (Rigid):**
+```python
+class Engine:
+    def start(self):
+        return "Engine starting..."
+
+# Car IS AN Engine? That makes no sense logically, but people do it to reuse code!
+class Car(Engine):
+    pass
+
+my_car = Car()
+print(my_car.start())
+```
+
+**The Composition Fix (Flexible):**
+```python
+class Engine:
+    def start(self):
+        return "Engine starting..."
+
+class Car:
+    def __init__(self):
+        # Car HAS AN Engine
+        self.engine = Engine()
+
+    def drive(self):
+        return self.engine.start() + " Vroom!"
+
+my_car = Car()
+print(my_car.drive())
+```
+
+## 6. Real-World Engineering Example
+
+Bro, let's build a notification system. If we use inheritance, we end up with crazy combinations like `EmailAndSmsNotification`. With composition, we just pass the behaviors we want!
+
+```python
+# --- Components (Behaviors) ---
+class EmailSender:
+    def send(self, msg):
+        print(f"Sending Email: {msg}")
+
+class SMSSender:
+    def send(self, msg):
+        print(f"Sending SMS: {msg}")
+
+class DatabaseLogger:
+    def log(self, msg):
+        print(f"Logging to DB: {msg}")
+
+# --- Container (Composition) ---
+class AlertSystem:
+    def __init__(self, sender, logger):
+        # We compose the system using injected dependencies
+        self.sender = sender
+        self.logger = logger
+
+    def trigger_alert(self, message):
+        self.sender.send(message)
+        self.logger.log(message)
+
+# Need an email alert with DB logging? Easy.
+email_alert = AlertSystem(EmailSender(), DatabaseLogger())
+email_alert.trigger_alert("Server Down!")
+
+# Need an SMS alert instead? Just swap the component! No new classes needed!
+sms_alert = AlertSystem(SMSSender(), DatabaseLogger())
+sms_alert.trigger_alert("CPU 100%")
+```
+
+## 7. Internal Working
+
+When you use Inheritance, Python resolves methods using the MRO (Method Resolution Order). The child class inherently carries the memory footprint and namespace of the parent class.
+
+When you use Composition, the objects are entirely separate entities in memory. They communicate strictly through references (attributes). This completely eliminates MRO complexity and side effects caused by parent class changes.
+
+## 8. Performance Table
+
+| Architecture | Memory Impact | Method Lookup Speed |
+|---|---|---|
+| Inheritance | Tightly packed, parent traits included | Slightly slower (has to traverse MRO chain) |
+| Composition | Multiple separate objects | Fast (direct attribute lookup O(1)) |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| When should you use Inheritance? | Only when there is a strict, undeniable "Is-A" relationship, and when the child class will use *almost all* of the parent's methods. |
+| Why is deep inheritance bad? | Deep inheritance (e.g., A -> B -> C -> D) makes code impossible to debug. A change in A can break D in unpredictable ways (Fragile Base Class Problem). |
+| What is the "Gorilla Banana" problem? | "You wanted a banana but what you got was a gorilla holding the banana and the entire jungle." It means when you inherit to get one method, you accidentally inherit massive unwanted dependencies. |
+| How do you achieve Polymorphism with Composition? | Through "Duck Typing" and Dependency Injection. As long as the components you pass in have the same method signatures (e.g., `.send()`), it works. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, can you combine both? Yes, but you must be careful.
+
+```python
+# Base class defining an interface (Inheritance)
+class Logger:
+    def log(self, msg): pass
+
+# Concrete implementations
+class FileLogger(Logger):
+    def log(self, msg): print(f"File: {msg}")
+
+class ConsoleLogger(Logger):
+    def log(self, msg): print(f"Console: {msg}")
+
+# Composition using the inherited types
+class Application:
+    def __init__(self, logger: Logger):
+        self.logger = logger  # Composed!
+```
+**Takeaway:** Inherit for *interfaces/types*, Compose for *behavior/logic*.
+
+## 11. Real-World Usage
+
+Where do big tech companies actually use this?
+- **Game Development (Entity Component System - ECS):** Modern games don't use `class Player(Character, Drawable, Moveable)`. They use composition: an `Entity` is just an ID that *has* a `RenderComponent`, `PhysicsComponent`, etc.
+- **UI Frameworks (React/Flutter):** You build UI by composing small widget classes inside larger ones, not by inheriting `Button` from `Screen`.
+- **FastAPI / Dependency Injection:** You inject dependencies (Database sessions, Auth tokens) into endpoints rather than inheriting them.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Favor composition for sharing behavior across unrelated classes | Create inheritance chains deeper than 2 levels |
+| Inject components via `__init__` (Dependency Injection) | Inherit just to reuse one utility method |
+| Use inheritance to define interfaces (`abc.ABC`) | Use multiple inheritance unless creating small Mixins |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+In microservices or large domain-driven architectures, composition is a lifesaver for unit testing. If a `PaymentService` inherits from `DatabaseClient`, testing payment logic requires a mocked database connection. If `PaymentService` is *composed* of a `database_repo`, you just pass a fake dictionary repository into the constructor for testing. Easy, fast, decoupled.
+
+## 14. Common Mistakes
+
+- **Inheriting for Utility:** Inheriting from `math_utils` just to use a `calculate_tax()` method. Just import the function or compose the class!
+- **Over-composing:** Creating 15 tiny component classes for a script that will only ever be 50 lines long.
+- **Leaking Components:** Allowing external code to access internal components directly (e.g., `car.engine.pistons.fire()`) instead of wrapping them (e.g., `car.drive()`). This violates the Law of Demeter.
+
+## 15. Related Topics
+- Multiple Inheritance & Mixins
+- Object-Oriented Design (SOLID)
+- Dependency Injection
+- Law of Demeter

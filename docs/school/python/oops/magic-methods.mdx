@@ -2,6 +2,197 @@
 sidebar_position: 7
 ---
 
-# Magic Methods
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Magic Methods.
+# Magic Methods (Dunder Methods) in Python
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Magic Methods (Dunder Methods) |
+| Difficulty | Intermediate |
+| Used For | Overloading built-in operations (like `+`, `==`, `len()`) for custom objects |
+| Common Mistake | Using `__str__` for debugging instead of `__repr__` |
+| Key Benefit | Making custom objects behave like native Python types |
+
+## 2. Real-World Analogy
+
+Bro, think of Magic Methods like custom keyboard shortcuts in your favorite IDE. By default, `Ctrl+C` copies text. But if you configure a custom shortcut, you change how the software reacts to that specific input.
+
+In Python, when you use the `+` operator, Python doesn't actually know how to add custom objects together. It secretly calls a "shortcut" method behind the scenes (`__add__`). Magic methods allow your custom objects to hook into Python's native syntax seamlessly.
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', position: { x: 250, y: 0 }, data: { label: 'Python Syntax (e.g., obj1 + obj2)' } },
+    { id: '2', type: 'process', position: { x: 250, y: 150 }, data: { label: 'Interceptor (Looks for Magic Method)' } },
+    { id: '3', type: 'data', position: { x: 0, y: 300 }, data: { label: 'obj1.__add__(obj2)' } },
+    { id: '4', type: 'data', position: { x: 500, y: 300 }, data: { label: 'Default Error (TypeError)' } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', type: 'smoothstep' },
+    { id: 'e2-3', source: '2', target: '3', label: 'If implemented', type: 'smoothstep' },
+    { id: 'e2-4', source: '2', target: '4', label: 'If missing', type: 'smoothstep' }
+  ]}
+/>
+
+## 3. Concept Explanation
+
+Magic methods, often called **Dunder** methods (Double UNDERscore), are special methods surrounded by double underscores, like `__init__` or `__str__`. They are not meant to be called directly by you (like `obj.__str__()`). Instead, they are invoked internally by Python when certain syntax is used.
+
+For example, when you pass an object to `len(obj)`, Python secretly calls `obj.__len__()`. Implementing these methods allows you to create highly "Pythonic" APIs.
+
+## 4. Syntax Table
+
+| Operation | Syntax | Magic Method Called |
+|---|---|---|
+| Initialization | `obj = MyClass()` | `__init__(self, ...)` |
+| String Repr | `print(obj)` | `__str__(self)` |
+| Developer Repr| `repr(obj)` | `__repr__(self)` |
+| Addition | `obj1 + obj2` | `__add__(self, other)` |
+| Length | `len(obj)` | `__len__(self)` |
+| Equality | `obj1 == obj2` | `__eq__(self, other)` |
+| Indexing | `obj[key]` | `__getitem__(self, key)` |
+
+## 5. Beginner Example
+
+Let's make a custom `Wallet` object that can be added together using the standard `+` operator.
+
+```python
+class Wallet:
+    def __init__(self, balance):
+        self.balance = balance
+
+    # Magic method to handle standard print()
+    def __str__(self):
+        return f"Wallet with ${self.balance}"
+
+    # Magic method to handle the '+' operator
+    def __add__(self, other):
+        return Wallet(self.balance + other.balance)
+
+w1 = Wallet(50)
+w2 = Wallet(100)
+
+w3 = w1 + w2  # Internally calls w1.__add__(w2)
+
+print(w3)  # Internally calls w3.__str__()
+# Output: Wallet with $150
+```
+
+## 6. Real-World Engineering Example
+
+Bro, in a real system, you might be building a custom data pipeline or ORM. Let's say you want to combine query results, or check if two records are identical based on ID, not memory address.
+
+```python
+class UserRecord:
+    def __init__(self, user_id, name, permissions):
+        self.user_id = user_id
+        self.name = name
+        self.permissions = set(permissions)
+
+    # Crucial for testing and deduplication
+    def __eq__(self, other):
+        if not isinstance(other, UserRecord):
+            return False
+        return self.user_id == other.user_id
+
+    # Allow combining permissions with the '|' (OR) operator
+    def __or__(self, other):
+        combined_perms = self.permissions.union(other.permissions)
+        return UserRecord(self.user_id, self.name, combined_perms)
+
+    def __repr__(self):
+        return f"User({self.user_id}, {self.permissions})"
+
+user_db = UserRecord(1, "Alice", ["read"])
+user_cache = UserRecord(1, "Alice", ["write"])
+
+# Checks equality using __eq__
+print(user_db == user_cache)  # Output: True
+
+# Combines permissions using __or__
+merged_user = user_db | user_cache
+print(merged_user) # Output: User(1, {'read', 'write'})
+```
+
+## 7. Internal Working
+
+Python is heavily dependent on protocols. When Python executes `a + b`, the CPython runtime literally checks the type definition of `a` for a slot called `tp_as_number.nb_add` (which maps to `__add__`). If it exists, it executes it. If not, it checks `b` for `__radd__` (reverse add). If both fail, it raises a `TypeError`.
+
+This protocol system is why Python objects can act dynamically but still integrate seamlessly with built-in functions.
+
+## 8. Performance Table
+
+| Magic Method Call | Complexity / Overhead |
+|---|---|
+| `__init__` | O(1) + Initialization logic |
+| `__eq__` | O(1) (Customizable based on logic) |
+| Operator Overload | Minor C-level lookup overhead |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between `__str__` and `__repr__`? | `__str__` is for readable end-user output. `__repr__` is for developers, usually returning a string that could recreate the object. |
+| What does `__new__` do compared to `__init__`? | `__new__` actually creates and allocates the object in memory. `__init__` only initializes an already created object. |
+| How do you make an object callable like a function? | Implement the `__call__` magic method. |
+| Why is `__hash__` important? | If you want to use your custom object as a dictionary key or in a set, it must implement `__hash__` and `__eq__`. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, what happens if you compare a custom object to an integer, but you only wrote logic for other custom objects?
+
+```python
+class Score:
+    def __init__(self, points):
+        self.points = points
+
+    def __eq__(self, other):
+        # ❌ TRAP: What if 'other' is an int?
+        return self.points == other.points
+
+score = Score(10)
+
+# print(score == 10)  # AttributeError: 'int' object has no attribute 'points'
+```
+
+**The Fix:** Always check the type using `isinstance` or return `NotImplemented` to let Python handle the fallback correctly.
+```python
+    def __eq__(self, other):
+        if not isinstance(other, Score):
+            return NotImplemented
+        return self.points == other.points
+```
+
+## 11. Real-World Usage
+
+Where do big tech companies actually use this?
+- **Pandas DataFrames:** Overloading `[]` (`__getitem__`) to filter rows, and `+` to add columns.
+- **SQLAlchemy ORM:** Overloading `==` to generate SQL syntax instead of returning True/False (e.g., `User.id == 5` creates an SQL string `WHERE id = 5`).
+- **Pathlib:** Overloading `/` (`__truediv__`) to join file paths elegantly (`path / "folder"`).
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Return `NotImplemented` for unsupported operations in operators | Raise `TypeError` directly in operator methods (it breaks fallback logic) |
+| Keep `__repr__` unambiguous and informative for debugging | Put expensive network/DB calls inside `__str__` or `__repr__` |
+| Make sure `__eq__` and `__hash__` match conceptually | Overload operators to do unintuitive things (like `+` doing subtraction) |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+Be very careful when implementing `__hash__` and `__eq__`. If an object is mutable (its attributes can change), its hash value shouldn't change over time. If a hash changes while an object is stored in a dictionary, it becomes "lost" in the hash table and causes massive memory leaks and lookup failures in production.
+
+## 14. Common Mistakes
+
+- **Forgetting `return`:** Forgetting to return a value in `__str__` or `__add__`. They must return something, not just print.
+- **Overusing Magic Methods:** Overloading `__call__` or operators just because it's "cool", making the codebase completely unreadable for new engineers.
+- **Ignoring `NotImplemented`:** Failing to handle mismatched types correctly during operator overloading.
+
+## 15. Related Topics
+- Object Initialization (`__new__`)
+- Hashability and Sets
+- Operator Module
+- Context Managers (`__enter__`, `__exit__`)
