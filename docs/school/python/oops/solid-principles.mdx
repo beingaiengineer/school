@@ -2,6 +2,267 @@
 sidebar_position: 9
 ---
 
-# Solid Principles
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Solid Principles.
+# SOLID Principles
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | SOLID Principles in Python |
+| Difficulty | Advanced |
+| Used For | Writing scalable, maintainable, and decoupled object-oriented code |
+| Common Mistake | Creating massive "God" classes that do everything (violates SRP) |
+| Impact | Slower initial development, but exponentially faster maintenance/scaling later |
+
+---
+
+# 2. Real-World Analogy
+
+Think of SOLID like designing a modern restaurant kitchen, bro.
+
+If one chef cooks, cleans, takes orders, and manages inventory, the restaurant collapses when it gets busy (Violates Single Responsibility).
+If you have to tear down a wall every time you add a new dish, it's terrible design (Violates Open/Closed).
+If a vegetarian chef replaces a meat chef but doesn't know how to cook meat, tickets fail (Violates Liskov Substitution).
+If a dishwasher is forced to learn how to make sushi just to work there, they quit (Violates Interface Segregation).
+If the head chef only knows how to use one specific brand of knife, and that brand goes out of business, the kitchen stops (Violates Dependency Inversion).
+
+SOLID prevents these disasters in code.
+
+---
+
+# 3. Concept Explanation
+
+SOLID is an acronym for five design principles intended to make software designs more understandable, flexible, and maintainable.
+
+1. **S**ingle Responsibility Principle (SRP): A class should have one, and only one, reason to change.
+2. **O**pen/Closed Principle (OCP): Code should be open for extension, but closed for modification.
+3. **L**iskov Substitution Principle (LSP): Subclasses should be substitutable for their base classes without breaking things.
+4. **I**nterface Segregation Principle (ISP): Don't force code to depend on methods it doesn't use.
+5. **D**ependency Inversion Principle (DIP): Depend on abstractions (interfaces), not concrete implementations.
+
+---
+
+# 4. Syntax Table
+
+(Conceptual mapping in Python)
+
+| Principle | Python Mechanism Used |
+|---|---|
+| **SRP** | Small classes, modular functions |
+| **OCP** | Inheritance, Composition, `Strategy Pattern` |
+| **LSP** | Correct Method Signatures, `Type Hinting` |
+| **ISP** | Multiple small Abstract Base Classes (`abc` module) |
+| **DIP** | Dependency Injection, Abstract Base Classes |
+
+---
+
+# 5. Beginner Example: SRP (Single Responsibility)
+
+**Bad (Violates SRP):**
+```python
+class User:
+    def __init__(self, email):
+        self.email = email
+
+    def get_email(self):
+        return self.email
+
+    # User class shouldn't handle database logic!
+    def save_to_database(self):
+        print(f"Saving {self.email} to DB")
+```
+
+**Good (Follows SRP):**
+```python
+class User:
+    def __init__(self, email):
+        self.email = email
+
+# Create a separate class for DB logic
+class UserRepository:
+    def save(self, user: User):
+        print(f"Saving {user.email} to DB")
+
+u = User("bro@python.com")
+repo = UserRepository()
+repo.save(u)
+```
+
+---
+
+# 6. Real-World Engineering Example: OCP & DIP
+
+Bro, let's look at Dependency Inversion and Open/Closed applied to a Notification System.
+We want to add new notification types (Slack, Discord) *without* modifying existing code.
+
+```python
+from abc import ABC, abstractmethod
+
+# 1. Abstraction (DIP)
+class Notifier(ABC):
+    @abstractmethod
+    def send(self, message: str):
+        pass
+
+# 2. Concrete Implementations
+class EmailNotifier(Notifier):
+    def send(self, message: str):
+        print(f"Sending Email: {message}")
+
+class SMSNotifier(Notifier):
+    def send(self, message: str):
+        print(f"Sending SMS: {message}")
+
+# 3. High-level module depends on abstraction, NOT concrete classes!
+class AlertSystem:
+    # Inject the dependency here (Dependency Injection)
+    def __init__(self, notifier: Notifier):
+        self.notifier = notifier
+
+    def trigger_alert(self, issue: str):
+        self.notifier.send(f"CRITICAL: {issue}")
+
+# Usage
+email_sys = AlertSystem(EmailNotifier())
+email_sys.trigger_alert("Server down!")
+
+# To add Slack, we just create `class SlackNotifier(Notifier)`
+# We do NOT touch `AlertSystem`. It is Open for extension, Closed for modification! (OCP)
+```
+
+---
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'process', data: { label: 'AlertSystem\n(High Level)' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'core', data: { label: 'Abstract Notifier\n(Interface)' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'tool', data: { label: 'EmailNotifier\n(Low Level)' }, position: { x: 100, y: 200 } },
+    { id: '4', type: 'tool', data: { label: 'SMSNotifier\n(Low Level)' }, position: { x: 400, y: 200 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'Depends on', type: 'smoothstep' },
+    { id: 'e3-2', source: '3', target: '2', label: 'Implements', type: 'step' },
+    { id: 'e4-2', source: '4', target: '2', label: 'Implements', type: 'step' }
+  ]}
+/>
+
+---
+
+# 7. Internal Working
+
+SOLID isn't a feature of the Python interpreter; it's a structural methodology.
+However, Python provides tools to enforce it:
+- `abc.ABC` enforces Interface Segregation and Dependency Inversion.
+- Python's dynamic typing makes Dependency Injection easier than in Java (duck typing).
+- `typing.Protocol` (Python 3.8+) allows structural subtyping, meaning you don't even need explicit inheritance to enforce interfaces.
+
+---
+
+# 8. Performance Table
+
+| Aspect | Impact |
+|---|---|
+| Execution Speed | Tiny overhead from abstraction layers/interfaces |
+| Memory Usage | Slightly higher due to more small objects |
+| Developer Velocity | Slower initially, massively faster over long-term |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the 'L' in SOLID? | Liskov Substitution. Subclasses must be usable in place of superclasses without breaking the program. |
+| How do you achieve OCP in Python? | By using inheritance or composition to extend behavior, rather than modifying existing classes with `if/else` flags. |
+| What is Dependency Injection? | Passing a dependent object into a class (usually via `__init__`) rather than letting the class instantiate it directly. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Look at this Liskov Substitution violation.
+
+```python
+class Rectangle:
+    def __init__(self, w, h):
+        self.w = w
+        self.h = h
+    def set_width(self, w): self.w = w
+    def set_height(self, h): self.h = h
+
+class Square(Rectangle):
+    # A square forces width and height to be the same
+    def set_width(self, w):
+        self.w = w
+        self.h = w
+
+def enlarge_width(rect: Rectangle):
+    rect.set_width(rect.w + 5)
+    # We expect height to remain unchanged for a rectangle!
+
+s = Square(5, 5)
+enlarge_width(s) # Breaks Liskov! The height silently changed to 10.
+```
+
+**Explanation:** Even though mathematically a Square is a Rectangle, programmatically it alters the expected behavior of a Rectangle. A `Square` should not inherit from `Rectangle` here.
+
+---
+
+# 11. Real-World Usage
+
+- **Django/Flask Views:** Keeping routing (URL) separate from Business Logic, separate from Database Models (SRP).
+- **Payment Gateways:** Injecting Stripe or Braintree into a checkout class (DIP).
+- **Logging Libraries:** Python's built-in `logging` module allows adding new Handlers (File, Stream, HTTP) without rewriting the core logger (OCP).
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Break down classes that have more than one reason to change | Use "God classes" (`AppManager`, `HelperTools`) that do a bit of everything |
+| Depend on Abstract Base Classes for critical external services (DB, API) | Hardcode concrete classes (like `pymysql.Connection`) deeply inside your business logic |
+
+---
+
+# 13. Production Notes
+
+> ⚠ **Production Note:**
+Bro, over-engineering SOLID is a real trap. Don't create 5 abstract classes and 10 interfaces for a script that just parses a CSV file once a day. Apply SOLID aggressively to the core domain logic that changes often, and be pragmatic about glue-code or simple scripts.
+
+---
+
+# 14. Common Mistakes
+
+A massive mistake is Interface Segregation violation.
+
+```python
+from abc import ABC, abstractmethod
+
+class Machine(ABC):
+    @abstractmethod
+    def print_doc(self): pass
+    @abstractmethod
+    def staple_doc(self): pass
+
+class BasicPrinter(Machine):
+    def print_doc(self):
+        print("Printing")
+
+    # BasicPrinter doesn't staple, but is FORCED to implement it!
+    def staple_doc(self):
+        raise NotImplementedError("I cannot staple!")
+```
+
+**Fix:** Break `Machine` into `Printer` and `Stapler` interfaces.
+
+---
+
+# 15. Related Topics
+
+- Abstraction & Interfaces
+- Design Patterns (Strategy, Factory)
+- Composition vs Inheritance
+- Testing & Mocking (SOLID makes mocking 10x easier)

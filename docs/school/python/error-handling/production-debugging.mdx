@@ -2,6 +2,203 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Production Debugging
 
-Placeholder: introduce Production Debugging.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Production Debugging |
+| Difficulty | Advanced |
+| Used For | Diagnosing and fixing bugs on live servers where you cannot use `breakpoint()` |
+| Common Mistake | Guessing the issue and blindly deploying a "fix" without verifying the root cause via logs/metrics |
+| Tooling | Sentry, Datadog, ELK Stack (Elasticsearch, Logstash, Kibana), APMs |
+
+---
+
+# 2. Real-World Analogy
+
+Think of Production Debugging like being a doctor treating a patient over the phone, bro.
+
+When you're debugging locally, the patient is right in front of you. You can take their blood pressure, do an X-ray, and try different medicines instantly (using `pdb` and `print`).
+
+But in production, the patient is on a live server 1,000 miles away. You can't pause their heart to see what's wrong. You have to rely purely on the monitors hooked up to them (Logs), the symptoms they describe (Error Tracebacks), and their overall health charts (Metrics).
+
+---
+
+# 3. Concept Explanation
+
+You cannot run `pdb` or visual debuggers on a production server. Pausing a live server means real users get frozen web pages.
+
+Production debugging relies entirely on **Observability**:
+1. **Logs:** What events happened leading up to the error?
+2. **Metrics:** Was CPU/Memory spiking? Was the database slow?
+3. **Traces/Exceptions:** What was the exact line of code and the state of variables when the crash occurred?
+
+Modern engineering teams use tools like Sentry to automatically capture uncaught exceptions and send them to a dashboard.
+
+---
+
+# 4. Syntax Table (Sentry Example)
+
+| Action | Code |
+|---|---|
+| Setup Sentry | `sentry_sdk.init(dsn="https://...", traces_sample_rate=1.0)` |
+| Auto-Capture | Does it automatically on uncaught exceptions! |
+| Manual Capture | `sentry_sdk.capture_exception(e)` |
+| Add Context | `sentry_sdk.set_user({"id": user_id, "email": email})` |
+
+---
+
+# 5. Beginner Example
+
+Let's see how you add context to a production error so you can actually fix it later.
+
+```python
+import logging
+
+logger = logging.getLogger(__name__)
+
+def process_checkout(user_id, cart_items):
+    # Imagine this runs on a server. It fails randomly for 1% of users.
+    try:
+        total = sum(item['price'] for item in cart_items)
+        # Bug: if total > 1000, our fake payment gateway crashes
+        if total > 1000:
+            raise ValueError("High-risk transaction blocked by gateway.")
+
+        return {"status": "success", "total": total}
+
+    except Exception as e:
+        # We must log the user_id and cart state to debug this later!
+        logger.error(
+            "Checkout failed",
+            # Passing extra context to the JSON log
+            extra={"user_id": user_id, "cart_size": len(cart_items), "error": str(e)}
+        )
+        raise e
+```
+
+---
+
+# 6. Real-World Engineering Example
+
+Bro, when a bug hits production, this is the actual engineering workflow:
+
+1. **Alerting:** PagerDuty sends a Slack message: `[CRITICAL] 500 Error Spike on Checkout API`.
+2. **Sentry (Error Tracking):** You open Sentry and see `TypeError: unsupported operand type(s) for +: 'int' and 'NoneType'`. Sentry shows it happened on line 42 in `payments.py`.
+3. **Datadog (Logs):** You search logs for the `request_id` associated with that error. You see:
+   - `INFO: User 99 started checkout`
+   - `INFO: Fetched discount code (Result: None)`
+   - `ERROR: Checkout crashed`.
+4. **Local Reproduction:** You write a unit test locally where `discount_code=None` and verify it crashes.
+5. **Fix & Deploy:** You fix the bug, deploy, and monitor the charts to ensure the errors stop.
+
+---
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Live Server (App)' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'warning', data: { label: 'Exception Raised' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'tool', data: { label: 'Sentry\n(Captures Traceback)' }, position: { x: 100, y: 200 } },
+    { id: '4', type: 'tool', data: { label: 'Datadog/ELK\n(Captures JSON Logs)' }, position: { x: 400, y: 200 } },
+    { id: '5', type: 'output', data: { label: 'Engineer Dashboard\n(Finds root cause)' }, position: { x: 250, y: 300 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', type: 'straight' },
+    { id: 'e2-3', source: '2', target: '3', label: 'Async HTTP POST', type: 'smoothstep' },
+    { id: 'e2-4', source: '2', target: '4', label: 'Log Stream', type: 'smoothstep' },
+    { id: 'e3-5', source: '3', target: '5', type: 'smoothstep' },
+    { id: 'e4-5', source: '4', target: '5', type: 'smoothstep' }
+  ]}
+/>
+
+---
+
+# 7. Internal Working
+
+Error tracking tools like Sentry work by patching standard library hooks. For example, they inject a custom `sys.excepthook`.
+
+When an exception goes completely unhandled and reaches the top of the interpreter, Python calls `sys.excepthook`. Sentry intercepts this, grabs the traceback, gathers local variable states, formats it into JSON, sends it asynchronously to their servers (so it doesn't block the app crash), and then allows the program to terminate normally.
+
+---
+
+# 8. Performance Table
+
+| Monitoring Tool | Performance Impact |
+|---|---|
+| JSON Logging | Low (Usually buffered and shipped by a sidecar agent like Filebeat) |
+| Error Tracking (Sentry) | Near Zero (Only activates when an Exception actually occurs) |
+| APM (Application Performance Monitoring) | ~1-5% Overhead (Traces database queries and HTTP requests) |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| How do you debug a memory leak in production? | Use a profiler like `tracemalloc` to sample memory allocations over time, or monitor memory graphs to identify which endpoints cause memory to rise without dropping. |
+| What is a "Correlation ID" or "Trace ID"? | A unique UUID generated at the very start of a web request. Every log message generated during that request includes this ID, allowing you to filter millions of logs to see the exact flow of one specific user. |
+| Why shouldn't you log raw user data? | PII (Personally Identifiable Information) like passwords or credit cards in logs violates compliance (GDPR/PCI). Logs must be sanitized. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+What is the "Silent Catch" trap in production?
+
+```python
+def process_data(data):
+    try:
+        # Complex logic...
+        pass
+    except Exception as e:
+        # TRAP: We caught the error, but didn't log it or alert anyone!
+        return None
+```
+
+**Explanation:** In production, if you catch a generic `Exception` and just return `None`, Sentry will **not** trigger an alert (because you technically handled the error). The app is quietly failing, users are mad, and your dashboards show zero errors. Always log or re-raise!
+
+---
+
+# 11. Real-World Usage
+
+- **Sentry / Rollbar:** Capturing uncaught Python exceptions with beautiful UI dashboards.
+- **Datadog / Splunk / ELK:** Centralizing terabytes of text logs from hundreds of servers so they can be searched quickly.
+- **Prometheus / Grafana:** Monitoring metrics (e.g., "CPU is at 99%", "DB Connections are maxed out").
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Log context! (e.g., `user_id`, `order_id`) alongside the error message | Restart the server without looking at the logs first (you destroy the evidence!) |
+| Use structured JSON logging so machines can parse and filter the logs easily | Log at `DEBUG` level in production (it will fill up your hard drive in minutes) |
+
+---
+
+# 13. Production Notes
+
+> ⚠ **Production Note:**
+Bro, never push a "quick fix" directly to production without testing it locally first. Production debugging gives you the *clues* to find the bug. Once you have the clues, you write a unit test locally to reproduce the bug, fix the code so the test passes, and then deploy.
+
+---
+
+# 14. Common Mistakes
+
+A massive mistake is **Log Spam**.
+
+If your database goes down, your app might generate 5,000 errors per second. If you send every single error to Sentry, you will exceed your quota in 2 minutes and lose visibility.
+Tools like Sentry use "Rate Limiting" and "Deduplication" to group the same error together. Ensure your logs are similarly rate-limited or monitored via metrics rather than plain text for high-volume failures.
+
+---
+
+# 15. Related Topics
+
+- Logging module
+- Exceptions
+- System Design (Observability)
+- Best Practices (Production Checklists)

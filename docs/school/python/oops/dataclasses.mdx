@@ -2,6 +2,230 @@
 sidebar_position: 8
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Dataclasses
 
-Placeholder: introduce Dataclasses.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Dataclasses |
+| Difficulty | Beginner/Intermediate |
+| Used For | Generating boilerplate OOP code (`__init__`, `__repr__`, `__eq__`) automatically |
+| Common Mistake | Using mutable defaults (like `[]`) instead of `default_factory` |
+| Performance | Faster object creation compared to standard classes with manual properties |
+
+---
+
+# 2. Real-World Analogy
+
+Think of a Dataclass like an automated form-filling robot, bro.
+
+Imagine you have to fill out 100 ID cards. Normally, you'd have to write down: "My name is X, my age is Y, my ID is Z" over and over again (this is the traditional `__init__` method).
+
+With a Dataclass, you just hand the robot a blank template with headers: `Name`, `Age`, `ID`. The robot automatically knows how to construct the card, how to print it nicely, and how to compare if two cards belong to the same person. It saves you from writing repetitive boilerplate.
+
+---
+
+# 3. Concept Explanation
+
+Introduced in Python 3.7 via the `@dataclass` decorator, dataclasses are designed to hold state (data).
+
+When you decorate a class with `@dataclass`, Python automatically generates the `__init__`, `__repr__`, and `__eq__` magic methods based on the class attributes you define using type hints. It drastically reduces the amount of code needed for classes that exist primarily to store data.
+
+---
+
+# 4. Syntax Table
+
+| Concept | Standard Class | Dataclass Equivalent |
+|---|---|---|
+| Definition | `class User:` | `@dataclass`<br/>`class User:` |
+| Initialization | `def __init__(self, n): self.n = n` | `n: str` |
+| Printing | Needs manual `__repr__` | Auto-generated |
+| Equality | Needs manual `__eq__` | Auto-generated (compares fields) |
+
+---
+
+# 5. Beginner Example
+
+Let's look at how much code we save.
+
+**Without Dataclass:**
+```python
+class InventoryItem:
+    def __init__(self, name: str, price: float, quantity: int = 0):
+        self.name = name
+        self.price = price
+        self.quantity = quantity
+
+    def __repr__(self):
+        return f"InventoryItem(name='{self.name}', price={self.price}, quantity={self.quantity})"
+
+    def __eq__(self, other):
+        if not isinstance(other, InventoryItem): return False
+        return self.name == other.name and self.price == other.price and self.quantity == other.quantity
+```
+
+**With Dataclass:**
+```python
+from dataclasses import dataclass
+
+@dataclass
+class InventoryItem:
+    name: str
+    price: float
+    quantity: int = 0
+
+# Test it out!
+item1 = InventoryItem("Laptop", 1200.00, 5)
+item2 = InventoryItem("Laptop", 1200.00, 5)
+
+print(item1)          # Output: InventoryItem(name='Laptop', price=1200.0, quantity=5)
+print(item1 == item2) # Output: True (Auto-compares the data fields!)
+```
+
+---
+
+# 6. Real-World Engineering Example
+
+Bro, in modern backend APIs (like FastAPI pipelines) or ETL scripts, we use dataclasses to structure incoming JSON payloads securely before processing them.
+
+```python
+from dataclasses import dataclass, field
+from typing import List
+
+@dataclass
+class APIResponse:
+    status_code: int
+    data: dict
+    # We must use field(default_factory=list) for mutable defaults!
+    errors: List[str] = field(default_factory=list)
+
+def process_webhook(payload: dict) -> APIResponse:
+    if "user_id" not in payload:
+        return APIResponse(status_code=400, data={}, errors=["Missing user_id"])
+
+    # Process logic...
+    return APIResponse(status_code=200, data={"user_created": True})
+
+res = process_webhook({"email": "test@test.com"})
+print(res)
+# Output: APIResponse(status_code=400, data={}, errors=['Missing user_id'])
+```
+
+---
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'data', data: { label: 'Class Definition\nwith Type Hints' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'tool', data: { label: '@dataclass Decorator' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'output', data: { label: 'Auto-generates:\n__init__' }, position: { x: 50, y: 200 } },
+    { id: '4', type: 'output', data: { label: 'Auto-generates:\n__repr__' }, position: { x: 250, y: 200 } },
+    { id: '5', type: 'output', data: { label: 'Auto-generates:\n__eq__' }, position: { x: 450, y: 200 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', type: 'smoothstep' },
+    { id: 'e2-3', source: '2', target: '3', type: 'step' },
+    { id: 'e2-4', source: '2', target: '4', type: 'step' },
+    { id: 'e2-5', source: '2', target: '5', type: 'step' }
+  ]}
+/>
+
+---
+
+# 7. Internal Working
+
+When Python reads `@dataclass`, it inspects the class definition for variables that have type annotations (e.g., `name: str`).
+
+It dynamically generates an `__init__` method, dynamically compiling a string of code into byte code for maximum performance, and attaches it to the class. It uses Python's `inspect` and `types` modules heavily to inject these methods cleanly into the namespace.
+
+---
+
+# 8. Performance Table
+
+| Operation | Standard Class | Dataclass |
+|---|---|---|
+| Import/Definition time | Slightly faster | Slightly slower (due to dynamic generation) |
+| Object Creation (`__init__`) | Normal | Slightly faster (highly optimized generated CPython code) |
+| Memory Footprint | Normal dict | Same (unless `slots=True` is used, then much smaller) |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why use Dataclasses over NamedTuples? | Dataclasses are mutable by default and support inheritance/methods easily. NamedTuples are immutable. |
+| What is `default_factory`? | A parameter used for fields with mutable defaults (like lists or dicts) to ensure a new instance is created for every object. |
+| Can you make a Dataclass immutable? | Yes, by passing `frozen=True` to the decorator (`@dataclass(frozen=True)`). |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+What is the trap here, bro?
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class Team:
+    name: str
+    members: list = [] # DANGER!
+```
+
+**Answer:** Python will raise a `ValueError: mutable default <class 'list'> for field members is not allowed`.
+
+**Explanation:** If Python allowed this, every `Team` instance would share the *exact same list* in memory. If you appended a member to Team A, they would also appear in Team B. You must use `members: list = field(default_factory=list)`.
+
+---
+
+# 11. Real-World Usage
+
+- **FastAPI / Pydantic:** Pydantic models (heavy validation) are heavily inspired by standard dataclasses. Dataclasses are often used for internal data structures behind APIs.
+- **Machine Learning Configurations:** Storing hyperparameters for training jobs.
+- **Message Queues:** Structuring payloads sent to RabbitMQ or Kafka.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `frozen=True` if the data should never change after creation (makes it hashable for sets!) | Put heavy business logic inside dataclasses (they are for data storage) |
+| Use type hints explicitly for all fields | Mix fields with and without default values out of order (defaults must come last) |
+
+---
+
+# 13. Production Notes
+
+> ⚠ **Production Note:**
+If you are instantiating millions of dataclasses (like rows from a large database query), always use `@dataclass(slots=True)` (available in Python 3.10+). This prevents Python from creating a `__dict__` for every object, drastically dropping RAM usage by up to 50% and speeding up attribute access.
+
+---
+
+# 14. Common Mistakes
+
+A common mistake is forgetting that type hints in standard dataclasses are **not** enforced at runtime.
+
+```python
+@dataclass
+class User:
+    age: int
+
+# Python allows this! It won't crash.
+u = User(age="twenty")
+print(u.age) # Outputs: 'twenty'
+```
+
+If you need strict runtime validation, you must use a library like `Pydantic` or `marshmallow`, not standard `dataclasses`.
+
+---
+
+# 15. Related Topics
+
+- Classes & Objects
+- Magic Methods
+- Tuples vs Lists (Immutability)
+- Type Hinting

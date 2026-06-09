@@ -2,6 +2,242 @@
 sidebar_position: 7
 ---
 
-# Magic Methods
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Magic Methods.
+# Magic Methods (Dunder Methods)
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Magic Methods (Dunder Methods) |
+| Difficulty | Intermediate |
+| Used For | Customizing object behavior for built-in operations like `+`, `==`, `len()`, and `print()` |
+| Common Mistake | Implementing `__eq__` without implementing `__hash__` when using objects in sets |
+| Performance | Tiny overhead; calling a dunder directly vs built-in syntax is slightly slower |
+
+---
+
+# 2. Real-World Analogy
+
+Think of Magic Methods like a universal translator inside your object, bro.
+
+If you buy a ticket for a train, and the conductor asks for it, the ticket automatically knows how to present itself. If you buy two tickets, they don't naturally know how to merge.
+
+But if you give your ticket an internal rule (a magic method) that says "when someone tries to ADD you to another ticket, combine the passenger names," you've taught a custom object how to behave with standard operators like `+`.
+
+---
+
+# 3. Concept Explanation
+
+Magic methods (often called "dunder" methods because they have **D**ouble **UNDER**scores, like `__init__`) are special methods that Python invokes automatically behind the scenes.
+
+When you do `a + b`, Python actually calls `a.__add__(b)`.
+When you do `len(my_list)`, Python actually calls `my_list.__len__()`.
+
+By defining these methods in your custom classes, you make your objects behave like built-in Python types, unlocking operator overloading and clean, Pythonic code.
+
+---
+
+# 4. Syntax Table
+
+| Operation | Built-in Syntax | Behind the scenes Magic Method |
+|---|---|---|
+| Initialization | `obj = MyClass()` | `__init__(self)` |
+| String Representation | `print(obj)` or `str(obj)` | `__str__(self)` |
+| Developer Representation | `repr(obj)` | `__repr__(self)` |
+| Length | `len(obj)` | `__len__(self)` |
+| Addition | `a + b` | `__add__(self, other)` |
+| Equality | `a == b` | `__eq__(self, other)` |
+
+---
+
+# 5. Beginner Example
+
+Let's say we have a `Wallet` class. By default, you can't add two wallets together using `+`. Let's fix that using `__add__`.
+
+```python
+class Wallet:
+    def __init__(self, balance):
+        self.balance = balance
+
+    # Overloading the '+' operator
+    def __add__(self, other):
+        # Create a new wallet with combined balance
+        return Wallet(self.balance + other.balance)
+
+    # Overloading how the object prints
+    def __str__(self):
+        return f"Wallet with ${self.balance}"
+
+w1 = Wallet(50)
+w2 = Wallet(100)
+
+w3 = w1 + w2  # Python calls w1.__add__(w2) behind the scenes!
+
+print(w3)  # Python calls w3.__str__()
+# Output: Wallet with $150
+```
+
+---
+
+# 6. Real-World Engineering Example
+
+Bro, in engineering, we often use `__eq__` (equality) and `__hash__` to allow custom objects to be used in Sets or as Dictionary keys.
+
+Imagine an `Employee` system where employees are unique by their ID.
+
+```python
+class Employee:
+    def __init__(self, emp_id, name):
+        self.emp_id = emp_id
+        self.name = name
+
+    # Two employees are equal if their IDs are equal
+    def __eq__(self, other):
+        if not isinstance(other, Employee):
+            return False
+        return self.emp_id == other.emp_id
+
+    # We must implement __hash__ if we implement __eq__ to use in sets/dicts
+    def __hash__(self):
+        return hash(self.emp_id)
+
+    def __repr__(self):
+        return f"Employee({self.emp_id}, {self.name})"
+
+# Processing payroll, ensuring no duplicate employees
+e1 = Employee(101, "Alice")
+e2 = Employee(102, "Bob")
+e3 = Employee(101, "Alice Duplicate") # Same ID!
+
+unique_employees = {e1, e2, e3}
+
+# e3 overwrites/merges with e1 because they evaluate as equal and have the same hash
+print(unique_employees)
+# Output: {Employee(101, Alice), Employee(102, Bob)}
+```
+
+---
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'data', data: { label: 'w1 + w2' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Python Interpreter Intercepts' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'core', data: { label: 'Looks for w1.__add__(w2)' }, position: { x: 100, y: 200 } },
+    { id: '4', type: 'warning', data: { label: 'Throws TypeError' }, position: { x: 400, y: 200 } },
+    { id: '5', type: 'output', data: { label: 'Executes your custom logic' }, position: { x: 100, y: 300 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', type: 'straight' },
+    { id: 'e2-3', source: '2', target: '3', label: 'If defined', type: 'step' },
+    { id: 'e2-4', source: '2', target: '4', label: 'If missing', type: 'step' },
+    { id: 'e3-5', source: '3', target: '5', type: 'smoothstep' }
+  ]}
+/>
+
+---
+
+# 7. Internal Working
+
+Python is heavily object-oriented under the hood. All built-in operators are just syntactic sugar for function calls on objects.
+
+When you define a dunder method, Python registers it in the class's `__dict__`. When an operator is used, Python checks the left operand's class dictionary for the corresponding dunder method. If it's missing, it checks the right operand for the reverse method (like `__radd__` for right-addition). If both fail, it throws a `TypeError`.
+
+---
+
+# 8. Performance Table
+
+| Usage | Speed | Note |
+|---|---|---|
+| Built-in `a + b` | Fast | Highly optimized in CPython |
+| Overloaded `a + b` | Slightly slower | Incurs Python function call overhead to custom `__add__` |
+| Direct call `a.__add__(b)` | Slowest | Bypass syntax sugar, direct dictionary lookup |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Difference between `__str__` and `__repr__`? | `__str__` is for end-users (readable). `__repr__` is for developers (detailed, ideally can recreate the object). |
+| What happens if you define `__eq__` but not `__hash__`? | The object becomes unhashable and cannot be used in a `set` or as a `dict` key. |
+| What is `__new__` vs `__init__`? | `__new__` actually *allocates* the memory and returns the instance. `__init__` only *initializes* the already created instance. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Look at this trap regarding `__repr__` fallback.
+
+```python
+class Node:
+    def __init__(self, value):
+        self.value = value
+
+    def __repr__(self):
+        return f"Node({self.value})"
+
+n = Node(10)
+print(n) # We didn't define __str__, what happens?
+```
+
+**Output:**
+```text
+Node(10)
+```
+**Explanation:** If a class doesn't define `__str__`, Python automatically falls back to `__repr__` when `print()` is called. However, if you only define `__str__`, `repr()` will NOT fall back to `__str__` (it will print the memory address).
+
+---
+
+# 11. Real-World Usage
+
+- **Pandas/NumPy:** Overloading operators `+`, `-`, `*` so you can add entire columns of data together effortlessly.
+- **Pathlib:** The `Path` object overloads `/` (`__truediv__`) so you can join paths like `Path('folder') / 'file.txt'`.
+- **ORMs (SQLAlchemy):** Overloading `==` to generate SQL query strings instead of returning a boolean (e.g., `User.id == 5` creates a SQL condition).
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Implement `__repr__` for all custom classes to make debugging easier | Overload operators to do unintuitive things (e.g., making `+` subtract values) |
+| Return `NotImplemented` from comparison dunders if the types don't match, allowing Python to try reverse methods | Raise `NotImplementedError` in comparison dunders |
+
+---
+
+# 13. Production Notes
+
+> ⚠ **Production Note:**
+Bro, when implementing `__eq__`, always check the type of `other` using `isinstance()`. If you blindly compare `self.id == other.id`, and `other` is an integer or None, your production system will crash with an `AttributeError` during a simple equality check.
+
+---
+
+# 14. Common Mistakes
+
+A massive beginner mistake is modifying `self` inside an operator overload like `__add__`.
+
+**Bad Practice:**
+```python
+def __add__(self, other):
+    self.balance += other.balance  # Mutates self!
+    return self
+```
+
+**Good Practice:**
+```python
+def __add__(self, other):
+    # Addition should return a NEW object, not mutate the existing one
+    return Wallet(self.balance + other.balance)
+```
+
+---
+
+# 15. Related Topics
+
+- Classes & Objects
+- Operator Overloading (Concepts)
+- Sets & Hashing
+- Iterators (uses `__iter__` and `__next__`)
+- Context Managers (uses `__enter__` and `__exit__`)

@@ -2,6 +2,237 @@
 sidebar_position: 2
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Custom Exceptions
 
-Placeholder: introduce Custom Exceptions.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Custom Exceptions |
+| Difficulty | Intermediate |
+| Used For | Creating specific, business-logic related error types (e.g., `InsufficientFundsError`) |
+| Common Mistake | Inheriting from `BaseException` instead of `Exception` |
+| Performance | Same overhead as standard exceptions; lightweight to define |
+
+---
+
+# 2. Real-World Analogy
+
+Think of Built-in Exceptions like standard police codes (e.g., "10-4" for OK, "10-30" for robbery).
+If someone steals a painting, the police use the robbery code.
+
+But what if you run a highly specific museum, and someone touches the lasers? The standard police codes don't have a "Laser Touched" code.
+
+So, you create a **Custom Exception**: `LaserTripwireTriggeredError`. It immediately tells your security system exactly what went wrong, rather than just broadcasting a generic "Something Bad Happened" alarm.
+
+---
+
+# 3. Concept Explanation
+
+While Python has many built-in exceptions (`ValueError`, `TypeError`), they don't always describe *business logic* errors cleanly.
+
+If a user tries to withdraw more money than they have, raising a `ValueError("Not enough money")` is vague. A custom exception `InsufficientFundsError` makes the code infinitely more readable, debuggable, and easier to catch specifically in higher-level functions.
+
+To create one, you simply create a new class that inherits from `Exception`.
+
+---
+
+# 4. Syntax Table
+
+| Concept | Syntax |
+|---|---|
+| Define Custom Error | `class CustomError(Exception): pass` |
+| Raise Custom Error | `raise CustomError("Details here")` |
+| Catch Custom Error | `except CustomError as e:` |
+| Add Custom Attributes | `def __init__(self, item, amount): ...` |
+
+---
+
+# 5. Beginner Example
+
+Let's make a simple banking script.
+
+```python
+# 1. Define the custom exception
+class InsufficientFundsError(Exception):
+    """Raised when a user tries to withdraw more than their balance."""
+    pass
+
+def withdraw(balance, amount):
+    if amount > balance:
+        # 2. Raise it!
+        raise InsufficientFundsError(f"Cannot withdraw ${amount}. Balance is only ${balance}.")
+    return balance - amount
+
+# 3. Catch it!
+try:
+    my_balance = withdraw(100, 500)
+except InsufficientFundsError as e:
+    print(f"Transaction Failed: {e}")
+```
+
+---
+
+# 6. Real-World Engineering Example
+
+Bro, in a massive API, you usually create a base exception for your whole application, and then specific exceptions inherit from that. This allows the API framework (like FastAPI) to catch *any* of your app's errors globally.
+
+```python
+# Base error for our whole App
+class StripeAppError(Exception):
+    """Base exception for all Stripe-related errors."""
+    pass
+
+# Specific errors inheriting from our Base error
+class CardDeclinedError(StripeAppError):
+    def __init__(self, decline_code):
+        self.decline_code = decline_code
+        super().__init__(f"Card declined by bank. Code: {decline_code}")
+
+class RateLimitError(StripeAppError):
+    pass
+
+def charge_card(user, amount):
+    # Simulate API logic
+    if user.card_status == "blocked":
+        raise CardDeclinedError(decline_code="stolen_card")
+    if user.api_requests > 1000:
+        raise RateLimitError("Too many requests this minute.")
+
+# The beautiful part: Catching logic
+try:
+    charge_card(current_user, 50.0)
+except CardDeclinedError as e:
+    print(f"Notify User: {e}") # Handle card issues specifically
+except StripeAppError as e:
+    print(f"General App Error: {e}") # Catches RateLimitError and any future StripeAppErrors!
+except Exception as e:
+    print("Unknown catastrophic system error.")
+```
+
+---
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Exception (Built-in)' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'core', data: { label: 'MyAppBaseError' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'tool', data: { label: 'InvalidInputError' }, position: { x: 100, y: 200 } },
+    { id: '4', type: 'tool', data: { label: 'DatabaseSyncError' }, position: { x: 400, y: 200 } },
+    { id: '5', type: 'output', data: { label: 'except MyAppBaseError:\nCatches BOTH!' }, position: { x: 250, y: 300 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'Inherits', type: 'straight' },
+    { id: 'e2-3', source: '2', target: '3', label: 'Inherits', type: 'step' },
+    { id: 'e2-4', source: '2', target: '4', label: 'Inherits', type: 'step' },
+    { id: 'e3-5', source: '3', target: '5', type: 'smoothstep' },
+    { id: 'e4-5', source: '4', target: '5', type: 'smoothstep' }
+  ]}
+/>
+
+---
+
+# 7. Internal Working
+
+Custom exceptions are just standard Python classes. When you call `raise CustomError("msg")`, Python instantiates the object and populates its `.args` tuple with `"msg"`.
+
+Because exception catching uses standard `issubclass()` checks under the hood, catching `MyAppBaseError` successfully catches `InvalidInputError` because `InvalidInputError` *is a subclass* of `MyAppBaseError`.
+
+---
+
+# 8. Performance Table
+
+| Action | Impact |
+|---|---|
+| Defining custom classes | Near zero (evaluated once on import) |
+| Raising Custom vs Built-in | Exactly the same overhead (object instantiation + stack unwind) |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why should you inherit from `Exception` and not `BaseException`? | `BaseException` is meant for system-exiting events (`KeyboardInterrupt`). Standard `except Exception:` blocks won't catch `BaseException`, so your app might crash unexpectedly. |
+| Can custom exceptions contain methods? | Yes! They are regular classes. You can add methods like `log_to_datadog()` directly inside the exception class. |
+| What is the benefit of a base App exception? | It allows you to catch all expected domain-specific errors in one block, while letting unexpected systemic errors (like `KeyError`) bubble up to crash/alert normally. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Look at this tricky overriding of `__str__` in an exception.
+
+```python
+class MissingDataError(Exception):
+    def __init__(self, field_name):
+        self.field_name = field_name
+
+    def __str__(self):
+        return f"CRITICAL: The field '{self.field_name}' is missing."
+
+try:
+    raise MissingDataError("email_address")
+except Exception as e:
+    # Notice we catch it as Exception, not MissingDataError
+    print(e)
+```
+
+**Output:**
+```text
+CRITICAL: The field 'email_address' is missing.
+```
+**Explanation:** Even though it's caught as a generic `Exception` variable `e`, the object is still fundamentally a `MissingDataError`. Python calls its overridden `__str__` method when printing.
+
+---
+
+# 11. Real-World Usage
+
+- **Django:** Defines `ObjectDoesNotExist` and `MultipleObjectsReturned`.
+- **Requests Library:** Defines `ConnectionError`, `Timeout`, `TooManyRedirects`.
+- **Financial Software:** Custom errors like `DailyTransferLimitExceededError`.
+- **Game Dev:** Errors like `PlayerOutOfBoundsError`.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Create an `AppBaseError` for your specific project | Create 50 custom exceptions if a simple `ValueError("msg")` suffices for a small script |
+| Name them clearly ending in "Error" (e.g., `PaymentError`) | Catch standard `Exception` before catching your custom exception (order matters!) |
+
+---
+
+# 13. Production Notes
+
+> ⚠ **Production Note:**
+Bro, when building microservices, include HTTP status codes directly in your custom exceptions.
+If you have `UserNotFoundError(APIError)`, give it an attribute `status_code = 404`. Then, your top-level FastAPI/Flask error handler can simply catch `APIError`, read the `status_code` property, and instantly return the correct JSON response to the client.
+
+---
+
+# 14. Common Mistakes
+
+A massive mistake is **Swallowing Exceptions**.
+
+**Bad:**
+```python
+try:
+    raise InsufficientFundsError()
+except InsufficientFundsError:
+    # The developer did nothing here! The program silently fails.
+    pass
+```
+
+If you catch a custom exception, you must *handle* it (log it, notify the user, or return a specific default value). Don't just `pass`.
+
+---
+
+# 15. Related Topics
+
+- Exceptions (Core)
+- API Error Handling
+- Inheritance
+- Logging Exception Tracebacks

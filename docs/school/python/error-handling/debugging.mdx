@@ -2,6 +2,217 @@
 sidebar_position: 4
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Debugging
 
-Placeholder: introduce Debugging.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Debugging |
+| Difficulty | Beginner/Intermediate |
+| Used For | Finding and fixing logical or runtime errors in code interactively |
+| Common Mistake | Staring at code for hours instead of using a debugger to step through execution |
+| Best Tool | Python's built-in `pdb` (or IDE debuggers like VSCode / PyCharm) |
+
+---
+
+# 2. Real-World Analogy
+
+Think of Debugging like diagnosing a broken car engine, bro.
+
+If the car won't start, you don't just stare at the hood and guess. You don't replace random parts hoping it works (that's "print debugging").
+
+Instead, you use a diagnostic tool. You pause the engine's cycle, check the fuel line, check the spark plugs one by one, and see exactly where the failure happens. A debugger lets you "pause" your code mid-execution and look at the exact values of variables in memory.
+
+---
+
+# 3. Concept Explanation
+
+Debugging is the systematic process of finding and resolving bugs. While `print()` statements are common for beginners, they require you to guess where the problem is and constantly rerun the script.
+
+Interactive debuggers (like Python's `pdb` or the `breakpoint()` function) allow you to halt execution at a specific line (a breakpoint). From there, you can execute code line-by-line, inspect variable values, and even change variables on the fly to see how the program reacts.
+
+---
+
+# 4. Syntax Table
+
+| Action | `pdb` Command | Description |
+|---|---|---|
+| Set Breakpoint | `breakpoint()` | Stops execution here (Python 3.7+) |
+| Next Line | `n` (next) | Executes current line, goes to next line |
+| Step Into | `s` (step) | Steps *inside* the function being called |
+| Continue | `c` (continue) | Resumes execution until next breakpoint |
+| Print Variable | `p var_name` | Prints the value of a variable |
+| Quit | `q` (quit) | Aborts the debugger and program |
+
+---
+
+# 5. Beginner Example
+
+Let's debug a simple function where the math is wrong.
+
+```python
+def calculate_total(price, tax_rate):
+    # Bug: tax_rate should be divided by 100 if it's a percentage (e.g., 20 for 20%)
+    tax_amount = price * tax_rate
+
+    # We insert a breakpoint to inspect values right before the crash/wrong output
+    breakpoint()
+
+    total = price + tax_amount
+    return total
+
+print(calculate_total(100, 20))
+```
+
+When you run this script, it pauses in the terminal:
+```text
+> /path/to/script.py(8)calculate_total()
+-> total = price + tax_amount
+(Pdb) p tax_amount
+2000
+(Pdb) p price
+100
+(Pdb) # Ah! 2000 tax on a 100 price is wrong. I see the bug!
+(Pdb) q
+```
+
+---
+
+# 6. Real-World Engineering Example
+
+Bro, in backend development, you often debug complex nested dictionaries coming from API requests.
+
+```python
+import json
+
+def process_webhook(payload_str):
+    try:
+        data = json.loads(payload_str)
+        # We expect data to have ['user']['address']['zipcode']
+        # But it crashes with KeyError!
+
+        breakpoint() # Stop here to inspect 'data'
+
+        zipcode = data['user']['address']['zipcode']
+        print(f"Processing zipcode: {zipcode}")
+
+    except Exception as e:
+        print(f"Failed: {e}")
+
+# The incoming payload has a typo: 'adress' instead of 'address'
+malformed_payload = '{"user": {"adress": {"zipcode": "10001"}}}'
+process_webhook(malformed_payload)
+```
+*In the debugger, you can type `data.keys()` or `data['user'].keys()` and instantly see the typo `adress` without guessing!*
+
+---
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'data', data: { label: 'Line 1: Code' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'warning', data: { label: 'Line 2: breakpoint()' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'process', data: { label: 'Execution Paused' }, position: { x: 100, y: 200 } },
+    { id: '4', type: 'tool', data: { label: 'Developer Inspects\n(p variable, n)' }, position: { x: 400, y: 200 } },
+    { id: '5', type: 'output', data: { label: 'Line 3: Code Resumes\n(after typing "c")' }, position: { x: 250, y: 300 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', type: 'straight' },
+    { id: 'e2-3', source: '2', target: '3', type: 'step' },
+    { id: 'e3-4', source: '3', target: '4', label: 'Interactive Session', type: 'straight' },
+    { id: 'e4-5', source: '4', target: '5', type: 'smoothstep' }
+  ]}
+/>
+
+---
+
+# 7. Internal Working
+
+When `breakpoint()` is called, Python invokes `sys.breakpointhook()`, which by default drops you into the `pdb` (Python Debugger) module.
+
+`pdb` uses Python's `sys.settrace()` function under the hood. This trace function intercepts the Python interpreter before every single line of code is executed. It halts the thread, opens a standard input stream (`stdin`) to your terminal, and waits for your commands before allowing the interpreter to proceed to the next bytecode instruction.
+
+---
+
+# 8. Performance Table
+
+| Environment | Performance Impact |
+|---|---|
+| Running without breakpoints | Normal speed |
+| Running with `sys.settrace` active (IDE Debugger attached) | Noticeably slower (overhead on every line) |
+| Hitting a `breakpoint()` | Halts execution entirely (0 CPU usage while waiting) |
+
+*Never leave `breakpoint()` or debuggers attached in production!*
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What's the difference between "Step Over" (`n`) and "Step Into" (`s`)? | Step Over executes the next line, running any functions completely. Step Into goes *inside* the function call on that line so you can debug its internals. |
+| Why is `breakpoint()` better than `import pdb; pdb.set_trace()`? | `breakpoint()` is built-in (Python 3.7+) so it requires no imports. It also respects the `PYTHONBREAKPOINT` environment variable, allowing you to disable all breakpoints globally. |
+| How do you debug an infinite loop? | Interrupt it (Ctrl+C). If running in an IDE, hit the "Pause" button to halt execution and inspect the current stack frame. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+What happens if you have a variable named `c` (like `c = 10`) and you type `c` in the Pdb console?
+
+**Answer:**
+The debugger will execute the `continue` command and resume your program! Pdb commands (`c`, `n`, `q`) take precedence over your variable names.
+
+**Fix:** If you need to print a variable named `c`, you must type `p c` (print c).
+
+---
+
+# 11. Real-World Usage
+
+- **VSCode / PyCharm Debugger:** 99% of professional engineers use the visual debuggers in these IDEs rather than terminal `pdb`. You just click the line number to add a red dot, hit "Debug", and use visual buttons to step through.
+- **Docker/Kubernetes Debugging:** Using `debugpy` to attach a visual debugger to a remote server running inside a Docker container.
+- **Data Science:** Pausing a Jupyter notebook to inspect a massive Pandas DataFrame before applying a transformation.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Learn visual IDE debuggers (VSCode/PyCharm); they save hundreds of hours | Commit `breakpoint()` or `print("here1")` into version control |
+| Use conditional breakpoints (e.g., pause only if `user_id == 5`) | Try to debug asynchronous code (`asyncio`) purely with `pdb` (it gets messy, use IDEs) |
+
+---
+
+# 13. Production Notes
+
+> ⚠ **Production Note:**
+Bro, if you accidentally deploy `breakpoint()` to a production server, your application will pause forever waiting for user input that will never come, completely locking up that worker thread.
+Always use Linters (like `flake8` or `ruff`) in your CI/CD pipeline to automatically block commits that contain `breakpoint()`.
+
+---
+
+# 14. Common Mistakes
+
+A common mistake is forgetting that you can run arbitrary Python code inside `pdb`.
+
+If you are paused inside a function, you don't just have to *look* at variables. You can execute code!
+```text
+(Pdb) p my_list
+[1, 2, 3]
+(Pdb) my_list.append(4)  # You can mutate state!
+(Pdb) len(my_list)       # You can run functions!
+4
+```
+Beginners often stop the debugger, change the code, and restart, instead of just testing the fix live inside the debugger shell.
+
+---
+
+# 15. Related Topics
+
+- Production Debugging (Logs & APMs)
+- Exceptions
+- Unit Testing (Reduces the need for manual debugging)
+- VSCode / PyCharm Setup
