@@ -2,6 +2,293 @@
 sidebar_position: 9
 ---
 
-# Solid Principles
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Solid Principles.
+# SOLID Principles
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | SOLID Principles in Python |
+| Difficulty | Advanced |
+| Used For | Writing clean, scalable, and maintainable object-oriented code |
+| Common Mistake | Over-engineering small scripts just to adhere strictly to all 5 rules |
+| Performance | No direct impact on runtime performance, but drastically improves developer speed |
+
+---
+
+# 2. Real-World Analogy
+
+Think of SOLID like the architectural blueprint for a massive hospital, bro.
+
+If you build a tiny hut (a small script), you don't need detailed blueprints. But for a hospital, if the X-Ray room is wired directly into the plumbing of the cafeteria, repairing the sink will break the X-Ray machine!
+
+SOLID principles are the rules that ensure the plumbing, electrical, and structural systems are decoupled and modular. If you need to upgrade the X-Ray machine, you only touch that room, without risking the whole hospital.
+
+---
+
+# 3. Concept Explanation
+
+SOLID is an acronym for 5 design principles introduced by Robert C. Martin (Uncle Bob):
+
+1. **(S) Single Responsibility Principle:** A class should have one, and only one, reason to change.
+2. **(O) Open/Closed Principle:** Code should be open for extension, but closed for modification.
+3. **(L) Liskov Substitution Principle:** Subclasses should be substitutable for their base classes.
+4. **(I) Interface Segregation Principle:** Many client-specific interfaces are better than one general-purpose interface.
+5. **(D) Dependency Inversion Principle:** Depend upon abstractions, not concretions.
+
+---
+
+# 4. Single Responsibility Principle (SRP)
+
+**Bad Code:** A class that does too much.
+```python
+class ReportGenerator:
+    def __init__(self, data):
+        self.data = data
+
+    def generate(self):
+        return f"Report: {self.data}"
+
+    def save_to_file(self, filename):
+        with open(filename, 'w') as f:
+            f.write(self.generate())
+```
+*Why is this bad?* If the file system changes (e.g., saving to AWS S3 instead), or the report format changes, this class has to change. Two reasons to change!
+
+**Good Code:** Split the responsibilities.
+```python
+class ReportGenerator:
+    def __init__(self, data):
+        self.data = data
+
+    def generate(self):
+        return f"Report: {self.data}"
+
+class ReportSaver:
+    def save(self, content, filename):
+        with open(filename, 'w') as f:
+            f.write(content)
+```
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Violation (Monolith)', detail: 'Report + DB + Email', kind: 'warning', x: 250, y: 50 },
+    { id: '2', title: 'Refactor', detail: 'Split Responsibilities', kind: 'process', x: 250, y: 150 },
+    { id: '3', title: 'Report Class', detail: 'Only formats data', kind: 'core', x: 50, y: 250 },
+    { id: '4', title: 'DB Class', detail: 'Only saves data', kind: 'core', x: 250, y: 250 },
+    { id: '5', title: 'Email Class', detail: 'Only sends data', kind: 'core', x: 450, y: 250 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'apply SRP', type: 'step' },
+    { source: '2', target: '3', label: 'extract', type: 'smoothstep' },
+    { source: '2', target: '4', label: 'extract', type: 'smoothstep' },
+    { source: '2', target: '5', label: 'extract', type: 'smoothstep' }
+  ]
+}} />
+
+---
+
+# 5. Open/Closed Principle (OCP)
+
+You should be able to add new features without modifying existing code.
+
+**Bad Code:** Modifying an `if` statement every time a new shape is added.
+```python
+class AreaCalculator:
+    def calculate(self, shape):
+        if shape.type == "circle":
+            return 3.14 * shape.radius ** 2
+        elif shape.type == "square":
+            return shape.side ** 2
+        # Adding a triangle requires changing THIS code!
+```
+
+**Good Code:** Using Polymorphism!
+```python
+from abc import ABC, abstractmethod
+
+class Shape(ABC):
+    @abstractmethod
+    def calculate_area(self): pass
+
+class Circle(Shape):
+    def __init__(self, radius): self.radius = radius
+    def calculate_area(self): return 3.14 * self.radius ** 2
+
+class Square(Shape):
+    def __init__(self, side): self.side = side
+    def calculate_area(self): return self.side ** 2
+
+# Closed for modification, Open for extension!
+class AreaCalculator:
+    def calculate(self, shape: Shape):
+        return shape.calculate_area()
+```
+
+---
+
+# 6. Liskov Substitution Principle (LSP)
+
+If you replace a parent class with its child class, the program should not break.
+
+**Bad Code:** The child breaks the parent's contract.
+```python
+class Bird:
+    def fly(self):
+        print("Flying!")
+
+class Penguin(Bird):
+    def fly(self):
+        raise Exception("Penguins can't fly!") # VIOLATION!
+
+def make_bird_fly(bird: Bird):
+    bird.fly() # Will crash if we pass a Penguin!
+```
+
+**Good Code:** Rethink the inheritance hierarchy.
+```python
+class Bird:
+    pass
+
+class FlyingBird(Bird):
+    def fly(self):
+        print("Flying!")
+
+class Penguin(Bird):
+    def swim(self):
+        print("Swimming!")
+```
+
+---
+
+# 7. Interface Segregation Principle (ISP)
+
+Don't force a class to implement methods it doesn't need.
+
+**Bad Code:** A fat interface.
+```python
+class WorkerInterface:
+    def work(self): pass
+    def eat(self): pass
+
+class Robot(WorkerInterface):
+    def work(self):
+        print("Robot working")
+    def eat(self):
+        pass # Robots don't eat! We are forcing a useless method!
+```
+
+**Good Code:** Small, specific interfaces.
+```python
+class Workable:
+    def work(self): pass
+
+class Eatable:
+    def eat(self): pass
+
+class Human(Workable, Eatable):
+    pass # Humans do both
+
+class Robot(Workable):
+    pass # Robots only work!
+```
+
+---
+
+# 8. Dependency Inversion Principle (DIP)
+
+High-level modules should not depend on low-level modules. Both should depend on abstractions.
+
+**Bad Code:** Tightly coupled to MySQL.
+```python
+class MySQLDatabase:
+    def insert(self, data):
+        print("Inserting into MySQL")
+
+class UserLogic:
+    def __init__(self):
+        # Tied directly to MySQL! What if we want MongoDB?
+        self.db = MySQLDatabase()
+```
+
+**Good Code:** Depend on an Abstraction (Interface/ABC).
+```python
+class DatabaseInterface(ABC):
+    @abstractmethod
+    def insert(self, data): pass
+
+class MySQLDatabase(DatabaseInterface):
+    def insert(self, data): print("MySQL insert")
+
+class MongoDatabase(DatabaseInterface):
+    def insert(self, data): print("Mongo insert")
+
+class UserLogic:
+    def __init__(self, db: DatabaseInterface):
+        # We pass the dependency in. This is called Dependency Injection!
+        self.db = db
+
+# Now UserLogic works with ANY database!
+logic = UserLogic(MongoDatabase())
+```
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does the 'O' in SOLID stand for, and what does it mean? | Open/Closed Principle. Classes should be open for extension (adding features via inheritance/polymorphism) but closed for modification (not rewriting existing core code). |
+| How do you achieve Dependency Inversion in Python? | By using Abstract Base Classes (ABCs) to define interfaces, and using Dependency Injection (passing the dependency via `__init__`) instead of instantiating low-level classes directly inside high-level ones. |
+| Is SOLID strict in Python? | Python's dynamic typing and duck-typing make principles like Interface Segregation slightly less rigid than in Java, but the conceptual design rules still absolutely apply to large systems. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, sometimes following SOLID strictly makes the code *worse*.
+
+If you have a 50-line script that parses a CSV and sends an email, creating 5 Abstract Base Classes, 3 interfaces, and a Dependency Injector is an anti-pattern called **"Lasagna Code"** (too many layers). SOLID is meant for long-living, large codebases that require team collaboration. Do not over-engineer simple scripts!
+
+---
+
+# 11. Real-World Usage
+
+- **Web Frameworks (Django/FastAPI):** They heavily use Dependency Inversion (passing DB sessions to routes) and Single Responsibility (Models handle DB, Views handle logic, Templates handle UI).
+- **Payment Gateways:** Using Open/Closed so that adding Stripe alongside PayPal doesn't require rewriting the core checkout loop.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use Dependency Injection to make testing and mocking easy. | Hardcode API clients or Database connections inside your business logic classes. |
+| Use Polymorphism to eliminate long `if-elif` chains. | Blindly apply all 5 principles to a script you will delete tomorrow. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+In production, Dependency Inversion (DIP) is the most critical principle for testing. If your class instantiates a real `StripeClient` inside `__init__`, you cannot easily unit test it without hitting Stripe's real API. By passing the client as an argument (`def __init__(self, payment_client)`), you can easily pass a fake `MockClient` during testing!
+
+---
+
+# 14. Common Mistakes
+
+- **Violating SRP for convenience:** Adding a `send_slack_alert()` method directly into the `UserModel`.
+- **Misunderstanding Liskov:** Creating a subclass that throws unexpected exceptions that the parent class never threw. The caller won't be ready to catch them!
+
+---
+
+# 15. Related Topics
+
+- Abstraction
+- Polymorphism
+- Composition vs Inheritance
+- Testing (Mocking)

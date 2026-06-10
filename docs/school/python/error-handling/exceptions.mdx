@@ -2,6 +2,221 @@
 sidebar_position: 1
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Exceptions
 
-Placeholder: introduce Exceptions.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Exceptions & Error Handling (`try-except`) |
+| Difficulty | Beginner |
+| Used For | Catching and handling runtime errors so the program doesn't crash |
+| Common Mistake | Using a bare `except:` clause which catches everything, including `KeyboardInterrupt` |
+| Performance | `try` blocks have near-zero overhead in Python 3.11+. Raising an exception is slow. |
+
+---
+
+# 2. Real-World Analogy
+
+Think of Exceptions like a fire alarm in a building, bro.
+
+If someone leaves a toaster on and starts a fire (an Error), the fire alarm rings (Raising an Exception). If the building has no sprinkler system or fire department procedure (No Error Handling), the whole building burns down (Program Crashes).
+
+But if you have a fire procedure (`try-except` block), the alarm is caught by the system, the sprinklers turn on, the danger is neutralized, and the building stays standing. The program survives.
+
+---
+
+# 3. Concept Explanation
+
+An Exception is an event that occurs during the execution of a program that disrupts the normal flow of instructions.
+
+In Python, we handle these using a `try-except` block. You put the "dangerous" code inside the `try` block. If Python hits an error, it immediately jumps to the `except` block to execute your backup plan, instead of terminating the script.
+
+Key Keywords:
+- `try`: The code you want to attempt.
+- `except`: The code that runs if an error happens.
+- `else`: Runs ONLY if the `try` block was successful (no errors).
+- `finally`: Runs ALWAYS, no matter what, even if the program crashes or returns.
+
+---
+
+# 4. Syntax Table
+
+| Block | What it does | Required? |
+|---|---|---|
+| `try:` | Executes the risky code. | Yes |
+| `except ValueError as e:` | Catches a specific error. | Yes (at least one) |
+| `else:` | Executes if no error occurred. | No |
+| `finally:` | Executes always (used for cleanup). | No |
+
+---
+
+# 5. Beginner Example
+
+Let's try to divide by zero, a classic crash scenario.
+
+**Without Handling (CRASH):**
+```python
+# print(10 / 0)
+# ZeroDivisionError: division by zero
+```
+
+**With Handling (SAFE):**
+```python
+try:
+    result = 10 / 0
+except ZeroDivisionError as e:
+    print("Bro, you can't divide by zero!")
+    result = 0
+
+print(f"The result is {result}")
+# Output:
+# Bro, you can't divide by zero!
+# The result is 0
+```
+The program didn't crash! It handled the error and continued execution safely.
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'try block', detail: 'Executes risky code', kind: 'process', x: 250, y: 50 },
+    { id: '2', title: 'Error Occurs?', detail: 'Exception Raised', kind: 'warning', x: 250, y: 150 },
+    { id: '3', title: 'except block', detail: 'Handles the crash', kind: 'core', x: 100, y: 250 },
+    { id: '4', title: 'else block', detail: 'Runs if success', kind: 'output', x: 400, y: 250 },
+    { id: '5', title: 'finally block', detail: 'Always executes cleanup', kind: 'tool', x: 250, y: 350 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'evaluates', type: 'step' },
+    { source: '2', target: '3', label: 'Yes', type: 'smoothstep' },
+    { source: '2', target: '4', label: 'No', type: 'smoothstep' },
+    { source: '3', target: '5', label: 'moves to', type: 'smoothstep' },
+    { source: '4', target: '5', label: 'moves to', type: 'smoothstep' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+In production, you often read files or make API calls. You must use `finally` to ensure resources (like database connections or files) are closed, even if an error occurs.
+
+```python
+def read_config_file(filepath):
+    file = None
+    try:
+        print(f"Opening {filepath}...")
+        file = open(filepath, 'r')
+        data = file.read()
+        return data
+    except FileNotFoundError:
+        print("Error: The config file does not exist. Using defaults.")
+        return "{}"
+    except PermissionError:
+        print("Error: You don't have access to this file.")
+        return "{}"
+    finally:
+        # This ALWAYS runs. If the file opened, we MUST close it!
+        if file:
+            print("Closing file to free up memory...")
+            file.close()
+
+config = read_config_file("missing_file.txt")
+```
+Bro, without `finally`, a crashed program can leave hundreds of files open, eventually causing the server to crash from "Too Many Open Files" limits.
+
+---
+
+# 7. Internal Working
+
+Python exceptions are just classes that inherit from `BaseException`.
+When an error occurs, Python creates an instance of that exception class (e.g., `e = ValueError("Bad data")`) and "throws" it up the call stack.
+
+Python searches the current function for an `except` block. If it doesn't find one, it goes to the function that called it. It keeps going up until it either finds a matching `except` block, or it hits the top level of the script and triggers the default system crash (Stack Trace).
+
+---
+
+# 8. Performance Table
+
+| Scenario | Performance Impact | Note |
+|---|---|---|
+| Entering `try` block | Zero cost (Python 3.11+) | "Zero-cost exceptions" make `try` blocks free. |
+| Error does NOT happen | Extremely Fast | The `except` block is completely ignored. |
+| Error DOES happen | Very Slow | Generating the stack trace and unwinding frames takes time. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why is using a bare `except:` bad practice? | It catches `BaseException`, which includes system exits (`sys.exit()`) and keyboard interrupts (Ctrl+C). It prevents the user from killing a stuck program. Always use `except Exception:` at minimum. |
+| What is the difference between `except` and `finally`? | `except` runs *only* if an error occurs. `finally` runs *always*, regardless of whether an error occurred, making it perfect for cleanup. |
+| When should you use the `else` block? | Use `else` for code that should only run if the `try` block succeeded, but that *should not* be caught by the `try` block's exception handler if it fails. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+What happens if there is a `return` in the `try` block AND a `return` in the `finally` block?
+
+```python
+def tricky_function():
+    try:
+        return "Success from Try"
+    finally:
+        return "Overridden by Finally!"
+
+print(tricky_function())
+# Output: Overridden by Finally!
+```
+Bro, `finally` always wins! Even if `try` attempts to return a value, the `finally` block executes right before the return happens. If `finally` has its own return, it overwrites the original one! Never put `return` inside a `finally` block.
+
+---
+
+# 11. Real-World Usage
+
+- **Network Requests:** Using `try-except` around `requests.get()` to catch `Timeout` or `ConnectionError`.
+- **Database Transactions:** If a SQL query fails in the `try` block, the `except` block runs a `.rollback()` to undo the partial changes safely.
+- **User Input Validation:** Trying to cast a string to an integer `int("hello")` and catching the `ValueError`.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Catch specific errors (e.g., `except KeyError:`). | Use bare `except:` or catch general `Exception` unless logging the error. |
+| Keep the `try` block as small as possible (only the risky lines). | Wrap 50 lines of code in a single `try` block. |
+| Use `finally` to close files, connections, and network sockets. | Swallow errors silently with `except: pass`. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+The "Ask for Forgiveness, Not Permission" (EAFP) principle is heavily favored in Python. Instead of writing slow `if` statements to check if a file exists or a dictionary key exists (Permission), just `try` to access it and handle the `except KeyError` (Forgiveness). In Python 3.11+, since `try` blocks are practically free, EAFP is faster than checking with `if`!
+
+---
+
+# 14. Common Mistakes
+
+- **Silent Failures:**
+  ```python
+  try:
+      do_something_important()
+  except Exception:
+      pass # WORST THING YOU CAN DO!
+  ```
+  If this fails, you will never know. The bug will be invisible. At least `logging.error(e)`.
+- **Catching the wrong exception:** Catching `TypeError` when the function actually throws a `ValueError`.
+
+---
+
+# 15. Related Topics
+
+- Custom Exceptions
+- Logging
+- Context Managers (The modern way to replace `finally` for files)

@@ -2,6 +2,202 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Production Debugging
 
-Placeholder: introduce Production Debugging.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Production Debugging |
+| Difficulty | Advanced |
+| Used For | Finding and fixing errors in live applications where you cannot use a normal debugger |
+| Common Mistake | Trying to SSH into production servers to use `pdb` or add `print` statements |
+| Performance | Production monitoring tools (APMs) add about 2-5% overhead but provide total visibility |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, imagine debugging on your laptop is like fixing a bicycle in your garage. You can flip it upside down, take the wheels off, and test it slowly.
+
+Production debugging is like trying to fix the engine of a Formula 1 car *while it is racing at 200 MPH*.
+You cannot stop the car (you can't use `breakpoint()`). You cannot take it apart (you can't change the code). You must rely entirely on the telemetry data (Logs, Metrics, Traces) the car is beaming back to the pit wall to figure out what is wrong.
+
+---
+
+# 3. Concept Explanation
+
+When an application is running in production (live for users), you cannot attach a debugger. If you pause the code with a debugger, real users will see a spinning loading wheel and your website will crash!
+
+Therefore, Production Debugging relies on **Observability**. The "Three Pillars of Observability" are:
+1. **Logs:** Detailed records of events (e.g., "User 123 logged in").
+2. **Metrics:** Aggregated numbers over time (e.g., "CPU usage is at 95%", "500 requests per second").
+3. **Traces:** Tracking a single user request as it travels across multiple microservices.
+
+---
+
+# 4. Tooling Table
+
+| Tool Category | Example Tool | Purpose |
+|---|---|---|
+| APM (Application Performance Monitoring) | Datadog, New Relic | Shows overall health, slow queries, and error rates. |
+| Error Tracking | Sentry, Rollbar | Automatically catches unhandled exceptions and groups them. |
+| Log Aggregation | Splunk, ELK, Datadog | Collects text logs from all servers into one search bar. |
+| Distributed Tracing | Jaeger, OpenTelemetry | Shows exactly which microservice caused the delay. |
+
+---
+
+# 5. Beginner Example: Sentry Integration
+
+Instead of checking log files manually every day, modern engineers use tools like **Sentry**. When your app crashes, Sentry catches it, grabs the stack trace, grabs the local variables, and sends it to a web dashboard.
+
+```python
+# pip install sentry-sdk
+import sentry_sdk
+
+# 1. Initialize the SDK at the start of your app
+sentry_sdk.init(
+    dsn="https://your_sentry_key@sentry.io/12345",
+    traces_sample_rate=1.0 # Capture performance metrics too
+)
+
+def divide_money(total, people):
+    # If people is 0, this crashes!
+    # Sentry AUTOMATICALLY intercepts the crash and sends it to the cloud.
+    return total / people
+
+# We don't even need a try-except block for Sentry to work!
+divide_money(100, 0)
+```
+Bro, when this crashes, your phone will get an alert. You log into Sentry, and it will actually show you the values of `total` and `people` at the exact moment it crashed, without you having to write any logging code!
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Live App', detail: 'Runs in Cloud', kind: 'process', x: 50, y: 150 },
+    { id: '2', title: 'Crash Occurs', detail: 'ZeroDivisionError', kind: 'warning', x: 250, y: 150 },
+    { id: '3', title: 'Error Tracker (Sentry)', detail: 'Captures State', kind: 'tool', x: 250, y: 250 },
+    { id: '4', title: 'Engineer Alerted', detail: 'Slack / Email', kind: 'output', x: 450, y: 250 },
+    { id: '5', title: 'Dashboard', detail: 'Stack trace + Variables', kind: 'core', x: 450, y: 350 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'throws', type: 'smoothstep' },
+    { source: '2', target: '3', label: 'intercepted by', type: 'step' },
+    { source: '3', target: '4', label: 'notifies', type: 'smoothstep' },
+    { source: '4', target: '5', label: 'inspects', type: 'smoothstep' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example: Correlation IDs
+
+If you have 5 microservices, a single user click might trigger Code A, then B, then C. If Service C crashes, how do you know which log in Service A started the process? You use a **Correlation ID**.
+
+```python
+import uuid
+import logging
+
+# Generate a unique ID at the very start of the request
+request_id = str(uuid.uuid4())
+
+# Pass this ID to EVERY log and EVERY subsequent service!
+logging.info(f"[{request_id}] User clicked checkout.")
+
+def call_payment_service(req_id, amount):
+    logging.info(f"[{req_id}] Calling payment API...")
+    # Pass it in the HTTP headers to the next server!
+    # requests.post(url, headers={'X-Correlation-ID': req_id})
+    pass
+
+call_payment_service(request_id, 100)
+```
+In Datadog or Splunk, you just search for that one `request_id`, and you see the entire journey of that specific request across all your servers in chronological order!
+
+---
+
+# 7. Internal Working
+
+How does Sentry automatically catch errors without `try-except` blocks?
+
+It uses `sys.excepthook`. Python allows you to redefine the function that runs right before the program dies from an unhandled exception.
+
+Sentry injects its own function into `sys.excepthook`. When the app crashes, Sentry grabs the exception object, walks through the frame objects (`tb.tb_frame`) to read the local variables, serializes them into JSON, sends them via a background thread to the Sentry API, and *then* lets the program die.
+
+---
+
+# 8. Performance Table
+
+| Debugging Method | Overhead | Production Safe? |
+|---|---|---|
+| `sys.settrace` (Debugger) | 500% slower | NEVER. Will take down the server. |
+| APM / Tracing Tools | 2% - 5% slower | YES. Highly optimized C-extensions. |
+| Extensive File Logging | 10% - 20% slower | YES, but use async loggers or log shippers (Filebeat). |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What are the three pillars of Observability? | Logs (discrete events), Metrics (aggregable numbers), and Traces (request journeys across systems). |
+| How do you debug a memory leak in production? | You cannot pause the app. You must use tools to dump the heap profile (e.g., `tracemalloc` or `objgraph`) at intervals and compare the dumps to see which objects are accumulating without being garbage collected. |
+| What is a Correlation ID? | A unique identifier generated at the edge of the system (e.g., API Gateway) and passed along to every downstream service in the HTTP headers, allowing logs to be stitched together. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+What if your logging system crashes because the disk is full?
+
+If your `app.log` file fills up the 50GB hard drive, the `logging.info()` call will raise an `OSError` (Disk full). If your app isn't expecting `logging` to throw an error, your entire app crashes just because it couldn't write a log!
+
+**Solution:** Modern production setups use containerization (Docker) and write logs directly to `stdout` (the console). A separate, independent program (like Fluentd or Datadog Agent) reads `stdout` and sends it to the cloud. If the logging agent dies, the main app doesn't care!
+
+---
+
+# 11. Real-World Usage
+
+- **Performance Degradation:** If users complain the app is slow, an engineer looks at Datadog Traces and sees that a specific PostgreSQL query is taking 4.5 seconds instead of 0.1 seconds. They fix the query.
+- **Alert Fatigue:** Setting up Slack alerts for every error is bad. Engineers set up alerts for "Error Rate > 5% in 5 minutes" to avoid being woken up at 3 AM for a single random network glitch.
+- **Canary Deployments:** Releasing new code to only 5% of users and watching the error tracking dashboard to see if the new code throws exceptions before releasing it to 100%.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Log the context (User ID, Request ID) with the error. | Log sensitive PII (Passwords, Credit Cards) to third-party dashboards. |
+| Use APM tools like Sentry/Datadog for cloud apps. | Use `print()` to write files manually for production monitoring. |
+| Setup automated alerts for spikes in 500 status codes. | Ignore Sentry alerts until there are 10,000 unread messages. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Bro, never underestimate **Log Levels in Production**. Running a live server with `DEBUG` level logging can generate 100GB of text a day. Not only will this max out your hard drive, but the cloud provider (AWS/Datadog) will charge you thousands of dollars for log ingestion! Always run production at `INFO` or `WARNING`.
+
+---
+
+# 14. Common Mistakes
+
+- **Swallowing Errors:**
+  ```python
+  except Exception as e:
+      logging.info("Something failed") # BAD!
+  ```
+  If you use `info` instead of `exception`, Sentry and Datadog will NOT flag this as a crash. It will be invisible on the dashboards. Use `logging.exception()`.
+- **Assuming Local = Prod:** A bug that happens in production but not locally is usually due to data volume, concurrency, or network latency. A debugger won't help you there. You need metrics!
+
+---
+
+# 15. Related Topics
+
+- Logging
+- Exceptions
+- System Design (Monitoring & Alerting)

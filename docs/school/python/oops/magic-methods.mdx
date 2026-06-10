@@ -2,6 +2,221 @@
 sidebar_position: 7
 ---
 
-# Magic Methods
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Magic Methods.
+# Magic Methods (Dunder Methods)
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Magic / Dunder Methods |
+| Difficulty | Intermediate |
+| Used For | Customizing class behavior for built-in Python operations (like `+`, `==`, `len()`) |
+| Common Mistake | Using them unnecessarily for custom logic instead of sticking to standard methods |
+| Performance | Fast, as they hook directly into Python's C-level evaluation engine |
+
+---
+
+# 2. Real-World Analogy
+
+Think of Magic Methods like VIP passes at a concert, bro.
+
+A normal object is like a regular attendee. They have to follow standard rules. But if your object has a VIP pass (a magic method like `__add__`), the security guard (Python) recognizes it and allows it to do special things—like mathematically adding two custom objects together with the simple `+` operator. You are teaching Python how your custom class should behave when using standard syntax.
+
+---
+
+# 3. Concept Explanation
+
+Magic methods, officially called "Dunder methods" (Double UNDERscore), are special methods surrounded by double underscores, like `__init__` or `__str__`.
+
+They are rarely called directly by you (the programmer). Instead, Python calls them behind the scenes when you perform an action. For example, when you use `len(my_object)`, Python secretly calls `my_object.__len__()`.
+
+Why use them? They make your custom classes feel like built-in native Python types.
+
+---
+
+# 4. Syntax Table
+
+| Operation | Standard Syntax | Magic Method Triggered |
+|---|---|---|
+| Initialization | `obj = MyClass()` | `__init__(self)` |
+| String Representation | `print(obj)` | `__str__(self)` |
+| Length | `len(obj)` | `__len__(self)` |
+| Addition | `obj1 + obj2` | `__add__(self, other)` |
+| Equality | `obj1 == obj2` | `__eq__(self, other)` |
+| Call as function | `obj()` | `__call__(self)` |
+
+---
+
+# 5. Beginner Example
+
+Let's make a `Book` class that we can read clearly when printed, and easily check its page length.
+
+```python
+class Book:
+    def __init__(self, title, pages):
+        self.title = title
+        self.pages = pages
+
+    # Defines what print() outputs
+    def __str__(self):
+        return f"Book: '{self.title}'"
+
+    # Defines what len() returns
+    def __len__(self):
+        return self.pages
+
+my_book = Book("Python Secrets", 300)
+
+print(my_book)      # Calls my_book.__str__(). Output: Book: 'Python Secrets'
+print(len(my_book)) # Calls my_book.__len__(). Output: 300
+```
+Without `__str__`, `print(my_book)` would output useless garbage like `<__main__.Book object at 0x10d...`.
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Code', detail: 'obj1 + obj2', kind: 'tool', x: 250, y: 50 },
+    { id: '2', title: 'Python Engine', detail: 'Intercepts Operator', kind: 'process', x: 250, y: 150 },
+    { id: '3', title: 'Magic Method Hook', detail: 'obj1.__add__(obj2)', kind: 'core', x: 250, y: 250 },
+    { id: '4', title: 'Custom Logic Execute', detail: 'Return new value', kind: 'output', x: 250, y: 350 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'evaluates', type: 'smoothstep' },
+    { source: '2', target: '3', label: 'translates to', type: 'step' },
+    { source: '3', target: '4', label: 'returns result', type: 'smoothstep' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+In production, you often need to compare objects or combine them. Imagine an e-commerce `CartItem`. We want to merge items if they are the same product.
+
+```python
+class CartItem:
+    def __init__(self, name, price, quantity):
+        self.name = name
+        self.price = price
+        self.quantity = quantity
+
+    # Define how to add two cart items
+    def __add__(self, other):
+        if self.name != other.name:
+            raise ValueError("Can only add identical products!")
+        # Return a new merged CartItem
+        return CartItem(self.name, self.price, self.quantity + other.quantity)
+
+    # Define equality
+    def __eq__(self, other):
+        return self.name == other.name and self.price == other.price
+
+item1 = CartItem("Laptop", 1000, 1)
+item2 = CartItem("Laptop", 1000, 2)
+item3 = CartItem("Mouse", 50, 1)
+
+print(item1 == item2) # True (Same product type)
+
+merged_item = item1 + item2
+print(merged_item.quantity) # 3
+```
+Bro, this keeps the checkout logic super clean. `total_item = i1 + i2` is way better than `total_item = i1.merge_with(i2)`.
+
+---
+
+# 7. Internal Working
+
+Python is a highly object-oriented C program. Operators like `+` are just syntactic sugar over C function pointers.
+
+When you write `a + b`, Python's evaluator checks if the type of `a` has a slot registered for `nb_add` (the C-level equivalent of `__add__`). If it does, it passes `a` and `b` to that function. If it doesn't, it raises a `TypeError: unsupported operand type(s)`.
+
+---
+
+# 8. Performance Table
+
+| Mechanism | Complexity | Note |
+|---|---|---|
+| Calling `__len__` | O(1) | Extremely fast C-level hook. |
+| Calling custom `merge()` | O(1) | Slightly slower due to Python-level method lookup. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between `__str__` and `__repr__`? | `__str__` is for end-users (readable string). `__repr__` is for developers (unambiguous representation, ideally code that could recreate the object). |
+| What happens if you define `__eq__` but not `__hash__`? | The object becomes unhashable and cannot be used as a key in a dictionary or added to a set. |
+| How do you make an object callable like a function? | By implementing the `__call__` dunder method. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+What happens if you try to add two objects, but only the right-side object knows how to add?
+
+```python
+class SpecialNumber:
+    def __init__(self, val):
+        self.val = val
+
+    # Right-side addition!
+    def __radd__(self, other):
+        return self.val + other
+
+num = SpecialNumber(10)
+
+# print(num + 5) # ERROR! No __add__ defined!
+print(5 + num) # Output: 15. Python falls back to __radd__!
+```
+If Python fails to run `5.__add__(num)`, it checks if the right-hand operand has `__radd__` (Reverse Add) and uses that! This is a classic advanced interview trick.
+
+---
+
+# 11. Real-World Usage
+
+- **Pathlib:** The `pathlib` module overloads the `/` operator using `__truediv__` so you can join paths elegantly: `Path('/usr') / 'bin'`.
+- **Pandas DataFrames:** DataFrames use `__getitem__` to allow bracket syntax like `df['column_name']`.
+- **Decorators:** Class-based decorators rely heavily on the `__call__` method to wrap functions.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Implement `__str__` for every class used in logging. | Invent your own magic methods (e.g. `__mycustom__`). They are reserved for Python. |
+| Always implement `__hash__` if you implement `__eq__` and plan to use sets/dicts. | Overload operators to do unintuitive things (e.g. making `+` delete data). |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Bro, when implementing `__eq__`, always check if the `other` object is actually of the same type using `isinstance()`. If you assume it has the same attributes, comparing your object to `None` or a random string will crash your production app with an `AttributeError`.
+
+```python
+def __eq__(self, other):
+    if not isinstance(other, MyClass):
+        return NotImplemented # Safe fallback!
+    return self.id == other.id
+```
+
+---
+
+# 14. Common Mistakes
+
+- **Returning integers in `__str__`:** `__str__` must *always* return a string. Returning a number causes a runtime crash.
+- **Modifying `self` in arithmetic methods:** `__add__` should return a *new* object. It should never alter `self.value`. Arithmetic should be immutable!
+
+---
+
+# 15. Related Topics
+
+- Classes & Objects
+- Operator Overloading
+- Iterators (uses `__iter__` and `__next__`)
+- Context Managers (uses `__enter__` and `__exit__`)
