@@ -2,6 +2,201 @@
 sidebar_position: 2
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Custom Exceptions
 
-Placeholder: introduce Custom Exceptions.
+<LearningFlow
+  diagram={{
+    nodes: [
+      { id: "1", title: "Business Logic", detail: "Checking account balance", x: 0, y: 0, kind: "process" },
+      { id: "2", title: "Standard Error", detail: "ValueError('Not enough')", x: 250, y: -100, kind: "warning" },
+      { id: "3", title: "Custom Error", detail: "InsufficientFundsError", x: 250, y: 100, kind: "tool" },
+      { id: "4", title: "Confusing Log", detail: "Hard to debug", x: 500, y: -100, kind: "output" },
+      { id: "5", title: "Clear Intent", detail: "Easy to catch & track", x: 500, y: 100, kind: "output" }
+    ],
+    edges: [
+      { source: "1", target: "2", label: "Bad Practice", type: "straight" },
+      { source: "1", target: "3", label: "Best Practice", type: "smoothstep" },
+      { source: "2", target: "4", label: "Leads to", type: "straight" },
+      { source: "3", target: "5", label: "Leads to", type: "smoothstep" }
+    ]
+  }}
+/>
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Custom Exceptions |
+| Difficulty | Intermediate |
+| Used For | Creating specific, domain-related error types for clearer debugging and control flow |
+| Common Mistake | Not inheriting from Python's built-in `Exception` class |
+| Key Benefit | Makes your API or library self-documenting |
+
+## 2. Real-World Analogy
+
+Bro, imagine walking into an emergency room. If you tell the nurse, "I have an error in my body," that's like throwing a generic `Exception()`. The doctors have no idea where to start looking.
+
+If you say, "I have a sharp pain in my lower right abdomen," that's like a custom `AppendicitisError()`. The doctors immediately know exactly what's wrong and how to handle it. Custom exceptions give context and specificity to failures in your application.
+
+## 3. Concept Explanation
+
+While Python has many built-in exceptions (`ValueError`, `TypeError`, `KeyError`), they are often too generic for complex business logic. If a user tries to withdraw more money than they have in their bank account, raising a `ValueError` works, but it's not very descriptive.
+
+By creating **Custom Exceptions**, you define your own error classes that inherit from Python's base `Exception` class. This allows you to write cleaner `try/except` blocks that catch exactly the error you care about, while letting other generic errors bubble up.
+
+## 4. Syntax Table
+
+| Operation | Example |
+|---|---|
+| Define Custom Exception | `class MyCustomError(Exception):`<br/>`    pass` |
+| Raise Custom Exception | `raise MyCustomError("Something failed!")` |
+| Catch Custom Exception | `except MyCustomError as e:` |
+| Add Custom Data | `def __init__(self, item_id):`<br/>`    self.item_id = item_id` |
+
+## 5. Beginner Example
+
+Let's create a very simple custom error for an age verification script.
+
+```python
+# 1. Define the custom exception
+class UnderageError(Exception):
+    pass
+
+def check_age(age: int):
+    if age < 18:
+        # 2. Raise it when the condition fails
+        raise UnderageError(f"User is {age}, must be at least 18.")
+    print("Welcome to the club!")
+
+# 3. Catch it specifically
+try:
+    check_age(16)
+except UnderageError as e:
+    print(f"Access Denied: {e}")
+except ValueError:
+    print("Invalid age format.")
+```
+
+## 6. Real-World Engineering Example
+
+Bro, in a real REST API or backend system, you often build a hierarchy of custom exceptions so you can catch them at different levels of the application.
+
+Let's look at an e-commerce inventory system.
+
+```python
+# Base Exception for our entire application
+class ShopError(Exception):
+    """Base class for all Shop-related errors."""
+    pass
+
+# Specific Business Logic Errors
+class OutOfStockError(ShopError):
+    def __init__(self, product_name: str, requested: int, available: int):
+        super().__init__(f"Cannot order {requested} of {product_name}. Only {available} left.")
+        self.product_name = product_name
+        self.requested = requested
+        self.available = available
+
+class PaymentDeclinedError(ShopError):
+    pass
+
+# The Business Logic
+def order_item(product_name: str, quantity: int, available_stock: int):
+    if quantity > available_stock:
+        # Raise our custom error, passing in useful debugging data
+        raise OutOfStockError(product_name, quantity, available_stock)
+
+    print(f"Successfully ordered {quantity} {product_name}")
+
+# The API Endpoint / Caller
+try:
+    order_item("PS5", quantity=2, available_stock=1)
+except OutOfStockError as e:
+    # We can access the custom attributes on our error!
+    print(f"CLIENT NOTIFICATION: Hey, we only have {e.available} of {e.product_name} left.")
+except ShopError as e:
+    # This acts as a catch-all for ANY of our custom app errors
+    print(f"Generic shop error: {e}")
+```
+
+This is incredibly powerful because the web framework can catch `OutOfStockError` and automatically return a 400 Bad Request to the frontend, while a `DatabaseError` might return a 500.
+
+## 7. Internal Working
+
+A custom exception is just a normal Python class that inherits from `Exception` (or a subclass of it). Because it inherits from `Exception`, Python's `raise` statement knows how to attach a traceback to it, and the `except` blocks know how to match it.
+
+When you write `except ShopError:`, Python uses `isinstance()` under the hood. Since `OutOfStockError` inherits from `ShopError`, catching `ShopError` will also catch `OutOfStockError`. This is why building error hierarchies is so effective.
+
+## 8. Performance Table
+
+| Aspect | Complexity / Impact |
+|---|---|
+| Defining custom classes | Near zero impact. Loaded once at module import. |
+| Catching custom vs built-in | Identical overhead. O(1) class matching. |
+| Adding custom attributes | Microscopic overhead (standard object instantiation). |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Should you inherit from `BaseException` or `Exception`? | Always inherit from `Exception`. `BaseException` is the root class that also catches system-exiting events like `KeyboardInterrupt` and `SystemExit`. |
+| Can a custom exception take arguments? | Yes, you can override `__init__` to accept whatever data you need (IDs, status codes, etc.) and pass it to `super().__init__(message)`. |
+| Why create an empty custom exception (just `pass`)? | Even if it has no custom logic, the class *name itself* is valuable for filtering errors in `try/except` blocks. |
+| What is an Exception Hierarchy? | It's creating a base exception for your module (e.g., `RequestsError`), and then having specific errors inherit from it (`TimeoutError(RequestsError)`). It allows users to catch all module errors easily. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, watch out for the order in which you catch exceptions in a hierarchy.
+
+```python
+class AppError(Exception): pass
+class DatabaseError(AppError): pass
+
+def run():
+    raise DatabaseError("DB is down")
+
+# BAD:
+try:
+    run()
+except AppError:
+    print("Caught generic AppError")
+except DatabaseError:
+    print("Caught specific DatabaseError") # THIS WILL NEVER RUN!
+```
+
+**The Trap:** Because `DatabaseError` *is an* `AppError`, the first `except` block catches it. Python evaluates `except` blocks from top to bottom.
+**The Fix:** Always put the most *specific* exceptions at the top, and the most *generic* exceptions at the bottom!
+
+## 11. Real-World Usage
+
+- **Requests Library:** `requests.exceptions.ConnectionError`, `requests.exceptions.Timeout`. If `requests` just raised a generic `Exception`, you wouldn't know if your internet died or if the URL was malformed.
+- **Boto3 (AWS SDK):** Uses `ClientError` with embedded HTTP status codes so you can parse exactly why AWS rejected your request.
+- **SQLAlchemy:** `IntegrityError` (for unique constraint violations), `DataError`, `OperationalError`.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Name exceptions with the `Error` suffix (e.g., `ValidationError`). | Name exceptions vaguely (e.g., `ValidationProblem` or just `Validation`). |
+| Create a base exception class for your specific project/module. | Inherit from `BaseException`. |
+| Attach useful state (like IDs or failed payloads) to the exception via `__init__`. | Raise built-in `Exception("My specific error")` for business logic failures. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+In enterprise microservices, custom exceptions are often mapped directly to HTTP status codes. For example, you might create an `APIError` base class with a `status_code` attribute. Then `class UserNotFoundError(APIError): status_code = 404`. Your web framework (like FastAPI or Flask) can have a single global error handler that catches `APIError` and formats the JSON response perfectly every time.
+
+## 14. Common Mistakes
+
+- **Forgetting `super().__init__()`:** If you override `__init__` in your custom exception but forget to call `super().__init__(message)`, the error message might not print correctly when the exception is dumped to the console.
+- **Over-complicating exceptions:** Don't put heavy logic, network calls, or database lookups inside an exception's `__init__`. Exceptions should be lightweight data containers for the error state.
+- **Catching your own exceptions too early:** If you raise a custom exception inside a helper function, and immediately catch it inside the same helper function, you defeat the purpose. Let the exception bubble up to the controller/API layer to be handled.
+
+## 15. Related Topics
+
+- Exceptions (try/except)
+- Object-Oriented Inheritance
+- Logging
+- API Design

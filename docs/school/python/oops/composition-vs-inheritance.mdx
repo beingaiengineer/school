@@ -2,6 +2,231 @@
 sidebar_position: 10
 ---
 
-# Composition Vs Inheritance
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Composition Vs Inheritance.
+# Composition vs Inheritance
+
+<LearningFlow
+  diagram={{
+    nodes: [
+      { id: "1", title: "Inheritance", detail: "'Is-A' Relationship", x: 0, y: 0, kind: "warning" },
+      { id: "2", title: "Tight Coupling", detail: "Changes break subclasses", x: 0, y: 120, kind: "output" },
+      { id: "3", title: "Composition", detail: "'Has-A' Relationship", x: 300, y: 0, kind: "core" },
+      { id: "4", title: "Loose Coupling", detail: "Plug and play modules", x: 300, y: 120, kind: "output" }
+    ],
+    edges: [
+      { source: "1", target: "2", label: "Leads to", type: "straight" },
+      { source: "3", target: "4", label: "Enables", type: "smoothstep" }
+    ]
+  }}
+/>
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Composition vs Inheritance |
+| Difficulty | Intermediate / Advanced |
+| Used For | Deciding how to reuse code and structure objects |
+| Common Mistake | Using inheritance just to reuse a single method |
+| Golden Rule | "Favor composition over class inheritance" |
+
+## 2. Real-World Analogy
+
+Bro, think about building a custom PC.
+
+**Inheritance** is like buying a pre-built Dell laptop. If you want a better graphics card, you can't just swap it out easily. The graphics card *is fundamentally tied* to the motherboard. If Dell upgrades the motherboard, your whole laptop changes. This is an "Is-A" relationship (Your laptop *is a* Dell).
+
+**Composition** is like building a custom desktop. You buy a motherboard, a separate GPU, and separate RAM, and you plug them together. The computer *has a* GPU. If you want to upgrade the GPU, you just swap that one part without affecting the CPU or RAM. This is a "Has-A" relationship.
+
+## 3. Concept Explanation
+
+Both Inheritance and Composition are ways to reuse code in Object-Oriented Programming.
+
+- **Inheritance ("Is-A"):** A new class is derived from an existing class. It inherits all attributes and methods. `Dog` *is an* `Animal`.
+- **Composition ("Has-A"):** A new class is composed of one or more objects of other classes as instance variables. A `Car` *has an* `Engine`.
+
+The famous software engineering rule is: **Favor composition over inheritance.** Inheritance creates tight coupling. If you change the parent class, you risk breaking all child classes. Composition provides loose coupling, allowing you to swap out components at runtime.
+
+## 4. Syntax Table
+
+| Approach | Python Example |
+|---|---|
+| **Inheritance** | `class Robot(Machine):` (Robot *is a* Machine) |
+| **Composition** | `class Robot:`<br/>`    def __init__(self):`<br/>`        self.brain = AI_Chip()` (Robot *has an* AI Chip) |
+
+## 5. Beginner Example
+
+Let's look at the difference when modeling a simple game character.
+
+**Using Inheritance (Tightly Coupled):**
+```python
+class Character:
+    def move(self):
+        print("Moving forward")
+
+class Warrior(Character):
+    def attack(self):
+        print("Swinging sword")
+
+class Wizard(Character):
+    def cast_spell(self):
+        print("Shooting fireball")
+
+# What if we want a Warrior-Wizard? Multiple inheritance gets messy fast!
+```
+
+**Using Composition (Flexible):**
+```python
+class MoveBehavior:
+    def execute(self): print("Moving forward")
+
+class SwordAttack:
+    def execute(self): print("Swinging sword")
+
+class FireSpell:
+    def execute(self): print("Shooting fireball")
+
+class Character:
+    # We pass the behaviors in! (Has-A)
+    def __init__(self, movement, attack_style):
+        self.movement = movement
+        self.attack_style = attack_style
+
+    def perform_action(self):
+        self.movement.execute()
+        self.attack_style.execute()
+
+# Now we can mix and match easily without deep class hierarchies!
+warrior = Character(movement=MoveBehavior(), attack_style=SwordAttack())
+battle_mage = Character(movement=MoveBehavior(), attack_style=FireSpell())
+```
+
+## 6. Real-World Engineering Example
+
+Bro, in backend systems, you often need to send notifications (Email, SMS, Slack). Using inheritance here is a classic junior mistake.
+
+**The Inheritance Trap (Bad):**
+```python
+class User:
+    def save_to_db(self): pass
+
+# We need to email the user. Should we inherit?
+class EmailableUser(User):
+    def send_email(self): pass
+
+# What if they also need SMS?
+class SMSAndEmailableUser(EmailableUser):
+    def send_sms(self): pass
+# This hierarchy will explode into madness!
+```
+
+**The Composition Solution (Good):**
+```python
+class EmailSender:
+    def send(self, message):
+        print(f"Sending Email: {message}")
+
+class SMSSender:
+    def send(self, message):
+        print(f"Sending SMS: {message}")
+
+class User:
+    # The user HAS a notification service
+    def __init__(self, name, notifier):
+        self.name = name
+        self.notifier = notifier
+
+    def notify(self, message):
+        # We delegate the work to the composed object!
+        self.notifier.send(f"Hello {self.name}, {message}")
+
+# Usage: Clean, testable, and swappable!
+alice = User("Alice", EmailSender())
+alice.notify("Your order shipped.")
+
+bob = User("Bob", SMSSender())
+bob.notify("Your table is ready.")
+```
+
+## 7. Internal Working
+
+At the memory level, Inheritance and Composition represent object graphs differently.
+- In **Inheritance**, when you instantiate a child class, Python builds a single combined object in memory with a Method Resolution Order (`__mro__`) that points up the chain.
+- In **Composition**, instantiating the main class creates the main object, which contains pointers (references) to the other distinct objects in memory. This means the composed objects can be replaced dynamically at runtime.
+
+## 8. Performance Table
+
+| Aspect | Complexity / Impact |
+|---|---|
+| Method Resolution | Inheritance requires checking the `__mro__`. Composition uses direct attribute lookup (slightly faster). |
+| Memory Footprint | Composition uses slightly more memory (multiple objects vs one fat object). |
+| Refactoring Speed | Composition is vastly superior. Modifying one component rarely breaks the others. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does "Favor composition over inheritance" mean? | It means you should try to build complex objects by assembling smaller, reusable objects (Has-A) rather than creating deep, fragile class hierarchies (Is-A). |
+| When *should* you use Inheritance? | When there is a strict, undeniable "Is-A" relationship that will rarely change, or when you are building a framework that explicitly requires it (like Django Views or Exception classes). |
+| What is the "Gorilla Banana" problem in inheritance? | "You wanted a banana but what you got was a gorilla holding the banana and the entire jungle." It means inheriting a class often brings in a massive amount of unneeded methods and state. |
+| How does Composition help with Unit Testing? | It makes mocking much easier. If a class *has a* Database object, you can easily pass a FakeDatabase object into the constructor during testing. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, what happens when you need an object to act like a list, but also have custom behavior?
+
+```python
+# Inheritance approach:
+class MyList(list):
+    def append_twice(self, item):
+        self.append(item)
+        self.append(item)
+
+# Composition approach:
+class CustomList:
+    def __init__(self):
+        self._data = [] # Has-a list
+
+    def append_twice(self, item):
+        self._data.append(item)
+        self._data.append(item)
+
+    def get_data(self):
+        return self._data
+```
+
+Which is better? If you use `MyList(list)`, your object inherits *every single method* a list has (`sort`, `reverse`, `pop`). If you didn't want the user to be able to `pop()`, too bad, they can!
+
+With the `CustomList` composition approach, the internal `_data` is hidden. The user can *only* do what you explicitly allow (like `append_twice`). Composition provides better encapsulation.
+
+## 11. Real-World Usage
+
+- **React / Frontend:** React explicitly abandoned inheritance in favor of composition. You build UIs by composing small components (`<Header>` has a `<Logo>`).
+- **Game Engines:** Unity and Unreal Engine use Entity-Component Systems (ECS). A game entity is just an empty shell composed of components (Transform, Rigidbody, Collider).
+- **Network Stacks:** A web server object is usually composed of a request handler, a router, and a logger, rather than inheriting from all three.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use composition to assemble behaviors dynamically at runtime. | Use inheritance just to save a few lines of code or reuse one specific method. |
+| Use Dependency Injection to pass composed objects into the constructor. | Deeply nest inheritance hierarchies (more than 2-3 levels deep is a code smell). |
+| Use inheritance when building custom Exception types (`class MyError(Exception)`). | Use multiple inheritance unless you completely understand Mixins and the MRO. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+Deep inheritance trees are a nightmare to maintain in production. When a bug occurs in a subclass, developers often trace it up 5 levels of parent classes, only to find that changing the parent to fix the bug breaks 10 other unrelated subclasses. Composition isolates failures to specific, swappable components.
+
+## 14. Common Mistakes
+
+- **Forcing "Is-A":** Saying "A Manager is an Employee, so Manager must inherit from Employee." In business logic, a person's role often changes. Using composition (`Person` has a `Role`) allows you to swap a person from Employee to Manager without deleting and recreating the object!
+- **Delegation Boilerplate:** The one downside of composition is that you sometimes have to write "pass-through" methods (e.g., `def start(self): self.engine.start()`). Don't let this minor boilerplate push you back to fragile inheritance.
+
+## 15. Related Topics
+
+- SOLID Principles
+- Object-Oriented Programming (OOP)
+- Multiple Inheritance & MRO
+- Design Patterns (Strategy Pattern, Decorator Pattern)

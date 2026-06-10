@@ -2,6 +2,210 @@
 sidebar_position: 7
 ---
 
-# Magic Methods
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Magic Methods.
+# Python Magic Methods
+
+<LearningFlow
+  diagram={{
+    nodes: [
+      { id: "1", title: "User Action", detail: "print(obj) or obj1 + obj2", x: 0, y: 0, kind: "core" },
+      { id: "2", title: "Python Interpreter", detail: "Intercepts syntax", x: 250, y: 0, kind: "process" },
+      { id: "3", title: "Magic Method", detail: "Calls __str__() or __add__()", x: 500, y: 0, kind: "tool" },
+      { id: "4", title: "Result", detail: "Custom object behavior", x: 750, y: 0, kind: "output" }
+    ],
+    edges: [
+      { source: "1", target: "2", label: "Syntax Trigger", type: "straight" },
+      { source: "2", target: "3", label: "Maps to", animated: true },
+      { source: "3", target: "4", label: "Returns", type: "smoothstep" }
+    ]
+  }}
+/>
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Magic Methods (Dunder Methods) |
+| Difficulty | Intermediate |
+| Used For | Customizing object behavior for built-in operations (like `+`, `==`, `print()`) |
+| Common Mistake | Overcomplicating `__init__` or overriding methods incorrectly |
+| Key Concept | "Dunder" means Double UNDERscore (e.g., `__init__`) |
+
+## 2. Real-World Analogy
+
+Bro, think about a universal remote control. When you press the "Volume Up" button, the remote doesn't know what TV you have. It just sends a generic signal. It's up to the TV to intercept that signal and know *how* to turn the volume up based on its own internal circuits.
+
+In Python, operators like `+`, `-`, or functions like `print()` and `len()` are like the buttons on the remote. Magic methods are the internal circuits in your objects that intercept those generic signals and define exactly what should happen.
+
+## 3. Concept Explanation
+
+Magic methods, often called **dunder methods** (because they start and end with double underscores, like `__init__`), allow your custom classes to integrate seamlessly with Python's built-in syntax and functions.
+
+Instead of writing `obj.add(other_obj)`, magic methods let you write `obj + other_obj`. The Python interpreter sees the `+` operator and automatically looks for the `__add__` magic method inside your class.
+
+This makes your custom objects behave like native Python data types (like integers, strings, or lists), leading to cleaner, more intuitive code.
+
+## 4. Syntax Table
+
+| Operation | Magic Method | Example Trigger |
+|---|---|---|
+| Initialization | `__init__(self)` | `obj = MyClass()` |
+| String Representation | `__str__(self)` | `print(obj)` or `str(obj)` |
+| Developer Representation | `__repr__(self)` | `obj` in REPL or `repr(obj)` |
+| Addition | `__add__(self, other)` | `obj1 + obj2` |
+| Equality | `__eq__(self, other)` | `obj1 == obj2` |
+| Length | `__len__(self)` | `len(obj)` |
+| Item Access | `__getitem__(self, key)`| `obj[key]` |
+
+## 5. Beginner Example
+
+Let's make a custom `Wallet` object that we can add together using the `+` operator.
+
+```python
+class Wallet:
+    def __init__(self, amount):
+        self.amount = amount
+
+    # Magic method for + operator
+    def __add__(self, other):
+        return Wallet(self.amount + other.amount)
+
+    # Magic method for print()
+    def __str__(self):
+        return f"Wallet with ${self.amount}"
+
+w1 = Wallet(50)
+w2 = Wallet(100)
+
+# This triggers w1.__add__(w2)
+combined = w1 + w2
+
+# This triggers combined.__str__()
+print(combined) # Output: Wallet with $150
+```
+
+Without `__add__`, `w1 + w2` would crash with a `TypeError`.
+
+## 6. Real-World Engineering Example
+
+Bro, in backend engineering, you often deal with money and currencies. You never want to accidentally add US Dollars and Euros together without converting them. Let's use magic methods to build a safe `Money` class.
+
+```python
+class Money:
+    def __init__(self, amount: float, currency: str):
+        self.amount = amount
+        self.currency = currency
+
+    def __str__(self):
+        return f"{self.amount:.2f} {self.currency}"
+
+    def __add__(self, other):
+        if not isinstance(other, Money):
+            raise TypeError("Can only add Money to Money")
+        if self.currency != other.currency:
+            raise ValueError(f"Cannot add {self.currency} and {other.currency} directly.")
+
+        return Money(self.amount + other.amount, self.currency)
+
+    def __eq__(self, other):
+        if not isinstance(other, Money):
+            return False
+        return self.amount == other.amount and self.currency == other.currency
+
+# Usage
+usd1 = Money(100.50, "USD")
+usd2 = Money(50.25, "USD")
+eur = Money(100.50, "EUR")
+
+print(usd1 + usd2)  # 150.75 USD
+print(usd1 == Money(100.50, "USD"))  # True
+
+# print(usd1 + eur) # ValueError: Cannot add USD and EUR directly.
+```
+
+This ensures our math operators enforce business logic at the object level!
+
+## 7. Internal Working
+
+When Python executes an expression like `a + b`, it doesn't just randomly add things. The interpreter performs a specific lookup:
+1. It checks if object `a` has an `__add__` method.
+2. If it does, it calls `a.__add__(b)`.
+3. If it returns `NotImplemented` (or if the method doesn't exist), Python falls back to checking if `b` has an `__radd__` (reverse add) method, calling `b.__radd__(a)`.
+4. If neither works, it raises a `TypeError`.
+
+This dynamic dispatch is what makes Python so flexible but also requires objects to clearly define their capabilities.
+
+## 8. Performance Table
+
+| Operation | Complexity / Impact |
+|---|---|
+| Magic Method Invocation | O(1) overhead. Very fast, as it hooks directly into the CPython runtime. |
+| Overriding built-ins | Negligible impact compared to standard method calls. |
+| `__getattr__` / `__getattribute__` | Can be slow if abused, as they intercept *every* attribute lookup. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between `__str__` and `__repr__`? | `__str__` is for end-users (readable string). `__repr__` is for developers (unambiguous, often executable string). If `__str__` is missing, Python falls back to `__repr__`. |
+| How do you make an object iterable? | Implement `__iter__` (to return an iterator) and `__next__` (to return the next item or raise `StopIteration`). |
+| What does `__new__` do compared to `__init__`? | `__new__` actually *creates* the object in memory (it's a static method returning the instance). `__init__` *initializes* the created object. |
+| How do you make an object callable like a function? | Implement the `__call__` method. Then you can do `obj()`. |
+| What is duck typing and how do magic methods relate to it? | Duck typing means checking behavior instead of explicit types. Magic methods enable this (e.g., if it has `__len__`, it can act like a collection). |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, look at this object reference trap.
+
+```python
+class Team:
+    def __init__(self, members):
+        self.members = members
+
+    def __eq__(self, other):
+        return self.members == other.members
+
+t1 = Team(["Alice", "Bob"])
+t2 = Team(["Alice", "Bob"])
+
+print(t1 == t2)  # True, because we defined __eq__
+print(t1 is t2)  # False, they are different objects in memory
+
+# What happens if we put them in a set?
+# my_set = {t1, t2} # TypeError: unhashable type: 'Team'
+```
+
+If you override `__eq__`, Python automatically sets `__hash__` to `None`, making your object "unhashable" (cannot be put in sets or used as dict keys). If you want an object to be usable in a set and you overrode `__eq__`, you *must* also implement `__hash__`.
+
+## 11. Real-World Usage
+
+- **Pandas DataFrames:** Heavily use `__getitem__` so you can do `df['column_name']`.
+- **SQLAlchemy:** Uses magic methods to translate Python operators into SQL queries (e.g., `User.age > 18` calls `__gt__` which generates `WHERE age > 18`).
+- **Pathlib:** The `Path` object uses `__truediv__` so you can join paths using the slash operator: `Path('/usr') / 'bin'`.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `__str__` for clean, user-friendly output. | Use `__repr__` for logging end-user messages. |
+| Return `NotImplemented` in comparison methods if the types don't match. | Raise `TypeError` in `__eq__`; just return `False` or `NotImplemented`. |
+| Ensure `__hash__` and `__eq__` are consistent if used together. | Override `__getattribute__` unless you absolutely need to intercept *every* property access. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+Be very careful when overriding `__getattr__`, `__setattr__`, or `__getattribute__` in production code. It's easy to accidentally create infinite recursion loops if you try to access `self.something` inside those methods. If you must use them, always use `super().__setattr__` or `self.__dict__` to avoid triggering the magic method recursively.
+
+## 14. Common Mistakes
+
+- **Returning wrong types:** A magic method like `__add__` should usually return a *new* instance of the class, not mutate the existing one. Modifying `self` inside `__add__` causes confusing bugs where `a + b` changes the value of `a`.
+- **Forgetting `self`:** Just like normal methods, magic methods must take `self` as the first argument.
+- **Confusing `__del__` with memory management:** `__del__` is the finalizer called before garbage collection, but you shouldn't rely on it to close resources (like files or DB connections). Use Context Managers (`__enter__` and `__exit__`) instead!
+
+## 15. Related Topics
+
+- Classes & Objects
+- Context Managers
+- Iterators
+- Polymorphism

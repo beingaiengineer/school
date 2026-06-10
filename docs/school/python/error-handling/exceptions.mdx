@@ -2,6 +2,210 @@
 sidebar_position: 1
 ---
 
-# Exceptions
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Exceptions.
+# Python Exceptions
+
+<LearningFlow
+  diagram={{
+    nodes: [
+      { id: "1", title: "Risky Code", detail: "try block", x: 0, y: 0, kind: "process" },
+      { id: "2", title: "Normal Flow", detail: "else block", x: 250, y: -100, kind: "output" },
+      { id: "3", title: "Exception Raised", detail: "Error occurs!", x: 250, y: 100, kind: "warning" },
+      { id: "4", title: "Handle Error", detail: "except block", x: 500, y: 100, kind: "tool" },
+      { id: "5", title: "Cleanup", detail: "finally block", x: 750, y: 0, kind: "process" }
+    ],
+    edges: [
+      { source: "1", target: "2", label: "Success", type: "smoothstep" },
+      { source: "1", target: "3", label: "Fails", type: "smoothstep" },
+      { source: "3", target: "4", label: "Caught by", animated: true },
+      { source: "2", target: "5", label: "Proceeds to", type: "smoothstep" },
+      { source: "4", target: "5", label: "Proceeds to", type: "smoothstep" }
+    ]
+  }}
+/>
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Exceptions (try / except) |
+| Difficulty | Beginner / Intermediate |
+| Used For | Gracefully handling runtime errors so the program doesn't crash |
+| Common Mistake | Using a bare `except:` without specifying the error type |
+| Key Keywords | `try`, `except`, `else`, `finally`, `raise` |
+
+## 2. Real-World Analogy
+
+Bro, imagine you are a delivery driver trying to drop off a package at a house.
+
+The **`try`** block is you walking up to the door and ringing the bell.
+If someone answers, that's the **`else`** block—you hand over the package and smile.
+But if a huge dog jumps the fence, that's an **Exception**. You don't just stand there and get bitten (crash the program). You run back to your truck and mark the package as "undeliverable." That's the **`except`** block—handling the bad situation gracefully.
+Regardless of whether you delivered it or got chased by a dog, you must log the attempt in your device before leaving. That's the **`finally`** block.
+
+## 3. Concept Explanation
+
+Errors in Python fall into two categories:
+1. **Syntax Errors:** Mistakes in your code's grammar (e.g., missing a colon). Python catches these *before* the code runs.
+2. **Exceptions:** Errors that occur *during* runtime (e.g., trying to divide by zero, or reading a file that doesn't exist).
+
+If an exception is not "caught" or handled, Python stops executing and prints a Traceback to the console. The `try-except` block allows you to intercept these errors, log them, fix them, or gracefully degrade the user experience instead of outright crashing the application.
+
+## 4. Syntax Table
+
+| Block | Purpose |
+|---|---|
+| `try:` | Put the risky code here that might fail. |
+| `except ValueError as e:` | Code that runs ONLY if a `ValueError` occurs. `e` holds the error message. |
+| `else:` | Code that runs ONLY if the `try` block succeeds without any errors. |
+| `finally:` | Code that ALWAYS runs, regardless of success or failure. Used for cleanup. |
+
+## 5. Beginner Example
+
+Let's look at a simple division calculator.
+
+```python
+def divide_numbers():
+    try:
+        num = int(input("Enter a number: "))
+        result = 100 / num
+    except ZeroDivisionError:
+        print("Bro, you can't divide by zero!")
+    except ValueError:
+        print("That's not a valid number. Enter digits only.")
+    else:
+        # Runs only if NO exceptions occurred
+        print(f"Success! The result is {result}")
+    finally:
+        # Runs no matter what
+        print("Calculator operation finished.")
+
+# divide_numbers()
+```
+
+By specifying the exact errors (`ZeroDivisionError`, `ValueError`), we give the user helpful, specific feedback.
+
+## 6. Real-World Engineering Example
+
+In backend engineering, we constantly deal with unreliable external systems, like databases or APIs. We use exceptions to handle timeouts or connection failures.
+
+```python
+import requests
+import time
+
+def fetch_user_data(url: str, retries: int = 3):
+    for attempt in range(retries):
+        try:
+            print(f"Attempt {attempt + 1}: Fetching data...")
+            response = requests.get(url, timeout=2)
+
+            # This raises an exception if the HTTP status is 4xx or 5xx
+            response.raise_for_status()
+
+        except requests.exceptions.Timeout:
+            print("Warning: The request timed out. Trying again...")
+            time.sleep(1)
+
+        except requests.exceptions.HTTPError as e:
+            # We don't want to retry a 404 Not Found, we just want to log it and stop.
+            print(f"Error: API returned a bad status code. {e}")
+            break
+
+        except Exception as e:
+            # Catch-all for unexpected errors (Network down, DNS failure, etc.)
+            print(f"Critical System Error: {e}")
+            break
+
+        else:
+            print("Successfully fetched data!")
+            return response.json()
+
+    print("Failed to fetch data after all attempts.")
+    return None
+
+# fetch_user_data("https://api.github.com/users/octocat")
+```
+
+Here, we don't just "catch" errors, we use specific exceptions to drive retry logic (control flow).
+
+## 7. Internal Working
+
+Exceptions in Python are just Objects that inherit from the `BaseException` class.
+
+When an error occurs, Python creates an instance of the specific exception class (like `KeyError()`) and "raises" it up the call stack.
+The interpreter looks at the current function for a matching `except` block. If it doesn't find one, it goes to the function that called it, and so on, bubbling all the way up. If it reaches the top level with no handler, the interpreter calls `sys.excepthook`, prints the traceback, and exits with a non-zero status code.
+
+## 8. Performance Table
+
+| Scenario | Complexity / Impact |
+|---|---|
+| `try` block succeeds (No exception) | Almost zero overhead in Python 3.11+ ("Zero-cost exceptions"). Very fast. |
+| Exception is raised and caught | High overhead. Creating the exception object and unwinding the stack is computationally expensive. |
+| Bare `except:` | Dangerous overhead. Can accidentally catch `KeyboardInterrupt` (Ctrl+C). |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between `except Exception:` and a bare `except:`? | `except Exception:` catches all standard runtime errors. A bare `except:` also catches `SystemExit` and `KeyboardInterrupt`, preventing the user from killing the program cleanly. |
+| When does the `else` block execute in a try-except statement? | It executes *only* if the code inside the `try` block completes successfully without raising any exceptions. |
+| Will `finally` execute if there is a `return` statement in the `try` block? | Yes! `finally` is guaranteed to execute before the function actually returns the value to the caller. |
+| How do you manually trigger an exception? | By using the `raise` keyword (e.g., `raise ValueError("Invalid input")`). |
+| What is the LBYL vs EAFP principle in Python? | LBYL (Look Before You Leap) means checking conditions with `if` statements first. EAFP (Easier to Ask for Forgiveness than Permission) means using `try-except` assuming it will work. Python heavily favors EAFP. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, look at this classic interview trap regarding `finally` and `return` statements. What does this function return?
+
+```python
+def tricky_function():
+    try:
+        return "Value from TRY"
+    finally:
+        return "Value from FINALLY"
+
+print(tricky_function())
+```
+
+**Answer:** It returns `"Value from FINALLY"`.
+The `finally` block always executes. If both the `try` block and the `finally` block have `return` statements, the `return` in the `finally` block overrides the previous one. This is why you should generally avoid putting `return` statements inside a `finally` block!
+
+## 11. Real-World Usage
+
+- **File Operations:** Using `FileNotFoundError` or `PermissionError` when reading/writing files.
+- **API Development:** Catching validation errors and returning a clean `400 Bad Request` JSON response instead of a raw Python traceback (HTTP 500).
+- **Database Connections:** Wrapping queries in `try-except` to catch `IntegrityError` (like inserting a duplicate email) and rolling back the transaction.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Be as specific as possible (e.g., catch `KeyError`, not `Exception`). | Use bare `except:` to swallow errors silently. |
+| Use `finally` to close files, sockets, and database connections. | Put huge blocks of logic inside the `try` block; keep it small. |
+| Use `raise` without arguments inside an `except` block to re-raise the same error after logging it. | Hide exceptions without logging them. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+In production, do not expose raw exception tracebacks to end users (especially on web servers). Tracebacks can reveal internal file paths, database schemas, and sometimes secret keys. Catch exceptions at the top level of your app, log the full traceback securely to your logging system (like Datadog or Sentry), and return a generic "An unexpected error occurred" message to the client.
+
+## 14. Common Mistakes
+
+- **Catching Exception blindly:**
+  ```python
+  try:
+      do_something()
+  except Exception as e:
+      pass # WORST THING YOU CAN DO
+  ```
+  This is called "swallowing" exceptions. It makes debugging impossible because the program fails silently.
+- **Overusing Exceptions for normal logic:** Exceptions are slow. Don't use them for normal `if/else` branching logic if you expect the failure to happen frequently (e.g., don't use `try-except` to check if an age is > 18).
+- **Putting too much in the try block:** If you put 50 lines of code in a `try` block and catch `TypeError`, you won't know *which* of the 50 lines actually caused the error.
+
+## 15. Related Topics
+
+- Custom Exceptions
+- File Handling
+- Context Managers (`with` statement)
+- Logging

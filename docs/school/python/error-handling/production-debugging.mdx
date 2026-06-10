@@ -2,6 +2,197 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Production Debugging
 
-Placeholder: introduce Production Debugging.
+<LearningFlow
+  diagram={{
+    nodes: [
+      { id: "1", title: "Customer Reports Error", detail: "App is crashing", x: 0, y: 0, kind: "warning" },
+      { id: "2", title: "Check Dashboards", detail: "Datadog / Grafana", x: 250, y: 0, kind: "tool" },
+      { id: "3", title: "Query Logs", detail: "Elasticsearch / Splunk", x: 500, y: 0, kind: "data" },
+      { id: "4", title: "Find Traceback", detail: "Identify exact line", x: 750, y: 0, kind: "process" },
+      { id: "5", title: "Deploy Hotfix", detail: "Patch production", x: 1000, y: 0, kind: "output" }
+    ],
+    edges: [
+      { source: "1", target: "2", label: "Start Triage", type: "straight" },
+      { source: "2", target: "3", label: "Dig Deeper", animated: true },
+      { source: "3", target: "4", label: "Locate Root Cause", type: "smoothstep" },
+      { source: "4", target: "5", label: "Fix and Release", type: "straight" }
+    ]
+  }}
+/>
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Production Debugging |
+| Difficulty | Advanced |
+| Used For | Finding and fixing bugs in live, running environments where you cannot use `breakpoint()` |
+| Common Mistake | Guessing the bug locally without looking at production logs |
+| Key Concepts | Logging, APM (Application Performance Monitoring), Distributed Tracing, Metrics |
+
+## 2. Real-World Analogy
+
+Bro, debugging locally on your laptop is like fixing a bicycle in your garage. You can stop, take things apart, and look at them as long as you want.
+
+Debugging in production is like trying to fix an airplane while it's flying at 30,000 feet with 300 passengers on board. You can't just hit "pause" (`breakpoint()`). You have to rely on the airplane's instrument panels (Metrics), the black box recordings (Logs), and the ground control radar (Distributed Tracing) to figure out what's wrong without crashing the plane.
+
+## 3. Concept Explanation
+
+When code runs in production, it usually runs on remote servers or inside Docker containers. You do not have terminal access. You cannot `print()` to a screen you can see, and you absolutely cannot use interactive debuggers like `pdb` because pausing the code will freeze the application for real users.
+
+Production debugging relies entirely on **Observability**. Observability consists of three pillars:
+1. **Logs:** Immutable records of discrete events that happened over time (e.g., "User 123 logged in").
+2. **Metrics:** Numeric representations of data measured over time (e.g., "CPU usage is at 95%", "50 HTTP 500 errors in the last minute").
+3. **Traces:** Representations of a series of causally related distributed events (e.g., tracking a single request as it jumps from the API gateway, to the Auth service, to the Database).
+
+## 4. Tooling Table
+
+In production, you don't use Python code directly to debug; you use external tools that aggregate the data your Python code generates.
+
+| Category | Popular Enterprise Tools | Purpose |
+|---|---|---|
+| **Log Aggregation** | Datadog, Splunk, ELK (Elasticsearch), CloudWatch | Searching through millions of text logs quickly. |
+| **Error Tracking** | Sentry, Rollbar, Bugsnag | Automatically captures unhandled exceptions, groups them, and alerts you. |
+| **Metrics / APM** | Datadog APM, Prometheus + Grafana, New Relic | Monitoring CPU, memory, and database query times. |
+| **Distributed Tracing**| Jaeger, OpenTelemetry, Honeycomb | Tracking a request across microservices. |
+
+## 5. Beginner Example: The Bug Report
+
+Imagine a customer support ticket comes in: *"Bro, I click checkout and the screen just goes white."*
+
+**The Amateur Approach (Bad):**
+You try to run the code locally, click checkout, and it works fine for you. You reply to the ticket: "Works on my machine, closing ticket."
+
+**The Professional Approach (Good):**
+1. You go to your Error Tracking tool (like Sentry).
+2. You see a massive spike in `KeyError: 'stripe_token'` happening exactly when the user tried to check out.
+3. You go to your Log Aggregation tool (Datadog) and search for the user's ID.
+4. You see their specific payload was missing the `stripe_token` because they were using an outdated version of the mobile app.
+5. You fix the Python API to gracefully handle missing tokens and ask them to upgrade their app.
+
+## 6. Real-World Engineering Example: Adding Context
+
+To make production debugging possible, your Python code must emit *structured, contextual logs*.
+
+**Bad Logging (Useless in Prod):**
+```python
+import logging
+def process_order(order, user):
+    try:
+        # Complex logic...
+        1 / 0
+    except Exception as e:
+        logging.error("Failed to process order!") # WHOSE ORDER? WHICH ORDER?
+```
+If you search for "Failed to process order!" in Datadog, you will see 5,000 matches and have no idea which one belongs to the angry customer on the phone.
+
+**Good Logging (Production Ready):**
+```python
+import logging
+import uuid
+
+# In modern Python, we often use libraries like `structlog` for JSON logging
+def process_order(order_id: str, user_id: int):
+    # We generate a unique Trace ID for this entire request flow
+    trace_id = str(uuid.uuid4())
+
+    logging.info(f"[TraceID: {trace_id}] Starting order processing for User:{user_id}, Order:{order_id}")
+
+    try:
+        # Complex logic...
+        1 / 0
+    except ZeroDivisionError:
+        # We log the EXACT context AND the traceback
+        logging.exception(f"[TraceID: {trace_id}] CRITICAL: Math failure during payment calc for Order:{order_id}")
+        return False
+
+    return True
+```
+Now, when the customer calls, you ask for their User ID. You search Datadog for `User:405`. You find their `TraceID`. You then search for that `TraceID` and see the exact `CRITICAL` log and the Python stack trace that caused their failure!
+
+## 7. Internal Working of Error Trackers (Sentry)
+
+How does a tool like Sentry automatically catch errors without you writing `try/except` everywhere?
+
+When you initialize the Sentry SDK in your Python app:
+```python
+import sentry_sdk
+sentry_sdk.init("https://your-dsn-key@sentry.io/123")
+```
+It hooks into Python's `sys.excepthook`. Whenever an exception is completely unhandled and reaches the top of the call stack (right before it would crash the program and print to standard error), Sentry intercepts it. It gathers the traceback, local variables, OS info, and Python version, packages it into a JSON payload, and sends it to their servers asynchronously.
+
+## 8. Performance Table
+
+| Strategy | Complexity / Impact |
+|---|---|
+| JSON Structured Logging | High disk/network IO, but mandatory for machine parsing in Splunk/Datadog. |
+| APM / Tracing Agents | Adds 2-5% CPU overhead to your Python app. Acceptable for the visibility gained. |
+| Over-logging (Logging inside massive loops) | Catastrophic. Can fill up server disk space in minutes and cause an outage. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| How do you debug an issue that you cannot reproduce locally? | I would rely on production observability. I'd check Sentry for unhandled tracebacks, query the application logs (Datadog/Splunk) around the time of the incident, and look at APM metrics for CPU/Memory spikes or slow database queries. |
+| What is a Correlation ID (or Trace ID)? | It's a unique string generated when a request enters the system. It is passed along to every function and microservice, and included in every log. It allows you to filter millions of logs down to the exact 5 logs that belong to one specific user request. |
+| Why is `print()` bad in production? | `print()` lacks timestamps, severity levels, and structural format. It writes to standard out synchronously, which can block the thread, and in many containerized setups, unformatted prints are difficult for log aggregators to parse and search. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, what happens if your logging system crashes the app?
+
+```python
+import logging
+
+def handle_user(user_dict):
+    # We want to log the user's name
+    try:
+        # BUG: We misspelled 'name' as 'nme'
+        logging.info(f"Processing user {user_dict['nme']}")
+
+        # Real logic...
+        print("Success")
+    except Exception as e:
+        logging.error("Failed to process user")
+
+handle_user({"name": "Alice"})
+```
+
+**The Trap:** The logging statement itself throws a `KeyError` because `nme` doesn't exist! The application fails *because* of the logging code, not the business logic.
+**The Lesson:** Never write complex, risky logic (like unsafe dictionary lookups or heavy computations) inside a log statement. Logs should be safe and dumb.
+
+## 11. Real-World Usage
+
+- **Memory Leaks:** Using tools like Datadog to monitor Python's memory footprint over a 24-hour period. If it looks like a staircase going up, you have a memory leak. You then use `tracemalloc` to find the culprit.
+- **Slow Endpoints:** Looking at an APM flame graph to realize that a 5-second API request is spending 4.9 seconds waiting on a slow PostgreSQL query because of a missing index.
+- **Alerting:** Setting up a monitor in PagerDuty: "If Sentry sees more than 100 `PaymentGatewayError`s in 5 minutes, wake up the on-call engineer."
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use a centralized error tracking tool like Sentry. | SSH into a production server and try to `tail -f` log files manually. |
+| Log Context (User IDs, Order IDs, Trace IDs). | Log generic messages like "It failed." |
+| Set up automated alerts for spikes in 500-level HTTP errors. | Wait for angry customers to report bugs on Twitter. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+**Never log PII (Personally Identifiable Information) or Secrets.** If your code logs a raw API payload that includes a user's plain-text password, credit card number, or Social Security Number, those secrets are now permanently stored in Datadog/Splunk. This is a massive security breach (and illegal under GDPR/HIPAA). Always sanitize or mask sensitive fields before passing them to `logging`.
+
+## 14. Common Mistakes
+
+- **"Works on my machine" syndrome:** Dismissing a bug because you can't replicate it locally. Production has different data, different traffic volume, and different network latency. Trust the logs, not your laptop.
+- **Log Spam:** Leaving `logging.debug()` statements inside a hot `while` loop that runs 10,000 times a second. You will DDOS your own logging provider and get a massive bill.
+- **Fixing the symptom, not the root cause:** Writing `except KeyError: pass` to make the Sentry alerts go away, instead of figuring out *why* the dictionary was missing the key in the first place.
+
+## 15. Related Topics
+
+- Logging
+- Custom Exceptions
+- System Design (Observability)
+- API Development Middleware

@@ -2,6 +2,191 @@
 sidebar_position: 4
 ---
 
-# Debugging
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Debugging.
+# Python Debugging
+
+<LearningFlow
+  diagram={{
+    nodes: [
+      { id: "1", title: "Bug Found", detail: "Unexpected output", x: 0, y: 0, kind: "warning" },
+      { id: "2", title: "Set Breakpoint", detail: "breakpoint()", x: 250, y: 0, kind: "tool" },
+      { id: "3", title: "Step Through Code", detail: "pdb: next, step", x: 500, y: 0, kind: "process" },
+      { id: "4", title: "Inspect State", detail: "Check variables", x: 500, y: 120, kind: "data" },
+      { id: "5", title: "Bug Fixed", detail: "Code corrected", x: 750, y: 0, kind: "output" }
+    ],
+    edges: [
+      { source: "1", target: "2", label: "Start Debugging", type: "straight" },
+      { source: "2", target: "3", label: "Pause Execution", animated: true },
+      { source: "3", target: "4", label: "Look around", type: "straight" },
+      { source: "4", target: "3", label: "Resume", type: "straight" },
+      { source: "3", target: "5", label: "Identify Root Cause", type: "smoothstep" }
+    ]
+  }}
+/>
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Python Debugging (`pdb` / `breakpoint()`) |
+| Difficulty | Intermediate |
+| Used For | Pausing code execution to inspect variables line-by-line |
+| Common Mistake | Relying solely on `print()` statements for complex bugs |
+| Key Tool | `pdb` (Python Debugger) and modern IDE debuggers |
+
+## 2. Real-World Analogy
+
+Bro, imagine your car is making a weird noise, but only when you drive over 60 mph.
+
+Using `print()` statements to debug is like driving the car past a mechanic at 60 mph and yelling, "Did you hear that?!" The mechanic only gets a split-second snapshot of what's happening.
+
+Using a **Debugger** is like putting the car on a dynamometer in the shop. You can slowly accelerate, pause the engine at exactly 60 mph, open the hood, and inspect every single belt and valve while it's running. It gives you total control over time and state.
+
+## 3. Concept Explanation
+
+Debugging is the process of finding and resolving bugs (defects or problems that prevent correct operation) within computer programs.
+
+While `print()` is okay for tiny scripts, Python comes with a built-in interactive debugger called `pdb` (Python DeBugger). Since Python 3.7, you can invoke it simply by typing `breakpoint()` anywhere in your code.
+
+When Python hits `breakpoint()`, the script pauses execution and opens an interactive console right in your terminal. From there, you can:
+- Look at the values of all variables at that exact moment.
+- Execute the code one line at a time to see how data changes.
+- Jump inside functions to see what they are doing.
+
+## 4. Syntax Table (PDB Commands)
+
+When the debugger is paused, you type these commands into the terminal:
+
+| Command | Shortcut | Action |
+|---|---|---|
+| `list` | `l` | Show the source code around the current line |
+| `next` | `n` | Execute the current line and go to the next line |
+| `step` | `s` | Step *into* a function call to see its internals |
+| `continue` | `c` | Resume normal execution until the next breakpoint |
+| `print(var)`| `p var` | Print the value of a specific variable |
+| `quit` | `q` | Abort the program entirely |
+
+## 5. Beginner Example
+
+Let's look at a script with a hidden bug.
+
+```python
+def calculate_discount(price, discount_str):
+    # Bug: discount_str is a string, not an integer!
+    discount = int(discount_str)
+
+    # We suspect a bug here, so we pause execution!
+    breakpoint()
+
+    final_price = price - (price * (discount / 100))
+    return final_price
+
+# Running this will pause the terminal right before final_price calculation
+print(calculate_discount(100, "20"))
+```
+
+When this runs, your terminal will change to `(Pdb)`. You can type `p discount` to see the value is `20`. You can type `n` to go to the next line, and verify `final_price` becomes `80.0`.
+
+## 6. Real-World Engineering Example
+
+In complex data processing, you might have a loop that processes thousands of records, but only fails on *one* specific record.
+
+```python
+def process_user_data(users):
+    for user in users:
+        # We don't want to break on every user, only the broken one!
+        if user.get("age") is None:
+            print(f"Investigating broken user: {user['name']}")
+            # Conditional Breakpoint!
+            breakpoint()
+
+        # Complex processing logic...
+        score = user["age"] * 10
+        print(f"{user['name']} scored {score}")
+
+users = [
+    {"name": "Alice", "age": 25},
+    {"name": "Bob", "age": 30},
+    {"name": "Charlie", "age": None}, # The bad data
+    {"name": "Dave", "age": 40}
+]
+
+# process_user_data(users)
+```
+
+By placing the `breakpoint()` inside the `if` statement, we don't have to hit "continue" 500 times. The program runs at full speed until it hits the exact scenario we want to debug, then pauses.
+
+## 7. Internal Working
+
+`pdb` is implemented in Python itself using the `sys.settrace()` function. `sys.settrace()` registers a trace function that the Python interpreter calls for every single line of code it executes, every function call, and every function return.
+
+When `pdb` is active, it hooks into this trace function. When it hits a breakpoint, it drops you into a `cmd.Cmd` interactive loop (the `(Pdb)` prompt) and blocks the interpreter from continuing until you give it a command like `next` or `continue`.
+
+## 8. Performance Table
+
+| Scenario | Complexity / Impact |
+|---|---|
+| Normal execution (no breakpoint) | `breakpoint()` is ignored if `PYTHONBREAKPOINT=0`, resulting in zero overhead. |
+| Breakpoint triggered | Execution halts entirely. High memory and CPU cost to maintain the trace state, but irrelevant since it's for human interaction. |
+| IDE Debuggers (PyCharm/VSCode) | Slight overhead when running in "Debug Mode" because the IDE attaches a trace function to watch for breakpoints. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does `breakpoint()` do? | It drops the program execution into the built-in `pdb` interactive debugger (or whatever debugger is configured in the environment). |
+| What is the difference between `step` and `next` in pdb? | `next` executes the current line and moves to the next line in the current function. `step` will jump *into* a function call on the current line so you can debug the function's internals. |
+| How do you debug an issue that only happens in a loop on the 1000th iteration? | Use a conditional breakpoint: `if i == 1000: breakpoint()`. |
+| Why is using a debugger better than `print()` statements? | Debuggers let you inspect *all* state, change variables dynamically, and control execution flow without having to constantly modify, save, and restart your script. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, what happens if your variable has the same name as a PDB command?
+
+```python
+def check_status():
+    step = 5
+    next = 10
+
+    breakpoint()
+
+    total = step + next
+    return total
+```
+
+If you are in PDB and type `step` or `next` to see the value of your variables, PDB will execute its built-in `step` and `next` commands instead! It will move your code forward instead of printing the variable.
+
+**The Fix:** To print variables that share names with PDB commands, prefix them with a `!` (e.g., `!step` or `!next`), or use the print command explicitly: `p step`.
+
+## 11. Real-World Usage
+
+- **VSCode / PyCharm:** Most engineers don't use raw `pdb` in the terminal anymore. They use the visual debuggers built into IDEs. You click in the margin to set a red dot (breakpoint), click "Debug", and the IDE gives you a beautiful GUI showing all variables.
+- **Django/Flask:** When an HTTP request fails, you drop a `breakpoint()` in the view function, resend the request from Postman, and step through the backend logic to see exactly why it failed.
+- **Pytest:** You can run tests with `pytest --pdb`. If a test fails, pytest automatically drops you into the PDB debugger at the exact line of the failure!
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use conditional breakpoints inside `if` statements for looping bugs. | Put unconditional `breakpoint()` calls inside a loop of 10,000 items. |
+| Learn the visual debugger in your IDE (VSCode or PyCharm); it's a massive productivity boost. | Rely solely on `print("got here 1")`, `print("got here 2")`. |
+| Use `pytest --pdb` to instantly jump into failing tests. | Leave `breakpoint()` calls in your code when committing to Git! |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+**Never commit `breakpoint()` to production code.** If a production server hits a `breakpoint()`, the application will freeze indefinitely waiting for user input via standard input (which doesn't exist for background server processes). This will cause requests to hang and eventually crash your service due to timeouts. Many CI/CD pipelines have linters (like `flake8-debugger`) specifically designed to fail the build if they detect `breakpoint()` or `import pdb`.
+
+## 14. Common Mistakes
+
+- **Forgetting to remove breakpoints:** The #1 mistake. Committing a breakpoint and freezing the CI pipeline or production server.
+- **Pressing 'Enter' blindly in PDB:** In PDB, if you just press `Enter` without typing anything, it repeats the last command. If your last command was `next`, pressing enter repeatedly steps through the code quickly. But if you overshoot the bug, you can't go backwards!
+- **Not knowing `c` (continue):** Beginners sometimes get stuck in a loop and type `n` (next) 500 times. Just type `c` to resume normal execution until the next breakpoint.
+
+## 15. Related Topics
+
+- Production Debugging
+- Logging
+- Testing (Pytest)
+- Error Handling (Exceptions)
