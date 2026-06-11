@@ -2,6 +2,246 @@
 sidebar_position: 9
 ---
 
-# Solid Principles
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Solid Principles.
+# SOLID Principles
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | SOLID Principles in Python |
+| Difficulty | Advanced |
+| Used For | Writing scalable, maintainable, and decoupled object-oriented code |
+| Common Mistake | Over-engineering simple scripts with unnecessary interfaces |
+| Performance | Zero runtime overhead; it's an architectural design pattern |
+
+---
+
+# 2. Real-World Analogy
+
+Think of SOLID principles like building a custom PC, bro.
+
+You don't buy a giant block of plastic where the CPU, RAM, and Motherboard are permanently glued together. If the RAM breaks, you'd have to throw away the whole computer!
+
+Instead, PC parts are built with **single responsibilities** (RAM holds memory, GPU renders graphics), they are **open for extension** (you can plug in a new GPU without modifying the motherboard), and they use **standard interfaces** (PCIe slots). SOLID principles teach us to build our code exactly like a custom PC: modular, interchangeable, and easy to upgrade.
+
+---
+
+# 3. Concept Explanation
+
+SOLID is an acronym for five design principles that make software designs more understandable, flexible, and maintainable.
+
+- **S (Single Responsibility):** A class should do one thing and have only one reason to change.
+- **O (Open/Closed):** Classes should be open for extension, but closed for modification.
+- **L (Liskov Substitution):** You should be able to replace a parent class with its child class without breaking the app.
+- **I (Interface Segregation):** Don't force classes to implement methods they don't use.
+- **D (Dependency Inversion):** High-level modules should not depend on low-level modules. Both should depend on abstractions.
+
+---
+
+# 4. Syntax Table
+
+*Note: SOLID is a concept, not a syntax, but here is how Python supports it:*
+
+| Principle | Python Tool/Concept |
+|---|---|
+| S | Breaking large classes into smaller ones. |
+| O | Inheritance, Mixins, and Decorators. |
+| L | Proper Inheritance design, type hints (`# type: ignore` avoidance). |
+| I | Abstract Base Classes (`abc` module) with focused methods. |
+| D | Dependency Injection (passing objects into `__init__`) and `abc`. |
+
+---
+
+# 5. Beginner Example: The 'S' (Single Responsibility)
+
+Let's look at a class violating SRP (Single Responsibility Principle) and fix it.
+
+**Violating SRP:**
+```python
+class ReportGen:
+    def get_data(self):
+        return {"sales": 100}
+
+    def format_to_pdf(self, data):
+        return f"PDF: {data}"
+
+    def email_report(self, pdf):
+        print(f"Emailing {pdf}")
+```
+*Why is this bad?* Because if the email API changes, or the PDF format changes, or the database changes, we have to edit this ONE class. It has three reasons to change.
+
+**Fixing SRP:**
+```python
+class DataFetcher:
+    def get_data(self): return {"sales": 100}
+
+class PDFFormatter:
+    def format(self, data): return f"PDF: {data}"
+
+class EmailSender:
+    def send(self, file): print(f"Emailing {file}")
+
+# Now, if email logic changes, DataFetcher and PDFFormatter are untouched!
+```
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'SOLID', detail: '5 Design Principles', kind: 'core', x: 250, y: 50 },
+    { id: '2', title: 'S', detail: 'Single Responsibility', kind: 'tool', x: 50, y: 150 },
+    { id: '3', title: 'O', detail: 'Open / Closed', kind: 'tool', x: 150, y: 220 },
+    { id: '4', title: 'L', detail: 'Liskov Substitution', kind: 'tool', x: 250, y: 280 },
+    { id: '5', title: 'I', detail: 'Interface Segregation', kind: 'tool', x: 350, y: 220 },
+    { id: '6', title: 'D', detail: 'Dependency Inversion', kind: 'tool', x: 450, y: 150 }
+  ],
+  edges: [
+    { source: '1', target: '2' },
+    { source: '1', target: '3' },
+    { source: '1', target: '4' },
+    { source: '1', target: '5' },
+    { source: '1', target: '6' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example: The 'O' & 'D'
+
+Bro, imagine building a notification system. You want it **Open for extension** (adding Slack, SMS) but **Closed for modification** (we don't want to edit the `AlertSystem` class every time). We achieve this using **Dependency Inversion**!
+
+```python
+from abc import ABC, abstractmethod
+
+# 1. Dependency Inversion: Create an abstract interface
+class Notifier(ABC):
+    @abstractmethod
+    def send(self, msg: str):
+        pass
+
+# 2. Open/Closed: We can add as many of these as we want!
+class EmailNotifier(Notifier):
+    def send(self, msg: str):
+        print(f"Email: {msg}")
+
+class SlackNotifier(Notifier):
+    def send(self, msg: str):
+        print(f"Slack: {msg}")
+
+# 3. The High-Level Module depends on the Abstraction (Notifier),
+# NOT the concrete classes (EmailNotifier).
+class AlertSystem:
+    # We INJECT the dependency here!
+    def __init__(self, notifier: Notifier):
+        self.notifier = notifier
+
+    def trigger_alert(self):
+        self.notifier.send("SERVER IS DOWN!")
+
+# Usage: We can swap notification methods without touching AlertSystem!
+email_alert = AlertSystem(EmailNotifier())
+email_alert.trigger_alert()
+
+slack_alert = AlertSystem(SlackNotifier())
+slack_alert.trigger_alert()
+```
+
+---
+
+# 7. Internal Working
+
+SOLID isn't something the Python interpreter enforces (like syntax errors). It is an architectural contract between developers.
+
+However, tools like `mypy` (static type checker) heavily rely on SOLID principles to prove your code is correct. If you violate Liskov Substitution (e.g., a child class returns a `string` while the parent method signature says it returns an `int`), `mypy` will throw a massive fit, even if Python runs it just fine dynamically.
+
+---
+
+# 8. Performance Table
+
+| Aspect | Impact | Note |
+|---|---|---|
+| Runtime Speed | None | SOLID is about code structure, not execution speed. |
+| Memory | Negligible | You might create a few more small objects instead of one giant one. |
+| Developer Speed | Slower at first | It takes time to plan interfaces, but saves hundreds of hours in debugging and refactoring later. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does Open/Closed mean? | A class should be open for extension (you can add new behavior by creating subclasses) but closed for modification (you shouldn't have to edit the existing, tested class code). |
+| What is the Liskov Substitution Principle? | Objects of a superclass should be replaceable with objects of its subclasses without breaking the application. E.g., If `Ostrich` inherits from `Bird`, but `Ostrich.fly()` throws an error, you violated Liskov! |
+| How do you achieve Dependency Inversion in Python? | By using Abstract Base Classes (`abc`) to define interfaces, and injecting the concrete implementations into the high-level class's `__init__` method. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Let's look at a subtle **Interface Segregation (I)** violation.
+
+```python
+from abc import ABC, abstractmethod
+
+class Machine(ABC):
+    @abstractmethod
+    def print_doc(self): pass
+    @abstractmethod
+    def fax_doc(self): pass
+
+# A modern printer does both! Great!
+class ModernPrinter(Machine):
+    def print_doc(self): print("Printing")
+    def fax_doc(self): print("Faxing")
+
+# An old printer doesn't fax!
+class OldPrinter(Machine):
+    def print_doc(self): print("Printing")
+    def fax_doc(self):
+        raise NotImplementedError("I can't fax!") # VIOLATION!
+```
+Bro, we forced `OldPrinter` to implement `fax_doc` even though it can't!
+**Fix:** Segregate the interfaces! Create `Printer(ABC)` and `Faxer(ABC)`. `ModernPrinter` inherits from both, `OldPrinter` inherits only from `Printer`.
+
+---
+
+# 11. Real-World Usage
+
+- **Django Class-Based Views:** Django uses Mixins heavily, following Single Responsibility and Interface Segregation.
+- **Pytest Fixtures:** Pytest injects dependencies (like database connections) into your tests, a perfect example of Dependency Inversion.
+- **Enterprise Microservices:** SOLID principles are mandatory when codebases scale past 100,000 lines. Otherwise, it becomes a "Big Ball of Mud".
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Apply SOLID when building libraries, frameworks, or large applications. | Apply SOLID to a 50-line data-scraping script. It's overkill. |
+| Use Dependency Injection to make your code easily mockable in Unit Tests. | Hardcode `requests.get()` deep inside a class. Pass a `HTTPClient` interface instead! |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+The biggest benefit of SOLID in production is **Testability**. If a class hardcodes a database connection inside its `__init__`, you cannot unit test it without a real database. If you use Dependency Inversion and pass the database connection as an argument, you can pass a Fake/Mock database during testing easily!
+
+---
+
+# 14. Common Mistakes
+
+- **Taking "Single Responsibility" too literally:** Creating a class that just has one method (`class Adder: def add(a,b)`). That's what a function is for!
+- **The God Object Anti-Pattern:** Creating a `Manager` or `Utils` class that handles database, networking, logging, and string formatting all at once. This completely destroys the 'S' in SOLID.
+
+---
+
+# 15. Related Topics
+
+- Classes & Objects
+- Inheritance
+- Abstraction
+- Decorators
+- Testing & Mocking

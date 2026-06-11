@@ -2,6 +2,217 @@
 sidebar_position: 7
 ---
 
-# Magic Methods
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Magic Methods.
+# Magic Methods (Dunder Methods)
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Magic Methods (Dunder Methods) |
+| Difficulty | Intermediate |
+| Used For | Customizing how objects behave with built-in Python operations like `+`, `==`, or `print()` |
+| Common Mistake | Using them for regular custom functions instead of their intended built-in hooks |
+| Performance | Fast, as they hook directly into Python's C-level operations |
+
+---
+
+# 2. Real-World Analogy
+
+Think of Magic Methods like custom keyboard shortcuts, bro.
+
+When you press `Ctrl + C` on your computer, the OS knows to copy text. You didn't have to write a custom `copy_text()` function and call it manually; the operating system provides a "hook" that triggers automatically when those keys are pressed.
+
+Magic methods in Python are similar. Instead of writing a `add_two_objects(obj1, obj2)` function, you write a `__add__` magic method. Then, whenever someone uses the standard `+` operator, Python automatically "presses the shortcut" and calls your method!
+
+---
+
+# 3. Concept Explanation
+
+Magic methods, often called **dunder methods** (because they have **d**ouble **under**scores before and after their name, like `__init__`), are special hooks in Python.
+
+They allow your custom classes to behave like built-in Python types. Do you want your custom `Vector` class to support the `+` operator? Implement `__add__`. Do you want `len(my_object)` to work? Implement `__len__`. Do you want `print(my_object)` to look nice? Implement `__str__`.
+
+You almost never call these methods directly (e.g., `obj.__len__()`). Instead, you use the standard Python syntax (e.g., `len(obj)`), and Python calls the magic method for you.
+
+---
+
+# 4. Syntax Table
+
+| Method | What triggers it | Purpose |
+|---|---|---|
+| `__init__(self)` | `obj = MyClass()` | Initializes the object. |
+| `__str__(self)` | `print(obj)` or `str(obj)` | Returns a human-readable string representation. |
+| `__repr__(self)` | `repr(obj)` or typing in REPL | Returns a developer-focused string representation. |
+| `__len__(self)` | `len(obj)` | Returns the "length" of the object. |
+| `__add__(self, other)` | `obj1 + obj2` | Defines behavior for the `+` operator. |
+| `__eq__(self, other)` | `obj1 == obj2` | Defines behavior for the `==` operator. |
+| `__getitem__(self, key)` | `obj[key]` | Allows dictionary or list-like access. |
+
+---
+
+# 5. Beginner Example
+
+Let's make a custom `Wallet` class that we can add together!
+
+```python
+class Wallet:
+    def __init__(self, amount):
+        self.amount = amount
+
+    # Magic method for human-readable printing
+    def __str__(self):
+        return f"Wallet with ${self.amount}"
+
+    # Magic method for the + operator
+    def __add__(self, other):
+        # Return a NEW Wallet object with the combined amount
+        return Wallet(self.amount + other.amount)
+
+wallet1 = Wallet(50)
+wallet2 = Wallet(100)
+
+print(wallet1) # Triggers __str__: "Wallet with $50"
+
+# Triggers __add__! We can add our custom objects naturally!
+combined_wallet = wallet1 + wallet2
+print(combined_wallet) # "Wallet with $150"
+```
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Python Syntax', detail: 'obj1 + obj2', kind: 'tool', x: 250, y: 50 },
+    { id: '2', title: 'Python Interpreter', detail: 'Looks for magic methods', kind: 'process', x: 250, y: 150 },
+    { id: '3', title: 'obj1.__add__(obj2)', detail: 'Executes your custom logic', kind: 'core', x: 250, y: 250 },
+    { id: '4', title: 'Result', detail: 'New Object Returned', kind: 'output', x: 250, y: 350 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'triggers', type: 'smoothstep' },
+    { source: '2', target: '3', label: 'maps to', type: 'step' },
+    { source: '3', target: '4', label: 'returns', type: 'smoothstep' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+Bro, in data engineering or game dev, you often need to represent a 2D Point or Vector. It's super annoying to do `p1.x + p2.x` and `p1.y + p2.y` every time. Let's use magic methods to make it elegant.
+
+```python
+class Vector2D:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def __repr__(self):
+        return f"Vector2D({self.x}, {self.y})"
+
+    def __add__(self, other):
+        if not isinstance(other, Vector2D):
+            raise TypeError("Can only add Vector2D to another Vector2D")
+        return Vector2D(self.x + other.x, self.y + other.y)
+
+    def __eq__(self, other):
+        if not isinstance(other, Vector2D):
+            return False
+        return self.x == other.x and self.y == other.y
+
+v1 = Vector2D(10, 20)
+v2 = Vector2D(5, 5)
+
+# Adding vectors cleanly!
+v3 = v1 + v2
+print(v3) # Output: Vector2D(15, 25)
+
+# Comparing vectors cleanly!
+print(Vector2D(1, 1) == Vector2D(1, 1)) # True!
+```
+
+---
+
+# 7. Internal Working
+
+Python is fundamentally built around protocols. When you write `len(x)`, the Python interpreter literally just checks: "Does `x` have a `__len__` method defined?" If yes, it calls it. If no, it throws a `TypeError: object of type 'X' has no len()`.
+
+This is why Python is considered highly extensible. The core language doesn't need to know anything about your custom `Vector2D` class; it just relies on these standardized dunder method contracts to interact with it.
+
+---
+
+# 8. Performance Table
+
+| Operation | Complexity | Note |
+|---|---|---|
+| Magic Method Call | O(1) overhead | Same speed as calling a normal function. |
+| Operator Overloading | Depends on implementation | `__add__` can be O(1) for numbers, but O(N) if you are concatenating large custom lists. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between `__str__` and `__repr__`? | `__str__` is for end-users (should be readable). `__repr__` is for developers (should ideally be unambiguous and look like valid Python code that could recreate the object). |
+| What happens if you define `__eq__` but not `__hash__`? | The object becomes unhashable and cannot be used as a dictionary key or put into a set. If you define equality, you usually need to define how the hash is calculated too. |
+| Why shouldn't we invent our own magic methods? | Dunder methods are reserved by Python. Inventing `__my_custom_func__` is bad practice because Python might add it as a real magic method in a future update, breaking your code. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+What happens if you compare two custom objects without `__eq__`?
+
+```python
+class User:
+    def __init__(self, uid):
+        self.uid = uid
+
+u1 = User(10)
+u2 = User(10)
+
+print(u1 == u2) # FALSE!
+```
+Wait, why is it False? Because without `__eq__`, Python defaults to checking object identity (memory address, like the `is` keyword). Since `u1` and `u2` are different objects in memory, it returns False. To fix it, you MUST implement `__eq__`.
+
+---
+
+# 11. Real-World Usage
+
+- **ORM Models (Django/SQLAlchemy):** They heavily use `__str__` so when you view database records in the admin panel, they show up nicely.
+- **Data Science (Pandas/NumPy):** `df1 + df2` works because they overloaded `__add__` to perform element-wise matrix addition.
+- **Custom Collections:** Using `__getitem__` to make your custom class behave like a dictionary or list.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Implement `__str__` for logging and debugging purposes. | Use magic methods for random, non-standard behaviors (e.g., making `__add__` subtract things). Keep the behavior intuitive. |
+| Always check `isinstance(other, MyClass)` inside operator methods like `__add__` or `__eq__`. | Invent your own `__dunder__` names. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+In production, failing to implement `__repr__` makes logging a nightmare. If an error occurs and your log prints `<User object at 0x7f8b9c>`, you have no idea *which* user caused the crash. Always implement `__repr__` to return something like `User(id=42, email="alex@ex.com")`.
+
+---
+
+# 14. Common Mistakes
+
+- **Returning wrong types from magic methods:** `__len__` MUST return an integer. If you return a string, Python will crash.
+- **Modifying `self` in `__add__`:** The `+` operator usually expects a *new* object to be returned. Modifying the original object in place inside `__add__` is a nasty side-effect bug waiting to happen. Use `__iadd__` (`+=`) if you want in-place modification.
+
+---
+
+# 15. Related Topics
+
+- Classes & Objects
+- Operator Overloading
+- Python Built-in Functions
+- Hashable Objects

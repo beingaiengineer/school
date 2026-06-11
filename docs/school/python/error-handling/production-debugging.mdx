@@ -2,6 +2,212 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Production Debugging
 
-Placeholder: introduce Production Debugging.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Production Debugging |
+| Difficulty | Advanced |
+| Used For | Finding and fixing bugs in a live, running server environment where you cannot use `breakpoint()` |
+| Common Mistake | Trying to reproduce production race-conditions on a local Windows machine |
+| Performance | Tools like Sentry and APMs have minimal overhead but provide massive value |
+
+---
+
+# 2. Real-World Analogy
+
+Think of Local Debugging vs Production Debugging like fixing a car, bro.
+
+**Local Debugging:** The car is in your garage. You can turn off the engine, open the hood, take out parts, and take your time. (Using `pdb` or IDE debuggers).
+
+**Production Debugging:** The car is driving 120 mph on the highway, and there are passengers inside. You *cannot* turn off the engine. You have to figure out why it's making a weird noise by looking at the dashboard gauges, listening to the engine, and reading the onboard computer logs.
+
+---
+
+# 3. Concept Explanation
+
+When code goes to production, you lose your IDE. You lose `pdb`. You lose the ability to pause execution, because if you pause the execution, 10,000 customers trying to use your app will get a "Request Timeout" error.
+
+Production debugging relies on **Observability**. This means designing your system so that it generates enough data (Logs, Metrics, and Traces) that you can reconstruct what happened *after* the crash occurred.
+
+---
+
+# 4. Syntax Table
+
+*Note: Production debugging is more about tools and concepts than pure Python syntax.*
+
+| Tool / Concept | Python Equivalent / Tool | Purpose |
+|---|---|---|
+| Centralized Logging | `logging` + ELK/Splunk/Datadog | Searching logs across 50 different servers. |
+| Error Tracking | `sentry-sdk` | Automatically capturing unhandled exceptions and grouping them. |
+| APM (Tracing) | OpenTelemetry / New Relic | Seeing exactly how long a database query took in a live request. |
+| Core Dumps | `faulthandler` | Seeing where the CPython interpreter crashed for a Segmentation Fault. |
+
+---
+
+# 5. Beginner Example
+
+Let's look at how to properly prepare a function for production debugging.
+
+**Bad (Impossible to debug in prod):**
+```python
+def process_order(order_id):
+    try:
+        db.update(order_id)
+    except Exception:
+        pass # Silent failure! You will never know this failed!
+```
+
+**Good (Production Ready):**
+```python
+import logging
+logger = logging.getLogger(__name__)
+
+def process_order(order_id):
+    logger.info("Starting processing for order_id: %s", order_id)
+    try:
+        db.update(order_id)
+    except Exception as e:
+        # We log the EXACT order_id so we can search it in Splunk/Datadog later!
+        logger.exception("Failed to update order_id: %s. Reason: %s", order_id, e)
+        # We re-raise the error so Sentry captures the traceback!
+        raise
+```
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Live Server Crash', detail: 'Unhandled Exception', kind: 'warning', x: 250, y: 50 },
+    { id: '2', title: 'Sentry SDK', detail: 'Captures Stack Trace', kind: 'tool', x: 100, y: 150 },
+    { id: '3', title: 'Log Aggregator', detail: 'Collects logger.error()', kind: 'tool', x: 400, y: 150 },
+    { id: '4', title: 'Developer Dashboard', detail: 'Root Cause Identified', kind: 'output', x: 250, y: 250 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'auto-reports' },
+    { source: '1', target: '3', label: 'writes to' },
+    { source: '2', target: '4', type: 'smoothstep' },
+    { source: '3', target: '4', type: 'smoothstep' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+Bro, setting up Sentry is the number one thing you must do in a production Python app. It automatically catches any unhandled exception, grabs the local variables at the exact moment of the crash, and sends them to a dashboard.
+
+```python
+# pip install sentry-sdk
+import sentry_sdk
+import os
+
+# Initialize at the very top of your app (e.g., main.py)
+sentry_sdk.init(
+    dsn=os.environ.get("SENTRY_DSN"),
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    traces_sample_rate=1.0,
+)
+
+def risky_production_code(user_id):
+    user = db.get_user(user_id)
+    # If user is None, this throws AttributeError!
+    # Because Sentry is installed, we don't even need a try/except block.
+    # Sentry hooks into sys.excepthook and will automatically catch this
+    # crash, package up the value of `user_id`, and alert us!
+    return user.email.lower()
+
+# risky_production_code(99)
+```
+
+---
+
+# 7. Internal Working
+
+How do tools like Sentry catch errors without you wrapping everything in `try/except`?
+
+They hook into `sys.excepthook`. When an exception goes completely unhandled and reaches the top of the Python interpreter, Python is about to crash. Before it crashes, it calls `sys.excepthook`. Sentry intercepts this call, serializes the stack trace, the current local variables, and the OS information, ships it via HTTP to their servers asynchronously, and *then* lets the program crash.
+
+---
+
+# 8. Performance Table
+
+| Tool | Production Overhead | Note |
+|---|---|---|
+| Standard `logging` | ~1% | Very fast, especially if writing to stdout. |
+| Error Tracking (Sentry) | ~2% | Only impacts performance when an actual error occurs. |
+| APM / Profiling | ~5% - 10% | Tracing every database query has a cost. Usually sampled (e.g., trace 10% of requests). |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| You have a memory leak in a production server. How do you find it? | I would use a tool like `tracemalloc` to take memory snapshots over time, or connect a profiler like `py-spy` to the live process to see which objects are consuming memory without pausing the app. |
+| What is a "Correlation ID"? | A unique string (like a UUID) generated when a web request first hits the server. It is passed along to every function and microservice, and included in every log message. It allows you to search logs and see exactly what one specific user request did across the entire system. |
+| Why shouldn't you use `pdb` in production? | Because `pdb.set_trace()` halts the execution of the thread/process. In a web server (like Gunicorn), that worker will stop responding to requests, causing a denial of service. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+What happens if the Python process completely dies (Segmentation Fault) from a C-extension bug (like an issue in `numpy` or `psycopg2`)?
+
+`try/except` won't catch it. Sentry won't catch it. The process just instantly vanishes.
+
+**The Fix:** You must enable Python's `faulthandler`.
+```bash
+# Run your production app with this environment variable:
+PYTHONFAULTHANDLER=1 python app.py
+```
+If a low-level C-crash occurs, `faulthandler` will dump the Python stack trace to standard error right before the OS kills the process. It is a lifesaver.
+
+---
+
+# 11. Real-World Usage
+
+- **Microservice Architectures:** Using Datadog to trace a single request as it jumps from the API Gateway (Python FastAPI) -> Auth Service (Go) -> Database -> Payment Service (Python Celery).
+- **Silent Failures:** Using structured JSON logging so you can set up alerts: "If `ERROR` log rate > 50 per minute, page the on-call engineer."
+- **Customer Support:** A customer says "I got an error." You ask for their User ID, search the centralized logs for `user_id: 1234`, and instantly see the exact database query that failed.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use Structured Logging (JSON logs) in production so machines can parse and query your logs easily. | Log raw PII (Personally Identifiable Information) like credit card numbers or passwords in plain text logs! |
+| Include contextual data in logs (e.g., `user_id`, `request_id`). | Deploy code without an automated error tracking system (like Sentry or Rollbar). |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+The worst bugs in production are "Heisenbugs"—bugs that disappear when you try to observe them locally, often caused by race conditions or specific database states. Do not waste days trying to reproduce them on your local machine. Add aggressive, detailed logging around the failing code, deploy to production, and wait for the bug to happen again to capture the exact state.
+
+---
+
+# 14. Common Mistakes
+
+- **Logging the Exception object, but not the Traceback:**
+  ```python
+  except Exception as e:
+      logger.error(f"Failed: {e}") # BAD! Prints "Failed: division by zero". But WHERE?
+  ```
+  Always use `logger.exception("Failed")` which prints the message *and* the full stack trace!
+
+---
+
+# 15. Related Topics
+
+- Logging
+- Exceptions
+- Concurrency (Race Conditions)
+- System Design (Observability)

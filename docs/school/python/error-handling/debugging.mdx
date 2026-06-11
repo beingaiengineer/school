@@ -2,6 +2,204 @@
 sidebar_position: 4
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Debugging
 
-Placeholder: introduce Debugging.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Debugging in Python |
+| Difficulty | Intermediate |
+| Used For | Finding and fixing logic errors or unexpected behavior in code |
+| Common Mistake | Relying entirely on `print()` instead of using a real debugger like `pdb` |
+| Performance | Running in a debugger slows execution significantly; use only in dev |
+
+---
+
+# 2. Real-World Analogy
+
+Think of Debugging like a detective investigating a bank robbery, bro.
+
+If you just use `print()`, it's like asking witnesses what happened after the robbery is already over. You get fragments of information, but you weren't there.
+
+Using a real debugger (`pdb`) is like having a time machine. You can pause the robbery right in the middle, walk around the room, look at exactly what money is in the vault at that exact second, and step forward frame by frame to see exactly who messes up!
+
+---
+
+# 3. Concept Explanation
+
+Debugging is the systematic process of identifying and resolving bugs (defects) in software.
+
+While `print("here1")` and `print("here2")` is a valid form of debugging (Print Debugging), it is extremely inefficient for complex issues. Python provides built-in tools—most notably the `pdb` (Python Debugger) module—which allows you to pause execution, inspect variables, and step through your code line by line to understand the exact state of the program.
+
+---
+
+# 4. Syntax Table
+
+| Command | `pdb` Action | Purpose |
+|---|---|---|
+| `import pdb; pdb.set_trace()` | Set Breakpoint (Python pre-3.7) | Halts execution at this line. |
+| `breakpoint()` | Set Breakpoint (Python 3.7+) | The modern, built-in way to halt execution. |
+| `n` (next) | Step Over | Executes the current line and goes to the next line. |
+| `s` (step) | Step Into | Goes inside a function call to see what it does. |
+| `c` (continue) | Continue | Resumes normal execution until the next breakpoint. |
+| `p var` | Print | Prints the value of a variable. |
+
+---
+
+# 5. Beginner Example
+
+Let's look at a buggy script and how we use `breakpoint()` to find the problem.
+
+```python
+def calculate_average(numbers):
+    total = sum(numbers)
+    # BUG: We are dividing by the length of the string "numbers", not the list!
+    average = total / len("numbers")
+    return average
+
+my_list = [10, 20, 30]
+
+# Pause execution right before the function call
+breakpoint()
+
+result = calculate_average(my_list)
+print(f"The average is: {result}")
+```
+
+When you run this script in the terminal, it will freeze at `breakpoint()` and give you a `(Pdb)` prompt. You can type `s` to step into the function, type `p total` to see `60`, and type `p len("numbers")` to realize it equals `7`, revealing the bug!
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Code Execution', detail: 'Runs normally', kind: 'process', x: 250, y: 50 },
+    { id: '2', title: 'breakpoint()', detail: 'Execution Paused', kind: 'warning', x: 250, y: 150 },
+    { id: '3', title: 'Inspect Variables', detail: 'p total', kind: 'tool', x: 50, y: 250 },
+    { id: '4', title: 'Step Execution', detail: 'n (next) / s (step)', kind: 'tool', x: 450, y: 250 },
+    { id: '5', title: 'Continue', detail: 'c (resume run)', kind: 'output', x: 250, y: 350 }
+  ],
+  edges: [
+    { source: '1', target: '2' },
+    { source: '2', target: '3' },
+    { source: '2', target: '4' },
+    { source: '3', target: '5' },
+    { source: '4', target: '5' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+Bro, when you have a massive loop processing thousands of API responses, a `print()` statement will flood your terminal. You only want to pause when a *specific* error condition happens. Conditional breakpoints are a superpower!
+
+```python
+def process_payments(transactions):
+    for tx in transactions:
+        amount = tx.get("amount", 0)
+
+        # CONDITIONAL BREAKPOINT!
+        # We only pause the debugger if the amount is negative (a bug!)
+        if amount < 0:
+            print("ALERT: Negative transaction detected!")
+            breakpoint() # We pause here to inspect `tx` immediately!
+
+        # Normal processing...
+        print(f"Processed ${amount}")
+
+data = [
+    {"id": 1, "amount": 100},
+    {"id": 2, "amount": 50},
+    {"id": 3, "amount": -5}, # Bug occurs here!
+    {"id": 4, "amount": 200}
+]
+
+process_payments(data)
+```
+Instead of pressing `continue` 100 times, the code runs at full speed until the exact moment the bug appears.
+
+---
+
+# 7. Internal Working
+
+When Python hits a `breakpoint()` call, it accesses the `sys.breakpointhook()`. By default, this imports `pdb` and calls `pdb.set_trace()`.
+
+`pdb` hooks into Python's `sys.settrace()` facility. This is a low-level CPython mechanism that allows a function to be called before every single line of code is executed. Because it intercepts every line, running code inside a debugger is substantially slower than normal execution.
+
+---
+
+# 8. Performance Table
+
+| Method | Speed | Note |
+|---|---|---|
+| Normal Execution | 100% | Full speed. |
+| Print Debugging | ~95% | Writing to standard output causes minor I/O latency. |
+| Running under `pdb` | ~10% to 50% | Massive overhead because Python traces every line of code. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| How do you start a Python script directly in debug mode? | Run `python -m pdb my_script.py`. It will pause on the very first line of the file. |
+| What is the difference between `n` (next) and `s` (step) in `pdb`? | `next` executes the current line and stops at the next line in the *current* function. `step` goes *inside* a function call on that line to see how it works internally. |
+| How do you quit the debugger? | Type `q` or `quit` and press Enter. This will terminate the program immediately. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+What happens if you have a variable named `c` and you try to print it in `pdb`?
+
+```python
+def test():
+    a = 10
+    c = 20
+    breakpoint()
+```
+In the `(Pdb)` prompt, if you type `c` and hit enter, **it will NOT print 20**. It will execute the `continue` command and the program will finish!
+**Fix:** To print variables that share names with `pdb` commands (like `c`, `n`, `s`, `l`), you MUST use the print command: `p c`.
+
+---
+
+# 11. Real-World Usage
+
+- **IDE Debuggers:** VS Code and PyCharm have visual debuggers. You click the left margin to place a red dot (breakpoint), and it gives you a visual UI for `pdb`!
+- **Data Science:** Using `%debug` in Jupyter Notebooks to drop into `ipdb` (an interactive version of pdb) right after an exception occurs.
+- **Django/Flask Development:** Placing `breakpoint()` in a view function to inspect the incoming HTTP Request headers before saving to the database.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `breakpoint()` conditionally (`if bug_condition: breakpoint()`). | Leave `breakpoint()` calls in your code when committing to Git! |
+| Learn to use your IDE's visual debugger (VSCode/PyCharm). | Rely solely on `print("got here")` for complex state tracking. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Never, ever commit a `breakpoint()` or `pdb.set_trace()` call into production code. If the server hits that line, the application will literally freeze, waiting for terminal input that will never come, effectively causing a total outage for that process! Tools like `flake8` or `pylint` in your CI/CD pipeline should be configured to fail the build if they detect `breakpoint()`.
+
+---
+
+# 14. Common Mistakes
+
+- **Not understanding the Call Stack:** When debugging deep inside a function, you might forget how you got there. Type `w` (where) in `pdb` to print the full stack trace of exactly which functions called which functions to reach your current line!
+- **Getting stuck in standard library code:** If you press `s` (step) on a function like `requests.get()`, you will dive into thousands of lines of complex Python internal code. Use `n` (next) to step *over* third-party libraries!
+
+---
+
+# 15. Related Topics
+
+- Logging
+- Exceptions
+- Production Debugging
+- Testing & Mocking
