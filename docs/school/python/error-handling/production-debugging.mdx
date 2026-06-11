@@ -2,6 +2,211 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Production Debugging
 
-Placeholder: introduce Production Debugging.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Production Debugging in Python |
+| Difficulty | Advanced |
+| Used For | Finding and fixing bugs in live, high-traffic systems without causing downtime |
+| Common Mistake | Trying to SSH into a production server and use `print()` or `pdb` |
+| Performance | Critical to minimize overhead. Telemetry and tracing must not slow down the app. |
+
+# 2. Real-World Analogy
+
+Bro, debugging locally is like fixing a bicycle in your garage. You can flip it over, take the wheels off, and take all day.
+
+Debugging in **production** is like fixing an airplane engine while it's flying at 30,000 feet. You can't hit "pause" (no `breakpoint()`), you can't just try random fixes, and millions of users are relying on you. You have to rely on instrument panels (logs, metrics, and traces) to figure out what's wrong before making a highly calculated patch.
+
+# 3. Concept Explanation
+
+Production debugging relies on **Observability**. Since you cannot attach a debugger to a live server without freezing requests, you must proactively write code that emits data about its state.
+
+The three pillars of observability are:
+1. **Logs:** Immutable records of discrete events (handled via the `logging` module).
+2. **Metrics:** Aggregated numbers over time (e.g., CPU usage, active DB connections).
+3. **Traces:** A single user's request path across multiple microservices.
+
+When an alert fires at 3 AM, you use these three pillars to form a hypothesis, reproduce the bug locally, write a fix, and deploy it.
+
+# 4. Syntax Table (Concepts)
+
+| Strategy | Tooling | Purpose |
+|---|---|---|
+| Structured Logging | `structlog`, JSON logs | Emitting logs that machines (ElasticSearch) can parse easily |
+| Distributed Tracing | OpenTelemetry, Jaeger | Tracking a single request ID across 5 different APIs |
+| Exception Tracking | Sentry, Rollbar | Grouping similar tracebacks and alerting developers immediately |
+| Profiling | `cProfile`, PySpy | Finding exactly which function is causing high CPU usage |
+
+# 5. Beginner Example
+
+Let's look at the difference between a bad log and a good structured log for production.
+
+```python
+import logging
+import json
+
+# BAD: Hard to parse via automated tools.
+logging.error("Failed to process payment for user 123 due to timeout")
+
+# GOOD: Structured Logging (JSON).
+# A tool like Datadog can instantly graph how many "timeout" errors occurred!
+def structured_error(user_id, reason, amount):
+    log_data = {
+        "event": "payment_failed",
+        "user_id": user_id,
+        "reason": reason,
+        "amount": amount
+    }
+    # Log as a JSON string
+    logging.error(json.dumps(log_data))
+
+structured_error(123, "timeout", 50.00)
+```
+
+# 6. Real-World Engineering Example
+
+Bro, imagine you have a microservice architecture. User hits Service A, which calls Service B, which calls the Database. It's slow. Where is the bottleneck? You use a **Correlation ID**.
+
+```python
+import logging
+import uuid
+from contextvars import ContextVar
+
+# ContextVar allows us to store an ID globally for the current async request
+request_id: ContextVar[str] = ContextVar("request_id")
+
+def process_order(order_data):
+    # Set a unique ID for this entire request flow
+    req_id = str(uuid.uuid4())
+    request_id.set(req_id)
+
+    log("Started order processing")
+    charge_credit_card(order_data['amount'])
+    log("Finished order processing")
+
+def charge_credit_card(amount):
+    # This function doesn't need to be passed the request_id!
+    log(f"Charging {amount}")
+    # Simulating a crash
+    raise ConnectionError("Bank API Down")
+
+def log(message):
+    # Every single log automatically gets tagged with the request ID!
+    print(f"[ReqID: {request_id.get()}] {message}")
+
+try:
+    process_order({"amount": 100})
+except Exception as e:
+    log(f"CRASH: {e}")
+
+# Output:
+# [ReqID: 550e8400-e29b-41d4-a716-446655440000] Started order processing
+# [ReqID: 550e8400-e29b-41d4-a716-446655440000] Charging 100
+# [ReqID: 550e8400-e29b-41d4-a716-446655440000] CRASH: Bank API Down
+```
+
+In Datadog, you search for that `ReqID` and instantly see the entire lifecycle of that specific user's request, across all functions and microservices!
+
+# 7. Internal Working
+
+<LearningFlow
+  elements={[
+    {
+      id: '1',
+      type: 'core',
+      position: { x: 250, y: 0 },
+      data: { label: 'User Request', description: 'Headers: X-Correlation-ID: 123' }
+    },
+    {
+      id: '2',
+      type: 'process',
+      position: { x: 50, y: 150 },
+      data: { label: 'Auth Service', description: 'Logs: [123] Auth Success' }
+    },
+    {
+      id: '3',
+      type: 'process',
+      position: { x: 450, y: 150 },
+      data: { label: 'Billing Service', description: 'Logs: [123] DB Timeout' }
+    },
+    {
+      id: '4',
+      type: 'tool',
+      position: { x: 250, y: 300 },
+      data: { label: 'Central Log Server', description: 'Groups all logs by ID: 123' }
+    },
+    { id: 'e1-2', source: '1', target: '2' },
+    { id: 'e2-3', source: '2', target: '3', label: 'Passes ID', animated: true },
+    { id: 'e2-4', source: '2', target: '4', type: 'step' },
+    { id: 'e3-4', source: '3', target: '4', type: 'step' }
+  ]}
+/>
+
+Production systems use distributed tracing. When a request hits the API Gateway, it generates a Correlation ID. This ID is passed in the HTTP Headers to every subsequent service. Every service attaches this ID to its logs. The central logging server aggregates them so developers can see the exact timeline of the crash.
+
+# 8. Performance Table
+
+| Observability Tool | Overhead | Production Recommendation |
+|---|---|---|
+| Logging (Async/JSON) | Low | Essential. Do not run production without it. |
+| Exception Tracking (Sentry) | Low | Essential. Groups identical bugs so you aren't spammed. |
+| Full Request Profiling | High | DO NOT leave on. Turn on dynamically for short bursts. |
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why not use `pdb` in production? | `pdb` pauses execution. In a web server, this freezes the request thread, causing timeouts for users and eventually crashing the server when threads are exhausted. |
+| What is a Correlation ID? | A unique identifier generated at the start of a request, passed through all microservices, and attached to all logs to trace the request's exact path. |
+| How do you debug high CPU usage on a live server? | Use a sampling profiler like `py-spy`. It reads the memory of the Python process from the outside without pausing it, generating a flame graph of function calls. |
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, what happens when your error logging system causes an error?
+
+```python
+try:
+    process_data()
+except Exception as e:
+    # TRAP: What if logger itself fails?
+    # (e.g. disk is full, or the logging network service is down)
+    logger.exception("Crash happened: " + str(e))
+```
+
+If the disk is 100% full, the `logger` will throw an `OSError`. Now your error handler crashed! In highly critical systems (like banking), you must configure your logger to fail gracefully (using non-blocking queues) so that a logging failure doesn't crash the actual business logic.
+
+# 11. Real-World Usage
+
+- **Sentry Integration:** Adding Sentry to a FastAPI app takes 2 lines of code. It automatically catches unhandled exceptions, grabs the traceback, grabs the local variable values, and sends a Slack alert to the engineering team.
+- **Py-Spy:** A tool written in Rust. You SSH into the server, find the PID of the stuck Python app, and run `py-spy dump --pid 12345`. It outputs exactly what line of code every thread is currently stuck on.
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Ensure logs are output in JSON format | Don't log sensitive PII (Passwords, SSNs, Tokens) |
+| Use Context Variables for request IDs | Don't use global variables for request IDs in async/threaded apps |
+| Set alerts for spikes in 500 status codes | Don't ignore Sentry alerts until there are 10,000 of them |
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Bro, the Golden Rule of Production Debugging is: **Reproduce Locally First.**
+Do not blindly push fixes to production based on a guess. Use the production logs to find the exact state, write a failing Pytest locally that mimics that state, fix the code so the test passes, and THEN deploy.
+
+# 14. Common Mistakes
+
+- **Swallowing Errors:** Wrapping the main function in `except Exception: pass`. The server stays up, but no data is processed, and no logs are generated. The "Silent Death".
+- **Log Spam:** Leaving `logger.debug()` on in production. It generates gigabytes of text, costing thousands of dollars in Datadog ingestion fees.
+- **Missing Context:** Logging `ERROR: Invalid User`. Which user? What time? What action? Always include the ID and context in the log!
+
+# 15. Related Topics
+- Logging
+- Exceptions
+- Microservices
+- Concurrency (Context Variables)

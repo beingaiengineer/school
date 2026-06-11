@@ -2,6 +2,200 @@
 sidebar_position: 3
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Logging
 
-Placeholder: introduce Logging.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Python `logging` module |
+| Difficulty | Intermediate |
+| Used For | Recording events, errors, and system states to files or monitoring systems |
+| Common Mistake | Using `print()` instead of `logging` in production code |
+| Performance | Fast, but writing to disk synchronously can slow down high-throughput apps |
+
+# 2. Real-World Analogy
+
+Bro, think about an airplane's black box. If the plane crashes, investigators don't just guess what happened; they look at the black box which recorded altitude, engine temperature, and pilot conversations.
+
+`print()` is like a pilot talking to the passengers—it disappears the moment the flight ends. `logging` is the black box. It records what happened, when it happened, and how severe it was, permanently saving it to a file so you can debug it later.
+
+# 3. Concept Explanation
+
+The built-in `logging` module is the standard way to track events in Python.
+
+It provides levels of severity:
+- `DEBUG`: Detailed info for diagnosing problems.
+- `INFO`: Confirmation that things are working normally.
+- `WARNING`: Something unexpected happened, but the software is still running.
+- `ERROR`: A serious problem occurred, a function failed.
+- `CRITICAL`: A fatal error, the program may crash.
+
+Unlike `print()`, logging automatically adds timestamps, log levels, file names, and can write output to multiple places (console, files, external services) simultaneously.
+
+# 4. Syntax Table
+
+| Level | Method | Best Used For |
+|---|---|---|
+| 10 | `logging.debug("Data: x")` | Variable state, step-by-step traces |
+| 20 | `logging.info("Server started")` | Standard lifecycle events |
+| 30 | `logging.warning("Disk 80% full")` | Potential future issues |
+| 40 | `logging.error("DB connection failed")` | Handled exceptions in `except` blocks |
+| 50 | `logging.critical("System out of memory")` | Unrecoverable crashes |
+
+# 5. Beginner Example
+
+Let's set up a basic logger that writes to the console.
+
+```python
+import logging
+
+# 1. Basic configuration (must be called BEFORE you log anything)
+logging.basicConfig(
+    level=logging.INFO, # Ignore DEBUG logs, show INFO and above
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+# 2. Start logging!
+logging.debug("This won't print because our level is INFO")
+logging.info("Starting the user import process...")
+logging.warning("User email format looks weird, but continuing.")
+logging.error("Failed to insert User ID 45 into database.")
+```
+
+**Output:**
+```text
+2023-10-25 14:30:01,123 - INFO - Starting the user import process...
+2023-10-25 14:30:01,125 - WARNING - User email format looks weird, but continuing.
+2023-10-25 14:30:01,126 - ERROR - Failed to insert User ID 45 into database.
+```
+
+# 6. Real-World Engineering Example
+
+Bro, in production, we never use the root logger (`logging.info()`). We always create named loggers for specific modules. We also log the full traceback automatically when catching exceptions.
+
+```python
+import logging
+
+# Create a custom logger named after the current file (__name__)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
+
+# Create a file handler
+file_handler = logging.FileHandler('app_errors.log')
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+
+def divide(a, b):
+    try:
+        return a / b
+    except ZeroDivisionError:
+        # logger.exception automatically attaches the traceback to the ERROR log!
+        logger.exception("Math operation failed for inputs %s and %s", a, b)
+        return None
+
+divide(10, 0)
+```
+
+# 7. Internal Working
+
+<LearningFlow
+  elements={[
+    {
+      id: '1',
+      type: 'core',
+      position: { x: 250, y: 0 },
+      data: { label: 'logger.error("...")', description: 'Log Event Created' }
+    },
+    {
+      id: '2',
+      type: 'process',
+      position: { x: 250, y: 150 },
+      data: { label: 'Level Check', description: 'Is ERROR >= Logger Level?' }
+    },
+    {
+      id: '3',
+      type: 'tool',
+      position: { x: 50, y: 300 },
+      data: { label: 'StreamHandler', description: 'Writes to Console' }
+    },
+    {
+      id: '4',
+      type: 'tool',
+      position: { x: 450, y: 300 },
+      data: { label: 'FileHandler', description: 'Writes to app.log' }
+    },
+    { id: 'e1-2', source: '1', target: '2' },
+    { id: 'e2-3', source: '2', target: '3', label: 'Pass to handlers', animated: true },
+    { id: 'e2-4', source: '2', target: '4', label: 'Pass to handlers', animated: true }
+  ]}
+/>
+
+When you call `logger.error()`, a `LogRecord` object is created. It passes through a filter (is `ERROR` >= the logger's threshold?). If yes, it is sent to all attached `Handlers` (console, file, network). The handler passes it to a `Formatter` to turn it into a string, and then writes the string to the destination.
+
+# 8. Performance Table
+
+| Operation | Performance Impact | Note |
+|---|---|---|
+| Filtering (Level check) | Nanoseconds | Extremely fast, `logger.debug()` is practically free if level is INFO |
+| Formatting | Microseconds | String interpolation takes slight time |
+| Writing to File | Milliseconds | I/O bound. Can block async code if not careful |
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why use `logging` instead of `print()`? | Logging persists to files, has severity levels, captures timestamps automatically, and can be turned on/off without changing code. |
+| Difference between `logger.error()` and `logger.exception()`? | `logger.exception()` automatically captures and logs the full stack traceback. `logger.error()` only logs the string message. |
+| Why should we use `%s` formatting (`logger.error("User %s", user)`) instead of f-strings? | If the log level prevents the message from being written, `%s` formatting avoids evaluating the string entirely, saving performance. F-strings evaluate immediately. |
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, watch out for the logging setup trap!
+
+```python
+import logging
+
+logging.info("Starting app...") # Uses default root logger (WARNING level by default!)
+
+# Too late! basicConfig does nothing if logging was already triggered.
+logging.basicConfig(level=logging.INFO)
+logging.info("App initialized.")
+```
+
+**What prints?** NOTHING.
+The first `logging.info()` triggers Python to configure the root logger automatically with a default level of `WARNING`. By the time `basicConfig` is called, it's ignored. Always call `basicConfig` at the absolute top of your script.
+
+# 11. Real-World Usage
+
+- **Microservices:** Emitting JSON-formatted logs to standard output, which are scraped by fluentd/Logstash and sent to Datadog or Kibana.
+- **Data Engineering:** Logging the row count of every ETL pipeline step so developers can track exactly where data was dropped.
+- **Security:** Logging successful and failed login attempts (without passwords!) for auditing purposes.
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `logger = logging.getLogger(__name__)` | Don't use `logging.info()` (the root logger) in library code |
+| Use `logger.exception()` inside `except` blocks | Don't log sensitive info (Passwords, API Keys, PII) |
+| Configure logging via dictionaries or config files | Don't rely purely on `basicConfig` in large projects |
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Bro, in high-volume production APIs (like FastAPI or Flask), writing logs synchronously to a file can actually bottleneck your entire application due to disk I/O. Use JSON-formatted console logging (handled by Docker) or use a non-blocking asynchronous log handler.
+
+# 14. Common Mistakes
+
+- **F-String Performance Penalty:** `logger.debug(f"Parsing {huge_xml_object}")`. The huge XML is parsed into a string even if the level is set to `INFO`, wasting CPU. Use `logger.debug("Parsing %s", huge_xml_object)`.
+- **Log Spam:** Putting `logging.info()` inside a massive `for` loop that runs 1 million times. It will fill up the server's hard drive and crash the system.
+- **Ignoring Log Rotation:** Appending to `app.log` forever. Use `RotatingFileHandler` so the file doesn't grow to 50GB.
+
+# 15. Related Topics
+- Exception Handling
+- Debugging
+- Production Monitoring
+- Context Managers

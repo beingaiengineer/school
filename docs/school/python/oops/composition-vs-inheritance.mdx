@@ -2,6 +2,222 @@
 sidebar_position: 10
 ---
 
-# Composition Vs Inheritance
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Composition Vs Inheritance.
+# Composition vs Inheritance
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Composition vs Inheritance |
+| Difficulty | Intermediate |
+| Used For | Deciding how objects should share code and behavior |
+| Common Mistake | Using deep inheritance trees, causing the "Gorilla Banana" problem |
+| Performance | Composition uses slightly more memory (multiple objects), but provides massive flexibility |
+
+# 2. Real-World Analogy
+
+Bro, think about building a custom car.
+
+**Inheritance** is like saying: "A SportsCar IS A Car." It inherits the engine, the wheels, and the doors from the generic Car blueprint. But what if you want a flying car? You have to rewrite the whole blueprint.
+
+**Composition** is like building with Lego blocks: "A SportsCar HAS A V8 Engine, HAS A Spoiler, HAS 4 Wheels." If you want a flying car, you just swap the V8 Engine block for a Jet Engine block. You don't rewrite the whole car.
+
+Composition is about combining small, focused parts (HAS-A) rather than locking into a rigid family tree (IS-A).
+
+# 3. Concept Explanation
+
+**Inheritance** establishes an "IS-A" relationship. A `Dog` IS A `Animal`. It's great for strict hierarchical taxonomies but leads to rigid code that is hard to change.
+
+**Composition** establishes a "HAS-A" relationship. A `Dog` HAS A `BarkBehavior`. Instead of inheriting behavior from a parent, a class is composed of smaller, specialized objects.
+
+The golden rule in modern software engineering is: **Favor Composition over Inheritance.**
+
+# 4. Syntax Table
+
+| Pattern | Code Structure | Relationship |
+|---|---|---|
+| Inheritance | `class ElectricCar(Car):` | IS-A |
+| Composition | `self.engine = ElectricEngine()` | HAS-A |
+
+# 5. Beginner Example
+
+Let's look at the trap of Inheritance first.
+
+```python
+# INHERITANCE (The rigid way)
+class Animal:
+    def walk(self): print("Walking")
+
+class Bird(Animal):
+    def fly(self): print("Flying")
+
+class Penguin(Bird):
+    # Uh oh... Penguins can't fly!
+    # We inherited bad behavior and now have to hack a fix.
+    def fly(self): raise Exception("I can't fly!")
+```
+
+Now, let's fix it using Composition.
+
+```python
+# COMPOSITION (The flexible way)
+class WalkBehavior:
+    def walk(self): print("Walking")
+
+class SwimBehavior:
+    def swim(self): print("Swimming")
+
+class Penguin:
+    def __init__(self):
+        # A Penguin HAS A walk behavior and HAS A swim behavior
+        self.walker = WalkBehavior()
+        self.swimmer = SwimBehavior()
+
+p = Penguin()
+p.walker.walk()
+p.swimmer.swim()
+```
+
+Bro, notice how the Penguin is just assembled from parts? No hacking required!
+
+# 6. Real-World Engineering Example
+
+Bro, imagine building a video game with hundreds of character types. If you use inheritance, you end up with classes like `InvisibleFlyingFireShootingEnemy`. It's a nightmare.
+
+Using Composition (often called Entity-Component System in games):
+
+```python
+class HealthComponent:
+    def __init__(self, hp):
+        self.hp = hp
+    def take_damage(self, amount):
+        self.hp -= amount
+        print(f"Took {amount} damage. HP left: {self.hp}")
+
+class WeaponComponent:
+    def fire(self):
+        print("Bang!")
+
+class Player:
+    def __init__(self):
+        # The player is just a container for components
+        self.health = HealthComponent(100)
+        self.weapon = WeaponComponent()
+
+class Turret:
+    def __init__(self):
+        # A Turret doesn't need health, it just shoots!
+        self.weapon = WeaponComponent()
+
+hero = Player()
+hero.health.take_damage(20)
+hero.weapon.fire()
+
+defense_turret = Turret()
+defense_turret.weapon.fire()
+```
+
+# 7. Internal Working
+
+<LearningFlow
+  elements={[
+    {
+      id: '1',
+      type: 'core',
+      position: { x: 250, y: 0 },
+      data: { label: 'Player Class', description: 'The Entity Container' }
+    },
+    {
+      id: '2',
+      type: 'data',
+      position: { x: 50, y: 150 },
+      data: { label: 'HealthComponent', description: 'Handles HP logic' }
+    },
+    {
+      id: '3',
+      type: 'data',
+      position: { x: 450, y: 150 },
+      data: { label: 'WeaponComponent', description: 'Handles Shooting logic' }
+    },
+    { id: 'e1-2', source: '1', target: '2', label: 'HAS-A', animated: true },
+    { id: 'e1-3', source: '1', target: '3', label: 'HAS-A', animated: true }
+  ]}
+/>
+
+In memory, Composition creates one main object (`Player`) that holds references to other distinct objects (`HealthComponent`, `WeaponComponent`). When `hero.health.take_damage()` is called, Python simply follows the reference to the `HealthComponent` instance and executes its method.
+
+# 8. Performance Table
+
+| Pattern | Memory Usage | Flexibility | Execution Speed |
+|---|---|---|---|
+| Inheritance | Lower (One large object) | Very Low | Fast (Direct method resolution) |
+| Composition | Slightly Higher (Multiple objects) | Extremely High | Slightly slower (Extra dot lookup) |
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why favor composition over inheritance? | Inheritance creates rigid, deeply coupled code. Composition is modular, easy to test, and allows changing behavior at runtime. |
+| What is the "Gorilla Banana" problem? | "You wanted a banana but what you got was a gorilla holding the banana and the entire jungle." - It refers to inheriting massive amounts of unwanted code from a parent class. |
+| How do you recognize when to use Inheritance? | When there is a strict, undeniable "IS-A" relationship and the child class uses *everything* the parent provides. |
+| Can you use both together? | Yes, you can use shallow inheritance (1 level deep) combined with composition for maximum efficiency. |
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, what happens if you need to change a behavior dynamically while the program is running?
+
+```python
+class Car:
+    def __init__(self, engine):
+        self.engine = engine  # Composition via Dependency Injection
+
+    def drive(self):
+        self.engine.start()
+
+class V8Engine:
+    def start(self): print("VROOM!")
+
+class ElectricEngine:
+    def start(self): print("Silent hum...")
+
+my_car = Car(V8Engine())
+my_car.drive() # Output: VROOM!
+
+# Magic! We can change the engine AT RUNTIME!
+my_car.engine = ElectricEngine()
+my_car.drive() # Output: Silent hum...
+```
+
+You absolutely cannot do this with inheritance! You can't change a class's parent class on the fly. Composition allows runtime swapping.
+
+# 11. Real-World Usage
+
+- **Django Models:** Django uses inheritance for base models, but uses composition heavily for field types (`models.CharField`, `models.DateTimeField`).
+- **Game Development:** Unity and Unreal Engine use Entity-Component Systems (pure composition) because game objects change constantly.
+- **UI Frameworks:** React and Flutter are entirely built on composition (components containing other components).
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use Composition for sharing code/behavior | Don't use Inheritance just to save a few lines of code |
+| Keep inheritance trees shallow (Max 1-2 levels) | Don't create 5-level deep inheritance chains |
+| Pass components into `__init__` (Dependency Injection) | Don't hardcode components inside the class if they might change |
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Bro, deep inheritance trees are the #1 cause of "Spaghetti Code" in legacy enterprise systems. When you change a method in a grand-parent class, it breaks 50 child classes you didn't even know existed. Composition isolates changes strictly to the component being modified.
+
+# 14. Common Mistakes
+
+- **Inheriting for convenience:** Creating a `class User(DatabaseConnection):` just so the User class can save itself. A User IS NOT a Database connection. A User HAS A Database connection!
+- **Over-engineering:** Breaking a 10-line script into 15 different components. Use composition when complexity arises, not for trivial scripts.
+
+# 15. Related Topics
+- SOLID Principles
+- Dependency Injection
+- Classes & Objects
+- Abstract Base Classes

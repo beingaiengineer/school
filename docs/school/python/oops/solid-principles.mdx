@@ -2,6 +2,225 @@
 sidebar_position: 9
 ---
 
-# Solid Principles
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Solid Principles.
+# SOLID Principles
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | SOLID Principles in Python |
+| Difficulty | Advanced |
+| Used For | Writing clean, scalable, and maintainable object-oriented code |
+| Common Mistake | Cramming too many responsibilities into a single "God Class" |
+| Performance | No direct impact on runtime speed; massive impact on developer speed |
+
+# 2. Real-World Analogy
+
+Bro, think of a massive hospital.
+- You have a receptionist who only books appointments.
+- You have a doctor who only treats patients.
+- You have a pharmacy that only dispenses medicine.
+
+If the receptionist suddenly started doing heart surgery, the hospital would collapse into chaos. SOLID principles are exactly like this hospital organization. They ensure every part of your code has a specific job, can be easily replaced, and doesn't break everything else when changes happen.
+
+# 3. Concept Explanation
+
+SOLID is an acronym representing five design principles for object-oriented programming:
+
+1. **S** - Single Responsibility Principle (SRP): A class should have only one reason to change.
+2. **O** - Open/Closed Principle (OCP): Code should be open for extension, but closed for modification.
+3. **L** - Liskov Substitution Principle (LSP): Subclasses must be replaceable for their parent classes without breaking things.
+4. **I** - Interface Segregation Principle (ISP): Don't force users to depend on methods they don't use.
+5. **D** - Dependency Inversion Principle (DIP): High-level modules should depend on abstractions, not low-level modules.
+
+Why do we care? Because when apps grow to 100,000 lines of code, violating these principles makes the code impossible to maintain, test, or scale.
+
+# 4. Syntax Table
+
+There is no strict "syntax" for SOLID, but here are the tools Python gives you to enforce them:
+
+| Principle | Python Tool / Pattern |
+|---|---|
+| Single Responsibility | Breaking logic into multiple smaller classes/functions |
+| Open/Closed | Inheritance, Strategy Pattern |
+| Liskov Substitution | Strict Type Hinting, Abstract Base Classes (`abc`) |
+| Interface Segregation | Multiple small abstract base classes |
+| Dependency Inversion | Dependency Injection (passing objects into `__init__`) |
+
+# 5. Beginner Example: Single Responsibility Principle (SRP)
+
+Let's look at what a violation of SRP looks like, and how to fix it.
+
+```python
+# BAD: This class handles user data AND database saving AND email sending
+class UserManager:
+    def create_user(self, username):
+        pass
+    def save_to_db(self):
+        pass
+    def send_welcome_email(self):
+        pass
+
+# GOOD: Split the responsibilities!
+class User:
+    def __init__(self, username):
+        self.username = username
+
+class UserRepository:
+    def save(self, user):
+        print(f"Saving {user.username} to database")
+
+class EmailService:
+    def send_welcome_email(self, user):
+        print(f"Sending email to {user.username}")
+```
+
+Now, if the email provider changes from AWS SES to SendGrid, you only touch `EmailService`. `UserRepository` is completely safe!
+
+# 6. Real-World Engineering Example: Dependency Inversion (DIP)
+
+Bro, imagine building a reporting system. High-level logic (generating the report) shouldn't be hardcoded to low-level logic (how it's saved).
+
+```python
+from abc import ABC, abstractmethod
+
+# 1. Create an Abstraction (Interface)
+class ReportSaver(ABC):
+    @abstractmethod
+    def save(self, data: str):
+        pass
+
+# 2. Create Low-Level Modules implementing the abstraction
+class PDFSaver(ReportSaver):
+    def save(self, data: str):
+        print(f"Saving '{data}' as PDF")
+
+class CSVSaver(ReportSaver):
+    def save(self, data: str):
+        print(f"Saving '{data}' as CSV")
+
+# 3. High-Level Module depends on Abstraction, NOT concrete classes!
+class ReportGenerator:
+    # Dependency Injection happens here:
+    def __init__(self, saver: ReportSaver):
+        self.saver = saver
+
+    def generate(self, data: str):
+        # We don't care IF it's PDF or CSV, we just call save()
+        self.saver.save(data)
+
+# Usage:
+pdf_reporter = ReportGenerator(PDFSaver())
+pdf_reporter.generate("Q1 Earnings")
+
+csv_reporter = ReportGenerator(CSVSaver())
+csv_reporter.generate("Q1 Earnings")
+```
+
+# 7. Internal Working
+
+<LearningFlow
+  elements={[
+    {
+      id: '1',
+      type: 'core',
+      position: { x: 250, y: 0 },
+      data: { label: 'ReportGenerator', description: 'High-Level Policy' }
+    },
+    {
+      id: '2',
+      type: 'data',
+      position: { x: 250, y: 150 },
+      data: { label: 'ReportSaver (ABC)', description: 'The Abstraction' }
+    },
+    {
+      id: '3',
+      type: 'process',
+      position: { x: 100, y: 300 },
+      data: { label: 'PDFSaver', description: 'Low-level Detail' }
+    },
+    {
+      id: '4',
+      type: 'process',
+      position: { x: 400, y: 300 },
+      data: { label: 'CSVSaver', description: 'Low-level Detail' }
+    },
+    { id: 'e1-2', source: '1', target: '2', label: 'Depends on', animated: true },
+    { id: 'e3-2', source: '3', target: '2', label: 'Implements' },
+    { id: 'e4-2', source: '4', target: '2', label: 'Implements' }
+  ]}
+/>
+
+Notice how the arrows point? The `ReportGenerator` relies on the abstract `ReportSaver`, and the details (`PDF`, `CSV`) implement it. The high-level and low-level code never talk directly. They talk through the abstraction.
+
+# 8. Performance Table
+
+| Aspect | Impact |
+|---|---|
+| Execution Speed | Negligible (function calls and dependency passing are extremely fast) |
+| Memory Usage | Negligible (creating extra small classes barely uses memory) |
+| Developer Velocity | Massive improvement in massive codebases; prevents merge conflicts |
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does the Open/Closed principle mean? | Code should be open for extension (adding new features) but closed for modification (don't alter existing tested code). |
+| How do you achieve the Open/Closed principle in Python? | By using inheritance or dependency injection (Strategy Pattern) so you can pass new behaviors without changing the base class. |
+| Give an example of violating the Liskov Substitution Principle. | Having a `Bird` class with a `fly()` method, and creating a `Penguin` subclass that throws an exception when `fly()` is called. |
+| What is Dependency Injection? | Passing dependencies (like database connections) into a class via `__init__` rather than hardcoding them inside the class. |
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, watch out for the Interface Segregation Principle (ISP) trap.
+
+```python
+# BAD: A massive interface forcing classes to implement unused methods
+class MultiFunctionPrinter(ABC):
+    @abstractmethod
+    def print_doc(self): pass
+    @abstractmethod
+    def scan_doc(self): pass
+
+class OldSchoolPrinter(MultiFunctionPrinter):
+    def print_doc(self):
+        print("Printing...")
+    def scan_doc(self):
+        raise NotImplementedError("I don't have a scanner!") # VIOLATION!
+```
+
+**Fix:** Split `MultiFunctionPrinter` into `Printer` and `Scanner` abstract classes. `OldSchoolPrinter` should only inherit from `Printer`.
+
+# 11. Real-World Usage
+
+Tech companies strictly enforce SOLID when:
+- **Writing Microservices:** Each service does one thing well (SRP).
+- **Building Frameworks:** Django allows you to swap out database backends (MySQL, Postgres, SQLite) without changing Django's core code (Open/Closed & Dependency Inversion).
+- **Unit Testing:** Dependency Inversion allows you to easily pass "Mock" databases into your classes during tests.
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use Dependency Injection via `__init__` | Don't hardcode third-party API clients deep inside your classes |
+| Keep classes under a few hundred lines | Don't write 5,000-line "God Classes" that do everything |
+| Use `typing` and `abc` to enforce contracts | Don't rely purely on "duck typing" for complex enterprise logic |
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Bro, while SOLID is amazing, beware of "Premature Abstraction." If you are building a quick 50-line script, applying full SOLID principles will make the code over-engineered and unreadable. Apply SOLID when the codebase starts growing and pain points emerge.
+
+# 14. Common Mistakes
+
+- **The "God Object":** A `SystemManager` class that handles users, billing, emails, and database connections. This is an absolute nightmare to test.
+- **Hidden Dependencies:** Hardcoding `db = MySQLConnection()` inside a method instead of passing it in. You can't test that method without a real MySQL server!
+- **Violating Liskov:** Changing the return type of a method in a child class (e.g., parent returns a `List`, child returns a `Dict`). It will crash anything expecting the parent's format.
+
+# 15. Related Topics
+- Design Patterns
+- Dependency Injection
+- Inheritance vs Composition
+- Abstract Base Classes

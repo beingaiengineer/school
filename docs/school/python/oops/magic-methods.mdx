@@ -2,6 +2,204 @@
 sidebar_position: 7
 ---
 
-# Magic Methods
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Magic Methods.
+# Magic Methods (Dunder Methods)
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Magic Methods (Dunder Methods) |
+| Difficulty | Intermediate |
+| Used For | Customizing object behavior (like addition, string representation, etc.) |
+| Common Mistake | Overcomplicating simple classes by implementing unnecessary magic methods |
+| Performance | Minimal overhead; hooks directly into Python's internal C operations |
+
+# 2. Real-World Analogy
+
+Bro, think of magic methods like custom shortcut buttons on a gaming controller. Normally, to jump, you might have to call `character.perform_jump()`. But if you map it to the "A" button, you just press "A".
+
+In Python, instead of calling `point.add(other_point)`, magic methods let you define what the `+` operator does, so you can just write `point + other_point`. It magically connects Python's built-in syntax to your custom code.
+
+# 3. Concept Explanation
+
+Magic methods, also known as "dunder" (double underscore) methods, are special methods in Python that start and end with double underscores, like `__init__`, `__str__`, or `__add__`.
+
+They allow you to define how objects of your class behave with built-in Python operations like addition (`+`), printing (`print()`), length checking (`len()`), and iteration (`for item in obj`).
+
+You never call these methods directly (e.g., `obj.__str__()`). Instead, Python calls them behind the scenes when you use corresponding built-in syntax (e.g., `str(obj)` or `print(obj)`).
+
+# 4. Syntax Table
+
+| Method | What it does | Triggers when |
+|---|---|---|
+| `__init__` | Initializes object state | `obj = MyClass()` |
+| `__str__` | Human-readable string representation | `print(obj)` or `str(obj)` |
+| `__repr__` | Developer-focused string representation | `repr(obj)` or typing `obj` in console |
+| `__add__` | Custom addition | `obj1 + obj2` |
+| `__len__` | Returns object length | `len(obj)` |
+| `__eq__` | Custom equality check | `obj1 == obj2` |
+
+# 5. Beginner Example
+
+Let's look at customizing how a `Book` object is printed using `__str__`.
+
+```python
+class Book:
+    def __init__(self, title, pages):
+        self.title = title
+        self.pages = pages
+
+    def __str__(self):
+        return f"'{self.title}' ({self.pages} pages)"
+
+my_book = Book("Python Crash Course", 500)
+
+# Without __str__, this prints something ugly like <__main__.Book object at 0x...>
+# With __str__, it magically prints our custom format:
+print(my_book)  # Output: 'Python Crash Course' (500 pages)
+```
+
+# 6. Real-World Engineering Example
+
+Bro, imagine you are building a financial application that deals with multiple currencies. You want to easily add two `Money` objects together.
+
+```python
+class Money:
+    def __init__(self, amount, currency="USD"):
+        self.amount = amount
+        self.currency = currency
+
+    def __add__(self, other):
+        if not isinstance(other, Money):
+            raise TypeError("Can only add Money to Money")
+        if self.currency != other.currency:
+            raise ValueError("Cannot add different currencies directly")
+
+        return Money(self.amount + other.amount, self.currency)
+
+    def __str__(self):
+        return f"{self.amount} {self.currency}"
+
+wallet1 = Money(50, "USD")
+wallet2 = Money(150, "USD")
+
+# The + operator magically calls wallet1.__add__(wallet2)
+total = wallet1 + wallet2
+print(total)  # Output: 200 USD
+```
+
+# 7. Internal Working
+
+<LearningFlow
+  elements={[
+    {
+      id: '1',
+      type: 'core',
+      position: { x: 250, y: 0 },
+      data: { label: 'obj1 + obj2', description: 'Python sees the + operator' }
+    },
+    {
+      id: '2',
+      type: 'process',
+      position: { x: 250, y: 150 },
+      data: { label: 'Checks type(obj1)', description: 'Looks for __add__ method' }
+    },
+    {
+      id: '3',
+      type: 'output',
+      position: { x: 100, y: 300 },
+      data: { label: 'Executes __add__', description: 'Returns custom sum result' }
+    },
+    {
+      id: '4',
+      type: 'warning',
+      position: { x: 400, y: 300 },
+      data: { label: 'No __add__ found', description: 'Throws TypeError' }
+    },
+    { id: 'e1-2', source: '1', target: '2', label: 'Triggers lookup' },
+    { id: 'e2-3', source: '2', target: '3', label: 'If implemented', animated: true },
+    { id: 'e2-4', source: '2', target: '4', label: 'If missing' }
+  ]}
+/>
+
+When Python encounters an operator like `+`, it doesn't just crash if it's not a primitive type. It translates `a + b` into `a.__add__(b)`. If `a` doesn't have `__add__`, Python might try `b.__radd__(a)` (reverse add). If neither exists, it raises a `TypeError`.
+
+# 8. Performance Table
+
+| Operation | Complexity | Performance Note |
+|---|---|---|
+| Object Creation (`__init__`) | O(1) | Python allocates memory, then calls `__init__` |
+| Math Ops (`__add__`, etc) | O(1)* | Minimal overhead, depends entirely on your custom logic |
+| String Ops (`__str__`) | O(N)* | Depends on what you format inside the method |
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Difference between `__str__` and `__repr__`? | `__str__` is for end-users (readable), `__repr__` is for developers (unambiguous, ideal for debugging). |
+| What is the `__init__` method? | It initializes the state of an object immediately after it's created. It is NOT the constructor (that's `__new__`). |
+| How do you make an object callable like a function? | Implement the `__call__` method. |
+| What happens if `__str__` is not defined? | Python falls back to calling `__repr__`. |
+| How do you make a custom object work with `len()`? | Implement the `__len__` method. |
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, a common interview trick is asking about the difference between `__new__` and `__init__`.
+
+```python
+class Singleton:
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            print("Creating new instance")
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self):
+        print("Initializing instance")
+
+s1 = Singleton()
+s2 = Singleton()
+
+# Output:
+# Creating new instance
+# Initializing instance
+# Initializing instance
+```
+
+`__new__` actually creates and returns the object (constructor). `__init__` only initializes the state. Notice how `__init__` is called twice here, even though only one object was created!
+
+# 11. Real-World Usage
+
+Tech companies rely on magic methods for:
+- **ORMs (Object-Relational Mappers):** SQLAlchemy and Django use `__eq__` so you can write queries like `User.age == 25`.
+- **Data Science:** Pandas and NumPy extensively use math magic methods so you can add entire dataframes together with `df1 + df2`.
+- **API Wrappers:** Custom `__str__` methods to print clean JSON responses from API objects instead of memory addresses.
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Always implement `__repr__` for debugging | Don't use `__str__` to return huge, multi-line dumps of data |
+| Make math magic methods return *new* objects | Don't mutate the existing object inside `__add__` (unless using `__iadd__`) |
+| Check types (`isinstance`) inside magic methods | Don't blindly assume the other object in `__add__` is the same class |
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Bro, when implementing `__eq__` (equality), always remember to also implement `__hash__` if you plan to use your objects in a `set` or as keys in a `dict`. If you override `__eq__` but not `__hash__`, Python makes the object unhashable to prevent bugs!
+
+# 14. Common Mistakes
+
+- **Forgetting `return`**: `__str__`, `__repr__`, and `__add__` must always *return* a value. If you just `print()` inside them, they will return `None` and break your code.
+- **Modifying self in `__add__`**: `a + b` should not change `a` or `b`. It should return a new object `c`.
+- **Infinite recursion in `__str__`**: Trying to print the object itself inside `__str__` will cause a crash (e.g., `return str(self)`).
+
+# 15. Related Topics
+- Classes & Objects
+- Operator Overloading
+- Dataclasses
+- Python Internals
