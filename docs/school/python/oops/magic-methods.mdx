@@ -2,6 +2,229 @@
 sidebar_position: 7
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Magic Methods
 
-Placeholder: introduce Magic Methods.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Magic Methods (Dunder Methods) |
+| Difficulty | Intermediate |
+| Used For | Hooking into Python's built-in operators and syntax (like `+`, `==`, `len()`) |
+| Common Mistake | Using them to implement completely unexpected behavior (like making `+` subtract). |
+| Performance | Fast, but calling them directly (`obj.__len__()`) is slightly slower than using the built-in function (`len(obj)`). |
+
+---
+
+# 2. Real-World Analogy
+
+Think of Magic Methods like VIP passes at an amusement park, bro.
+
+Normally, when you ride a roller coaster, you follow the standard rules. But if you have a VIP pass, you get special treatment. Magic methods are like giving your custom objects VIP access to Python's core syntax.
+
+Instead of writing `my_list.add(other_list)`, you can just write `my_list + other_list`. Python sees the `+` sign and checks if your object has the VIP pass (the `__add__` magic method) to handle it.
+
+---
+
+# 3. Concept Explanation
+
+Magic methods, also known as "dunder" (double underscore) methods, are special methods in Python that start and end with double underscores, like `__init__` or `__str__`.
+
+They are not meant to be called directly. Instead, they are called *automatically* by Python when certain operations happen. They allow your custom classes to behave like built-in Python types.
+
+---
+
+# 4. Syntax Table
+
+| Built-in Operation | Magic Method Called |
+|---|---|
+| `x + y` | `__add__(self, other)` |
+| `x == y` | `__eq__(self, other)` |
+| `len(x)` | `__len__(self)` |
+| `print(x)` | `__str__(self)` |
+| `x[0]` | `__getitem__(self, key)` |
+| `x(args)` | `__call__(self, *args, **kwargs)` |
+
+---
+
+# 5. Beginner Example
+
+Let's make a custom `Box` class that we can add together using the standard `+` operator.
+
+```python
+class Box:
+    def __init__(self, weight):
+        self.weight = weight
+
+    # The magic method for the '+' operator
+    def __add__(self, other):
+        # We return a new Box with the combined weight
+        return Box(self.weight + other.weight)
+
+    # The magic method for print()
+    def __str__(self):
+        return f"Box weighing {self.weight}kg"
+
+box1 = Box(10)
+box2 = Box(5)
+
+# Python automatically calls box1.__add__(box2)
+combined_box = box1 + box2
+
+# Python automatically calls combined_box.__str__()
+print(combined_box) # Box weighing 15kg
+```
+
+Bro, without magic methods, you would have to write ugly code like `combined_box = box1.add_weight(box2)`. Magic methods make your code look clean and "Pythonic."
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Python Syntax', detail: 'box1 + box2', kind: 'tool', x: 250, y: 50 },
+    { id: '2', title: 'Python Interpreter', detail: 'Checks for magic methods', kind: 'process', x: 250, y: 150 },
+    { id: '3', title: 'Found __add__', detail: 'box1.__add__(box2)', kind: 'core', x: 100, y: 250 },
+    { id: '4', title: 'No __add__', detail: 'TypeError!', kind: 'warning', x: 400, y: 250 },
+    { id: '5', title: 'Output', detail: 'New Box(15)', kind: 'output', x: 100, y: 350 }
+  ],
+  edges: [
+    { source: '1', target: '2', type: 'straight' },
+    { source: '2', target: '3', label: 'if exists' },
+    { source: '2', target: '4', label: 'if missing' },
+    { source: '3', target: '5', type: 'smoothstep' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+In production, magic methods are often used to create custom data structures that feel like standard dictionaries or lists. Let's create an `EnvironmentVars` class that allows array-like access, but always capitalizes the keys.
+
+```python
+class EnvironmentVars:
+    def __init__(self):
+        self._store = {}
+
+    # Enables writing: env['key'] = 'value'
+    def __setitem__(self, key, value):
+        print(f"Setting {key.upper()} = {value}")
+        self._store[key.upper()] = str(value)
+
+    # Enables reading: env['key']
+    def __getitem__(self, key):
+        return self._store.get(key.upper(), None)
+
+    # Enables checking: 'key' in env
+    def __contains__(self, key):
+        return key.upper() in self._store
+
+env = EnvironmentVars()
+
+# Calls __setitem__
+env['database_url'] = "postgres://localhost"
+
+# Calls __contains__
+if 'DATABASE_URL' in env:
+    # Calls __getitem__
+    print(env['database_url']) # Output: postgres://localhost
+```
+
+This pattern is widely used in web frameworks like Django and FastAPI to handle headers, cookies, and configuration files.
+
+---
+
+# 7. Internal Working
+
+When you write `len(obj)`, Python does not just magically know the length. It looks up the `__len__` method on the object's class.
+
+For built-in types (like CPython lists), `len(obj)` actually bypasses the `__len__` dictionary lookup and reads the size directly from a C struct field (the `ob_size` attribute). This is why `len(my_list)` is strictly O(1) and blazingly fast.
+
+For your custom objects, `len(obj)` essentially falls back to executing `obj.__len__()`.
+
+---
+
+# 8. Performance Table
+
+| Operation | Concept | Speed Impact |
+|---|---|---|
+| `len(list)` | C-level lookup | Extremely Fast |
+| `len(custom_obj)` | `__len__` method call | Normal method call speed |
+| `obj.__len__()` | Direct magic method call | Slightly slower than `len(obj)` |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between `__str__` and `__repr__`? | `__str__` is for readable output aimed at end-users (used by `print()`). `__repr__` is for unambiguous output aimed at developers, ideally containing valid Python code to recreate the object. |
+| How do you make an object callable like a function? | Implement the `__call__` magic method. E.g., `obj = MyClass(); obj()` triggers `__call__`. |
+| What does `__new__` do compared to `__init__`? | `__new__` actually *allocates memory and creates* the object. `__init__` only *initializes* the created object. `__new__` is rarely used except for singletons or subclassing immutable types like `tuple`. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+If you implement `__eq__` (equality), do you get `__hash__` for free?
+
+```python
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
+
+p1 = Point(1, 2)
+p2 = Point(1, 2)
+
+print(p1 == p2) # True
+
+# Try to use it in a set!
+# my_set = {p1, p2} # TypeError: unhashable type: 'Point'
+```
+
+Bro! If you override `__eq__`, Python automatically sets `__hash__ = None`, making your object unhashable. If you want to put your custom objects in a `set` or use them as `dict` keys, you MUST implement `__hash__` alongside `__eq__`.
+
+---
+
+# 11. Real-World Usage
+
+- **ORM Queries:** SQLAlchemy uses `__eq__` and `__lt__` to generate SQL. When you write `User.age > 18`, it doesn't return a boolean! It triggers a magic method that returns an SQL expression object.
+- **Path Manipulation:** `pathlib.Path` uses `__truediv__` so you can build paths using the slash operator: `path = folder / "file.txt"`.
+- **Context Managers:** Implementing `__enter__` and `__exit__` allows objects to be used in `with` blocks (e.g., database connections).
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use magic methods to make your classes behave like standard Python types. | Override `__add__` to do something that isn't mathematical addition or concatenation. |
+| Always implement `__repr__` for easier debugging. | Call magic methods directly (e.g., `obj.__len__()`). Use the built-in function (`len(obj)`). |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Be extremely careful when overriding `__getattr__` or `__getattribute__` for dynamic attribute access. It is incredibly easy to accidentally cause an infinite recursion (e.g., looking up an attribute inside the magic method that looks up an attribute...) which will crash your production app with a `RecursionError`.
+
+---
+
+# 14. Common Mistakes
+
+- **Confusing `__new__` and `__init__`:** Trying to return a value from `__init__` (it must return `None`).
+- **Ignoring `NotImplemented`:** If your `__eq__` method doesn't know how to compare against a certain type, you should return the `NotImplemented` singleton, NOT `False` or raise an error. This tells Python to try the reverse comparison (`other.__eq__(self)`).
+
+---
+
+# 15. Related Topics
+
+- Classes & Objects
+- Context Managers
+- Iterators (for `__iter__` and `__next__`)

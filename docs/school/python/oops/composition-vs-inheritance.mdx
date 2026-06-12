@@ -2,6 +2,268 @@
 sidebar_position: 10
 ---
 
-# Composition Vs Inheritance
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Composition Vs Inheritance.
+# Composition vs Inheritance
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Composition vs Inheritance |
+| Difficulty | Intermediate / Advanced |
+| Used For | Deciding how objects should share behavior and structure. |
+| Common Mistake | Using deeply nested Inheritance (e.g., 5 levels deep) just to share a single method. |
+| Performance | Composition uses slightly more memory (creates multiple objects), but is far more maintainable. |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, think about building a custom PC.
+
+**Inheritance (The "IS-A" relationship):**
+This is like buying a pre-built laptop. An `AlienwareLaptop` **is a** `Laptop`. It inherits the screen, keyboard, and motherboard design from the base `Laptop` blueprint. If you want to change the motherboard, you have to rip apart the whole system. It's rigid.
+
+**Composition (The "HAS-A" relationship):**
+This is like building a custom desktop. A `DesktopPC` **has a** `GPU`, **has a** `CPU`, and **has a** `PowerSupply`. You build the PC by plugging these independent components together. If you want a better GPU, you just swap that specific part. It's extremely flexible.
+
+---
+
+# 3. Concept Explanation
+
+**Inheritance** establishes an "is-a" relationship (`Dog` is an `Animal`). It allows a child class to inherit methods and properties from a parent class. It's great for strict taxonomic hierarchies but becomes a nightmare when things get complex (the "Fragile Base Class" problem).
+
+**Composition** establishes a "has-a" relationship (`Car` has an `Engine`). Instead of inheriting behavior, a class creates instances of other classes and delegates work to them.
+
+The golden rule of modern software engineering is: **"Favor Composition over Inheritance."**
+
+---
+
+# 4. Syntax Table
+
+| Concept | Python Code Structure |
+|---|---|
+| Inheritance | `class Child(Parent):` |
+| Composition | `class Whole:`<br/>`    def __init__(self):`<br/>`        self.part = Part()` |
+| Delegation | `def do_work(self):`<br/>`    self.part.do_work()` |
+
+---
+
+# 5. Beginner Example
+
+Let's look at a classic mistake: The `Bird` problem.
+
+**The Inheritance Trap (Bad):**
+```python
+class Bird:
+    def fly(self):
+        print("I am flying!")
+
+class Eagle(Bird):
+    pass
+
+class Penguin(Bird):
+    # Oh no, Penguins can't fly! We have to hack the parent method.
+    def fly(self):
+        raise Exception("I cannot fly!")
+```
+
+**The Composition Fix (Good):**
+Instead of saying "A Penguin is a Bird" (and forcing it to inherit flying), we give abilities to animals using Composition.
+
+```python
+class FlyingBehavior:
+    def fly(self):
+        print("I am flying!")
+
+class SwimmingBehavior:
+    def swim(self):
+        print("I am swimming!")
+
+class Eagle:
+    def __init__(self):
+        # Eagle HAS A flying behavior
+        self.movement = FlyingBehavior()
+
+class Penguin:
+    def __init__(self):
+        # Penguin HAS A swimming behavior
+        self.movement = SwimmingBehavior()
+
+e = Eagle()
+e.movement.fly()
+
+p = Penguin()
+p.movement.swim()
+```
+Bro, look how easy that is! Now if we add an `Ostrich` (runs, doesn't fly or swim), we just create a `RunningBehavior`. No breaking the base class!
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Inheritance (IS-A)', detail: 'Rigid Hierarchy', kind: 'warning', x: 100, y: 50 },
+    { id: '2', title: 'Bird', detail: 'fly()', kind: 'core', x: 100, y: 150 },
+    { id: '3', title: 'Penguin', detail: 'Must hack fly()', kind: 'process', x: 100, y: 250 },
+    { id: '4', title: 'Composition (HAS-A)', detail: 'Flexible Components', kind: 'output', x: 400, y: 50 },
+    { id: '5', title: 'Penguin Class', detail: 'Holds Behaviors', kind: 'core', x: 400, y: 150 },
+    { id: '6', title: 'SwimmingBehavior', detail: 'swim()', kind: 'tool', x: 320, y: 250 },
+    { id: '7', title: 'EatingBehavior', detail: 'eat()', kind: 'tool', x: 480, y: 250 }
+  ],
+  edges: [
+    { source: '1', target: '2', type: 'straight' },
+    { source: '2', target: '3', label: 'inherits' },
+    { source: '4', target: '5', type: 'straight' },
+    { source: '5', target: '6', label: 'has a', type: 'smoothstep' },
+    { source: '5', target: '7', label: 'has a', type: 'smoothstep' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+In web development, we often need to log user actions.
+
+**Bad Inheritance:**
+```python
+# Bad: Now every class MUST inherit from DatabaseLogger. What if we want to log to a File instead?
+class DatabaseLogger:
+    def log(self, msg):
+        print(f"DB Log: {msg}")
+
+class UserService(DatabaseLogger):
+    def create_user(self):
+        self.log("User created")
+```
+
+**Production-Grade Composition:**
+```python
+class Logger:
+    def log(self, msg):
+        pass
+
+class FileLogger(Logger):
+    def log(self, msg):
+        print(f"File: {msg}")
+
+class DBLogger(Logger):
+    def log(self, msg):
+        print(f"DB: {msg}")
+
+class UserService:
+    # We pass the logger in (Dependency Injection + Composition)
+    def __init__(self, logger: Logger):
+        self._logger = logger
+
+    def create_user(self):
+        # We delegate the logging work to the composed object!
+        self._logger.log("User created")
+
+# We can easily swap out the behavior at runtime!
+service1 = UserService(FileLogger())
+service1.create_user() # Output: File: User created
+
+service2 = UserService(DBLogger())
+service2.create_user() # Output: DB: User created
+```
+
+---
+
+# 7. Internal Working
+
+At the memory level, Inheritance creates a single object in RAM. If `Child` inherits from `Parent`, instantiating `Child` creates one memory block containing all attributes of both.
+
+Composition creates multiple objects in RAM. If `Car` has an `Engine`, instantiating a `Car` allocates memory for the `Car` object, which holds a pointer (reference) to a separate `Engine` object allocated elsewhere in memory.
+
+---
+
+# 8. Performance Table
+
+| Aspect | Inheritance | Composition |
+|---|---|---|
+| Memory | Slightly less (1 object) | Slightly more (Multiple objects) |
+| Method Lookup Time | Slightly slower (MRO resolution) | Faster (Direct reference) |
+| Maintainability | Low (Changes break children) | Extremely High (Isolated changes) |
+| Runtime Flexibility | None (Fixed at compile time) | High (Can swap components anytime) |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does "Favor Composition over Inheritance" mean? | It means you should try to build complex objects by combining simpler, independent objects (HAS-A) rather than creating deep, rigid class hierarchies (IS-A). |
+| What is the "Fragile Base Class" problem? | It occurs in deep inheritance hierarchies. A seemingly harmless change to the root parent class accidentally breaks the logic in subclasses that were relying on the parent's specific implementation. |
+| When *should* you use Inheritance? | Use inheritance when the relationship is strictly "is-a" (e.g., `CustomException` IS-A `Exception`) and when the subclass uses *all* the methods of the superclass without needing to override them to throw errors. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Can you use both Composition and Inheritance together?
+
+Absolutely, bro! This is how most professional frameworks (like Django or React) operate.
+
+```python
+from abc import ABC, abstractmethod
+
+# 1. Inheritance to define a strict Interface
+class PaymentGateway(ABC):
+    @abstractmethod
+    def charge(self, amount): pass
+
+class StripeGateway(PaymentGateway):
+    def charge(self, amount): print("Stripe charged", amount)
+
+# 2. Composition to USE that Interface
+class CheckoutSession:
+    def __init__(self, gateway: PaymentGateway):
+        self.gateway = gateway # HAS-A gateway
+
+    def complete_order(self):
+        self.gateway.charge(100)
+```
+Inheritance is used for *interfaces*, Composition is used for *behavior sharing*.
+
+---
+
+# 11. Real-World Usage
+
+- **Game Development:** Unity and Unreal Engine heavily use "Entity-Component Systems" (ECS). Instead of an `Orc` inheriting from `Monster`, an `Entity` is created and composed with a `HealthComponent`, `RenderComponent`, and `AttackComponent`.
+- **UI Frameworks:** In React/Flutter, you don't inherit from a `Button` to make a `RedButton`. You compose a standard `Button` with a `ColorProperty` of red.
+- **Microservices:** A service doesn't "inherit" from an Auth service; it calls (composes) the Auth service.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use composition for sharing code and behaviors. | Create inheritance trees more than 2 or 3 levels deep. |
+| Inject composed dependencies via the `__init__` method. | Hardcode composed objects (e.g., `self.logger = FileLogger()`) inside the class. |
+| Use inheritance strictly for Interfaces and Mixins. | Force an "IS-A" relationship just to reuse one helper method. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Deep inheritance trees are the number one cause of legacy code that engineers are afraid to touch. If you see a class like `class AbstractBaseAsyncAuthenticatedHTTPClient(BaseHTTPClient)`, run away, bro. Refactor that into composed components immediately.
+
+---
+
+# 14. Common Mistakes
+
+- **The Utility Parent:** Creating a `BaseUtils` class with 50 random helper methods (`format_date`, `clean_string`) and making every class in your app inherit from it just to use those methods. Use a module with separate functions instead!
+- **Over-delegation:** Creating composition so deep that your method just calls `self.a.b.c.do_work()`. This violates the Law of Demeter.
+
+---
+
+# 15. Related Topics
+
+- Inheritance
+- SOLID Principles
+- Dependency Injection
+- Interfaces / Abstraction

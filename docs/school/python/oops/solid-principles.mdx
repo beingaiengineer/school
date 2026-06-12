@@ -2,6 +2,272 @@
 sidebar_position: 9
 ---
 
-# Solid Principles
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Solid Principles.
+# SOLID Principles
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | SOLID Principles in Python |
+| Difficulty | Advanced |
+| Used For | Writing clean, maintainable, and scalable object-oriented code. |
+| Common Mistake | Over-engineering simple scripts with unnecessary interfaces. |
+| Performance | No direct runtime penalty, but heavily improves developer speed and bug reduction. |
+
+---
+
+# 2. Real-World Analogy
+
+Think of building software like running a massive restaurant kitchen, bro.
+
+If one chef has to chop vegetables, cook the meat, plate the food, wash the dishes, and take the payment, the kitchen will collapse (violating the Single Responsibility Principle).
+
+If you buy a new blender, you shouldn't have to redesign the entire kitchen layout to plug it in (violating the Open/Closed Principle).
+
+SOLID principles are the architectural rules that keep the kitchen running smoothly as the restaurant grows from serving 10 people to 10,000 people.
+
+---
+
+# 3. Concept Explanation
+
+SOLID is an acronym for five design principles intended to make software designs more understandable, flexible, and maintainable.
+
+- **S** - Single Responsibility Principle (SRP)
+- **O** - Open/Closed Principle (OCP)
+- **L** - Liskov Substitution Principle (LSP)
+- **I** - Interface Segregation Principle (ISP)
+- **D** - Dependency Inversion Principle (DIP)
+
+While they originated in strongly typed languages like Java, they apply perfectly to Python, helping you build production-grade backends instead of messy "spaghetti" code.
+
+---
+
+# 4. Syntax Table
+
+| Principle | Meaning in plain English |
+|---|---|
+| **SRP** | A class should do one thing, and one thing only. |
+| **OCP** | You should be able to add new features without changing existing code. |
+| **LSP** | If you swap a parent class with its child class, the code shouldn't break. |
+| **ISP** | Don't force a class to implement methods it doesn't need. |
+| **DIP** | High-level modules shouldn't depend on low-level modules; both should depend on abstractions. |
+
+---
+
+# 5. Beginner Example (SRP)
+
+Let's look at the **Single Responsibility Principle**.
+
+**Bad Code:**
+```python
+class User:
+    def __init__(self, name):
+        self.name = name
+
+    def get_name(self):
+        return self.name
+
+    # BAD: The User class shouldn't be responsible for saving to the database!
+    def save_to_db(self):
+        print(f"Saving {self.name} to Database...")
+```
+
+**Good Code:**
+```python
+class User:
+    def __init__(self, name):
+        self.name = name
+
+class UserRepository:
+    # GOOD: We created a separate class just for database operations.
+    def save(self, user: User):
+        print(f"Saving {user.name} to Database...")
+
+u = User("Alex")
+repo = UserRepository()
+repo.save(u)
+```
+Bro, now if the database changes from Postgres to Mongo, we don't have to touch the `User` class at all!
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Violating SRP', detail: 'User Class does everything', kind: 'warning', x: 100, y: 50 },
+    { id: '2', title: 'Data Logic', detail: 'get_name()', kind: 'data', x: 50, y: 150 },
+    { id: '3', title: 'DB Logic', detail: 'save_to_db()', kind: 'process', x: 150, y: 150 },
+    { id: '4', title: 'Following SRP', detail: 'Separation of Concerns', kind: 'core', x: 400, y: 50 },
+    { id: '5', title: 'User Class', detail: 'Holds Data', kind: 'data', x: 320, y: 150 },
+    { id: '6', title: 'UserRepository', detail: 'Handles DB', kind: 'process', x: 480, y: 150 }
+  ],
+  edges: [
+    { source: '1', target: '2', type: 'straight' },
+    { source: '1', target: '3', type: 'straight' },
+    { source: '4', target: '5', type: 'straight' },
+    { source: '4', target: '6', type: 'straight' },
+    { source: '5', target: '6', label: 'passed to', type: 'smoothstep' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example (OCP & DIP)
+
+Let's combine the **Open/Closed Principle** and **Dependency Inversion Principle**. We want to send notifications.
+
+**Bad Approach:**
+```python
+class NotificationService:
+    def send(self, message, type):
+        if type == "email":
+            print(f"Sending Email: {message}")
+        elif type == "sms":
+            print(f"Sending SMS: {message}")
+        # If we add Push Notifications, we have to modify this class! (Violates OCP)
+```
+
+**Production-Grade Approach:**
+```python
+from abc import ABC, abstractmethod
+
+# 1. Dependency Inversion: Depend on this abstraction!
+class Notifier(ABC):
+    @abstractmethod
+    def send(self, message: str):
+        pass
+
+# 2. Open for Extension: Create new classes for new features.
+class EmailNotifier(Notifier):
+    def send(self, message: str):
+        print(f"Sending Email: {message}")
+
+class SMSNotifier(Notifier):
+    def send(self, message: str):
+        print(f"Sending SMS: {message}")
+
+class PushNotifier(Notifier):
+    def send(self, message: str):
+        print(f"Sending Push: {message}")
+
+# 3. Closed for Modification: This service never changes!
+class NotificationService:
+    def __init__(self, notifier: Notifier):
+        self.notifier = notifier # Dependency Injection
+
+    def notify(self, message: str):
+        self.notifier.send(message)
+
+# Usage
+service = NotificationService(PushNotifier())
+service.notify("Server is down!")
+```
+Bro, look how clean that is. If we want to add Slack notifications tomorrow, we just write a new `SlackNotifier` class. We don't have to touch `NotificationService` at all!
+
+---
+
+# 7. Internal Working
+
+SOLID principles are not enforced by the Python interpreter. Python won't throw a `SolidError` if you write bad code.
+
+However, tools like `mypy` (for type checking) and `pylint` or `flake8` (for code quality) can help identify violations. For example, `mypy` will catch Liskov Substitution Principle (LSP) violations if a child class changes the return type of a parent's method.
+
+---
+
+# 8. Performance Table
+
+| Principle | Developer Speed | Runtime Performance |
+|---|---|---|
+| SRP | Faster debugging, easier testing | No impact |
+| OCP | Zero fear of breaking old code | Slight overhead of class instantiation |
+| LSP | Predictable behavior | No impact |
+| ISP | Cleaner auto-complete | No impact |
+| DIP | Easy to swap components | Slight overhead from abstract interfaces |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does the Liskov Substitution Principle actually mean? | It means a subclass should be able to replace its parent class without breaking the application. For example, if `Bird` has a `fly()` method, creating a `Penguin` subclass that throws an error on `fly()` violates LSP. |
+| How do you achieve the Dependency Inversion Principle in Python? | By using Abstract Base Classes (`abc` module) to define interfaces, and passing concrete implementations into classes via their `__init__` methods (Dependency Injection). |
+| Does SOLID apply to functional programming? | Yes, but differently. For example, SRP applies to functions (a function should do one thing), and OCP applies to higher-order functions. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Look at this code. Does it violate the **Interface Segregation Principle (ISP)**?
+
+```python
+from abc import ABC, abstractmethod
+
+class Machine(ABC):
+    @abstractmethod
+    def print_document(self): pass
+
+    @abstractmethod
+    def scan_document(self): pass
+
+class BasicPrinter(Machine):
+    def print_document(self):
+        print("Printing...")
+
+    def scan_document(self):
+        raise NotImplementedError("This printer cannot scan!")
+```
+
+Yes, it violates ISP! The `BasicPrinter` is forced to implement a `scan_document` method it doesn't need. The fix is to split the interface:
+
+```python
+class Printer(ABC):
+    @abstractmethod
+    def print_document(self): pass
+
+class Scanner(ABC):
+    @abstractmethod
+    def scan_document(self): pass
+```
+Now `BasicPrinter` only inherits from `Printer`, and a `SmartCopier` can inherit from both!
+
+---
+
+# 11. Real-World Usage
+
+- **Web Frameworks:** Django separates Views (SRP), Models (SRP), and allows custom Middleware (OCP).
+- **Cloud Infrastructure:** Writing AWS, GCP, and Azure connectors that all inherit from a base `CloudStorage` class (DIP).
+- **Unit Testing:** Dependency Inversion makes it incredibly easy to pass a `MockDatabase` into your service instead of a real database during testing.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Apply SOLID when a project starts getting complex. | Over-engineer a 50-line script with 10 abstract classes. |
+| Use Dependency Injection to pass dependencies. | Hardcode dependencies (`self.db = MySQLDB()`) inside the `__init__` method. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+SOLID principles are guidelines, not a religion. In massive data-processing pipelines (like Pandas/NumPy), forcing strict OOP and Dependency Injection can actually ruin performance and readability. Use SOLID for business logic and architecture, but be pragmatic.
+
+---
+
+# 14. Common Mistakes
+
+- **God Classes:** Creating a `Manager` or `Helper` class that handles database, networking, logging, and user auth all at once (Violates SRP).
+- **Type Checking instead of Polymorphism:** Using massive `if isinstance(obj, TypeA): ... elif isinstance(obj, TypeB): ...` blocks instead of relying on common interfaces (Violates OCP).
+
+---
+
+# 15. Related Topics
+
+- Classes & Objects
+- Inheritance
+- Abstraction
+- Design Patterns

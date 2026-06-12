@@ -2,6 +2,240 @@
 sidebar_position: 8
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Dataclasses
 
-Placeholder: introduce Dataclasses.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Dataclasses |
+| Difficulty | Beginner / Intermediate |
+| Used For | Storing data without writing repetitive boilerplate code like `__init__` and `__repr__`. |
+| Common Mistake | Using mutable defaults (like `[]` or `{}`) without `field(default_factory=...)`. |
+| Performance | Very fast. Equivalent to manually writing classes but with auto-generated methods. |
+
+---
+
+# 2. Real-World Analogy
+
+Think of Dataclasses like a pre-filled government form, bro.
+
+If you create a standard Python class, you have to write out every single field manually: "My name is X, my age is Y" over and over again in the `__init__` method.
+
+A Dataclass is like a standardized form where you just list the fields you want at the top (Name, Age, Address), and Python automatically generates all the boring paperwork (the `__init__`, `__repr__`, and `__eq__` methods) for you behind the scenes.
+
+---
+
+# 3. Concept Explanation
+
+Introduced in Python 3.7, the `@dataclass` decorator is used to automatically generate special methods for classes that primarily store data.
+
+Instead of manually writing `__init__()` to assign arguments to `self`, you just define the variables using type hints, and the decorator does the heavy lifting. This makes your code drastically shorter, cleaner, and less prone to typos.
+
+---
+
+# 4. Syntax Table
+
+| Concept | Syntax |
+|---|---|
+| Import | `from dataclasses import dataclass, field` |
+| Basic Dataclass | `@dataclass`<br/>`class User:`<br/>`    name: str` |
+| Default Value | `age: int = 18` |
+| Mutable Default | `items: list = field(default_factory=list)` |
+
+---
+
+# 5. Beginner Example
+
+Let's compare the old way of writing a class with the modern Dataclass way.
+
+**The Old Way (Boilerplate Hell):**
+```python
+class ProductOld:
+    def __init__(self, name: str, price: float):
+        self.name = name
+        self.price = price
+
+    def __repr__(self):
+        return f"ProductOld(name='{self.name}', price={self.price})"
+
+    def __eq__(self, other):
+        if not isinstance(other, ProductOld):
+            return False
+        return self.name == other.name and self.price == other.price
+```
+
+**The Dataclass Way (Clean & Elegant):**
+```python
+from dataclasses import dataclass
+
+@dataclass
+class Product:
+    name: str
+    price: float
+
+# Python automatically created __init__, __repr__, and __eq__ for us!
+p1 = Product("Laptop", 999.99)
+p2 = Product("Laptop", 999.99)
+
+print(p1) # Output: Product(name='Laptop', price=999.99)
+print(p1 == p2) # Output: True
+```
+
+Bro, look how much time that saves!
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: '@dataclass decorator', detail: 'Reads type hints', kind: 'tool', x: 250, y: 50 },
+    { id: '2', title: 'class User:', detail: 'name: str\nage: int', kind: 'data', x: 250, y: 150 },
+    { id: '3', title: 'Generates __init__', detail: 'def __init__(self, name, age):', kind: 'process', x: 50, y: 250 },
+    { id: '4', title: 'Generates __repr__', detail: 'def __repr__(self):', kind: 'process', x: 250, y: 250 },
+    { id: '5', title: 'Generates __eq__', detail: 'def __eq__(self, other):', kind: 'process', x: 450, y: 250 },
+    { id: '6', title: 'Final Object', detail: 'Fully functional class', kind: 'output', x: 250, y: 350 }
+  ],
+  edges: [
+    { source: '1', target: '2', type: 'straight' },
+    { source: '2', target: '3', type: 'smoothstep' },
+    { source: '2', target: '4', type: 'smoothstep' },
+    { source: '2', target: '5', type: 'smoothstep' },
+    { source: '3', target: '6', type: 'smoothstep' },
+    { source: '4', target: '6', type: 'straight' },
+    { source: '5', target: '6', type: 'smoothstep' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+In real systems, objects often have lists or dictionaries. Dataclasses require a special `field` function for mutable defaults to prevent memory-sharing bugs.
+
+```python
+from dataclasses import dataclass, field
+import uuid
+
+def generate_id():
+    return str(uuid.uuid4())[:8]
+
+@dataclass
+class ShoppingCart:
+    # A standard field
+    owner: str
+    # Calling a function for the default value
+    cart_id: str = field(default_factory=generate_id)
+    # Correct way to have an empty list as a default!
+    items: list[str] = field(default_factory=list)
+
+    def add_item(self, item: str):
+        self.items.append(item)
+
+cart1 = ShoppingCart(owner="Alex")
+cart2 = ShoppingCart(owner="Sam")
+
+cart1.add_item("Apple")
+
+print(cart1) # ShoppingCart(owner='Alex', cart_id='a1b2c3d4', items=['Apple'])
+print(cart2) # ShoppingCart(owner='Sam', cart_id='e5f6g7h8', items=[])
+```
+
+Notice how `cart2` does NOT have an "Apple". If we had written `items: list = []`, both carts would share the exact same list in memory!
+
+---
+
+# 7. Internal Working
+
+How does the decorator actually work?
+
+When Python compiles the script, the `@dataclass` decorator inspects the class's `__annotations__` dictionary (which stores all the variables you defined with type hints).
+
+It then uses dynamic code generation to literally build the `__init__`, `__repr__`, and `__eq__` functions as strings of Python code, compiles them, and attaches them to your class before the script even runs.
+
+---
+
+# 8. Performance Table
+
+| Action | Performance | Note |
+|---|---|---|
+| Class Creation Time | Slightly slower | The decorator has to generate methods at startup. |
+| Object Instantiation | Fast | Same speed as a manual `__init__`. |
+| Memory Usage | Same as normal class | Uses standard dictionaries (`__dict__`) under the hood. |
+| With `slots=True` | Faster & Less Memory | Tells Python not to use `__dict__`, saving RAM. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why should you use `field(default_factory=list)` instead of `[]`? | Because `[]` is evaluated once when the class is defined, meaning all object instances will share the exact same list in memory. `default_factory` calls the function to create a new list for every instance. |
+| How do you make a Dataclass immutable (read-only)? | By using `@dataclass(frozen=True)`. This makes the object hashable, meaning it can be used in Sets or as Dictionary keys. |
+| Can dataclasses have custom methods? | Yes, dataclasses are just normal classes. You can add any custom methods or properties you want. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+What happens if you combine dataclasses with inheritance?
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class Parent:
+    x: int = 10
+
+@dataclass
+class Child(Parent):
+    y: int
+
+# c = Child() # What happens here?
+```
+
+Bro, this actually throws a `TypeError: non-default argument 'y' follows default argument`.
+
+Dataclasses process the parent fields first, then the child fields. It generates an `__init__(self, x=10, y)`. In Python, you cannot have a non-default argument (`y`) *after* a default argument (`x=10`). You must give `y` a default value too!
+
+---
+
+# 11. Real-World Usage
+
+- **API Responses:** Parsing JSON from an API and immediately dumping it into a well-typed Dataclass.
+- **Config Objects:** Storing application settings cleanly instead of passing massive dictionaries around.
+- **Data Science:** Holding rows of data cleanly before processing them in Pandas or ML pipelines.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `@dataclass` for classes that primarily hold data. | Use it for classes that are purely behavioral (lots of methods, no state). |
+| Use `@dataclass(frozen=True)` if the data shouldn't change after creation. | Forget `default_factory` for lists and dicts. |
+| Use type hints! Dataclasses require them to work. | Use mutable defaults directly (e.g., `data: dict = {}`). |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+If you are creating millions of Dataclass instances (like processing a massive CSV file), use `@dataclass(slots=True)` (available in Python 3.10+). This prevents Python from creating a dynamic `__dict__` for every object, massively reducing RAM usage and slightly increasing attribute access speed.
+
+---
+
+# 14. Common Mistakes
+
+- **Missing Type Hints:** Writing `name = "Alex"` instead of `name: str = "Alex"`. Without the type hint, the dataclass completely ignores the variable!
+- **Modifying Frozen Dataclasses:** Trying to do `obj.x = 5` when `frozen=True`. It will throw a `FrozenInstanceError`.
+
+---
+
+# 15. Related Topics
+
+- Classes & Objects
+- Type Hinting
+- Memory Management (`__slots__`)
+- Collections (NamedTuple)

@@ -2,6 +2,223 @@
 sidebar_position: 6
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Abstraction
 
-Placeholder: introduce Abstraction.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Abstraction |
+| Difficulty | Intermediate |
+| Used For | Hiding complex implementation details and showing only the necessary features. |
+| Common Mistake | Using regular classes and just raising `NotImplementedError` instead of using the `abc` module. |
+| Performance | Abstract base classes have a minimal overhead during instantiation. |
+
+---
+
+# 2. Real-World Analogy
+
+Think of Abstraction like driving a car, bro.
+
+When you press the gas pedal, the car moves forward. You don't need to know how the fuel injection works, how the pistons move, or how the transmission changes gears. All that complex engineering is hidden from you. You only interact with the simple interface: the pedals and the steering wheel.
+
+Abstraction in code means building simple interfaces for complex systems.
+
+---
+
+# 3. Concept Explanation
+
+Abstraction focuses on *what* an object does rather than *how* it does it. It allows you to create an empty blueprint (an Abstract Base Class) that forces other developers to implement specific methods.
+
+In Python, we use the `abc` (Abstract Base Classes) module to achieve true abstraction. An abstract class cannot be instantiated directly. It exists only to be inherited by other classes, acting as a strict contract.
+
+---
+
+# 4. Syntax Table
+
+| Concept | Syntax |
+|---|---|
+| Abstract Class | `class MyClass(ABC):` |
+| Abstract Method | `@abstractmethod` decorator |
+| Import | `from abc import ABC, abstractmethod` |
+
+---
+
+# 5. Beginner Example
+
+Let's build a simple payment system. We want a strict rule that *every* payment method must have a `pay()` method.
+
+```python
+from abc import ABC, abstractmethod
+
+# The Abstract Base Class
+class PaymentProcessor(ABC):
+    @abstractmethod
+    def pay(self, amount):
+        pass
+
+# A concrete class that follows the rules
+class CreditCard(PaymentProcessor):
+    def pay(self, amount):
+        print(f"Processing ${amount} via Credit Card.")
+
+# p = PaymentProcessor() # TypeError! Cannot instantiate abstract class!
+c = CreditCard()
+c.pay(100) # Processing $100 via Credit Card.
+```
+
+If `CreditCard` didn't implement `pay()`, Python would throw an error when we tried to create the `CreditCard` object.
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Abstract Class', detail: 'PaymentProcessor(ABC)', kind: 'core', x: 250, y: 50 },
+    { id: '2', title: 'Requirement', detail: '@abstractmethod pay()', kind: 'warning', x: 250, y: 150 },
+    { id: '3', title: 'CreditCard', detail: 'implements pay()', kind: 'process', x: 100, y: 300 },
+    { id: '4', title: 'PayPal', detail: 'implements pay()', kind: 'process', x: 400, y: 300 },
+    { id: '5', title: 'Success', detail: 'Object Created', kind: 'output', x: 100, y: 400 },
+    { id: '6', title: 'Failure', detail: 'Missing pay()! TypeError', kind: 'warning', x: 400, y: 400 }
+  ],
+  edges: [
+    { source: '1', target: '2', type: 'straight' },
+    { source: '2', target: '3', label: 'inherits' },
+    { source: '2', target: '4', label: 'inherits' },
+    { source: '3', target: '5', label: 'valid', type: 'smoothstep' },
+    { source: '4', target: '6', label: 'invalid', type: 'smoothstep' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+In backend engineering, we often need to fetch data from different databases. We use abstraction to make sure every database connector behaves the same way, so the main application code doesn't care which database is being used.
+
+```python
+from abc import ABC, abstractmethod
+
+class DatabaseConnector(ABC):
+    @abstractmethod
+    def connect(self):
+        pass
+
+    @abstractmethod
+    def fetch_user(self, user_id):
+        pass
+
+class PostgresConnector(DatabaseConnector):
+    def connect(self):
+        print("Connecting to PostgreSQL...")
+
+    def fetch_user(self, user_id):
+        return f"User {user_id} from Postgres"
+
+class MongoConnector(DatabaseConnector):
+    def connect(self):
+        print("Connecting to MongoDB...")
+
+    def fetch_user(self, user_id):
+        return f"User {user_id} from Mongo"
+
+# The app doesn't care which DB it uses, it just calls fetch_user!
+def get_user_info(db: DatabaseConnector, user_id: int):
+    db.connect()
+    print(db.fetch_user(user_id))
+
+pg_db = PostgresConnector()
+get_user_info(pg_db, 101)
+```
+
+Bro, this is how large teams write flexible code. You can easily swap Postgres for Mongo without rewriting `get_user_info()`.
+
+---
+
+# 7. Internal Working
+
+When you inherit from `ABC` and use `@abstractmethod`, Python's metaclass `ABCMeta` intercepts the class creation process.
+
+When you try to instantiate a class, Python checks the `__abstractmethods__` attribute of the class. If this set is not empty (meaning there are abstract methods that haven't been overridden by the child class), Python immediately raises a `TypeError`.
+
+---
+
+# 8. Performance Table
+
+| Area | Impact | Note |
+|---|---|---|
+| Class Creation | Minimal | `ABCMeta` adds slight overhead when the class is defined. |
+| Object Instantiation | Minimal | Checking `__abstractmethods__` takes a tiny bit of time. |
+| Method Calling | None | Calling overridden methods is exactly as fast as normal methods. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between Encapsulation and Abstraction? | Encapsulation hides the *data* (variables) to protect it. Abstraction hides the *complexity* (implementation) to simplify the interface. |
+| Can an abstract class have regular (concrete) methods? | Yes! In Python, abstract classes can have fully implemented methods alongside abstract methods. |
+| How do you enforce interface implementation in Python? | By using the `abc` module, inheriting from `ABC`, and using the `@abstractmethod` decorator. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+What happens if you don't inherit from `ABC`, but you use `@abstractmethod`?
+
+```python
+from abc import abstractmethod
+
+class FakeAbstract:
+    @abstractmethod
+    def do_something(self):
+        pass
+
+# Wait, this works?!
+f = FakeAbstract()
+print("Success!")
+```
+
+Yes, it works! The `@abstractmethod` decorator by itself does nothing to stop instantiation. It *requires* the class to inherit from `ABC` (or use `metaclass=ABCMeta`) for the restriction to actually apply. This is a common trap, bro!
+
+---
+
+# 11. Real-World Usage
+
+- **Plugin Systems:** Defining an abstract `Plugin` class so external developers know exactly what methods their custom plugins must have.
+- **Data Pipelines:** An abstract `DataExtractor` class with an `extract()` method, implemented differently for CSV, JSON, and APIs.
+- **Testing:** Creating abstract test cases to ensure every test suite implements setup and teardown logic consistently.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `abc` to enforce strict contracts in large teams. | Use `raise NotImplementedError` in a normal class instead of `abc`. It only fails at runtime, not instantiation. |
+| Keep abstract interfaces small and focused. | Put 20 abstract methods in one class. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+In dynamically typed Python, abstraction is your safety net. Without strict `ABC` contracts, a developer might misspell a method name in a child class, and the code won't crash until that specific method is called in production. `ABC` forces the crash to happen immediately at startup.
+
+---
+
+# 14. Common Mistakes
+
+- **Forgetting `ABC`:** Using `@abstractmethod` but forgetting to inherit from `ABC`.
+- **Instantiating the base:** Trying to `x = BaseClass()` when it has abstract methods.
+
+---
+
+# 15. Related Topics
+
+- Inheritance
+- Encapsulation
+- Polymorphism
+- Magic Methods

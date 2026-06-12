@@ -2,6 +2,218 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Production Debugging
 
-Placeholder: introduce Production Debugging.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Production Debugging |
+| Difficulty | Advanced |
+| Used For | Finding and fixing bugs in live, user-facing systems without taking the system offline. |
+| Common Mistake | Using `print()` statements or adding `breakpoint()` to a live server. |
+| Performance | Requires careful telemetry (logging/tracing) that doesn't overwhelm the production hardware. |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, debugging locally is like fixing your car in your own garage. You can take the engine apart, leave tools everywhere, and take as long as you want.
+
+Production debugging is like fixing the engine of a commercial airplane *while it is flying at 30,000 feet*. You cannot stop the plane (add a breakpoint). You cannot guess and randomly unplug wires (hot-fixing without testing). You rely entirely on the plane's dashboard dials, black box recorders (Logs), and air traffic control radar (Metrics/Tracing) to figure out what's wrong and guide the plane to safety.
+
+---
+
+# 3. Concept Explanation
+
+When code runs on your laptop, you have full control. When it runs in Production (AWS, Kubernetes, Heroku), you often don't have terminal access to the machine.
+
+If a user reports "I clicked checkout and got a 500 Error", you have to figure out exactly why it failed based solely on the data the system emitted at that exact millisecond.
+
+Production debugging relies on the "Three Pillars of Observability":
+1. **Logs:** Text records of events (`"User 10 failed auth"`).
+2. **Metrics:** Aggregated numbers over time (`"CPU is at 99%"`).
+3. **Traces:** Tracking a single request as it jumps between microservices.
+
+---
+
+# 4. Syntax Table
+
+| Tool Category | Example Providers | Purpose |
+|---|---|---|
+| Log Aggregation | Datadog, Splunk, ELK | Search millions of logs instantly. |
+| Application Performance Monitoring (APM) | New Relic, AppDynamics | See which function is taking the longest. |
+| Error Tracking | Sentry, Rollbar | Automatically group similar tracebacks. |
+
+---
+
+# 5. Beginner Example (Error Tracking)
+
+In production, you don't just let an exception print to a terminal window that nobody is looking at. You catch it and send it to an Error Tracking service like **Sentry**.
+
+```python
+import sentry_sdk
+
+# 1. Initialize Sentry with your API Key
+sentry_sdk.init(
+    dsn="https://examplePublicKey@o0.ingest.sentry.io/0",
+    traces_sample_rate=1.0
+)
+
+def process_payment(amount):
+    if amount < 0:
+        raise ValueError("Cannot process negative amount")
+    return True
+
+try:
+    process_payment(-50)
+except Exception as e:
+    # 2. Send the error to the cloud!
+    sentry_sdk.capture_exception(e)
+    print("Oops! Something went wrong. Our engineers have been notified.")
+```
+
+Bro, when `capture_exception` runs, it sends the full stack trace, the exact line number, the user's browser info, and the values of the local variables to a beautiful cloud dashboard, and pings your Slack channel!
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'User Request', detail: 'Hits Live Server', kind: 'process', x: 100, y: 150 },
+    { id: '2', title: 'Live Server', detail: 'Exception Raised', kind: 'warning', x: 250, y: 150 },
+    { id: '3', title: 'Sentry SDK', detail: 'Captures Context', kind: 'tool', x: 400, y: 150 },
+    { id: '4', title: 'Cloud Dashboard', detail: 'Groups Errors', kind: 'core', x: 550, y: 150 },
+    { id: '5', title: 'Slack Alert', detail: '"New Bug Found"', kind: 'output', x: 550, y: 250 }
+  ],
+  edges: [
+    { source: '1', target: '2', type: 'straight' },
+    { source: '2', target: '3', type: 'straight' },
+    { source: '3', target: '4', type: 'straight' },
+    { source: '4', target: '5', type: 'smoothstep' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example (Tracing)
+
+Imagine a microservice architecture: The Frontend calls the Auth Service, which calls the Payment Service, which calls the Database.
+
+If the user gets a timeout, which service caused it? We use a **Correlation ID**.
+
+```python
+import logging
+import uuid
+from flask import Flask, request
+
+app = Flask(__name__)
+logger = logging.getLogger("ProdLogger")
+
+@app.route('/checkout')
+def checkout():
+    # 1. Get the Trace ID from the incoming request headers, or generate a new one
+    trace_id = request.headers.get('X-Correlation-ID', str(uuid.uuid4()))
+
+    # 2. ALWAYS include the Trace ID in your logs!
+    logger.info(f"[TraceID: {trace_id}] Starting checkout process")
+
+    try:
+        # call_payment_api(trace_id) # Pass the ID to the next microservice!
+        raise ConnectionError("DB Timeout")
+    except Exception as e:
+        logger.error(f"[TraceID: {trace_id}] Checkout failed: {e}")
+        return "Internal Error", 500
+
+# When an error occurs, you search Datadog for exactly that TraceID
+# and see every log across every server involved in that single request!
+```
+
+This is how senior engineers debug distributed systems, bro.
+
+---
+
+# 7. Internal Working
+
+Error tracking tools like Sentry work by hooking into Python's `sys.excepthook`.
+
+When an unhandled exception bubbles all the way to the top of the Python interpreter, Python usually prints the traceback to `stderr` and exits. By overriding `sys.excepthook`, the Sentry SDK intercepts the error right before Python crashes, serializes the traceback and local variables into JSON, makes a quick asynchronous HTTP POST request to the Sentry API, and *then* lets Python crash.
+
+---
+
+# 8. Performance Table
+
+| Tool | Production Overhead | Note |
+|---|---|---|
+| Logging to `stdout` | Very Low | Handled cleanly by Docker/Kubernetes. |
+| Exception Tracking (Sentry) | Low | Only triggers over the network when an error actually occurs. |
+| Distributed Tracing | Medium | Generating IDs and passing them adds slight latency. |
+| Profiling (cProfile) | High | Do not run continuous profiling in prod unless using a specialized APM. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is a Correlation ID (or Trace ID)? | A unique identifier attached to a single user request. As the request travels through different microservices, the ID is passed along in the headers. This allows engineers to search logs and stitch together the full journey of the request. |
+| How do you safely debug a bug that ONLY happens in production? | Never add a `breakpoint()`. You should increase the logging verbosity (e.g., from INFO to DEBUG) temporarily, deploy the code, gather the logs when the bug happens, and then revert the log level. Alternatively, write a failing unit test locally that mimics the prod data to reproduce the bug. |
+| What is the difference between an APM and Log Aggregation? | APM (App Performance Monitoring) tracks *performance* (e.g., "This SQL query takes 5 seconds"). Log Aggregation tracks *events* (e.g., "User clicked Checkout at 10:05 PM"). |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+What happens if the logging system itself crashes?
+
+```python
+try:
+    process_order()
+except Exception as e:
+    # What if the Datadog API is down, and this logger.error() throws an exception?
+    logger.error("Failed to process order", exc_info=True)
+```
+
+Bro, if your error handler throws an error, your app crashes silently! Production logging systems must be robust. You should always use asynchronous logging or ensure your log handlers wrap their network calls in tight `try-except` blocks so that a logging failure doesn't take down the main business logic.
+
+---
+
+# 11. Real-World Usage
+
+- **Sentry:** For immediate Slack alerts when a new Python Exception is detected.
+- **Datadog / Kibana:** For typing a query like `status:error AND user_id:99` to see all logs related to a specific customer's complaint.
+- **Grafana:** Building a dashboard that shows HTTP 500 errors. If the graph spikes, an engineer gets paged at 3 AM via PagerDuty.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Include contextual data in logs (User ID, Order ID, Trace ID). | Write useless logs like `logger.error("Something broke")`. |
+| Use an Error Tracking service (Sentry, Rollbar) instead of reading text files. | SSH into a production server and use `grep` to read log files. |
+| Mask PII (Personally Identifiable Information) like passwords or credit cards before logging! | Log `request.body` without filtering it first. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+If your system is logging 10,000 errors per second because a database went down, you will accidentally DDOS your own logging provider (and get a massive bill). Use **Log Sampling** or **Rate Limiting** in your logging configuration to drop duplicate errors during a massive outage.
+
+---
+
+# 14. Common Mistakes
+
+- **Testing in Production:** Thinking "I'll just add a quick print statement and deploy to prod to see what the variable is." This is how you take down the company. Reproduce it locally or in a Staging environment first!
+- **Alert Fatigue:** Configuring Slack to ping you for every single `WARNING` log. Engineers will start ignoring the channel, and when a real `CRITICAL` error happens, nobody will look. Only alert humans for actionable errors.
+
+---
+
+# 15. Related Topics
+
+- Logging
+- Exceptions
+- Microservices
+- System Design (Monitoring)
