@@ -2,6 +2,273 @@
 sidebar_position: 8
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Dataclasses
 
-Placeholder: introduce Dataclasses.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Dataclasses |
+| Difficulty | Beginner / Intermediate |
+| Used For | Creating classes primarily designed to hold data |
+| Main Strength | Reduces boilerplate code significantly (`__init__`, `__repr__`, `__eq__` generated for you) |
+| Common Mistake | Using mutable default arguments like `[]` or `{}` |
+| Performance | Fast object creation, especially if `slots=True` is used |
+
+Bro, dataclasses are a superpower in modern Python (3.7+). They let you create classes that hold data without writing the boring, repetitive `__init__` code yourself.
+
+You just define the fields and their types, and the `@dataclass` decorator writes all the magic methods for you behind the scenes.
+
+## 2. Real-World Analogy
+
+Bro, think of creating a standard class like filling out a detailed employee ID card by hand for every new hire. You have to manually write the name, ID, and department every single time.
+
+A dataclass is like an automated ID card printer. You just give it the structure (Name, ID, Dept), and the printer automatically generates perfectly formatted ID cards for you.
+
+| Manual Class | Dataclass |
+|---|---|
+| Write `__init__` manually | Auto-generated `__init__` |
+| Write `__repr__` manually | Auto-generated clean string output |
+| Write `__eq__` manually | Auto-generated equality checks |
+
+## 3. Concept Explanation
+
+When you write a normal class to hold data, you write a lot of boilerplate.
+
+A dataclass is just a regular Python class, but the `@dataclass` decorator inspects your class definition (specifically the type hints) and automatically adds the standard methods.
+
+Use dataclasses when:
+- You are passing structured data around (like API responses, database records, or configuration settings).
+- You want clean `print()` output out-of-the-box.
+- You need to compare two objects to see if their data is the same.
+
+Avoid dataclasses when:
+- You are building complex objects where initialization requires intense logic, network calls, or validation (though `__post_init__` helps, standard classes are sometimes clearer for heavy logic).
+
+## 4. Syntax Table
+
+| Concept | Python Example |
+|---|---|
+| Import | `from dataclasses import dataclass` |
+| Basic Setup | `@dataclass` <br/> `class User: ...` |
+| Field Definition | `name: str` |
+| Default Value | `age: int = 18` |
+| Post Init Logic | `def __post_init__(self): ...` |
+| Immutable Class | `@dataclass(frozen=True)` |
+
+## 5. Beginner Example
+
+Let's look at the "old way" vs the "dataclass way".
+
+**The Old Way:**
+```python
+class Point:
+    def __init__(self, x: int, y: int):
+        self.x = x
+        self.y = y
+
+    def __repr__(self):
+        return f"Point(x={self.x}, y={self.y})"
+
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
+```
+
+**The Dataclass Way:**
+```python
+from dataclasses import dataclass
+
+@dataclass
+class Point:
+    x: int
+    y: int
+
+p1 = Point(10, 20)
+p2 = Point(10, 20)
+
+print(p1)          # Automatically prints nicely!
+print(p1 == p2)    # Automatically checks equality!
+```
+
+Output:
+```text
+Point(x=10, y=20)
+True
+```
+
+Bro, you just saved so much typing. The dataclass automatically created `__init__`, `__repr__`, and `__eq__` for you.
+
+## 6. Real-World Engineering Example
+
+Imagine you are fetching user data from an API and you want to store it in a strongly-typed object, and maybe perform some basic validation right after creation.
+
+```python
+from dataclasses import dataclass, field
+from typing import List
+
+@dataclass
+class APIResponse:
+    endpoint: str
+    status_code: int
+    data: dict
+    # Correct way to use a mutable default (like an empty list)
+    errors: List[str] = field(default_factory=list)
+
+    def __post_init__(self):
+        # This runs automatically immediately after __init__
+        if self.status_code >= 400 and not self.errors:
+            self.errors.append("Unknown error occurred")
+
+# Simulating an API failure response
+response = APIResponse(
+    endpoint="/api/v1/users",
+    status_code=500,
+    data={}
+)
+
+print(response)
+```
+
+Output:
+```text
+APIResponse(endpoint='/api/v1/users', status_code=500, data={}, errors=['Unknown error occurred'])
+```
+
+Here, `field(default_factory=list)` prevents the notorious shared mutable state bug, and `__post_init__` gives you a hook to run validation logic automatically.
+
+## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'How @dataclass Works Behind the Scenes',
+    height: 350,
+    miniMap: true,
+    nodes: [
+      {id: 'decorator', title: '@dataclass Decorator', detail: 'Reads type hints and class attributes.', x: 250, y: 50, kind: 'process'},
+      {id: 'class_def', title: 'class User:', detail: 'name: str\nage: int = 18', x: 50, y: 50, kind: 'core'},
+      {id: 'gen_init', title: 'Generates __init__', detail: 'Assigns self.name = name', x: 100, y: 200, kind: 'tool'},
+      {id: 'gen_repr', title: 'Generates __repr__', detail: 'Builds nice print string', x: 250, y: 200, kind: 'tool'},
+      {id: 'gen_eq', title: 'Generates __eq__', detail: 'Compares all fields', x: 400, y: 200, kind: 'tool'},
+      {id: 'final', title: 'Final Object', detail: 'A fast, feature-rich Python class.', x: 250, y: 350, kind: 'output'},
+    ],
+    edges: [
+      {source: 'class_def', target: 'decorator', label: 'analyzed by'},
+      {source: 'decorator', target: 'gen_init', label: 'writes', type: 'smoothstep'},
+      {source: 'decorator', target: 'gen_repr', label: 'writes', type: 'smoothstep'},
+      {source: 'decorator', target: 'gen_eq', label: 'writes', type: 'smoothstep'},
+      {source: 'gen_init', target: 'final', label: 'adds to'},
+      {source: 'gen_repr', target: 'final', label: 'adds to'},
+      {source: 'gen_eq', target: 'final', label: 'adds to'},
+    ],
+  }}
+/>
+
+When Python loads the module, the `@dataclass` decorator actually writes Python code (using string manipulation internally!) for `__init__`, `__repr__`, etc., and then attaches those methods to your class dynamically.
+
+It does this once when the class is defined, not every time an object is created.
+
+## 8. Performance Table
+
+| Area | Python Behavior | Practical Impact |
+|---|---|---|
+| Import/Startup Time | Very slight overhead | The decorator does code generation once at load time. |
+| Object Creation | Extremely fast | The generated `__init__` is standard Python code. |
+| Memory Usage | Standard | Normal dataclasses use standard `__dict__`. |
+| `slots=True` (Python 3.10+) | Optimized | Uses `__slots__` instead of `__dict__`, saving significant memory for millions of objects. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is a Python dataclass? | A decorator that automatically generates boilerplate methods like `__init__` and `__repr__` for classes that primarily store data. |
+| How do you make a dataclass immutable? | Use `@dataclass(frozen=True)`. This makes the object read-only and hashable. |
+| What happens if you use `items: list = []` in a dataclass? | You will get a `ValueError`. Python prevents this to avoid the shared mutable default argument bug. You must use `field(default_factory=list)`. |
+| What is `__post_init__`? | A magic method that dataclasses automatically call at the very end of their generated `__init__`, useful for validation or derived attributes. |
+| Dataclasses vs NamedTuples? | Dataclasses are mutable by default and support inheritance better. NamedTuples are immutable and behave exactly like tuples. |
+
+## 10. Tricky Questions & Edge Cases
+
+### The Mutable Default Trap
+If you try to do this, Python stops you immediately:
+
+```python
+from dataclasses import dataclass
+
+# Bro, this crashes at run time when the file loads!
+# @dataclass
+# class Student:
+#     courses: list = []
+```
+
+You must do this:
+
+```python
+from dataclasses import dataclass, field
+
+@dataclass
+class Student:
+    courses: list = field(default_factory=list)
+```
+
+### Derived Fields in `__post_init__`
+Sometimes a field depends on other fields. You don't want the user to pass it in.
+
+```python
+from dataclasses import dataclass, field
+
+@dataclass
+class Rectangle:
+    width: int
+    height: int
+    # We don't want the user to supply this, we calculate it!
+    # init=False means it's excluded from __init__
+    area: int = field(init=False)
+
+    def __post_init__(self):
+        self.area = self.width * self.height
+
+r = Rectangle(10, 5)
+print(r.area) # 50
+```
+
+## 11. Real-World Usage
+
+Dataclasses are essential for:
+- **Configuration Parsing:** Loading `config.yaml` into strongly-typed `AppConfig` objects instead of using raw dictionaries.
+- **Data Pipelines:** Passing structured records through ETL stages (Extract, Transform, Load).
+- **FastAPI / Pydantic integration:** While Pydantic is its own beast, standard dataclasses integrate smoothly with modern web frameworks.
+- **Testing:** Easily creating mock data objects with clean equality checks for `assert obj1 == obj2`.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use type hints for all fields. It's required by the decorator. | Mix positional and keyword-default fields in the wrong order (fields without defaults must go first). |
+| Use `frozen=True` when the data shouldn't change after creation. | Use dataclasses if your class is mostly logic/methods rather than state/data. |
+| Use `slots=True` (if on Python 3.10+) when creating thousands of objects to save RAM. | Try to inherit dataclasses heavily with mixed default fields; inheritance rules get tricky. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> While dataclasses are great, they DO NOT validate data types at runtime by default.
+
+Bro, if you define `age: int`, someone can still do `User(age="twenty")`. The dataclass won't care.
+
+If you need strict runtime validation (like making sure age is actually an integer), you should use **Pydantic** instead of standard dataclasses for production API inputs. Standard dataclasses are best for internal code where you trust the inputs.
+
+## 14. Common Mistakes
+
+| Mistake | Why It Hurts |
+|---|---|
+| Putting default fields before non-default fields | Raises `TypeError: non-default argument follows default argument`. |
+| Forgetting type hints | The `@dataclass` decorator ONLY processes fields that have type hints. `x = 5` will be ignored entirely. It must be `x: int = 5`. |
+| Re-implementing `__init__` manually | It defeats the entire purpose of the dataclass. If you need custom init logic, use `__post_init__`. |
+
+## 15. Related Topics
+
+- Classes & Objects
+- Magic Methods
+- Tuples (vs NamedTuples)
+- Type Hints

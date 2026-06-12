@@ -2,6 +2,262 @@
 sidebar_position: 10
 ---
 
-# Composition Vs Inheritance
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Composition Vs Inheritance.
+# Composition vs Inheritance
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Composition vs Inheritance |
+| Difficulty | Intermediate |
+| Used For | Deciding how objects should share behavior and structure |
+| Main Strength | "Favor composition over inheritance" prevents rigid, fragile class hierarchies |
+| Common Mistake | Using inheritance just to reuse a few utility methods |
+| Performance | Both are fast; Composition requires slightly more memory/lookup overhead but saves you from architectural nightmares |
+
+Bro, this is the biggest debate in Object-Oriented Programming.
+
+Inheritance is an **"IS-A"** relationship (A Dog IS-A Animal).
+Composition is a **"HAS-A"** relationship (A Car HAS-A Engine).
+
+Modern software engineering strongly prefers Composition because it keeps your code flexible.
+
+## 2. Real-World Analogy
+
+Bro, think about building a robot.
+
+**Inheritance (The rigid way):**
+You create a `Robot` base class. Then a `FlyingRobot`. Then a `LaserFiringFlyingRobot`. What if you want a `LaserFiringSwimmingRobot`? Your family tree of robots becomes a tangled, massive mess. You are locked into the DNA of the parent class.
+
+**Composition (The flexible way):**
+You build a basic `Robot`. You give it "Parts". You plug in a `Jetpack` module. You plug in a `Laser` module. You plug in a `Flippers` module.
+The Robot *has* a jetpack, it *has* a laser. If you want to change how it moves, you just swap the jetpack for flippers. You don't have to redesign the whole robot family!
+
+## 3. Concept Explanation
+
+**Inheritance** tightly couples a child class to a parent class. The child gets all the parent's methods and data. It's great for strict, logical hierarchies.
+
+**Composition** means a class contains instances of other classes to get its work done. Instead of inheriting behavior, it *delegates* behavior to these smaller component objects.
+
+Use Inheritance when:
+- The "IS-A" relationship is strict and will never change (e.g., `Square` IS-A `Shape`).
+- You are building core framework pieces.
+
+Use Composition when:
+- You need a "HAS-A" relationship.
+- You want to reuse code without taking on the baggage of an entire parent class.
+- Behaviors might need to be swapped out dynamically at runtime.
+
+**Golden Rule:** Favor Composition over Inheritance.
+
+## 4. Syntax Table
+
+| Pattern | Python Example |
+|---|---|
+| Inheritance (IS-A) | `class Dog(Animal):` |
+| Composition (HAS-A) | `class Car:`<br/>&nbsp;&nbsp;&nbsp;&nbsp;`def __init__(self):`<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`self.engine = Engine()` |
+| Delegation | `def drive(self):`<br/>&nbsp;&nbsp;&nbsp;&nbsp;`self.engine.start()` |
+
+## 5. Beginner Example
+
+**The Inheritance Way (Fragile):**
+```python
+class Worker:
+    def work(self):
+        print("Working hard!")
+
+class Manager(Worker):
+    def manage(self):
+        print("Managing people.")
+
+# Wait... what if we have a Manager who doesn't do "Worker" tasks?
+# Too late, they inherited it!
+```
+
+**The Composition Way (Flexible):**
+```python
+class WorkSkill:
+    def do_work(self):
+        print("Working hard!")
+
+class ManageSkill:
+    def do_manage(self):
+        print("Managing people.")
+
+class Employee:
+    def __init__(self, skills):
+        # The Employee HAS skills, they don't INHERIT them
+        self.skills = skills
+
+    def perform_duties(self):
+        for skill in self.skills:
+            if hasattr(skill, 'do_work'): skill.do_work()
+            if hasattr(skill, 'do_manage'): skill.do_manage()
+
+# Easily build exactly the employee you need
+manager = Employee([ManageSkill()])
+team_lead = Employee([WorkSkill(), ManageSkill()])
+```
+
+Bro, notice how easy it is to make a `team_lead` that does both, without creating a weird `ManagerWorker` hybrid class!
+
+## 6. Real-World Engineering Example
+
+Imagine building a Notification System.
+
+**Bad (Inheritance):**
+```python
+class BaseNotifier:
+    pass
+
+class EmailNotifier(BaseNotifier):
+    pass
+
+class SMSNotifier(BaseNotifier):
+    pass
+
+# Now the boss says: "I want an alert that sends both Email and SMS!"
+# Oh no... do we create EmailAndSMSNotifier? Multiple inheritance? Spaghetti!
+```
+
+**Good (Composition):**
+```python
+class EmailSender:
+    def send(self, msg): print(f"Email: {msg}")
+
+class SMSSender:
+    def send(self, msg): print(f"SMS: {msg}")
+
+class AlertSystem:
+    # AlertSystem HAS senders. It delegates the actual sending.
+    def __init__(self, senders: list):
+        self.senders = senders
+
+    def notify(self, message: str):
+        for sender in self.senders:
+            sender.send(message)
+
+# Easy to configure!
+critical_alert = AlertSystem([EmailSender(), SMSSender()])
+critical_alert.notify("Server is down!")
+
+minor_alert = AlertSystem([EmailSender()])
+minor_alert.notify("Daily backup complete.")
+```
+
+Output:
+```text
+Email: Server is down!
+SMS: Server is down!
+Email: Daily backup complete.
+```
+
+Bro, this scales infinitely. You can add a `SlackSender` tomorrow without touching `AlertSystem`.
+
+## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'Inheritance vs Composition in Memory',
+    height: 380,
+    miniMap: true,
+    nodes: [
+      {id: 'inherit', title: 'Inheritance (IS-A)', detail: 'Monolithic block of shared data/methods.', x: 100, y: 50, kind: 'warning'},
+      {id: 'parent', title: 'Parent Data', detail: 'Locked inside child.', x: 100, y: 150, kind: 'data'},
+      {id: 'child', title: 'Child Class', detail: 'Tightly coupled to parent changes.', x: 100, y: 250, kind: 'core'},
+      {id: 'compose', title: 'Composition (HAS-A)', detail: 'A coordinator holding references.', x: 450, y: 50, kind: 'process'},
+      {id: 'moduleA', title: 'Engine Object', detail: 'Independent. Reusable.', x: 350, y: 200, kind: 'data'},
+      {id: 'moduleB', title: 'Wheels Object', detail: 'Independent. Reusable.', x: 550, y: 200, kind: 'data'},
+      {id: 'car', title: 'Car Object', detail: 'Holds pointers to Engine and Wheels.', x: 450, y: 300, kind: 'core'},
+    ],
+    edges: [
+      {source: 'inherit', target: 'child', label: 'creates'},
+      {source: 'parent', target: 'child', label: 'fused into'},
+      {source: 'compose', target: 'car', label: 'creates'},
+      {source: 'moduleA', target: 'car', label: 'plugged in (ptr)'},
+      {source: 'moduleB', target: 'car', label: 'plugged in (ptr)'},
+    ],
+  }}
+/>
+
+In Python, inheritance merges namespaces. `self.method()` looks in the child, then the parent (via MRO).
+
+In composition, namespaces are separate. You explicitly call `self.engine.start()`. This slight separation is exactly what protects you from nasty bugs where a parent class update silently breaks a child class.
+
+## 8. Performance Table
+
+| Aspect | Inheritance | Composition |
+|---|---|---|
+| Method Resolution | slightly faster (MRO lookup) | slightly slower (attribute lookup + method call) |
+| Memory Usage | smaller (fewer objects) | slightly larger (coordinator + component objects) |
+| Refactoring Speed | extremely slow and dangerous | very fast and safe |
+| Testing/Mocking | difficult (hard to mock just the parent) | very easy (mock the injected components) |
+
+Bro, the tiny performance hit of Composition is 100% worth it for the massive boost in maintainability.
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between composition and inheritance? | Inheritance is an IS-A relationship where child classes inherit parent traits. Composition is a HAS-A relationship where a class delegates work to smaller component objects it contains. |
+| Why is "Favor composition over inheritance" a popular rule? | Inheritance tightly couples code, creating fragile base class problems. Composition allows dynamic, modular changes without breaking existing code. |
+| Can you use both together? | Yes! You might use inheritance for core interfaces (ABCs) and composition to implement the actual business logic inside those classes. |
+| What is delegation? | When an object receives a request, but passes (delegates) that request to an internal component object to actually do the work. |
+
+## 10. Tricky Questions & Edge Cases
+
+### The Multiple Inheritance Trap (The Diamond Problem)
+If you try to use inheritance to gain multiple traits, you hit the diamond problem:
+
+```python
+class A: def ping(self): print("A")
+class B(A): def ping(self): print("B")
+class C(A): def ping(self): print("C")
+class D(B, C): pass
+
+d = D()
+d.ping() # What prints? B or C?
+```
+Python resolves this using Method Resolution Order (MRO), and it prints `B`. But bro, the fact you have to think about it means your architecture is confusing. Composition avoids this entirely.
+
+## 11. Real-World Usage
+
+- **Django Models:** Django heavily uses Inheritance (`models.Model`), which is an exception because ORMs require strict structural definitions mapping to database tables.
+- **Game Development:** Almost all modern games use ECS (Entity Component System) — pure Composition. A player is an Entity holding a `HealthComponent`, `RenderComponent`, and `InputComponent`.
+- **UI Frameworks:** React/React Native heavily pushed the industry away from class inheritance towards functional composition (Hooks/Components containing components).
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use composition to assemble complex objects from simpler, testable pieces. | Use inheritance just to get access to 2 helper methods from another class. |
+| Inject dependencies (components) via the `__init__` method. | Create deep inheritance trees (more than 2 or 3 levels deep). |
+| Ask yourself "Does a Car have an Engine?" (Composition) vs "Is a Car a Vehicle?" (Inheritance). | Force everything into an IS-A relationship. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> The Gorilla Banana Problem
+
+The creator of Erlang famously said about Object-Oriented inheritance: *"You wanted a banana but what you got was a gorilla holding the banana and the entire jungle."*
+
+In production, if you inherit from `BaseUser` just to get the `get_full_name()` method, you also accidentally pull in the database connection, the permission checkers, and the email dispatcher attached to `BaseUser`.
+
+Bro, use Composition. Just extract `get_full_name()` into a standalone utility function or a small `NameFormatter` component.
+
+## 14. Common Mistakes
+
+| Mistake | Why It Hurts |
+|---|---|
+| Deep Inheritance Trees | If `A -> B -> C -> D`, changing something in `A` will likely break `D` in unpredictable ways. |
+| The God Object | A composition object that has 50 different components inside it. It's too complex. Break it down. |
+| Forgetting to delegate | If `Car` has an `Engine`, but users have to call `car.engine.start()`, it violates encapsulation. `Car` should have `car.start()` which internally calls `self.engine.start()`. |
+
+## 15. Related Topics
+
+- Inheritance
+- SOLID Principles
+- Abstraction
+- Magic Methods

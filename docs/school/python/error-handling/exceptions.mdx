@@ -2,6 +2,248 @@
 sidebar_position: 1
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Exceptions
 
-Placeholder: introduce Exceptions.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Exceptions (try / except) |
+| Difficulty | Beginner / Intermediate |
+| Used For | Handling runtime errors gracefully instead of crashing the program |
+| Main Strength | Prevents full system failures when unpredictable things happen (like network drops) |
+| Common Mistake | Using a bare `except:` block that catches everything, including typos |
+| Performance | Fast if no error occurs, but throwing and catching an exception is slow |
+
+Bro, exceptions are how Python tells you, "Hey, something went wrong, and I can't continue."
+
+If you don't handle them, your program crashes violently and spits out a traceback. If you *do* handle them, your program can log the error, fix the issue, or fail gracefully.
+
+## 2. Real-World Analogy
+
+Bro, think of exceptions like a restaurant kitchen.
+
+A chef is making a pizza (your code is running).
+Suddenly, the oven breaks down (an error occurs).
+
+- **No Exception Handling:** The chef screams, throws the pizza on the floor, the whole restaurant closes down immediately, and everyone is kicked out (Program crash).
+- **With Exception Handling:** The chef realizes the oven is broken, calmly throws away that specific pizza, tells the waiter to apologize to the customer and offer a free drink, and continues making salads (Program logs error and recovers).
+
+## 3. Concept Explanation
+
+Exceptions interrupt the normal flow of your program.
+
+You handle them using a `try` / `except` block. You put the risky code inside the `try` block. If Python hits an error, it stops executing the `try` block immediately and jumps to the `except` block.
+
+Use exceptions when:
+- Reading files (the file might not exist).
+- Making network requests (the API might be down).
+- Parsing user input (the user might type a letter instead of a number).
+- Dealing with database connections.
+
+Avoid exceptions for:
+- Standard control flow. Don't use exceptions instead of a simple `if` statement when checking if a variable is valid.
+
+## 4. Syntax Table
+
+| Keyword | Purpose | Example |
+|---|---|---|
+| `try` | The code that might fail | `try: 10 / 0` |
+| `except` | The code to run if an error happens | `except ZeroDivisionError: print("Can't do that!")` |
+| `else` | Runs ONLY if the `try` block succeeds | `else: print("Math worked!")` |
+| `finally` | Runs NO MATTER WHAT (good for cleanup) | `finally: print("Closing program.")` |
+| `raise` | Manually trigger an exception | `raise ValueError("Bad data")` |
+
+## 5. Beginner Example
+
+Let's ask a user for a number and divide 100 by it.
+
+```python
+try:
+    user_input = int(input("Enter a number to divide 100 by: "))
+    result = 100 / user_input
+
+except ValueError:
+    print("Bro, you didn't type a valid number!")
+
+except ZeroDivisionError:
+    print("Bro, you can't divide by zero! The universe will explode.")
+
+else:
+    # This only runs if NO errors occurred
+    print(f"Success! The result is {result}")
+
+finally:
+    # This runs no matter what happens
+    print("Execution finished.")
+```
+
+If the user types `0`:
+```text
+Enter a number to divide 100 by: 0
+Bro, you can't divide by zero! The universe will explode.
+Execution finished.
+```
+
+If the user types `A`:
+```text
+Enter a number to divide 100 by: A
+Bro, you didn't type a valid number!
+Execution finished.
+```
+
+## 6. Real-World Engineering Example
+
+Imagine a script that fetches user profiles from an external API. Networks are flaky, so you must expect it to fail sometimes.
+
+```python
+import requests
+
+def fetch_user(user_id):
+    try:
+        print(f"Fetching user {user_id}...")
+        # Risky operation: network call
+        response = requests.get(f"https://api.example.com/users/{user_id}", timeout=2)
+
+        # Raise an exception if the HTTP status code is 4xx or 5xx
+        response.raise_for_status()
+
+        data = response.json()
+
+    except requests.exceptions.Timeout:
+        print("Error: The API took too long to respond. Try again later.")
+        return None
+
+    except requests.exceptions.HTTPError as e:
+        print(f"Error: API returned a bad status code. Details: {e}")
+        return None
+
+    except Exception as e:
+        # Catch-all for truly unexpected errors (like running out of memory)
+        print(f"CRITICAL: Something entirely unexpected happened: {e}")
+        return None
+
+    else:
+        print("Data fetched successfully!")
+        return data
+
+# Program won't crash if the API is down, it just returns None
+user = fetch_user(999)
+```
+
+Bro, notice how we catch specific errors first (`Timeout`, `HTTPError`), and leave the generic `Exception` at the very bottom just in case.
+
+## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'How Exceptions Bubble Up',
+    height: 380,
+    miniMap: true,
+    nodes: [
+      {id: 'funcC', title: 'Level 3: DB Query', detail: 'try: db.execute()\n(Fails: ConnectionError)', x: 50, y: 300, kind: 'core'},
+      {id: 'funcB', title: 'Level 2: Get User', detail: 'No try/except block here. Error bubbles up!', x: 250, y: 200, kind: 'process'},
+      {id: 'funcA', title: 'Level 1: Main API', detail: 'try/except catches ConnectionError.', x: 450, y: 100, kind: 'process'},
+      {id: 'handled', title: 'Graceful Recovery', detail: 'Returns 500 API response to client.', x: 650, y: 100, kind: 'output'},
+      {id: 'crash', title: 'App Crash', detail: 'If unhandled, Python terminates.', x: 450, y: 250, kind: 'warning'},
+    ],
+    edges: [
+      {source: 'funcC', target: 'funcB', label: 'throws error up'},
+      {source: 'funcB', target: 'funcA', label: 'throws error up'},
+      {source: 'funcA', target: 'handled', label: 'caught & handled'},
+      {source: 'funcB', target: 'crash', label: 'if funcA lacked try/except', type: 'step'},
+    ],
+  }}
+/>
+
+When an exception occurs, Python creates an Exception object. It then looks at the current block of code to see if there is an `except` handler.
+
+If there isn't, Python looks at the function that called this function. It keeps "bubbling up" the call stack until it either finds a handler, or it hits the top of the program and crashes.
+
+## 8. Performance Table
+
+| Scenario | Performance Impact | Why |
+|---|---|---|
+| Code succeeds in `try` block | Almost zero overhead | Python's `try` blocks are heavily optimized for the "happy path". |
+| Exception is thrown and caught | Very slow | Python has to capture the call stack, create objects, and unwind the execution. |
+| Checking with `if` vs catching Exception | `if` is faster for common cases | "Look Before You Leap" (LBYL) is faster if the error happens 50% of the time. |
+
+Bro, in Python, we have a philosophy called **EAFP**: "Easier to Ask for Forgiveness than Permission". It means we prefer `try/except` over a bunch of `if/else` checks, *as long as the error is rare*.
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between `except Exception:` and a bare `except:`? | A bare `except:` catches EVERYTHING, including `SystemExit` and `KeyboardInterrupt` (Ctrl+C). `except Exception:` catches application errors but lets system interruptions pass. Never use a bare `except:`. |
+| When does the `finally` block execute? | Always. Whether the `try` succeeds, fails, or even if there is a `return` statement inside the `try` block, `finally` will execute before the function exits. |
+| What does the `raise` keyword do? | It intentionally triggers an exception, usually because invalid data was passed and you want to stop execution immediately. |
+| Can you have multiple `except` blocks? | Yes, you should order them from most specific to least specific. |
+
+## 10. Tricky Questions & Edge Cases
+
+### The `return` in `finally` Trap
+
+```python
+def tricky_function():
+    try:
+        return "Success from Try"
+    finally:
+        return "Wait, what?"
+
+print(tricky_function())
+```
+Output:
+```text
+Wait, what?
+```
+Bro, a `return` in a `finally` block will OVERRIDE any return or exception from the `try` block. Never put `return` inside `finally`.
+
+### Swallowing Exceptions
+```python
+try:
+    do_something_important()
+except Exception:
+    pass  # Bro, no!
+```
+This is the worst sin in Python. It's called swallowing an exception. The code failed, but you silenced it. Now your program is in a corrupted state and you have no logs to tell you why.
+
+## 11. Real-World Usage
+
+- **File I/O:** Wrapping `open()` in `try/except FileNotFoundError`.
+- **Databases:** Catching `IntegrityError` when a user tries to register with an email that already exists in the database.
+- **Web Scraping:** Catching `ConnectionTimeout` when a target website blocks your request.
+- **Data Pipelines:** Using `try/except` to skip bad rows in a 10-million row CSV file without crashing the whole job.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Catch specific exceptions (e.g., `KeyError`, `ValueError`). | Catch generic `Exception` unless it's at the very top level of your app. |
+| Use `finally` to close files, database connections, and network sockets. | Put too much code inside the `try` block. Only wrap the exact lines that might fail. |
+| Log the exception using the `logging` module so you can debug it later. | Use bare `except: pass` ever. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Keep your `try` blocks as small as possible.
+
+If you put 50 lines of code inside a single `try` block and catch `ValueError`, and it fails, which of the 50 lines actually threw the error? You won't know easily.
+
+Wrap exactly the 1 or 2 lines that do the risky operation (like the network call or the type conversion), and leave the rest of the code outside or in the `else` block.
+
+## 14. Common Mistakes
+
+| Mistake | Why It Hurts |
+|---|---|
+| Bare `except:` | Prevents you from stopping the program with Ctrl+C because it catches the `KeyboardInterrupt` signal. |
+| Broad `except Exception:` on everything | Hides typos! If you misspell a variable name, it throws a `NameError`. If you catch generic Exceptions, your typo is hidden as a "runtime error". |
+| Forgetting to use `else` | If you put success logic inside the `try` block, and the success logic throws an error, your `except` block catches it, making debugging a nightmare. |
+
+## 15. Related Topics
+
+- Custom Exceptions
+- Logging
+- File Handling
+- Input / Output

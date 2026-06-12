@@ -2,6 +2,264 @@
 sidebar_position: 3
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Logging
 
-Placeholder: introduce Logging.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Logging |
+| Difficulty | Intermediate |
+| Used For | Recording what your application is doing for debugging and auditing |
+| Main Strength | Replaces `print()` statements with leveled, timestamped, routable logs |
+| Common Mistake | Using `print()` in production code |
+| Performance | Very fast, especially when logs are routed to files or async streams |
+
+Bro, `print()` is for playing around on your laptop. `logging` is for production.
+
+When your app crashes on a server at 3:00 AM, there is no terminal to read `print` outputs from. You need a persistent record of what happened, when it happened, and how severe it was. That is what the built-in `logging` module does.
+
+## 2. Real-World Analogy
+
+Bro, think of a ship's captain.
+
+If the captain just yells "We hit a rock!" into the wind (a `print()` statement), no one will remember it later if the ship sinks.
+
+Instead, the captain writes in the Ship's Logbook (Python `logging`):
+- **INFO (12:00 PM):** Departed port.
+- **WARNING (2:00 PM):** Dark clouds spotted.
+- **ERROR (3:15 PM):** Engine 1 failed.
+- **CRITICAL (3:30 PM):** Hull breached, taking on water.
+
+Investigators can read this logbook later to figure out exactly what happened.
+
+## 3. Concept Explanation
+
+The Python `logging` module provides a flexible framework for emitting log messages from Python programs.
+
+It revolves around **Log Levels**:
+1. **DEBUG (10):** Detailed information, typically of interest only when diagnosing problems.
+2. **INFO (20):** Confirmation that things are working as expected.
+3. **WARNING (30):** An indication that something unexpected happened, but the software is still working. (Default level)
+4. **ERROR (40):** A more serious problem, the software has not been able to perform some function.
+5. **CRITICAL (50):** A serious error, indicating that the program itself may be unable to continue running.
+
+Use Logging when:
+- Writing backend APIs, data pipelines, or background scripts.
+- You need timestamps, file names, and line numbers automatically attached to messages.
+- You need to write output to a file, not just the console.
+
+## 4. Syntax Table
+
+| Action | Python Example |
+|---|---|
+| Import | `import logging` |
+| Basic Config | `logging.basicConfig(level=logging.INFO)` |
+| Debug Log | `logging.debug("Variable x is 5")` |
+| Info Log | `logging.info("User logged in")` |
+| Warning Log | `logging.warning("Disk space low")` |
+| Error Log | `logging.error("Failed to connect to DB")` |
+| Exception Log | `logging.exception("Crash!")` (includes traceback) |
+
+## 5. Beginner Example
+
+Let's set up basic logging and write some messages.
+
+```python
+import logging
+
+# Set the threshold to DEBUG so we see everything
+logging.basicConfig(level=logging.DEBUG, format='%(levelname)s - %(message)s')
+
+def process_data(data):
+    logging.info("Starting data process")
+
+    if not data:
+        logging.warning("Data list is empty!")
+        return
+
+    logging.debug(f"Processing item: {data[0]}")
+
+    try:
+        result = 10 / len(data)
+    except Exception as e:
+        # logging.error logs the message, but logging.exception logs the whole stack trace!
+        logging.exception("Failed to do math")
+
+process_data([])
+print("-" * 20)
+process_data([1])
+```
+
+Output:
+```text
+INFO - Starting data process
+WARNING - Data list is empty!
+--------------------
+INFO - Starting data process
+DEBUG - Processing item: 1
+```
+
+Bro, see how `WARNING` and `DEBUG` tags are automatically added? This makes filtering logs in monitoring tools super easy.
+
+## 6. Real-World Engineering Example
+
+In a real app, you don't use the root logger. You create a named logger for your specific module, and you format it nicely with timestamps.
+
+```python
+import logging
+
+# 1. Create a custom logger named after the current file
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# 2. Create a handler (where the logs go - console in this case)
+console_handler = logging.StreamHandler()
+
+# 3. Create a formatter (how the logs look)
+# Format: [Time] [LoggerName] [LEVEL] Message
+formatter = logging.Formatter('[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+console_handler.setFormatter(formatter)
+
+# 4. Add the handler to the logger
+logger.addHandler(console_handler)
+
+def charge_credit_card(user_id, amount):
+    logger.info(f"Initiating charge of ${amount} for user {user_id}")
+
+    if amount > 10000:
+        logger.warning(f"High value transaction detected for user {user_id}!")
+
+    try:
+        # Simulate network failure
+        raise ConnectionError("Payment API timeout")
+    except ConnectionError:
+        logger.error(f"Payment failed for user {user_id} due to network error.")
+
+charge_credit_card(845, 12000)
+```
+
+Output:
+```text
+[2023-10-27 14:30:15] [__main__] [INFO] Initiating charge of $12000 for user 845
+[2023-10-27 14:30:15] [__main__] [WARNING] High value transaction detected for user 845!
+[2023-10-27 14:30:15] [__main__] [ERROR] Payment failed for user 845 due to network error.
+```
+
+Bro, this is production-ready. You have the exact time, the module name (`__main__`), the severity, and the message.
+
+## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'The Python Logging Architecture',
+    height: 380,
+    miniMap: true,
+    nodes: [
+      {id: 'logger', title: 'Logger', detail: 'logger.info("Hi"). Checks level threshold.', x: 50, y: 150, kind: 'core'},
+      {id: 'filter', title: 'Filter', detail: '(Optional) Drops logs based on complex rules.', x: 250, y: 150, kind: 'process'},
+      {id: 'handler1', title: 'StreamHandler', detail: 'Sends to Console.', x: 450, y: 50, kind: 'tool'},
+      {id: 'handler2', title: 'FileHandler', detail: 'Sends to app.log', x: 450, y: 250, kind: 'tool'},
+      {id: 'formatter', title: 'Formatter', detail: 'Adds timestamps and layout.', x: 650, y: 150, kind: 'data'},
+      {id: 'output', title: 'Output', detail: 'Terminal / Disk / Datadog', x: 850, y: 150, kind: 'output'},
+    ],
+    edges: [
+      {source: 'logger', target: 'filter', label: 'passes LogRecord'},
+      {source: 'filter', target: 'handler1', label: 'routes to'},
+      {source: 'filter', target: 'handler2', label: 'routes to'},
+      {source: 'handler1', target: 'formatter', label: 'formats'},
+      {source: 'handler2', target: 'formatter', label: 'formats'},
+      {source: 'formatter', target: 'output', label: 'writes'},
+    ],
+  }}
+/>
+
+The logging module creates a `LogRecord` object.
+
+It passes this record from the **Logger** -> **Filter** -> **Handler** -> **Formatter** -> **Destination**.
+
+This modularity is why logging is so powerful. You can easily configure it so that `INFO` logs go to the console, but `ERROR` logs get written to a file AND emailed to the dev team.
+
+## 8. Performance Table
+
+| Logging Action | Performance | Note |
+|---|---|---|
+| Logging below threshold (e.g., `logger.debug()` when level is `INFO`) | Extremely fast | Python checks the integer level first and skips evaluating the string entirely. |
+| Writing to Console | Fast | Standard I/O. |
+| Writing to File | Moderate | Disk I/O is slower. Use `RotatingFileHandler` to prevent massive files. |
+| F-strings in skipped logs | Slow | Don't do `logger.debug(f"Data: {heavy_function()}")`. It runs the function even if DEBUG is off! Use `%s` formatting for heavy logs. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why use `logging` instead of `print()`? | Logging provides severity levels, timestamps, contextual info (line numbers), and can route messages to multiple destinations (files, network) simultaneously. |
+| What is the default logging level? | `WARNING` (level 30). This means `INFO` and `DEBUG` logs will not show up unless you explicitly configure the logger. |
+| What is the difference between `logging.error()` and `logging.exception()`? | Both log an error message, but `logging.exception()` automatically attaches the full traceback of the exception to the log output. It should only be used inside an `except` block. |
+| What are the core components of the logging module? | Loggers (emitters), Handlers (destinations), Filters (rules), and Formatters (layout). |
+
+## 10. Tricky Questions & Edge Cases
+
+### The Lazy Evaluation Trap
+Bro, this is a senior-level trap.
+
+```python
+# BAD: process_huge_data() runs EVERY TIME, even if level is INFO
+logger.debug(f"Detailed data: {process_huge_data()}")
+
+# GOOD: process_huge_data() ONLY runs if level is DEBUG
+logger.debug("Detailed data: %s", process_huge_data())
+```
+Wait, actually the second one still runs the function before passing the argument!
+To truly be lazy, you must only pass variables, or check the level:
+```python
+if logger.isEnabledFor(logging.DEBUG):
+    logger.debug(f"Detailed data: {process_huge_data()}")
+```
+
+### Multiple Loggers duplicating logs
+If you configure the root logger with `basicConfig`, and then create a custom logger, you might see logs print twice! This is because logs "propagate" up to the root logger by default. Fix it with `logger.propagate = False`.
+
+## 11. Real-World Usage
+
+- **Microservices:** Emitting logs in JSON format using a library like `pythonjsonlogger`, so tools like Datadog, ELK, or Splunk can easily index them.
+- **Data Engineering:** Using `FileHandler` to create a separate `.log` file for every single ETL run.
+- **Web Frameworks:** Django and FastAPI have built-in logging configurations that automatically log every incoming HTTP request and its status code.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `logger = logging.getLogger(__name__)` at the top of every file. | Use `logging.info()` (root logger) directly in production code. |
+| Include contextual data (User IDs, Request IDs) in your logs. | Log passwords, API keys, or PII (Personally Identifiable Information). |
+| Use `logging.exception()` inside `except` blocks. | Swallow exceptions with `except: pass` without logging anything. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Never let log files grow infinitely.
+
+If you use a basic `FileHandler`, your log file will grow until the server's hard drive fills up and crashes the database.
+
+Bro, always use a `RotatingFileHandler` or `TimedRotatingFileHandler` in production. It automatically keeps the last (e.g.) 5 log files of 10MB each, and deletes older ones.
+
+```python
+from logging.handlers import RotatingFileHandler
+handler = RotatingFileHandler('app.log', maxBytes=10000000, backupCount=5)
+```
+
+## 14. Common Mistakes
+
+| Mistake | Why It Hurts |
+|---|---|
+| Using `print()` | When the app runs as a background service (systemd, Docker), `print` output is often lost or unformatted. |
+| Logging too much in INFO | If you log every loop iteration in `INFO`, the logs become unreadable spam. Move spammy logs to `DEBUG`. |
+| Hardcoding logger configs deep in modules | Let the `main.py` entry point configure the Handlers and Formatters. Library modules should just emit logs. |
+
+## 15. Related Topics
+
+- Exceptions
+- Debugging
+- Production Debugging

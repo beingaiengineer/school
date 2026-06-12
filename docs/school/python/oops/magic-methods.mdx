@@ -2,6 +2,265 @@
 sidebar_position: 7
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Magic Methods
 
-Placeholder: introduce Magic Methods.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Magic Methods (Dunder Methods) |
+| Difficulty | Intermediate |
+| Used For | Customizing built-in Python behavior for your own classes |
+| Main Strength | Makes custom objects act like native Python types |
+| Common Mistake | Using them unnecessarily when a standard method would be clearer |
+| Performance | Fast, as they are hooked directly into Python's C core |
+
+Bro, magic methods are the secret sauce that makes Python feel so smooth. They are special methods surrounded by double underscores, like `__init__` or `__str__`.
+
+They are also called **dunder methods** (Double UNDERscore). They let you tell Python how your custom objects should behave when used with built-in operations like `+`, `len()`, or `print()`.
+
+## 2. Real-World Analogy
+
+Bro, think of magic methods like a universal adapter for electronics.
+
+You buy a custom gadget from another country. The wall socket (Python) doesn't know how to power it directly. So, you use a universal adapter (a magic method) that translates the wall's power into something the gadget understands.
+
+| Action (Wall Socket) | Magic Method (Adapter) | What it powers |
+|---|---|---|
+| Printing the object | `__str__` | The display screen |
+| Adding two objects | `__add__` | Combining two batteries |
+| Checking length | `__len__` | A measuring tape |
+
+Magic methods act as adapters so your objects "fit" into Python's built-in ecosystem perfectly.
+
+## 3. Concept Explanation
+
+Whenever you do an operation in Python, behind the scenes, Python looks for a specific magic method on the object.
+
+For example, when you do `a + b`, Python is actually calling `a.__add__(b)`. When you do `len(my_list)`, Python is calling `my_list.__len__()`.
+
+By implementing these methods in your own classes, you can define exactly how your objects should respond to these standard operators.
+
+Use magic methods when:
+- You want your objects to be printed cleanly (`__str__`, `__repr__`).
+- You are building mathematical or data-heavy classes that should support `+`, `-`, `*`, etc.
+- You want your object to behave like a list or dictionary (`__getitem__`, `__len__`).
+
+Avoid magic methods when:
+- A regular, named method is more explicit and readable (e.g., use `.merge(other)` instead of `__add__` if it's not intuitively a mathematical addition).
+
+## 4. Syntax Table
+
+| Built-in Action | Magic Method | Example Use Case |
+|---|---|---|
+| Object Creation | `__init__(self)` | `obj = MyClass()` |
+| String Representation | `__str__(self)` | `print(obj)` |
+| Developer Representation| `__repr__(self)` | Showing obj in console |
+| Addition `+` | `__add__(self, other)` | `obj1 + obj2` |
+| Equality `==` | `__eq__(self, other)` | `obj1 == obj2` |
+| Length `len()` | `__len__(self)` | `len(obj)` |
+| Indexing `obj[key]` | `__getitem__(self, key)`| `obj['name']` |
+| Calling as function | `__call__(self)` | `obj()` |
+
+## 5. Beginner Example
+
+Let's make a custom `Wallet` class that can be added together using the `+` operator.
+
+```python
+class Wallet:
+    def __init__(self, amount):
+        self.amount = amount
+
+    # Magic method for addition (+)
+    def __add__(self, other):
+        # We return a new Wallet with the combined amount
+        return Wallet(self.amount + other.amount)
+
+    # Magic method for printing
+    def __str__(self):
+        return f"Wallet with ${self.amount}"
+
+w1 = Wallet(50)
+w2 = Wallet(20)
+
+w3 = w1 + w2  # Calls w1.__add__(w2)
+
+print(w3)     # Calls w3.__str__()
+```
+
+Output:
+```text
+Wallet with $70
+```
+
+Bro, how cool is that? You just taught Python how to add two wallets together using the standard `+` sign!
+
+## 6. Real-World Engineering Example
+
+Imagine you are building a custom data processing pipeline where you have `DataBatch` objects. You want to easily check their size and access records inside them like a normal list.
+
+```python
+class DataBatch:
+    def __init__(self, records):
+        self.records = records
+        self.metadata = {"timestamp": "2023-10-27", "source": "db_dump"}
+
+    # Allows len(batch)
+    def __len__(self):
+        return len(self.records)
+
+    # Allows batch[index]
+    def __getitem__(self, index):
+        return self.records[index]
+
+    # Allows for rec in batch:
+    def __iter__(self):
+        return iter(self.records)
+
+# Simulate records from a database
+batch = DataBatch([
+    {"id": 1, "status": "ok"},
+    {"id": 2, "status": "failed"},
+    {"id": 3, "status": "ok"}
+])
+
+print(f"Batch size: {len(batch)}")
+print(f"First record: {batch[0]}")
+
+print("Iterating over records:")
+for rec in batch:
+    print(rec)
+```
+
+Output:
+```text
+Batch size: 3
+First record: {'id': 1, 'status': 'ok'}
+Iterating over records:
+{'id': 1, 'status': 'ok'}
+{'id': 2, 'status': 'failed'}
+{'id': 3, 'status': 'ok'}
+```
+
+Bro, this is how you write Pythonic code! The developers using your `DataBatch` class don't need to learn a custom `.get_size()` or `.get_item(index)` method. They just use the Python skills they already have.
+
+## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'How Python Translates Syntax to Magic Methods',
+    height: 350,
+    miniMap: true,
+    nodes: [
+      {id: 'syntax', title: 'Developer Code', detail: 'obj1 + obj2', x: 50, y: 150, kind: 'core'},
+      {id: 'interpreter', title: 'Python Interpreter', detail: 'Sees the "+" operator.', x: 250, y: 150, kind: 'process'},
+      {id: 'lookup', title: 'Method Lookup', detail: 'Looks up __add__ on the left object.', x: 450, y: 50, kind: 'tool'},
+      {id: 'fallback', title: 'Fallback Lookup', detail: 'If no __add__, looks up __radd__ on right.', x: 450, y: 250, kind: 'warning'},
+      {id: 'execute', title: 'Execution', detail: 'Runs custom code and returns result.', x: 650, y: 150, kind: 'output'},
+    ],
+    edges: [
+      {source: 'syntax', target: 'interpreter', label: 'runs'},
+      {source: 'interpreter', target: 'lookup', label: 'translates to'},
+      {source: 'interpreter', target: 'fallback', label: 'if missing'},
+      {source: 'lookup', target: 'execute', label: 'found'},
+      {source: 'fallback', target: 'execute', label: 'found'},
+    ],
+  }}
+/>
+
+When the Python interpreter encounters an operator, it uses a mechanism called **operator overloading**. It translates the symbol (like `+`) into a method call (`__add__`).
+
+If the left operand doesn't support the operation, Python politely checks the right operand using the "reverse" magic method (`__radd__` in the case of addition).
+
+If neither object knows how to handle the operation, Python raises a `TypeError`.
+
+## 8. Performance Table
+
+| Operation | Python Behavior | Practical Impact |
+|---|---|---|
+| Standard Operator (`+`) | Extremely fast | Handled efficiently at the C level in CPython. |
+| Magic Method Call (`.__add__()`) | Slightly slower than `+` | Direct method calls have slight overhead compared to native operators. Always prefer using the operator syntax. |
+| Missing Magic Method | Throws TypeError | Fails fast, avoiding silent data corruption. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What are magic (dunder) methods? | Special methods surrounded by double underscores that define how objects behave with built-in Python operations. |
+| What is the difference between `__str__` and `__repr__`? | `__str__` is for readable output (end users). `__repr__` is for unambiguous output, ideally code that can recreate the object (developers). |
+| How do you make an object iterable? | Implement `__iter__` to return an iterator, and/or `__next__`. Or simply implement `__getitem__` and `__len__`. |
+| What does `__call__` do? | It allows an instance of a class to be called as if it were a function (e.g., `obj()`). |
+| Can you override `is` using a magic method? | No. The `is` operator checks memory identity, and Python does not allow overriding it. You can only override `==` via `__eq__`. |
+
+## 10. Tricky Questions & Edge Cases
+
+### The `__str__` Fallback
+If you only define `__repr__`, Python will use it as a fallback when `__str__` is called.
+
+```python
+class Node:
+    def __repr__(self):
+        return "<Node Object>"
+
+n = Node()
+print(n) # Calls str(n), which falls back to repr(n)!
+```
+Output: `<Node Object>`
+
+Bro, always implement `__repr__` first. It's the most useful for debugging.
+
+### Equality and Hashing
+If you override `__eq__` to say two objects are equal based on their values, you usually lose the ability to put those objects in a `set` or use them as dictionary keys, unless you also implement `__hash__`.
+
+```python
+class User:
+    def __init__(self, uid):
+        self.uid = uid
+    def __eq__(self, other):
+        return self.uid == other.uid
+    # Bro, you MUST add __hash__ if you want to use this in a set!
+    def __hash__(self):
+        return hash(self.uid)
+```
+
+## 11. Real-World Usage
+
+Magic methods are everywhere in professional Python code:
+- **Pandas DataFrames:** Heavily use `__getitem__` and `__setitem__` to allow `df['column_name']`.
+- **SQLAlchemy ORM:** Uses `__eq__`, `__gt__`, etc., to translate Python comparisons into SQL queries (e.g., `User.age > 18` translates to `WHERE age > 18`).
+- **Pathlib:** Uses `__truediv__` (the `/` operator) to join paths nicely: `path = folder / "file.txt"`.
+- **Decorators:** Class-based decorators use the `__call__` magic method to wrap functions.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `__repr__` on almost all your classes for better debugging. | Implement `__add__` to merge two completely unrelated things. Operators should be intuitive. |
+| Use `__getitem__` and `__len__` if your object is essentially a collection. | Call magic methods directly (e.g., `obj.__len__()`). Always use the built-in function (`len(obj)`). |
+| Return `NotImplemented` (the singleton, not the error) from comparison methods if types are incompatible. | Forget to implement `__hash__` if you implement `__eq__` and need hashability. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Overusing magic methods can make code incredibly hard to debug.
+
+If `a + b` triggers a massive database sync operation hidden inside `__add__`, other engineers will hate you.
+
+Bro, keep magic methods simple, pure, and fast. If an operation causes side effects (like network calls or file writes), use a clearly named method like `sync_with_db()` instead of hiding it in a dunder method.
+
+## 14. Common Mistakes
+
+| Mistake | Why It Hurts |
+|---|---|
+| Returning strings from `__len__` | `__len__` MUST return an integer. Python will raise a `TypeError` otherwise. |
+| Forgetting `self` in the definition | e.g., `def __str__():`. Will crash with arguments missing. |
+| Putting side effects in `__str__` | `print()` should never change the state of the system or database. |
+
+## 15. Related Topics
+
+- Classes & Objects
+- Iterators
+- Operator Overloading (Concepts)
+- Collections Module

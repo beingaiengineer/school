@@ -2,6 +2,260 @@
 sidebar_position: 9
 ---
 
-# Solid Principles
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Solid Principles.
+# SOLID Principles
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | SOLID Principles |
+| Difficulty | Advanced |
+| Used For | Writing maintainable, scalable, and robust object-oriented code |
+| Main Strength | Prevents spaghetti code and makes large refactors safe |
+| Common Mistake | Over-engineering small scripts with strict SOLID rules |
+| Performance | No runtime performance hit; entirely a design/architectural benefit |
+
+Bro, SOLID is an acronym for five design principles that make object-oriented designs more understandable, flexible, and maintainable.
+
+If you want to move from "writing code that works" to "writing code that survives," you need to understand SOLID.
+
+## 2. Real-World Analogy
+
+Bro, think of a well-organized hospital.
+
+- **S (Single Responsibility):** A surgeon does surgery. The janitor cleans. The surgeon doesn't clean the floors.
+- **O (Open/Closed):** When a new disease appears, the hospital doesn't rebuild the entire building. It just adds a new specialized ward.
+- **L (Liskov Substitution):** If you call for a "Doctor", any trained doctor should be able to treat a basic wound. A pediatrician shouldn't randomly start acting like a security guard.
+- **I (Interface Segregation):** A patient getting an X-Ray only uses the X-Ray room. They don't need access to the MRI and surgical tools simultaneously.
+- **D (Dependency Inversion):** The hospital depends on "Medical Supply Companies", not specifically "Johnson & Johnson". If one supplier fails, they just swap to another without changing how the hospital runs.
+
+## 3. Concept Explanation
+
+SOLID stands for:
+
+1. **S**ingle Responsibility Principle (SRP): A class should have one, and only one, reason to change.
+2. **O**pen/Closed Principle (OCP): Classes should be open for extension, but closed for modification.
+3. **L**iskov Substitution Principle (LSP): Subclasses should be substitutable for their base classes without breaking the program.
+4. **I**nterface Segregation Principle (ISP): Many client-specific interfaces are better than one general-purpose interface.
+5. **D**ependency Inversion Principle (DIP): Depend upon abstractions (interfaces), not concretions (specific classes).
+
+Use SOLID when:
+- Building large-scale applications (e.g., Django monoliths, FastAPI microservices).
+- Working in a team where multiple engineers touch the same codebase.
+- Writing code that will need to support new features frequently over years.
+
+Avoid SOLID when:
+- Writing a quick 50-line automation script. Bro, don't build a 5-layer architecture to rename some PDFs.
+
+## 4. Syntax Table
+
+| Principle | Python Pattern |
+|---|---|
+| Single Responsibility | Split a giant `UserManager` into `UserCreator` and `UserEmailer` |
+| Open/Closed | Use inheritance or composition (e.g., `PaymentProcessor` base class) |
+| Liskov Substitution | Ensure subclasses have the same method signatures as parents |
+| Interface Segregation | Create specific `abc.ABC` classes (e.g., `Printer` and `Scanner` instead of `Machine`) |
+| Dependency Inversion | Pass dependencies via `__init__` (Dependency Injection) |
+
+## 5. Beginner Example: Single Responsibility Principle (SRP)
+
+**Bad Code:**
+```python
+class Report:
+    def __init__(self, data):
+        self.data = data
+
+    def generate(self):
+        return f"Report: {self.data}"
+
+    # BAD: This class now handles reporting AND database logic!
+    def save_to_database(self):
+        print("Saving to DB...")
+```
+
+**Good Code (SRP):**
+```python
+class Report:
+    def __init__(self, data):
+        self.data = data
+
+    def generate(self):
+        return f"Report: {self.data}"
+
+# Separate class handles saving
+class ReportSaver:
+    def save(self, report: Report):
+        print(f"Saving '{report.generate()}' to DB...")
+
+r = Report("Q3 Profits")
+saver = ReportSaver()
+saver.save(r)
+```
+
+Bro, if the database changes from PostgreSQL to MongoDB, you only change `ReportSaver`. `Report` remains untouched.
+
+## 6. Real-World Engineering Example: Dependency Inversion (DIP)
+
+Imagine a notification system.
+
+**Bad Code (Coupled):**
+```python
+class EmailService:
+    def send(self, msg):
+        print(f"Sending Email: {msg}")
+
+class AlertSystem:
+    def __init__(self):
+        # BAD: AlertSystem is tightly coupled to EmailService
+        self.notifier = EmailService()
+
+    def alert(self):
+        self.notifier.send("System is down!")
+```
+
+**Good Code (Inverted/Decoupled):**
+```python
+from abc import ABC, abstractmethod
+
+# 1. Create an abstraction (Interface)
+class Notifier(ABC):
+    @abstractmethod
+    def send(self, msg: str):
+        pass
+
+# 2. Concrete implementations
+class EmailService(Notifier):
+    def send(self, msg: str):
+        print(f"Sending Email: {msg}")
+
+class SMSService(Notifier):
+    def send(self, msg: str):
+        print(f"Sending SMS: {msg}")
+
+# 3. High-level module depends on abstraction, injected via __init__
+class AlertSystem:
+    def __init__(self, notifier: Notifier):
+        self.notifier = notifier
+
+    def alert(self):
+        self.notifier.send("System is down!")
+
+# Now we can easily swap email for SMS without changing AlertSystem!
+sms = SMSService()
+system = AlertSystem(sms)
+system.alert()
+```
+
+Output:
+```text
+Sending SMS: System is down!
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'SOLID Design Flow',
+    height: 400,
+    miniMap: true,
+    nodes: [
+      {id: 'base', title: 'Messy Code', detail: 'Tightly coupled, massive classes.', x: 250, y: 50, kind: 'warning'},
+      {id: 'srp', title: 'SRP', detail: 'Split into single-purpose classes.', x: 50, y: 150, kind: 'process'},
+      {id: 'ocp', title: 'OCP & LSP', detail: 'Allow extension via safe subclasses.', x: 450, y: 150, kind: 'process'},
+      {id: 'isp', title: 'ISP', detail: 'Break fat interfaces into small ones.', x: 50, y: 250, kind: 'process'},
+      {id: 'dip', title: 'DIP', detail: 'Inject dependencies via abstractions.', x: 450, y: 250, kind: 'tool'},
+      {id: 'clean', title: 'Clean Architecture', detail: 'Highly testable, easy to modify.', x: 250, y: 350, kind: 'output'},
+    ],
+    edges: [
+      {source: 'base', target: 'srp', label: 'refactor 1'},
+      {source: 'base', target: 'ocp', label: 'refactor 2'},
+      {source: 'srp', target: 'isp', label: 'refine'},
+      {source: 'ocp', target: 'dip', label: 'abstract'},
+      {source: 'isp', target: 'clean', label: 'results in'},
+      {source: 'dip', target: 'clean', label: 'results in'},
+    ],
+  }}
+/>
+
+SOLID isn't enforced by the Python interpreter (except partly by `abc` for ISP and DIP). It's enforced by **code reviews**, **linters**, and **architecture design**.
+
+## 8. Performance Table
+
+| Aspect | Impact |
+|---|---|
+| Execution Speed | Very slightly slower due to more function calls and object lookups (negligible). |
+| Memory Usage | Slightly higher due to more discrete objects. |
+| Developer Velocity | Slower initially (more planning), but drastically faster in the long run. |
+| Testability | Extremely high. Mocking dependencies becomes trivial. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does SOLID stand for? | Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, Dependency Inversion. |
+| Explain the Open/Closed principle. | Software entities should be open for extension (adding new features) but closed for modification (don't break existing code). Usually done via inheritance or composition. |
+| Why is Liskov Substitution important? | If a child class breaks the behavior expected by the parent class, polymorphism fails, leading to unexpected runtime crashes. |
+| How do you achieve Dependency Inversion in Python? | By defining `abc.ABC` abstract base classes and passing them into a class via its constructor (Dependency Injection), rather than instantiating concrete classes inside. |
+
+## 10. Tricky Questions & Edge Cases
+
+### The Liskov Substitution Violation
+Bro, this is a classic interview trap.
+
+```python
+class Rectangle:
+    def __init__(self, w, h):
+        self.w = w
+        self.h = h
+
+class Square(Rectangle):
+    def __init__(self, size):
+        # A square forces width and height to be the same
+        super().__init__(size, size)
+
+# Business logic expects a Rectangle
+def double_width(rect: Rectangle):
+    rect.w *= 2
+    # Expectation: Area should double.
+    # Reality for Square: Only width doubled, it's no longer a square!
+```
+A Square is mathematically a Rectangle, but in software, making `Square` inherit from `Rectangle` often violates LSP because the expected behaviors (like modifying width independently of height) break.
+
+## 11. Real-World Usage
+
+- **Django Views:** Class-Based Views (CBVs) heavily use the Single Responsibility Principle. A view handles the request, a form handles validation, a model handles DB interactions.
+- **Boto3 (AWS SDK):** You don't hardcode HTTP requests. You use abstracted client interfaces (DIP).
+- **FastAPI Dependency Injection:** FastAPI has a built-in `Depends()` system entirely built around Dependency Inversion, allowing you to swap out database sessions easily during testing.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use Dependency Injection to pass database connections or API clients into your classes. | Hardcode `requests.get()` deep inside a business logic class. |
+| Keep classes under 200-300 lines. If it's bigger, it probably violates SRP. | Create massive "God classes" like `AppManager` that do everything. |
+| Write unit tests. SOLID code is naturally very easy to unit test. | Over-engineer small scripts. Not every 10-line Python script needs 5 interfaces. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Strict interface segregation (ISP) is less common in Python than in Java or C#.
+
+Because Python relies heavily on "Duck Typing" (if it walks like a duck, it's a duck), you don't always need to define strict formal `abc.ABC` interfaces for everything. Often, just ensuring an object has the required methods is enough for production Python, though strict ABCs are preferred in massive enterprise codebases.
+
+## 14. Common Mistakes
+
+| Mistake | Why It Hurts |
+|---|---|
+| Instantiating concrete classes inside `__init__` | Violates DIP. You can't easily mock that dependency for unit testing. |
+| Modifying core classes for new features | Violates OCP. You risk introducing bugs into existing, working features. |
+| Fat interfaces | Violates ISP. If a subclass has to implement methods with `pass` or `raise NotImplementedError` because it doesn't need them, the interface is too big. |
+
+## 15. Related Topics
+
+- Classes & Objects
+- Inheritance
+- Abstraction
+- Design Patterns
+- Unit Testing & Mocking
