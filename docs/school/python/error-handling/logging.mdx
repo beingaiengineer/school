@@ -1,7 +1,233 @@
 ---
 sidebar_position: 3
+title: "Logging"
+description: "Master Python's built-in logging module to track application behavior and debug production systems."
 ---
 
-# Logging
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Logging.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| **Topic** | Python Logging Module |
+| **Difficulty** | Intermediate |
+| **Used For** | Recording events, warnings, and errors during program execution for later analysis |
+| **Common Mistake** | Using `print()` statements instead of `logging` in production code |
+| **Performance** | Configurable; logging to files/network has disk/network IO overhead |
+
+# 2. Real-World Analogy
+
+Bro, imagine you are a ship's captain.
+
+Using `print()` is like yelling commands across the deck. It's fine for the moment, but the wind blows it away. If the ship crashes tomorrow, nobody knows what you yelled yesterday.
+
+Using `logging` is like writing in the ship's Official Logbook. You record the time, the severity of the event (Routine vs. Emergency), and the exact details. If something goes wrong, investigators (or future you) can open the logbook and see exactly what happened leading up to the disaster.
+
+# 3. Concept Explanation
+
+The `logging` module is part of Python's standard library. It provides a flexible framework for generating log messages from your applications.
+
+Instead of just outputting text, a Log Record contains metadata: a timestamp, the file name, the line number, and a severity level. You can configure where these logs go (console, file, remote server) and how they are formatted, without changing the actual code that generates the log message.
+
+**Log Levels (in increasing severity):**
+1. **DEBUG:** Detailed information, typically of interest only when diagnosing problems.
+2. **INFO:** Confirmation that things are working as expected.
+3. **WARNING:** An indication that something unexpected happened, but the software is still working (e.g., "disk space low").
+4. **ERROR:** Due to a more serious problem, the software has not been able to perform some function.
+5. **CRITICAL:** A serious error, indicating that the program itself may be unable to continue running.
+
+When to use it:
+- Always, for any script that will run unattended, on a server, or be used by someone else.
+
+When NOT to use it:
+- For simple interactive CLI tools where the output *is* the UI (though even then, background logging is good).
+
+# 4. Syntax Table
+
+| Operation | Example |
+|---|---|
+| Basic Setup | `import logging`<br/>`logging.basicConfig(level=logging.INFO)` |
+| Log a string | `logging.info("Server started on port 80")` |
+| Log a variable | `logging.debug(f"User ID: {uid}")` |
+| Log an exception | `logging.exception("Failed to connect to DB")` |
+
+# 5. Beginner Example
+
+Let's set up basic logging to the console.
+
+```python
+import logging
+
+# Configure the minimum level we want to see.
+# If we set it to WARNING, DEBUG and INFO messages will be ignored!
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+
+def process_payment(amount):
+    logging.debug("Starting payment processing...") # This won't print! Level is INFO.
+
+    if amount > 1000:
+        logging.warning("Large transaction detected. Flagging for review.")
+
+    logging.info(f"Successfully processed ${amount}.")
+
+process_payment(50)
+process_payment(5000)
+```
+
+Output:
+```
+INFO: Successfully processed $50.
+WARNING: Large transaction detected. Flagging for review.
+INFO: Successfully processed $5000.
+```
+
+Bro, notice how we didn't have to delete the `logging.debug` line? It's just muted because our threshold is `INFO`. This is why logging beats `print()`!
+
+# 6. Real-World Engineering Example
+
+In production, you usually want logs written to a file, with exact timestamps, and you might want errors to also print to the console. We use Loggers, Handlers, and Formatters for this.
+
+```python
+import logging
+
+# 1. Create a custom logger
+logger = logging.getLogger("BillingSystem")
+logger.setLevel(logging.DEBUG) # Catch everything at the source
+
+# 2. Create Handlers (Where the logs go)
+console_handler = logging.StreamHandler()
+file_handler = logging.FileHandler("billing.log")
+
+# Console only shows warnings and above
+console_handler.setLevel(logging.WARNING)
+# File saves everything
+file_handler.setLevel(logging.DEBUG)
+
+# 3. Create Formatters (How the logs look)
+console_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+file_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - [Line: %(lineno)d] - %(message)s')
+
+console_handler.setFormatter(console_format)
+file_handler.setFormatter(file_format)
+
+# 4. Add handlers to the logger
+logger.addHandler(console_handler)
+logger.addHandler(file_handler)
+
+# --- App Logic ---
+def charge_card(user, amount):
+    logger.debug(f"Attempting to charge {user} ${amount}")
+    if amount < 0:
+        logger.error(f"Cannot charge negative amount to {user}!")
+        return
+    logger.info(f"Charged {user} successfully.")
+
+charge_card("Alice", 100)
+charge_card("Bob", -50)
+```
+
+*Console Output:*
+```
+BillingSystem - ERROR - Cannot charge negative amount to Bob!
+```
+
+*File Output (billing.log):*
+```
+2023-10-27 10:15:30,123 - BillingSystem - DEBUG - [Line: 28] - Attempting to charge Alice $100
+2023-10-27 10:15:30,124 - BillingSystem - INFO - [Line: 32] - Charged Alice successfully.
+2023-10-27 10:15:30,124 - BillingSystem - DEBUG - [Line: 28] - Attempting to charge Bob $-50
+2023-10-27 10:15:30,125 - BillingSystem - ERROR - [Line: 30] - Cannot charge negative amount to Bob!
+```
+
+# 7. Internal Working
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Logger Object\n(Filters by Level)' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'tool', data: { label: 'Console Handler\n(Warning+)' }, position: { x: 50, y: 150 } },
+    { id: '3', type: 'tool', data: { label: 'File Handler\n(Debug+)' }, position: { x: 450, y: 150 } },
+    { id: '4', type: 'process', data: { label: 'Console Formatter\n(Simple String)' }, position: { x: 50, y: 300 } },
+    { id: '5', type: 'process', data: { label: 'File Formatter\n(JSON / Timestamps)' }, position: { x: 450, y: 300 } },
+    { id: '6', type: 'output', data: { label: 'Terminal output' }, position: { x: 50, y: 450 } },
+    { id: '7', type: 'data', data: { label: 'app.log file on Disk' }, position: { x: 450, y: 450 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'Sends Record', type: 'smoothstep' },
+    { id: 'e1-3', source: '1', target: '3', label: 'Sends Record', type: 'smoothstep' },
+    { id: 'e2-4', source: '2', target: '4', type: 'straight' },
+    { id: 'e3-5', source: '3', target: '5', type: 'straight' },
+    { id: 'e4-6', source: '4', target: '6', type: 'straight' },
+    { id: 'e5-7', source: '5', target: '7', type: 'straight' }
+  ]}
+/>
+
+When you call `logger.error()`, Python creates a `LogRecord` object containing the message, time, and execution context. This record is passed to the Logger. If the record's level is high enough, the Logger passes it to all attached Handlers. Each Handler checks its own level threshold. If it passes, the Handler passes the record to its Formatter, which turns it into a string, and finally, the Handler writes that string to its destination (terminal, file, network).
+
+# 8. Performance Table
+
+| Logging Action | Performance Impact | Note |
+|---|---|---|
+| Log check (muted) | Extremely Low | `if logger.isEnabledFor(DEBUG)` happens under the hood; fast exit |
+| Console Logging | Medium | Terminal I/O is notoriously slow |
+| File Logging | Medium | Disk I/O; can be mitigated with asynchronous loggers |
+| `logging.exception` | High | Generating the traceback string requires unwinding the stack |
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between `logging.error()` and `logging.exception()`? | `logging.error(msg)` just logs the string. `logging.exception(msg)` logs the string with level ERROR *and* automatically appends the full traceback. It should only be used inside an `except` block. |
+| Why use `__name__` when creating a logger (`logging.getLogger(__name__)`)? | It creates a logger hierarchy based on your python module structure (e.g., `app.auth.login`). This allows you to easily turn on/off logs for specific files from a central config. |
+| How do you prevent a log file from growing infinitely large? | Use `RotatingFileHandler` or `TimedRotatingFileHandler`. They automatically archive old logs and create new ones when a size limit or time limit is reached. |
+| Why is `logging.basicConfig()` not working in my second file? | `basicConfig()` does nothing if the root logger has already been configured. It is designed to be called exactly once, at the very entry point of your application. |
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, look at this common mistake with F-strings in logging.
+
+```python
+# Bad
+logging.debug(f"User {calculate_expensive_stats()} logged in.")
+
+# Good
+logging.debug("User %s logged in.", calculate_expensive_stats())
+```
+
+If your logger is set to `INFO`, the `DEBUG` message won't be printed.
+
+HOWEVER, in the "Bad" example using an F-string, Python *must* evaluate `calculate_expensive_stats()` immediately to build the string *before* passing it to `logging.debug()`. You just wasted CPU cycles for a log that gets thrown away!
+
+In the "Good" example (using `%s` formatting syntax supported by the logging module), the logging framework checks the level *first*. If `DEBUG` is muted, it ignores the arguments, and the expensive function is never executed.
+
+*(Note: If `calculate_expensive_stats()` is just a variable lookup, F-strings are fine. But for function calls, use `%s`).*
+
+# 11. Real-World Usage
+
+- **Cloud Watch / Datadog:** Apps output JSON formatted logs using `python-json-logger`. Log aggregators ingest these JSON logs, allowing engineers to search `status:ERROR AND user_id:123` across 50 different servers instantly.
+- **Audit Trails:** Regulated industries log every `INFO` event where a user views sensitive data, storing them in immutable S3 buckets.
+- **Microservices:** Passing a unique `correlation_id` across APIs and injecting it into the log formatter so a single user request can be traced across 5 different Python services.
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Configure `logging.basicConfig()` ONLY in your main entry script (`main.py`). | Call `basicConfig` in library modules or helper files. |
+| Use `logging.getLogger(__name__)` at the top of every file. | Use the root logger (`logging.info()`) everywhere in a large app. |
+| Log at the appropriate level. `ERROR` means someone needs to wake up and fix it. | Log expected user mistakes (like "Bad Password") as `ERROR`. That is an `INFO` or `WARNING` event. |
+
+# 13. Production Notes
+
+> ⚠ **Production Note:**
+Never log sensitive PII (Personal Identifiable Information) or secrets. If you do `logging.info(f"User request: {payload}")` and the payload contains a credit card or a password, those logs will be shipped to Datadog/Splunk where any engineer can see them. Always sanitize objects before passing them to the logger.
+
+# 14. Common Mistakes
+
+- **Silent Failures:** Using `except Exception as e: print(e)`. When run as a background service via systemd or Docker, standard output might be lost. You will never know it crashed. Use `logger.exception("Failed")`.
+- **Multiple Handlers Bug:** If you add a handler inside a function that gets called repeatedly, you will get duplicated log lines (e.g., one line, then two lines, then three lines). Always configure handlers at the module level.
+
+# 15. Related Topics
+
+- [Exceptions](./exceptions)
+- [Debugging](./debugging)
+- [Production Debugging](./production-debugging)

@@ -1,7 +1,221 @@
 ---
 sidebar_position: 4
+title: "Debugging"
+description: "Learn how to effectively debug Python code using pdb, IDE tools, and strategic print statements."
 ---
 
-# Debugging
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Debugging.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| **Topic** | Debugging Python Code |
+| **Difficulty** | Beginner to Intermediate |
+| **Used For** | Finding and fixing logic errors, crashes, and unexpected behavior |
+| **Common Mistake** | Using random `print()` statements without reading the actual Traceback first |
+| **Performance** | Running in debug mode or using `pdb` heavily slows down code execution |
+
+# 2. Real-World Analogy
+
+Bro, imagine you are a detective investigating a bank robbery.
+
+A beginner developer just stares at the empty vault (the crashed program) and guesses what happened.
+
+A good developer uses the security cameras (Tracebacks) to see exactly where the thief entered. If that's not enough, they use a time machine (a Debugger like `pdb`) to pause time right before the robbery, step through the events second by second, and inspect the thief's pockets (variables) to find the exact moment things went wrong.
+
+# 3. Concept Explanation
+
+Debugging is the systematic process of identifying and resolving bugs (errors) in software.
+
+In Python, bugs usually fall into two categories:
+1. **Exceptions (Crashes):** The program stops entirely. Python provides a **Traceback**, which is a map showing exactly which function calls led to the crash.
+2. **Logic Errors:** The program runs successfully but produces the wrong output. These are harder to find and require inspecting state.
+
+**Tools for Debugging:**
+- **Tracebacks:** The default error output. Always read from the bottom up!
+- **Print debugging:** The simplest method, inserting `print()` to check variable states.
+- **pdb (Python Debugger):** The built-in interactive debugger that lets you pause execution.
+- **IDE Debuggers:** Visual debuggers in VSCode or PyCharm.
+
+When to use it:
+- Whenever your code doesn't do exactly what you expect.
+
+When NOT to use it:
+- Do not leave `pdb.set_trace()` or `breakpoint()` calls in production code! It will literally pause the server waiting for user input.
+
+# 4. Syntax Table
+
+| Tool | Syntax / Command | Purpose |
+|---|---|---|
+| Built-in Breakpoint | `breakpoint()` | Pauses execution and opens `pdb` at that line |
+| `pdb` module | `import pdb; pdb.set_trace()` | Older way to pause execution (Python < 3.7) |
+| `pdb`: Next line | `n` (or `next`) | Execute the current line and stop at the next line |
+| `pdb`: Step into | `s` (or `step`) | Step *inside* a function call on the current line |
+| `pdb`: Continue | `c` (or `continue`) | Resume normal execution until the next breakpoint |
+
+# 5. Beginner Example
+
+Let's look at a logic error. We want to calculate the average of a list, but it's giving the wrong answer.
+
+```python
+def calculate_average(numbers):
+    total = 0
+    count = 0
+
+    for num in numbers:
+        total += num
+        # BUG: We are incrementing count by the number itself, not by 1!
+        count += num
+
+    return total / count
+
+# This should be 20. But it returns 1.0!
+result = calculate_average([10, 20, 30])
+print(result)
+```
+
+**How to debug it with `breakpoint()`:**
+
+```python
+def calculate_average(numbers):
+    total = 0
+    count = 0
+
+    for num in numbers:
+        total += num
+        count += num
+        breakpoint() # PAUSE HERE!
+
+    return total / count
+```
+
+When you run this script in the terminal, it stops, and you see a `(Pdb)` prompt. You can type `total` and hit enter. It prints `10`. You type `count`. It prints `10`. Immediately you realize: "Wait, `count` should be 1 on the first loop, not 10!" You found the bug.
+
+# 6. Real-World Engineering Example
+
+In backend APIs, you often deal with deeply nested JSON dictionaries from external sources. Let's debug an unexpected `KeyError`.
+
+```python
+def extract_user_city(api_response):
+    # Imagine this response comes from a real API
+    users = api_response.get("data", {}).get("users", [])
+
+    cities = []
+    for user in users:
+        # What if a user doesn't have an address? Crash!
+        try:
+            city = user["address"]["city"]
+            cities.append(city)
+        except KeyError as e:
+            print(f"Failed on user: {user['id']}")
+            # Drop into debugger automatically when the error happens!
+            import pdb; pdb.post_mortem()
+
+    return cities
+
+payload = {
+    "data": {
+        "users": [
+            {"id": 1, "address": {"city": "New York"}},
+            {"id": 2, "address": {"city": "London"}},
+            {"id": 3, "name": "NoAddressUser"} # Bug trigger
+        ]
+    }
+}
+
+extract_user_city(payload)
+```
+
+Bro, `pdb.post_mortem()` is magic. Instead of guessing *why* it crashed, this command opens the debugger *exactly* at the moment of the crash, with all the local variables still intact so you can inspect `user` and see that it is missing the `address` key.
+
+# 7. Internal Working
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Python Interpreter\nRunning normally' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'warning', data: { label: 'Encounters breakpoint()' }, position: { x: 250, y: 150 } },
+    { id: '3', type: 'process', data: { label: 'Suspends Execution\n(Global Interpreter Lock held)' }, position: { x: 250, y: 300 } },
+    { id: '4', type: 'tool', data: { label: 'Opens interactive TTY\n(Pdb prompt)' }, position: { x: 50, y: 450 } },
+    { id: '5', type: 'output', data: { label: 'Developer types `c`' }, position: { x: 450, y: 450 } },
+    { id: '6', type: 'core', data: { label: 'Resumes Execution' }, position: { x: 250, y: 600 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', type: 'smoothstep' },
+    { id: 'e2-3', source: '2', target: '3', type: 'smoothstep' },
+    { id: 'e3-4', source: '3', target: '4', type: 'smoothstep' },
+    { id: 'e4-5', source: '4', target: '5', type: 'straight' },
+    { id: 'e5-6', source: '5', target: '6', type: 'smoothstep' }
+  ]}
+/>
+
+When Python hits a `breakpoint()`, it hooks into the `sys.breakpointhook()`. It halts the execution frame, keeping all memory and variables exactly as they are. It binds standard input/output to the `pdb` module, allowing you to execute arbitrary Python code within the scope of the paused frame.
+
+# 8. Performance Table
+
+| Strategy | Speed Impact | Note |
+|---|---|---|
+| Traceback Generation | Minimal | Only happens at the moment of a crash |
+| `print()` Debugging | Low/Medium | Console I/O slows down tight loops |
+| IDE Debugger (Attached) | High | Tracing every line of code significantly slows execution |
+| `pdb` (Active) | Total Stop | Program is completely halted waiting for human input |
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| How do you read a Python Traceback? | From the bottom up. The last line tells you the exact Error (e.g., `IndexError`). The line immediately above it tells you the exact file and line number where the code failed. |
+| What is the difference between `step` and `next` in `pdb`? | `next` executes the current line and stops at the next line in the *current* function. `step` will dive *into* the function being called on the current line. |
+| How can you debug a script without modifying the source code? | Run it from the terminal with the pdb module: `python -m pdb my_script.py`. |
+| What is rubber duck debugging? | Explaining your code line-by-line out loud to an inanimate object (like a rubber duck). It forces you to slow down and often reveals logic gaps. |
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, sometimes print debugging lies to you. Watch this:
+
+```python
+def process_data(data_list):
+    print("Data received:", data_list)
+    # 50 lines of complex code here...
+    data_list.clear() # Mutates the original list!
+    return True
+
+my_list = [1, 2, 3]
+process_data(my_list)
+print("My list is now:", my_list)
+```
+
+If you only look at the first print statement, you think "Okay, the data got there fine." But `my_list` is passed by reference (it's mutable). The function clears it. If you try to use `my_list` later in your main code, it's empty, and you'll spend hours wondering why.
+
+**Lesson:** In Python, passing mutable objects (lists, dicts) into functions can cause side-effects. Use the debugger to watch variables *change* over time.
+
+# 11. Real-World Usage
+
+- **VSCode / PyCharm:** Most developers rarely use CLI `pdb` anymore. They click the left gutter in their IDE to set a red dot (breakpoint) and hit "Run in Debug Mode". This provides a beautiful GUI showing all variables, the call stack, and step controls.
+- **Jupyter Notebooks:** Data Scientists use `%debug` magic commands in notebooks to drop into `pdb` immediately after a cell throws an exception.
+- **Git Bisect:** When a bug is found but nobody knows when it was introduced, engineers use `git bisect` to binary-search through old commits to find exactly which commit broke the code.
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Read the bottom of the Traceback first. That is the actual error. | Copy-paste the entire Traceback into Google without reading it. |
+| Isolate the problem. Comment out unrelated code until you have a minimal reproducible example. | Guess. Don't randomly change code hoping it will fix the issue. |
+| Write a unit test that reproduces the bug *before* you fix it. Then fix it so the test passes. | Leave `print("HERE")`, `print("HERE 2")` in your final commits. |
+
+# 13. Production Notes
+
+> ⚠ **Production Note:**
+You cannot use `breakpoint()` or IDE debuggers on a live production server. The server will hang indefinitely waiting for your input, taking down the application for all users. For production debugging, you must rely exclusively on robust `logging` and APM (Application Performance Monitoring) tools like Datadog or Sentry.
+
+# 14. Common Mistakes
+
+- **Shadowing variables in `pdb`:** In the `pdb` prompt, if you type `c`, it means "continue". But what if you have a variable named `c` in your code and you want to see its value? Typing `c` will just continue execution! You have to use the command `p c` (print `c`) instead.
+- **Ignoring the Call Stack:** Sometimes the line of code that *crashes* is perfectly fine. It crashed because a completely different function 5 steps up the stack passed it bad data. Look at the *entire* Traceback to find the root cause.
+
+# 15. Related Topics
+
+- [Production Debugging](./production-debugging)
+- [Exceptions](./exceptions)
+- [Logging](./logging)
+- [Unit Testing](../testing/unit-testing)

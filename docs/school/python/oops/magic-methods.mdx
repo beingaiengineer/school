@@ -1,7 +1,212 @@
 ---
 sidebar_position: 7
+title: "Magic Methods"
+description: "Understand Python Magic Methods (Dunder Methods) and operator overloading."
 ---
 
-# Magic Methods
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Magic Methods.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| **Topic** | Magic Methods (Dunder Methods) |
+| **Difficulty** | Intermediate |
+| **Used For** | Customizing class behavior for built-in operations (like `+`, `len()`, `str()`) |
+| **Common Mistake** | Modifying standard behavior in unexpected ways |
+| **Performance** | Native execution speed, heavily optimized by Python |
+
+# 2. Real-World Analogy
+
+Bro, think of magic methods like customized shortcut buttons on a gaming controller. Normally, the 'A' button jumps. But you can go into the settings and define exactly what 'A' does for your specific character.
+
+In Python, when you use the `+` operator, Python doesn't inherently know how to "add" two custom objects (like two `ShoppingCart` objects). Magic methods let you tell Python exactly what `+` (the `__add__` method) should do when your specific objects are involved.
+
+# 3. Concept Explanation
+
+Magic methods, often called **dunder methods** (because they start and end with **d**ouble **under**scores, e.g., `__init__`), are special methods that Python invokes implicitly under the hood.
+
+You rarely call them directly (like `obj.__str__()`). Instead, you trigger them using standard operators or built-in functions (like `str(obj)`). They allow your custom classes to integrate seamlessly with Python's core syntax, a concept often called **Operator Overloading** or **Data Model Customization**.
+
+When to use it:
+- When you want your objects to support standard operations like addition, comparison, or length checking.
+- When you want your objects to have a nice string representation for logging or printing.
+
+When NOT to use it:
+- Don't override `__add__` to perform a subtraction operation. Keep the behavior intuitive.
+
+# 4. Syntax Table
+
+| Operation | Trigger | Magic Method |
+|---|---|---|
+| Initialization | `obj = MyClass()` | `__init__(self)` |
+| String Representation | `str(obj)`, `print(obj)` | `__str__(self)` |
+| Developer Representation | `repr(obj)` | `__repr__(self)` |
+| Addition | `obj1 + obj2` | `__add__(self, other)` |
+| Equality | `obj1 == obj2` | `__eq__(self, other)` |
+| Length | `len(obj)` | `__len__(self)` |
+
+# 5. Beginner Example
+
+Let's say we have a `Book` class. By default, printing it looks ugly.
+
+```python
+class Book:
+    def __init__(self, title, pages):
+        self.title = title
+        self.pages = pages
+
+    # How it looks to end users (print)
+    def __str__(self):
+        return f"'{self.title}' ({self.pages} pages)"
+
+    # Let's define what length means for a book
+    def __len__(self):
+        return self.pages
+
+my_book = Book("Python Crash Course", 500)
+
+# Triggers __str__
+print(my_book)
+
+# Triggers __len__
+print(len(my_book))
+```
+
+Output:
+```
+'Python Crash Course' (500 pages)
+500
+```
+
+Bro, notice how we didn't call `my_book.__len__()`. The built-in `len()` function automatically looks for the `__len__` method on your object.
+
+# 6. Real-World Engineering Example
+
+Imagine a logistics system tracking 2D coordinate positions for delivery trucks. We need to easily add vectors and compare distances.
+
+```python
+import math
+
+class Vector2D:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def __add__(self, other):
+        # Allow adding two vectors: v1 + v2
+        if not isinstance(other, Vector2D):
+            return NotImplemented
+        return Vector2D(self.x + other.x, self.y + other.y)
+
+    def __eq__(self, other):
+        # Allow checking if two vectors are at the same spot: v1 == v2
+        if not isinstance(other, Vector2D):
+            return False
+        return self.x == other.x and self.y == other.y
+
+    def __repr__(self):
+        # How it looks in logs or debugging
+        return f"Vector2D({self.x}, {self.y})"
+
+truck1_start = Vector2D(5, 10)
+movement = Vector2D(2, 3)
+
+# Uses __add__
+truck1_current = truck1_start + movement
+print(truck1_current) # Uses __repr__
+
+target = Vector2D(7, 13)
+
+# Uses __eq__
+if truck1_current == target:
+    print("Truck has arrived!")
+```
+
+# 7. Internal Working
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Code Execution\nobj1 + obj2' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Python Interpreter\nLooks for __add__' }, position: { x: 250, y: 150 } },
+    { id: '3', type: 'data', data: { label: 'obj1.__add__(obj2)\nMethod Found' }, position: { x: 50, y: 300 } },
+    { id: '4', type: 'warning', data: { label: 'NotImplemented\nRaises TypeError' }, position: { x: 450, y: 300 } },
+    { id: '5', type: 'output', data: { label: 'Result Returned' }, position: { x: 50, y: 450 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'Triggers', type: 'smoothstep' },
+    { id: 'e2-3', source: '2', target: '3', label: 'If __add__ exists', type: 'smoothstep' },
+    { id: 'e2-4', source: '2', target: '4', label: 'If missing', type: 'smoothstep' },
+    { id: 'e3-5', source: '3', target: '5', type: 'straight' }
+  ]}
+/>
+
+When Python sees `a + b`, it fundamentally tries to call `a.__add__(b)`. If `a` doesn't have an `__add__` method, or if it returns the special `NotImplemented` singleton, Python will then check if `b` has a "reverse" add method called `__radd__(a)`. If both fail, you get a `TypeError: unsupported operand type(s) for +`.
+
+# 8. Performance Table
+
+| Operation | Complexity | Note |
+|---|---|---|
+| Method Lookup | O(1) | Python looks up dunder methods directly on the class dictionary |
+| Custom Execution | O(N) | Depends entirely on how you implement the logic inside the method |
+| Fallback (`__radd__`) | O(1) | Slight overhead if the primary method fails and reverse is called |
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between `__str__` and `__repr__`? | `__str__` is for end-users (readable). `__repr__` is for developers (unambiguous, often executable code). If `__str__` is missing, Python falls back to `__repr__`. |
+| What happens if you define `__eq__` but not `__hash__`? | If you define `__eq__`, Python automatically sets `__hash__` to `None`, making your object unhashable (can't be used in sets or as dict keys). |
+| What is `__new__` used for? | `__new__` is the actual constructor that *creates* the object in memory. `__init__` only initializes the state *after* creation. Used mostly for singletons or subclassing immutable types. |
+| What does `NotImplemented` mean? | It tells Python that the current object doesn't know how to handle the operation with the given type, prompting Python to try the reverse operator on the other object. |
+| How do you make an object callable like a function? | Implement the `__call__` method. |
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, what happens when you compare objects without defining `__eq__`?
+
+```python
+class Dummy:
+    pass
+
+d1 = Dummy()
+d2 = Dummy()
+
+print(d1 == d2) # What is this?
+```
+
+Output is `False`. If you don't define `__eq__`, Python falls back to the default behavior inherited from `object`, which compares memory addresses (identity), exactly like the `is` operator.
+
+Another trap: Returning `None` from `__add__` instead of `NotImplemented`. If you return `None`, Python assumes the addition succeeded and the result is `None`. Always return `NotImplemented` if you don't support the specific type combination.
+
+# 11. Real-World Usage
+
+- **ORM Models (Django/SQLAlchemy):** They heavily use `__eq__` for queries (e.g., `User.age == 25` actually overrides `__eq__` to return a SQL expression object, not a boolean!).
+- **Pandas DataFrames:** DataFrames override almost every math and comparison operator (`+`, `-`, `>`, etc.) to perform element-wise vectorized operations.
+- **Pathlib:** The `pathlib.Path` object overrides `/` (`__truediv__`) so you can do `path = Path("/usr") / "local" / "bin"`.
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Implement `__repr__` for every custom class. It saves hours of debugging. | Override operators to do non-intuitive things (e.g., overriding `+` to delete an item). |
+| Return `NotImplemented` in comparison/math methods when encountering an unknown type. | Forget to implement `__hash__` if you implement `__eq__` and need dictionary keys. |
+| Use `__str__` for clean console output. | Use `__del__` for critical resource cleanup; rely on context managers (`with` statement) instead. |
+
+# 13. Production Notes
+
+> ⚠ **Production Note:**
+Be very careful when overriding `__getattr__` or `__getattribute__`. These methods control attribute access. A bug in here can easily cause infinite recursion (a `RecursionError`), immediately crashing your production server. Always call the base class `super().__getattribute__(name)` if you aren't handling the attribute explicitly.
+
+# 14. Common Mistakes
+
+- **Confusing `__init__` and `__new__`:** People often think `__init__` creates the object. It doesn't. It just populates variables.
+- **Infinite loops in `__str__`:** Doing `return str(self)` inside `__str__` will recursively call itself until the stack overflows.
+- **Assuming `__del__` is a guaranteed destructor:** Python's garbage collector calls `__del__`, but there is no guarantee *when* it will be called, or if it will be called at all on program exit.
+
+# 15. Related Topics
+
+- [Classes & Objects](./classes-objects)
+- [Constructors](./constructors)
+- [Context Managers](../advanced-python/context-managers)
+- [Iterators](../functions/iterators)
