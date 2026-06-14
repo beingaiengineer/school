@@ -2,6 +2,239 @@
 sidebar_position: 10
 ---
 
-# Composition Vs Inheritance
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Composition Vs Inheritance.
+# Composition vs Inheritance
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Composition vs Inheritance in Python OOP |
+| Difficulty | Intermediate |
+| Used For | Deciding how classes should relate to and reuse each other |
+| Common Mistake | Using deep inheritance trees just to share one utility method |
+| Performance | Composition is slightly faster as it avoids complex Method Resolution Order (MRO) lookups |
+
+---
+
+# 2. Real-World Analogy
+
+**Inheritance (IS-A Relationship):**
+A `Smartphone` IS A `Phone`. It inherits all the traits of a basic phone (making calls), but adds new features (web browsing).
+
+**Composition (HAS-A Relationship):**
+A `Smartphone` HAS A `Camera` and HAS A `Battery`. The smartphone doesn't *inherit* from the camera; it *contains* a camera object inside it to do the picture-taking work.
+
+Bro, if you try to make a `Smartphone` inherit from both `Phone` and `Camera` and `Battery` (Multiple Inheritance), your blueprint becomes a massive, confusing mess. It's much better to just build a `Smartphone` and put a `Camera` object inside it.
+
+---
+
+# 3. Concept Explanation
+
+In OOP, we often want to reuse code.
+
+**Inheritance** is when a child class derives from a parent class. It gets all the parent's attributes and methods automatically. It models an **"is-a"** relationship.
+
+**Composition** is when a class creates or receives objects of other classes as attributes. It delegates work to those component objects. It models a **"has-a"** relationship.
+
+*The Golden Rule of modern software engineering is: **Prefer Composition over Inheritance.*** Deep inheritance trees become brittle and impossible to maintain.
+
+---
+
+# 4. Syntax Table
+
+| Concept | Python Code | Explanation |
+|---|---|---|
+| Inheritance | `class ElectricCar(Car):` | `ElectricCar` extends `Car`. |
+| Composition | `self.engine = Engine()` | `Car` instantiates an `Engine` inside its `__init__`. |
+| Dependency Injection | `def __init__(self, engine):` | A form of composition where the component is passed in. |
+
+---
+
+# 5. Beginner Example
+
+Let's look at the wrong way (Inheritance abuse) and the right way (Composition).
+
+### The Bad Way: Deep Inheritance
+```python
+class Engine:
+    def start(self):
+        print("Engine starting...")
+
+# Wait, a Car IS NOT an Engine. This makes no logical sense!
+class Car(Engine):
+    def drive(self):
+        self.start()
+        print("Driving...")
+```
+
+### The Good Way: Composition
+```python
+class Engine:
+    def start(self):
+        print("Vroom! Engine started.")
+
+class Car:
+    def __init__(self):
+        # The Car HAS AN Engine
+        self.engine = Engine()
+
+    def start_car(self):
+        # We delegate the starting logic to the engine component
+        self.engine.start()
+        print("Car is ready to drive.")
+
+my_car = Car()
+my_car.start_car()
+```
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Car', detail: 'HAS-A relationship', kind: 'tool', x: 250, y: 50 },
+    { id: '2', title: 'Engine Component', detail: 'Handles power', kind: 'process', x: 50, y: 200 },
+    { id: '3', title: 'Tire Component', detail: 'Handles grip', kind: 'process', x: 250, y: 200 },
+    { id: '4', title: 'Radio Component', detail: 'Handles audio', kind: 'process', x: 450, y: 200 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'self.engine =' },
+    { source: '1', target: '3', label: 'self.tires =' },
+    { source: '1', target: '4', label: 'self.radio =' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+In web development, we use Composition heavily for logging and database connections.
+
+```python
+class Logger:
+    def log(self, message):
+        print(f"[LOG]: {message}")
+
+class Database:
+    def save(self, data):
+        print(f"Saving {data} to DB")
+
+# Using Dependency Injection (A form of Composition)
+class UserService:
+    def __init__(self, logger: Logger, db: Database):
+        # UserService HAS a logger and HAS a database
+        self.logger = logger
+        self.db = db
+
+    def create_user(self, username):
+        self.logger.log(f"Attempting to create user {username}")
+        self.db.save({"user": username})
+        self.logger.log("Success!")
+
+# Enterprise Usage
+log_component = Logger()
+db_component = Database()
+
+# Assemble the service like lego blocks!
+service = UserService(log_component, db_component)
+service.create_user("alice123")
+```
+
+---
+
+# 7. Internal Working
+
+When you use Inheritance, Python has to use the **Method Resolution Order (MRO)**. When you call a method, Python checks the child class, then the parent, then the grandparent, walking up the tree until it finds the method.
+
+With Composition, there is no MRO lookup. You are simply calling a method directly on an attribute (e.g., `self.db.save()`). Because there is no complex tree traversal, Composition can be marginally faster and is significantly less prone to namespace collisions (where two parent classes have a method with the same name).
+
+---
+
+# 8. Performance Table
+
+| Strategy | Speed | Memory | Maintainability |
+|---|---|---|---|
+| Deep Inheritance (5+ levels) | Slower (MRO Lookups) | Normal | Terrible (Fragile Base Class problem) |
+| Composition | Fast (Direct attr lookup) | Normal | Excellent (Decoupled) |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does "Prefer Composition over Inheritance" mean? | It means you should achieve code reuse by assembling smaller component objects (HAS-A) rather than building massive, rigid class hierarchies (IS-A). |
+| When SHOULD you use Inheritance? | When there is a strict, undeniable "IS-A" relationship (e.g., `Cat` is an `Animal`), AND the child class actually utilizes the parent's core behavior. |
+| What is the "Fragile Base Class" problem? | When you have a deep inheritance tree, changing a single method in the top-level base class can unintentionally break 50 child classes that rely on that specific behavior. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+The Multiple Inheritance Nightmare!
+
+```python
+class Logger:
+    def process(self): print("Logging")
+
+class Authenticator:
+    def process(self): print("Authenticating")
+
+# MULTIPLE INHERITANCE GONE WRONG
+class WebRequest(Logger, Authenticator):
+    pass
+
+req = WebRequest()
+# Tricky: Which process() runs? The Logger one!
+# Because Python resolves MRO left-to-right. Authenticator is silently ignored!
+req.process()
+```
+
+Bro, this is why we hate Multiple Inheritance. If `WebRequest` just used Composition (`self.logger = Logger(); self.auth = Authenticator()`), you would explicitly call `self.logger.process()` and `self.auth.process()`. Zero confusion!
+
+---
+
+# 11. Real-World Usage
+
+- **Game Development:** Unity and Unreal Engine use an "Entity-Component System" (ECS). A `Player` doesn't inherit from `Renderable` and `Movable`. Instead, the `Player` is an empty shell composed of a `RenderComponent` and a `MovementComponent`.
+- **UI Frameworks:** React and Flutter are 100% composition-based. You build a `Screen` by composing `Button`, `Text`, and `Image` components together.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use Composition to assemble complex objects from smaller, testable parts. | Use inheritance just to steal one utility method from another class. |
+| Use Dependency Injection to pass components into classes. | Hardcode `self.db = Database()` inside `__init__` if `Database` requires a network connection. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+If you are writing Unit Tests, Composition makes your life amazing. If `UserService` inherits from a real `PostgresDatabase` class, testing `UserService` requires a real database. If `UserService` uses Composition via Dependency Injection, you can just pass a fake `MockDatabase()` into its constructor and test it in 1 millisecond.
+
+---
+
+# 14. Common Mistakes
+
+- **Inheriting from Utility Classes:**
+  ```python
+  class StringUtils:
+      def capitalize(self, s): return s.upper()
+
+  class User(StringUtils): # TERRIBLE! A User IS NOT a StringUtils!
+      pass
+  ```
+  *Fix:* Just instantiate the utility, or make the utility methods `@staticmethod`.
+
+---
+
+# 15. Related Topics
+
+- SOLID Principles
+- Multiple Inheritance & MRO
+- Abstract Base Classes
+- Decorators (Another way to compose behavior)

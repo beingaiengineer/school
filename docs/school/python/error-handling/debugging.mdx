@@ -2,6 +2,205 @@
 sidebar_position: 4
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Debugging
 
-Placeholder: introduce Debugging.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Debugging in Python |
+| Difficulty | Beginner / Intermediate |
+| Used For | Finding exactly where and why your code is broken |
+| Common Mistake | Using `print()` to trace complex issues instead of an actual debugger |
+| Performance | Using a debugger halts execution, so performance isn't the concern—fixing the bug is! |
+
+---
+
+# 2. Real-World Analogy
+
+Imagine you are a plumber looking for a leak in a massive house.
+
+Using `print()` statements is like turning on all the faucets and just staring at the pipes, hoping you spot the drip as the water rushes by.
+
+Using a **Debugger** is like having a magical valve system. You can pause the water flow completely, walk around the house, check the exact pressure in every single pipe, and then let the water flow forward *one inch at a time* until you find the exact spot the pipe is broken.
+
+---
+
+# 3. Concept Explanation
+
+Debugging is the process of identifying and removing errors from software.
+
+While beginners use `print()` statements to see what variables contain, professional engineers use built-in tools like `pdb` (Python Debugger) or IDE debuggers (like VS Code or PyCharm).
+
+A debugger allows you to:
+1. **Set Breakpoints:** Tell Python to freeze execution at line 45.
+2. **Inspect Variables:** Look at exactly what is in memory at that exact millisecond.
+3. **Step Over/Into:** Run the code line-by-line manually to see where the logic goes wrong.
+
+Bro, mastering a debugger will cut your bug-fixing time from 3 hours to 3 minutes.
+
+---
+
+# 4. Syntax Table
+
+| Method | Syntax | Explanation |
+|---|---|---|
+| The Old Way | `print(f"User is {user}")` | Requires code modification and running the whole script. |
+| The `pdb` way | `import pdb; pdb.set_trace()` | Halts execution. (Pre-Python 3.7) |
+| The Modern Way | `breakpoint()` | Built-in function in Python 3.7+ that drops you into the debugger. |
+
+---
+
+# 5. Beginner Example
+
+Let's look at a buggy script and how `breakpoint()` helps us fix it.
+
+```python
+def calculate_discount(price, discount_str):
+    # BUG: discount_str is a string like "20", not an integer!
+    discount_amount = price * (discount_str / 100)
+    return price - discount_amount
+
+def process_cart(items):
+    total = 0
+    for item in items:
+        # We put breakpoint() right before the crash
+        breakpoint()
+        total += calculate_discount(item['price'], item['discount'])
+    return total
+
+cart = [{'price': 100, 'discount': "20"}]
+process_cart(cart)
+```
+
+When you run this script, it doesn't crash immediately! It stops at the `breakpoint()` and opens an interactive console in your terminal.
+
+```text
+> /app/script.py(10)process_cart()
+-> total += calculate_discount(item['price'], item['discount'])
+(Pdb) p item                 # You type "p item" to print the variable
+{'price': 100, 'discount': '20'}
+(Pdb) type(item['discount']) # You check the type!
+<class 'str'>                # Aha! The bug is found! It's a string!
+(Pdb) c                      # You type "c" to continue execution (it will now crash)
+```
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Running Code', detail: 'Line 1 to 9 execute instantly', kind: 'process', x: 250, y: 50 },
+    { id: '2', title: 'breakpoint()', detail: 'Execution FREEZES', kind: 'warning', x: 250, y: 150 },
+    { id: '3', title: 'Interactive Shell (Pdb)', detail: 'Inspect memory & variables', kind: 'tool', x: 250, y: 250 },
+    { id: '4', title: 'Step (s)', detail: 'Go into function', kind: 'process', x: 50, y: 350 },
+    { id: '5', title: 'Next (n)', detail: 'Go to next line', kind: 'process', x: 450, y: 350 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'hits' },
+    { source: '2', target: '3', label: 'drops to' },
+    { source: '3', target: '4', label: 'user command' },
+    { source: '3', target: '5', label: 'user command' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+In production, you often can't use `breakpoint()` because the code is running on a server in the cloud, and no one is there to type in the terminal!
+
+Instead, we use **IDE Debugging** locally, or we write robust `except` blocks that capture the state.
+
+If you are using VS Code:
+1. Click to the left of the line number to place a red dot (Breakpoint).
+2. Run the script using the "Run and Debug" button.
+3. The editor will freeze at the red dot.
+4. You can hover your mouse over variables to see their values, and use the GUI buttons to step through the code.
+
+No `print()` statements required!
+
+---
+
+# 7. Internal Working
+
+How does `breakpoint()` actually freeze time?
+
+Python has a C-level tracing API. When you call `breakpoint()`, it triggers `sys.breakpointhook()`, which by default imports the `pdb` module and starts an interactive Read-Eval-Print Loop (REPL).
+
+The Python interpreter literally suspends the execution of the main thread and hands control over to your terminal input, maintaining all local and global variables in memory exactly as they were.
+
+---
+
+# 8. Performance Table
+
+| Strategy | Speed | Note |
+|---|---|---|
+| `print()` | Fast | Only slows down due to terminal I/O. |
+| `pdb` / `breakpoint()` | Paused | Execution is halted until developer input. |
+| Tracing (sys.settrace) | Very Slow | Setting an active debugger slows down execution heavily, as it intercepts every single line of code. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between `n` (next) and `s` (step) in `pdb`? | `n` (next) executes the current line and moves to the next line in the *current* function. `s` (step) will go *inside* a function call if the current line has one. |
+| Why is `breakpoint()` better than `import pdb; pdb.set_trace()`? | It's built-in (Python 3.7+), shorter to type, and you can disable all breakpoints globally by setting the environment variable `PYTHONBREAKPOINT=0`. |
+| How do you debug an infinite loop? | Hit `Ctrl+C` to throw a `KeyboardInterrupt`. If you wrap your loop in a try/except, you can drop into a `breakpoint()` in the except block to see why it got stuck! |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+The `PYTHONBREAKPOINT=0` trick!
+
+```bash
+# Script has 50 breakpoint() calls in it!
+$ export PYTHONBREAKPOINT=0
+$ python my_script.py
+```
+
+Bro, if you accidentally commit `breakpoint()` to production, the server will freeze waiting for terminal input! But, if the server environment has `PYTHONBREAKPOINT=0` set, Python will completely ignore the `breakpoint()` calls and run the code normally.
+
+---
+
+# 11. Real-World Usage
+
+- **Local Development:** Using VS Code or PyCharm's visual debugger to step through complex JSON parsing logic.
+- **Data Science:** Using Jupyter Notebooks. The notebook itself acts as a debugger by allowing you to run cells one at a time and inspect memory between steps.
+- **Network Requests:** Dropping a `breakpoint()` right after an `requests.get()` call to inspect the exact headers and JSON response the server sent back before writing the parsing logic.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Learn visual debuggers in IDEs (VS Code/PyCharm). They are vastly superior to text-based `pdb`. | Rely exclusively on `print()` statements for complex bugs. |
+| Use `breakpoint()` when working in raw terminal environments (like SSHing into a test server). | Commit `breakpoint()` to your Git repository. Always delete them before merging! |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Never, ever run a visual debugger or `breakpoint()` on a live production web server. It will halt the thread. If it's an async server, halting one request might halt the entire event loop, crashing the website for thousands of active users! Debugging happens locally or in staging environments.
+
+---
+
+# 14. Common Mistakes
+
+- **Leaving `breakpoint()` in code:** If you push this to a CI/CD pipeline, your automated tests will freeze forever waiting for someone to type `c` into a terminal that doesn't exist. The CI pipeline will eventually fail due to a 60-minute timeout.
+- **Using `n` (next) instead of `c` (continue):** In `pdb`, if you hit `n`, it goes to the next line. If you are inside a loop of 10,000 items, hitting `n` will take forever. Use `c` to resume normal execution until the next breakpoint or crash.
+
+---
+
+# 15. Related Topics
+
+- Exceptions
+- Logging
+- Production Debugging
+- Testing (Pytest)

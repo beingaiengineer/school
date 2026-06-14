@@ -2,6 +2,256 @@
 sidebar_position: 8
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Dataclasses
 
-Placeholder: introduce Dataclasses.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Dataclasses (`@dataclass`) in Python |
+| Difficulty | Beginner / Intermediate |
+| Used For | Storing data without writing repetitive `__init__`, `__repr__`, or `__eq__` methods |
+| Common Mistake | Using mutable default arguments like `[]` instead of `field(default_factory=list)` |
+| Performance | Faster to instantiate than normal classes; supports `__slots__` in Python 3.10+ |
+
+---
+
+# 2. Real-World Analogy
+
+Think of building a standard database table or an Excel spreadsheet. Every row has standard columns: ID, Name, Age.
+
+If you write a standard Python class to represent this row, you have to write boilerplate code: "set ID to ID, set Name to Name, set Age to Age." Bro, that's like manually typing out the column headers for every single row!
+
+A **Dataclass** is like a smart form. You just define the fields you want, and Python automatically writes the boring boilerplate code (the constructor, the print format, the comparison logic) for you in the background.
+
+---
+
+# 3. Concept Explanation
+
+Introduced in Python 3.7, `dataclasses` provide a decorator `@dataclass` that automatically generates special methods for user-defined classes.
+
+Instead of writing `__init__()`, `__repr__()`, and `__eq__()`, you just declare your variables with **Type Hints**, and Python does the rest.
+
+Bro, if your class's primary job is just to hold data (like a configuration object, a database record, or an API response), you should almost always be using a dataclass.
+
+---
+
+# 4. Syntax Table
+
+| Code | Explanation |
+|---|---|
+| `from dataclasses import dataclass` | Import the decorator. |
+| `@dataclass` | Apply the decorator above the class definition. |
+| `name: str` | You MUST use type hints for the fields. |
+| `age: int = 25` | You can provide default values. |
+| `frozen=True` | Makes the dataclass immutable (like a tuple). |
+
+---
+
+# 5. Beginner Example
+
+Let's look at a class written the old way, vs the new `dataclass` way.
+
+### The Old Way (Boilerplate Hell)
+
+```python
+class OldUser:
+    def __init__(self, name: str, age: int):
+        self.name = name
+        self.age = age
+
+    def __repr__(self):
+        return f"OldUser(name='{self.name}', age={self.age})"
+
+    def __eq__(self, other):
+        if not isinstance(other, OldUser):
+            return False
+        return self.name == other.name and self.age == other.age
+```
+
+### The New Way (Dataclass Magic)
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class NewUser:
+    name: str
+    age: int
+
+# Usage
+user1 = NewUser("Alice", 25)
+user2 = NewUser("Alice", 25)
+
+# Free __repr__!
+print(user1) # Output: NewUser(name='Alice', age=25)
+
+# Free __eq__!
+print(user1 == user2) # Output: True
+```
+
+Bro, look at how much cleaner that is. It took 15 lines of code and turned it into 4!
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: '@dataclass Decorator', detail: 'Reads Type Hints', kind: 'tool', x: 250, y: 50 },
+    { id: '2', title: 'class User:', detail: 'name: str\nage: int', kind: 'data', x: 250, y: 150 },
+    { id: '3', title: '__init__', detail: 'Auto-generated', kind: 'process', x: 50, y: 300 },
+    { id: '4', title: '__repr__', detail: 'Auto-generated', kind: 'process', x: 250, y: 300 },
+    { id: '5', title: '__eq__', detail: 'Auto-generated', kind: 'process', x: 450, y: 300 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'analyzes' },
+    { source: '2', target: '3', label: 'injects' },
+    { source: '2', target: '4', label: 'injects' },
+    { source: '2', target: '5', label: 'injects' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+In production, dataclasses are perfect for configurations or returning structured data from an API client.
+
+```python
+from dataclasses import dataclass, field
+from typing import List
+
+@dataclass
+class APIConfig:
+    endpoint: str
+    timeout: int = 30
+    # You MUST use default_factory for mutable defaults like lists!
+    retries: List[int] = field(default_factory=lambda: [1, 2, 5])
+
+@dataclass
+class APIResponse:
+    status_code: int
+    data: dict
+    error_message: str = None
+
+# Using it
+config = APIConfig(endpoint="https://api.stripe.com/v1")
+print(config.retries) # [1, 2, 5]
+
+response = APIResponse(status_code=200, data={"id": "usr_123"})
+print(response)
+# Output: APIResponse(status_code=200, data={'id': 'usr_123'}, error_message=None)
+```
+
+---
+
+# 7. Internal Working
+
+When Python executes the `@dataclass` decorator, it scans the class for variables that have **Type Annotations**. It ignores variables without type hints!
+
+It then dynamically writes strings of Python code for `__init__`, `__repr__`, etc., and uses `exec()` to attach these methods to your class. It essentially does the boilerplate typing for you at runtime just before the class is fully loaded into memory.
+
+---
+
+# 8. Performance Table
+
+| Operation | Complexity | Note |
+|---|---|---|
+| Instantiation | O(1) | Same speed as a normal class. |
+| Memory Usage | Standard | Uses standard `__dict__` unless you use `slots=True`. |
+| Sorting | Fast | You can pass `order=True` to auto-generate `__lt__` for sorting. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why must you use type hints in a dataclass? | The `@dataclass` decorator parses the `__annotations__` dictionary to figure out which fields belong to the generated `__init__` method. No type hint = no field! |
+| How do you make a dataclass immutable? | Use `@dataclass(frozen=True)`. This makes it hashable, so you can use it as a dictionary key or put it in a set! |
+| What is the `field()` function used for? | It allows customization of individual fields, like setting a `default_factory` for lists/dicts, or hiding a field from the `__repr__` output (`repr=False`). |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+The Mutable Default Argument Trap!
+
+```python
+from dataclasses import dataclass
+from typing import List
+
+# THIS WILL THROW AN ERROR!
+# @dataclass
+# class BadTeam:
+#     members: List[str] = []
+
+# THIS IS THE CORRECT WAY
+from dataclasses import field
+
+@dataclass
+class GoodTeam:
+    members: List[str] = field(default_factory=list)
+
+t1 = GoodTeam()
+t2 = GoodTeam()
+
+t1.members.append("Alice")
+
+print(t2.members) # Output: [] (Safe! They don't share the list!)
+```
+
+Bro, Python strictly forbids doing `members = []` in a dataclass. It will literally crash your code to protect you from the shared reference bug. Always use `field(default_factory=...)` for lists, dicts, or sets.
+
+---
+
+# 11. Real-World Usage
+
+- **FastAPI / Pydantic:** Pydantic models (used for API validation) are heavily inspired by standard dataclasses.
+- **Config Management:** Loading `.yaml` or `.env` files into strongly-typed `Config` dataclass objects instead of passing raw dictionaries around.
+- **Data Pipelines:** Passing structured `DataRow` dataclasses between transformations in Pandas or PySpark.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use dataclasses when the class's main job is just to hold state/data. | Use them for complex business logic classes that have heavy custom initialization. |
+| Use `frozen=True` if you don't intend to modify the data after creation. | Put default fields before non-default fields (Python will throw an error). |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+In Python 3.10+, you can do `@dataclass(slots=True)`. This auto-generates `__slots__` for the dataclass, removing the `__dict__` overhead. If you are instantiating 1,000,000 data rows, adding `slots=True` can cut your RAM usage by half and improve attribute access speed!
+
+---
+
+# 14. Common Mistakes
+
+- **Forgetting the Type Hint:**
+  ```python
+  @dataclass
+  class Car:
+      color = "red" # BUG! No type hint, so Dataclass ignores this!
+  ```
+- **Order of Defaults:**
+  ```python
+  @dataclass
+  class BadOrder:
+      age: int = 0  # Default value
+      name: str     # NO Default value (ERROR!)
+  ```
+  Fields without defaults MUST come before fields with defaults.
+
+---
+
+# 15. Related Topics
+
+- Classes & Objects
+- Magic Methods
+- Type Hinting
+- Pydantic (Advanced validation library based on similar concepts)

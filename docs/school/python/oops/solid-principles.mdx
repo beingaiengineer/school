@@ -2,6 +2,274 @@
 sidebar_position: 9
 ---
 
-# Solid Principles
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Solid Principles.
+# SOLID Principles
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | SOLID Principles in Python |
+| Difficulty | Advanced |
+| Used For | Writing maintainable, scalable, and decoupled object-oriented code |
+| Common Mistake | Creating massive "God Classes" that handle everything |
+| Performance | Architectural concept; prevents developer slowdown as codebases grow |
+
+---
+
+# 2. Real-World Analogy
+
+Think of building a hospital.
+
+- You wouldn't make the heart surgeon also mop the floors (Single Responsibility).
+- If you build a new MRI machine, you shouldn't have to rebuild the hospital walls to fit it; you just plug it into the existing room (Open/Closed).
+- If you ask for a "Doctor", getting a Dentist or a Surgeon should both work fine for a general checkup (Liskov Substitution).
+- You wouldn't force a patient with a broken toe to fill out forms for brain surgery (Interface Segregation).
+- The hospital relies on standard electrical outlets, not directly wiring machines into the city grid (Dependency Inversion).
+
+Bro, SOLID is just common sense applied to code organization so your codebase doesn't become a tangled mess of spaghetti.
+
+---
+
+# 3. Concept Explanation
+
+SOLID is an acronym for five design principles intended to make software designs more understandable, flexible, and maintainable.
+
+1. **S - Single Responsibility Principle (SRP):** A class should have one, and only one, reason to change.
+2. **O - Open/Closed Principle (OCP):** Software entities should be open for extension, but closed for modification.
+3. **L - Liskov Substitution Principle (LSP):** Subtypes must be substitutable for their base types without altering the correctness of the program.
+4. **I - Interface Segregation Principle (ISP):** Clients should not be forced to depend on interfaces they do not use.
+5. **D - Dependency Inversion Principle (DIP):** High-level modules should not depend on low-level modules. Both should depend on abstractions.
+
+---
+
+# 4. Syntax Table
+
+*Note: SOLID is architectural, not syntax-based. Here is how Python implements the concepts.*
+
+| Principle | Python Implementation |
+|---|---|
+| SRP | Keep classes small. Move unrelated methods to new classes. |
+| OCP | Use inheritance, mixins, or decorators to add new behavior. |
+| LSP | Ensure child class methods accept the same arguments and return similar types as the parent. |
+| ISP | Create multiple small Abstract Base Classes (`ABC`) instead of one giant one. |
+| DIP | Pass dependencies via `__init__` (Dependency Injection) and rely on `ABC` or Protocols. |
+
+---
+
+# 5. Beginner Example: Single Responsibility Principle (SRP)
+
+Let's look at a bad class that does too much, and how to fix it.
+
+### The Bad Way
+
+```python
+class User:
+    def __init__(self, name, email):
+        self.name = name
+        self.email = email
+
+    # Responsibility 1: User Data
+    def change_email(self, new_email):
+        self.email = new_email
+
+    # Responsibility 2: Database Logic (VIOLATION!)
+    def save_to_database(self):
+        print(f"Connecting to SQL... saving {self.name}")
+
+    # Responsibility 3: Email Logic (VIOLATION!)
+    def send_welcome_email(self):
+        print(f"Sending SMTP email to {self.email}")
+```
+Bro, if the SMTP server changes, you have to edit the `User` class. That makes no sense!
+
+### The SOLID Way
+
+```python
+class User:
+    def __init__(self, name, email):
+        self.name = name
+        self.email = email
+
+class UserRepository:
+    def save(self, user: User):
+        print(f"Connecting to SQL... saving {user.name}")
+
+class EmailService:
+    def send_welcome(self, user: User):
+        print(f"Sending SMTP email to {user.email}")
+
+# Usage
+user = User("Alice", "alice@example.com")
+repo = UserRepository()
+repo.save(user)
+```
+
+Now, every class has exactly one reason to change!
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'SOLID', detail: 'Object-Oriented Design', kind: 'tool', x: 250, y: 50 },
+    { id: 'SRP', title: 'S', detail: 'Single Responsibility', kind: 'process', x: 50, y: 200 },
+    { id: 'OCP', title: 'O', detail: 'Open/Closed', kind: 'process', x: 150, y: 200 },
+    { id: 'LSP', title: 'L', detail: 'Liskov Substitution', kind: 'process', x: 250, y: 200 },
+    { id: 'ISP', title: 'I', detail: 'Interface Segregation', kind: 'process', x: 350, y: 200 },
+    { id: 'DIP', title: 'D', detail: 'Dependency Inversion', kind: 'process', x: 450, y: 200 }
+  ],
+  edges: [
+    { source: '1', target: 'SRP', label: '1 reason to change' },
+    { source: '1', target: 'OCP', label: 'Extend, don\'t edit' },
+    { source: '1', target: 'LSP', label: 'Child = Parent' },
+    { source: '1', target: 'ISP', label: 'Small interfaces' },
+    { source: '1', target: 'DIP', label: 'Depend on Abstractions' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example: Dependency Inversion (DIP)
+
+Let's build a payment system. High-level business logic shouldn't care if you use Stripe or PayPal.
+
+```python
+from abc import ABC, abstractmethod
+
+# 1. The Abstraction
+class PaymentGateway(ABC):
+    @abstractmethod
+    def process(self, amount: float):
+        pass
+
+# 2. The Low-Level Modules (Details)
+class StripeAPI(PaymentGateway):
+    def process(self, amount: float):
+        print(f"Stripe: Charged ${amount}")
+
+class PayPalAPI(PaymentGateway):
+    def process(self, amount: float):
+        print(f"PayPal: Charged ${amount}")
+
+# 3. The High-Level Module (Business Logic)
+class CheckoutBasket:
+    # Dependency Injection! We pass the abstraction in.
+    def __init__(self, payment_gateway: PaymentGateway):
+        self.gateway = payment_gateway
+
+    def checkout(self, amount):
+        # We don't care what gateway it is, we just call .process()
+        self.gateway.process(amount)
+
+# Usage
+stripe = StripeAPI()
+paypal = PayPalAPI()
+
+basket1 = CheckoutBasket(stripe)
+basket1.checkout(100.0)
+
+basket2 = CheckoutBasket(paypal) # Swapped the dependency easily!
+basket2.checkout(50.0)
+```
+
+---
+
+# 7. Internal Working
+
+SOLID isn't a Python compiler feature; it's a structural methodology. However, Python provides built-in modules that make following SOLID easier:
+- **`abc` module:** Perfect for enforcing the Interface Segregation (ISP) and Dependency Inversion (DIP) principles.
+- **`typing.Protocol`:** Allows for structural subtyping (Duck Typing), which is a very Pythonic way to achieve Dependency Inversion without strict inheritance.
+
+---
+
+# 8. Performance Table
+
+| Aspect | Impact | Note |
+|---|---|---|
+| Runtime Speed | None | SOLID does not inherently make code run faster or slower. |
+| Memory | Negligible | More classes mean slightly more memory, but it's rarely a bottleneck. |
+| Dev Velocity | +1000% | At scale (100k+ lines), SOLID prevents bugs and makes feature addition lightning fast. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does Open/Closed mean? | A class should be open to having new features added (via subclassing or composition), but closed to having its existing source code modified (which could break existing tests). |
+| How do you violate Liskov Substitution (LSP)? | If a base class `Bird` has a `fly()` method, and you create a subclass `Penguin` that throws a `NotImplementedError` when `fly()` is called, you violated LSP. A child must be fully substitutable for the parent! |
+| What is Dependency Injection? | It's a technique used to achieve Dependency Inversion. Instead of a class creating its own dependencies internally (e.g., `self.db = Database()`), the dependency is passed into the constructor (`def __init__(self, db)`). |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+The Interface Segregation (ISP) Trap!
+
+```python
+from abc import ABC, abstractmethod
+
+# GIANT INTERFACE (Violation!)
+class MultiFunctionPrinter(ABC):
+    @abstractmethod
+    def print_doc(self): pass
+    @abstractmethod
+    def scan_doc(self): pass
+    @abstractmethod
+    def fax_doc(self): pass
+
+class BasicPrinter(MultiFunctionPrinter):
+    def print_doc(self):
+        print("Printing...")
+
+    # We are FORCED to implement methods we don't need!
+    def scan_doc(self):
+        raise Exception("I don't have a scanner!")
+
+    def fax_doc(self):
+        raise Exception("I don't have a fax!")
+```
+Bro, this violates ISP. The client (`BasicPrinter`) is forced to depend on interfaces (`scan`, `fax`) it doesn't use.
+
+*Fix:* Break `MultiFunctionPrinter` into three smaller interfaces: `Printer`, `Scanner`, and `Faxer`.
+
+---
+
+# 11. Real-World Usage
+
+- **Web Frameworks:** Django separates logic perfectly: Models (DB/SRP), Views (Logic), and Templates (UI).
+- **Testing:** Dependency Inversion makes unit testing trivial. Because your class depends on an Abstraction, you can easily pass in a "Mock Database" instead of a real one during tests.
+- **Microservices:** The ultimate expression of the Single Responsibility Principle applied to infrastructure.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use Dependency Injection to pass objects into your classes. | Hardcode API keys or database connections inside your domain classes. |
+| Write small, focused Abstract Base Classes. | Create a `utils.py` file with 50 unrelated functions and call it "organized." |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Do not over-engineer early on! Applying all 5 SOLID principles to a simple 100-line script is a waste of time. SOLID shines in large, long-lived projects with multiple engineers where changing a core file could break 50 other systems. Start simple, and refactor towards SOLID when you feel the pain of tight coupling.
+
+---
+
+# 14. Common Mistakes
+
+- **The God Class:** A `SystemManager` class that handles database connections, user auth, email sending, and PDF generation. (Violates SRP).
+- **Checking types manually:** Using `if isinstance(obj, TypeA): do_a() elif isinstance(obj, TypeB): do_b()` everywhere. (Violates Open/Closed). Use polymorphism instead!
+
+---
+
+# 15. Related Topics
+
+- Abstraction & Interfaces (`abc`)
+- Design Patterns (Strategy, Factory, Observer)
+- Composition vs Inheritance
+- Duck Typing and Protocols

@@ -2,6 +2,222 @@
 sidebar_position: 2
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Custom Exceptions
 
-Placeholder: introduce Custom Exceptions.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Custom Exceptions in Python |
+| Difficulty | Intermediate |
+| Used For | Creating domain-specific error types to make code readable and debugging easier |
+| Common Mistake | Inheriting from `BaseException` instead of `Exception` |
+| Performance | Same performance as standard built-in exceptions |
+
+---
+
+# 2. Real-World Analogy
+
+Imagine you are at an airport. If a flight is delayed, the PA system doesn't just announce "General Error Occurred." They say "Weather Delay," "Mechanical Issue," or "Crew Shortage."
+
+By giving the problem a specific name, the passengers (and the mechanics) know exactly what went wrong and how to react.
+
+In Python, instead of throwing a generic `ValueError` when a user enters a bad password, you can throw a custom `WeakPasswordError`. Bro, this tells the rest of your code exactly what business rule was broken!
+
+---
+
+# 3. Concept Explanation
+
+Custom Exceptions allow you to create your own error types by inheriting from the built-in `Exception` class.
+
+When building large applications (like a banking app or an e-commerce site), built-in errors like `TypeError` or `IndexError` aren't descriptive enough. If a user tries to withdraw more money than they have, raising a `ValueError` is confusing. Raising an `InsufficientFundsError` is self-documenting, engineering-grade code.
+
+---
+
+# 4. Syntax Table
+
+| Concept | Syntax | Note |
+|---|---|---|
+| Define Custom Error | `class MyError(Exception): pass` | Must inherit from `Exception`. |
+| Add a Message | `super().__init__("Custom message")` | Call the parent constructor inside `__init__`. |
+| Raise Custom Error | `raise MyError()` | Trigger your custom error in the code. |
+| Catch Custom Error | `except MyError as e:` | Handle it exactly like built-in errors. |
+
+---
+
+# 5. Beginner Example
+
+Let's build a simple custom exception for a registration form.
+
+```python
+# 1. Define the Custom Exception
+class WeakPasswordError(Exception):
+    """Raised when a password does not meet security requirements."""
+    pass
+
+def register_user(username, password):
+    if len(password) < 8:
+        # 2. Raise it when a business rule fails
+        raise WeakPasswordError("Password must be at least 8 characters long, bro!")
+
+    print(f"User {username} registered successfully.")
+
+# 3. Handle it!
+try:
+    register_user("alice123", "pass")
+except WeakPasswordError as e:
+    print(f"Registration Failed: {e}")
+```
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Base Exception Class', detail: 'Python built-in', kind: 'tool', x: 250, y: 50 },
+    { id: '2', title: 'BankError(Exception)', detail: 'Your Domain Base', kind: 'process', x: 250, y: 150 },
+    { id: '3', title: 'InsufficientFundsError', detail: 'Specific business rule', kind: 'warning', x: 50, y: 300 },
+    { id: '4', title: 'AccountLockedError', detail: 'Specific business rule', kind: 'warning', x: 450, y: 300 },
+    { id: '5', title: 'try / except', detail: 'Catches the specific error', kind: 'output', x: 250, y: 450 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'inherits from' },
+    { source: '2', target: '3', label: 'inherits from' },
+    { source: '2', target: '4', label: 'inherits from' },
+    { source: '3', target: '5', label: 'raised and caught' },
+    { source: '4', target: '5', label: 'raised and caught' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+In production, we often create a "Base Error" for our specific app, and then inherit all other errors from that. This allows the top-level server to catch *any* error related to our app specifically.
+
+```python
+# The Base Error for our specific E-Commerce App
+class EcommerceError(Exception):
+    """Base exception for all E-Commerce application errors."""
+    pass
+
+class OutOfStockError(EcommerceError):
+    def __init__(self, item_name, remaining_stock):
+        self.item_name = item_name
+        self.remaining_stock = remaining_stock
+        super().__init__(f"Sorry, {item_name} is out of stock. Only {remaining_stock} left.")
+
+class PaymentDeclinedError(EcommerceError):
+    pass
+
+def checkout(cart, balance):
+    if "laptop" in cart:
+        raise OutOfStockError("Gaming Laptop", 0)
+    if balance < 100:
+        raise PaymentDeclinedError("Card declined.")
+
+# Enterprise Usage
+try:
+    checkout(["laptop"], 500)
+
+except OutOfStockError as e:
+    # Handle inventory issues specifically
+    print(f"Inventory Alert: {e.item_name} has {e.remaining_stock} units.")
+
+except EcommerceError as e:
+    # This catches PaymentDeclinedError, or ANY other custom error we make!
+    print(f"General App Error: {e}")
+```
+
+---
+
+# 7. Internal Working
+
+A custom exception is literally just a standard Python class. Because Python's `except` block uses `isinstance()` under the hood, defining a class hierarchy allows Python to route the error to the correct `except` block.
+
+When you do `super().__init__(message)`, it stores the string inside the parent `Exception` class's `args` tuple, which is why printing the exception automatically prints the message.
+
+---
+
+# 8. Performance Table
+
+| Action | Impact | Note |
+|---|---|---|
+| Defining Exception Class | Zero | Just class definition overhead at startup. |
+| Raising Custom Error | Slow | Same performance penalty as raising built-in errors. |
+| Catching Custom Error | Fast | Normal `isinstance` check in the `except` block. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why should you inherit from `Exception` and not `BaseException`? | `BaseException` catches system-level events like `SystemExit` and `KeyboardInterrupt`. Your custom business logic errors have nothing to do with killing the interpreter, so they must inherit from `Exception`. |
+| Can a Custom Exception have extra attributes? | Yes! Because it is a normal class, you can add `self.error_code`, `self.user_id`, or any other data you want to access in the `except` block. |
+| Why create a Base Exception for your app? | So you can write a single `except MyAppError:` block at the top of your web framework to catch ANY domain-specific error, separating them from unexpected Python bugs (like `KeyError`). |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Shadowing Built-in Errors!
+
+```python
+# HORRIBLE IDEA
+class ValueError(Exception):
+    pass
+
+try:
+    int("apple") # This raises Python's REAL ValueError
+except ValueError:
+    print("Caught it!")
+```
+Bro, never name your custom exception the exact same name as a built-in exception. You will overwrite the local namespace, and your `except` block will break in extremely confusing ways. Always use descriptive, domain-specific names.
+
+---
+
+# 11. Real-World Usage
+
+- **Boto3 (AWS SDK):** Defines things like `ClientError` so you know exactly when an AWS API call failed.
+- **Django:** Defines `ObjectDoesNotExist` so you can specifically catch when a database query finds 0 rows.
+- **Stripe API:** Raises `CardError`, `RateLimitError`, and `AuthenticationError` so your code knows exactly how to respond.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| End your custom exception names with "Error" (e.g., `TimeoutError`). | Name them generically like `FailedProcess`. |
+| Add attributes to your exception class (like `error_code=404`) to make debugging easier. | Raise `Exception("My custom message")`. Always build a class for it! |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+When writing APIs (FastAPI/Flask), we often map Custom Exceptions directly to HTTP status codes. For example, you can configure your framework so that anytime a `UserNotFoundError` is raised anywhere deep in the codebase, the framework automatically catches it at the top and returns a clean `404 Not Found` JSON response to the client.
+
+---
+
+# 14. Common Mistakes
+
+- **Forgetting `pass` or `__init__`:**
+  If you don't need custom attributes, just use `pass`.
+  ```python
+  class BadError(Exception):
+      # SyntaxError! Empty class requires 'pass'
+  ```
+- **Not calling `super()`:**
+  If you write an `__init__`, you must call `super().__init__(msg)` otherwise printing the exception won't show the error message!
+
+---
+
+# 15. Related Topics
+
+- Exceptions (Try / Except)
+- Classes & Objects
+- Inheritance
+- Logging

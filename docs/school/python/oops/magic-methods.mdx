@@ -2,6 +2,233 @@
 sidebar_position: 7
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Magic Methods
 
-Placeholder: introduce Magic Methods.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Magic Methods (Dunder Methods) in Python |
+| Difficulty | Intermediate |
+| Used For | Customizing object behavior (like addition, string representation, length) |
+| Common Mistake | Using `__str__` instead of `__repr__` for developer debugging |
+| Performance | Overriding heavily-used methods like `__eq__` can impact loop/sorting speed |
+
+---
+
+# 2. Real-World Analogy
+
+Think of Magic Methods like a universal adapter for your custom objects.
+
+If you build a custom robot toy, the real world doesn't know how to interact with it natively. But if you add standard "adapter ports" to your robot—like a standard power plug or a standard USB port—suddenly everything else in the house knows how to plug into it.
+
+Magic methods are Python's standard adapters. They tell Python exactly what to do when someone uses standard operators like `+`, `==`, or `len()` on your custom object.
+
+---
+
+# 3. Concept Explanation
+
+Magic Methods (often called **Dunder** methods because they start and end with **d**ouble **under**scores, like `__init__`) are special predefined methods in Python. They allow your custom classes to emulate the behavior of built-in types.
+
+When you do `a + b`, Python internally calls `a.__add__(b)`. When you do `print(obj)`, Python calls `obj.__str__()`.
+
+Bro, by implementing these methods in your class, you make your custom objects act naturally with Python's core syntax, rather than forcing users to call clunky methods like `obj.add(other)` or `obj.get_length()`.
+
+---
+
+# 4. Syntax Table
+
+| Operation | Magic Method | Note |
+|---|---|---|
+| Initialization | `__init__(self, ...)` | Sets up the object. |
+| String (User) | `__str__(self)` | Called by `print()` and `str()`. |
+| String (Dev) | `__repr__(self)` | The "official" representation, useful for debugging. |
+| Addition `+` | `__add__(self, other)` | Customizes the `+` operator. |
+| Length `len()` | `__len__(self)` | Customizes `len(obj)`. |
+| Equality `==` | `__eq__(self, other)` | Customizes `==` operator. |
+
+---
+
+# 5. Beginner Example
+
+Let's make a `Wallet` class that holds cash and can be added together using the `+` operator.
+
+```python
+class Wallet:
+    def __init__(self, amount):
+        self.amount = amount
+
+    # The __str__ method dictates what print() shows
+    def __str__(self):
+        return f"Wallet with ${self.amount}"
+
+    # The __add__ method dictates what the + operator does
+    def __add__(self, other):
+        # We return a NEW Wallet with the combined amount
+        new_amount = self.amount + other.amount
+        return Wallet(new_amount)
+
+# Usage
+w1 = Wallet(50)
+w2 = Wallet(20)
+
+print(w1)         # Output: Wallet with $50
+w3 = w1 + w2      # Calls w1.__add__(w2)
+print(w3)         # Output: Wallet with $70
+```
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Python Syntax', detail: 'obj1 + obj2\nlen(obj1)\nprint(obj1)', kind: 'tool', x: 250, y: 50 },
+    { id: '2', title: 'Python Interpreter', detail: 'Translates syntax\nto method calls', kind: 'process', x: 250, y: 150 },
+    { id: '3', title: '__add__', detail: 'obj1.__add__(obj2)', kind: 'core', x: 50, y: 300 },
+    { id: '4', title: '__len__', detail: 'obj1.__len__()', kind: 'core', x: 250, y: 300 },
+    { id: '5', title: '__str__', detail: 'obj1.__str__()', kind: 'core', x: 450, y: 300 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'triggers' },
+    { source: '2', target: '3', label: 'maps +' },
+    { source: '2', target: '4', label: 'maps len()' },
+    { source: '2', target: '5', label: 'maps print()' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+In production, magic methods are often used to define equality or make objects sortable. Let's look at an `Employee` class where we want to sort a list of employees by their salary.
+
+```python
+class Employee:
+    def __init__(self, name: str, salary: int):
+        self.name = name
+        self.salary = salary
+
+    def __repr__(self):
+        return f"Employee({self.name}, ${self.salary})"
+
+    # Defines Equality (==)
+    def __eq__(self, other):
+        if not isinstance(other, Employee):
+            return False
+        return self.name == other.name and self.salary == other.salary
+
+    # Defines Less Than (<). This makes the object sortable!
+    def __lt__(self, other):
+        return self.salary < other.salary
+
+# Enterprise Usage
+employees = [
+    Employee("Alice", 120000),
+    Employee("Bob", 90000),
+    Employee("Charlie", 150000)
+]
+
+# Because we defined __lt__, Python knows exactly how to sort them!
+sorted_employees = sorted(employees)
+print(sorted_employees)
+# Output: [Employee(Bob, $90000), Employee(Alice, $120000), Employee(Charlie, $150000)]
+```
+
+---
+
+# 7. Internal Working
+
+Magic methods hook directly into Python's core C-API. When Python parses the AST (Abstract Syntax Tree) and sees the `+` token between two objects, it doesn't try to guess how to add them. It immediately looks up the `__add__` slot on the left object's type structure in memory.
+
+If `__add__` isn't implemented, Python checks if the right object has `__radd__` (Right Addition). If neither exist, it throws a `TypeError: unsupported operand type(s)`.
+
+---
+
+# 8. Performance Table
+
+| Operation | Complexity | Note |
+|---|---|---|
+| Default Object `==` | O(1) | Compares memory addresses by default. |
+| Custom `__eq__` | Depends | If comparing many attributes, it slows down sorting/filtering operations. |
+| `__slots__` memory | O(1) | A special magic method that prevents `__dict__` creation to save massive RAM. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Difference between `__str__` and `__repr__`? | `__str__` is for readable output (end-users). `__repr__` is for unambiguous representation (developers). If `__str__` is missing, Python falls back to `__repr__`. |
+| What is `__call__` used for? | It allows an object to be called like a function! E.g., `obj = MyClass(); obj()`. |
+| How do you make an object iterable? | Implement `__iter__` to return an iterator, and `__next__` to yield values. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+The `==` vs `is` trap!
+
+```python
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
+
+p1 = Point(1, 2)
+p2 = Point(1, 2)
+
+print(p1 == p2) # True (because we defined __eq__)
+print(p1 is p2) # False (they are different objects in memory)
+```
+
+Bro, remember: `__eq__` compares *values*, but `is` compares *memory identities*. You cannot override the `is` operator using magic methods.
+
+---
+
+# 11. Real-World Usage
+
+- **Pandas DataFrames:** Heavily overrides `__getitem__` so you can do `df['column_name']`.
+- **SQLAlchemy ORM:** Overrides `__eq__` and `__lt__` to generate SQL queries when you write `User.age > 18`.
+- **Pathlib:** Overrides `__truediv__` (`/`) so you can build paths easily: `Path('/usr') / 'bin'`.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Always implement `__repr__` for custom classes. It makes debugging 10x easier. | Implement `__add__` if it doesn't make logical sense (e.g., adding two `Employee` objects). |
+| Return `NotImplemented` from `__eq__` if the `other` object is an unknown type. | Throw an exception inside `__eq__`. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+In data-heavy applications, creating millions of objects causes high RAM usage because Python assigns a dynamic dictionary (`__dict__`) to every object. You can use the special magic method `__slots__ = ['attr1', 'attr2']` to tell Python to use a static C-array instead of a dictionary. This can reduce memory usage by up to 50%!
+
+---
+
+# 14. Common Mistakes
+
+- **Forgetting to check the type in `__eq__`:**
+  ```python
+  def __eq__(self, other):
+      # CRASHES if `other` is an integer and has no .name attribute!
+      return self.name == other.name
+  ```
+  *Fix:* Always use `if not isinstance(other, MyClass): return False`.
+- **Returning the wrong type:** `__len__` must return an integer. If your custom `__len__` returns a string, Python will crash.
+
+---
+
+# 15. Related Topics
+
+- Classes & Objects
+- Iterators (for `__iter__` and `__next__`)
+- Context Managers (for `__enter__` and `__exit__`)
+- Dataclasses (automatically generates magic methods)

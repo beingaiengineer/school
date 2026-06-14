@@ -2,6 +2,237 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Production Debugging
 
-Placeholder: introduce Production Debugging.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Production Debugging in Python |
+| Difficulty | Advanced |
+| Used For | Finding and fixing bugs in live, running environments without breaking the system |
+| Common Mistake | Trying to SSH into a production server to use `pdb` or add `print()` statements |
+| Performance | Requires external observability tools (APM, Logging) to minimize performance impact |
+
+---
+
+# 2. Real-World Analogy
+
+Local debugging (using an IDE or `pdb`) is like fixing a car while it's parked in your garage. You can turn the engine off, take the tires off, and inspect every piece slowly.
+
+**Production Debugging** is like trying to fix the engine of a commercial airplane while it is flying at 30,000 feet with 300 passengers on board.
+
+You cannot hit "pause" (`breakpoint()`). You cannot easily swap parts out. You must rely purely on the dashboard gauges (Logs), the flight data recorder (APM tools), and remote diagnostics to figure out what is wrong, and then deploy a patch safely without crashing the plane.
+
+---
+
+# 3. Concept Explanation
+
+When code is deployed to Production, it usually runs across multiple servers, inside Docker containers, managed by Kubernetes, behind load balancers.
+
+If a bug occurs in Production, you can't just reproduce it locally. The bug might only happen when 5,000 users hit the database at the exact same millisecond.
+
+Production debugging relies on **Observability**:
+1. **Logs:** Structured text records of what happened (e.g., Elasticsearch, Datadog).
+2. **Metrics:** Dashboards showing CPU, Memory, and Error Rates (e.g., Prometheus, Grafana).
+3. **Traces:** Visual timelines of exactly how long a request spent in the Python app vs the Database (e.g., OpenTelemetry, Sentry).
+
+Bro, a senior engineer doesn't guess what the bug is. They look at the observability tools, find the exact stack trace, and then fix it locally.
+
+---
+
+# 4. Syntax Table
+
+*Note: Production debugging is architectural. Here are the common Python tools used.*
+
+| Tool Type | Example Python Tools | Purpose |
+|---|---|---|
+| Error Tracking | `sentry-sdk` | Automatically captures exceptions and sends them to a web dashboard. |
+| Structured Logging | `structlog` | Formats logs as JSON so machines can search them easily. |
+| APM (Tracing) | `ddtrace` (Datadog) | Tracks network requests and DB query times across microservices. |
+
+---
+
+# 5. Beginner Example
+
+Let's look at how we capture errors in production using **Sentry** (the industry standard for error tracking).
+
+Instead of relying on terminal logs, we initialize Sentry at the start of our app.
+
+```python
+import sentry_sdk
+from flask import Flask
+
+# 1. Initialize Sentry with your project key (DSN)
+sentry_sdk.init(
+    dsn="https://your_public_key@sentry.io/12345",
+    traces_sample_rate=1.0,
+)
+
+app = Flask(__name__)
+
+@app.route('/checkout')
+def checkout():
+    # BUG: We forgot to define `user_balance`!
+    # This will raise a NameError.
+
+    if user_balance > 100:
+        return "Success"
+    return "Failed"
+
+# When a user hits /checkout, the app crashes.
+# Sentry automatically intercepts the NameError, grabs the stack trace,
+# captures local variables, and sends an alert to your Slack channel!
+```
+
+Bro, you don't even need to write a `try/except` block. Sentry catches unhandled exceptions globally and emails you the exact line of code that broke!
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'User hits App', detail: 'HTTP GET /checkout', kind: 'process', x: 250, y: 50 },
+    { id: '2', title: 'Python App', detail: 'NameError Occurs!', kind: 'warning', x: 250, y: 150 },
+    { id: '3', title: 'App Crash', detail: 'Returns 500 Error to User', kind: 'output', x: 50, y: 300 },
+    { id: '4', title: 'Observability SDK', detail: 'Sentry / Datadog intercepts', kind: 'tool', x: 450, y: 300 },
+    { id: '5', title: 'Alerts', detail: 'Slack Ping to Engineer', kind: 'process', x: 450, y: 450 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'triggers' },
+    { source: '2', target: '3', label: 'fails request' },
+    { source: '2', target: '4', label: 'async report' },
+    { source: '4', target: '5', label: 'notifies team' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+In enterprise systems, terminal logs (plain text) are useless because you have 50 servers printing text at the same time. We use **Structured Logging (JSON)**.
+
+```python
+import logging
+import json
+
+# A basic JSON formatter for production
+class JSONFormatter(logging.Formatter):
+    def format(self, record):
+        log_obj = {
+            "time": self.formatTime(record),
+            "level": record.levelname,
+            "message": record.getMessage(),
+            "module": record.module,
+        }
+        # If there's an exception, add it to the JSON
+        if record.exc_info:
+            log_obj["traceback"] = self.formatException(record.exc_info)
+        return json.dumps(log_obj)
+
+logger = logging.getLogger("ProdApp")
+handler = logging.StreamHandler()
+handler.setFormatter(JSONFormatter())
+logger.addHandler(handler)
+
+def process_order(order_id):
+    logger.info(f"Processing order", extra={"order_id": order_id})
+    try:
+        1 / 0
+    except ZeroDivisionError:
+        logger.error("Math failed during tax calc!", exc_info=True)
+
+process_order("ORD_999")
+# Output is clean JSON! External tools (like ELK) can easily parse and search this!
+# {"time": "2023-10-27 10:00:00", "level": "ERROR", "message": "Math failed...", "traceback": "..."}
+```
+
+---
+
+# 7. Internal Working
+
+How do tools like Sentry automatically catch errors without `try/except`?
+
+Python has a built-in hook called `sys.excepthook`. When an exception is raised and *not* caught by any `except` block in your code, Python is about to crash the thread. Right before it does, it passes the exception to `sys.excepthook`.
+
+Sentry replaces the default `sys.excepthook` with its own function. It quickly formats the error into JSON, fires off an asynchronous HTTP request to the Sentry servers, and *then* lets Python crash.
+
+---
+
+# 8. Performance Table
+
+| Strategy | Performance Impact | Note |
+|---|---|---|
+| Text Logging to Disk | High | Heavy disk I/O. Use rotating handlers. |
+| APM Tracing (e.g., Datadog) | Low (1-5%) | Hooks into C-level execution to time functions. |
+| Global Error Tracking (Sentry) | Near Zero | Only does work when an exception is actually raised. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why not use `breakpoint()` in production? | Production servers handle multiple concurrent users. A `breakpoint()` halts the entire thread or event loop. It will hang the server, causing timeouts for real users. |
+| What is Distributed Tracing? | In microservices, a single user request might hit the Web Server, then the Auth Server, then the Payment Server. A "Trace ID" is passed in the HTTP headers so you can see exactly which service caused the failure. |
+| Why use JSON for logs instead of plain text? | Text logs require complex Regex to search. JSON logs allow logging platforms (Elasticsearch) to index fields natively, so you can instantly query `level="ERROR" AND user_id="123"`. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+The Logging PII Trap!
+
+```python
+import logging
+
+def handle_login(user_id, password):
+    # FIREABLE OFFENSE!
+    logging.info(f"User {user_id} attempting login with password {password}")
+```
+
+Bro, if you log passwords, credit card numbers, or social security numbers (PII), those logs get sent to Datadog, Elasticsearch, and Sentry. Now every developer in your company has access to user passwords! This violates GDPR, SOC2, and HIPAA.
+
+*Fix:* Scrub data before logging, or use libraries that automatically redact sensitive keys like `password` or `token`.
+
+---
+
+# 11. Real-World Usage
+
+- **Sentry:** Almost universally used in Python web apps (Django/FastAPI) to catch 500 Internal Server errors and alert developers.
+- **Datadog / New Relic:** Used to monitor API endpoints. If a DB query suddenly takes 5 seconds instead of 50ms, the APM trace shows exactly which SQL query is slow.
+- **Grafana:** Used to build dashboards showing "Exceptions per minute". If a bad deploy happens, the graph spikes, and an automated rollback is triggered.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use a global exception tracker like Sentry to catch unhandled errors. | Rely on users emailing support to tell you your website is broken. |
+| Use Correlation IDs (Trace IDs) to track a single request across multiple functions/servers. | SSH into a production server and modify the live code using `vim` to add `print()` statements. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Always configure different environments!
+Your `config.py` should check `if ENV == "production"`. If it's production, turn off Django's `DEBUG = True` (which leaks source code to users), enable Sentry, and switch logs to JSON. If it's `ENV == "local"`, disable Sentry so you don't pollute the dashboard with your local testing errors!
+
+---
+
+# 14. Common Mistakes
+
+- **Silent Failures in Background Jobs:** Celery or Redis Queue workers often fail silently if not configured correctly. Always ensure your error tracking SDK is initialized inside the worker process, not just the web server!
+- **Over-logging:** Logging every single loop iteration (e.g., `logging.info(f"Processed row {i}")` for 1,000,000 rows) will cost your company thousands of dollars in Datadog ingestion fees. Only log significant milestones (e.g., `Processed 10,000 rows`).
+
+---
+
+# 15. Related Topics
+
+- Logging
+- Debugging (Local)
+- Custom Exceptions
+- Web Frameworks (Django / FastAPI Middleware)
