@@ -2,6 +2,237 @@
 sidebar_position: 7
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Magic Methods
 
-Placeholder: introduce Magic Methods.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Magic Methods (Dunder Methods) in Python |
+| Difficulty | Intermediate |
+| Used For | Customizing built-in behaviors like `+`, `==`, `len()`, and string representation for custom objects |
+| Common Mistake | Using `__str__` for logging/debugging instead of `__repr__` |
+| Performance | Minimal overhead; hooks directly into Python's C-level evaluation loop |
+
+---
+
+# 2. Real-World Analogy
+
+Think of Magic Methods like custom keyboard shortcuts on your computer, bro. Normally, `Ctrl + C` copies text. But if you have a special gaming keyboard, you can remap a key so that pressing a specific button executes a complex macro sequence.
+
+In Python, when you use the `+` operator, Python normally adds numbers. But if you create a custom `Vector` class, Python doesn't know how to "add" two vectors together. Magic methods let you remap what `+` means for your specific object, telling Python exactly how to handle it.
+
+---
+
+# 3. Concept Explanation
+
+Magic Methods, officially called **Dunder Methods** (Double UNDERscore), are special built-in methods that start and end with double underscores (e.g., `__init__`, `__str__`, `__add__`).
+
+They are the secret sauce that makes Python objects feel "Pythonic." They allow your custom classes to behave like built-in types. Instead of calling `my_list.length()`, you can call `len(my_list)` because Python silently looks for the `__len__` magic method inside your class.
+
+You rarely call magic methods directly. Instead, they are invoked behind the scenes by Python's built-in functions and operators.
+
+---
+
+# 4. Syntax Table
+
+| Operation | Trigger | Magic Method Called |
+|---|---|---|
+| Instantiation | `obj = MyClass()` | `__init__(self, ...)` (and `__new__`) |
+| String Output | `str(obj)` or `print(obj)` | `__str__(self)` |
+| Representation | `repr(obj)` or terminal output | `__repr__(self)` |
+| Addition | `obj1 + obj2` | `__add__(self, other)` |
+| Equality | `obj1 == obj2` | `__eq__(self, other)` |
+| Length | `len(obj)` | `__len__(self)` |
+| Indexing | `obj[key]` | `__getitem__(self, key)` |
+
+---
+
+# 5. Beginner Example
+
+Let's build a `Wallet` class. We want to be able to add two wallets together using `+` to get their total balance.
+
+```python
+class Wallet:
+    def __init__(self, balance):
+        self.balance = balance
+
+    # Controls what print() outputs
+    def __str__(self):
+        return f"Wallet with ${self.balance}"
+
+    # Controls what the '+' operator does
+    def __add__(self, other):
+        # We return a NEW Wallet object with the combined balance
+        return Wallet(self.balance + other.balance)
+
+    # Controls what '==' does
+    def __eq__(self, other):
+        return self.balance == other.balance
+
+w1 = Wallet(50)
+w2 = Wallet(100)
+
+print(w1)         # Output: Wallet with $50
+w3 = w1 + w2      # Triggers __add__
+print(w3)         # Output: Wallet with $150
+print(w1 == w2)   # Output: False (Triggers __eq__)
+```
+
+Bro, without `__add__`, doing `w1 + w2` would immediately crash with a `TypeError` because Python doesn't know how to add custom objects together by default.
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Python Syntax', detail: 'w1 + w2', kind: 'core', x: 250, y: 50 },
+    { id: '2', title: 'Python Interpreter', detail: 'Looks for magic methods', kind: 'process', x: 250, y: 150 },
+    { id: '3', title: '__add__ found!', detail: 'w1.__add__(w2)', kind: 'tool', x: 250, y: 250 },
+    { id: '4', title: 'Output', detail: 'Wallet(150)', kind: 'output', x: 250, y: 350 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'evaluates' },
+    { source: '2', target: '3', label: 'dispatches to' },
+    { source: '3', target: '4', label: 'returns' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+In engineering, we often build custom data structures. Here's a custom `LogParser` that acts like a dictionary and a list using magic methods.
+
+```python
+class LogParser:
+    def __init__(self, log_lines):
+        self.lines = log_lines
+
+    # Allows len(parser)
+    def __len__(self):
+        return len(self.lines)
+
+    # Allows accessing by index: parser[0]
+    def __getitem__(self, index):
+        return self.lines[index].strip().upper()
+
+    # Allows iteration: for line in parser:
+    def __iter__(self):
+        return iter(self.lines)
+
+logs = [
+    "INFO: System started",
+    "WARN: High memory usage",
+    "ERROR: DB connection failed"
+]
+
+parser = LogParser(logs)
+
+print(f"Total logs: {len(parser)}") # Output: Total logs: 3
+
+# Using indexing triggers __getitem__
+print(parser[1]) # Output: WARN: HIGH MEMORY USAGE
+
+# Using a loop triggers __iter__ then __getitem__
+for log in parser:
+    pass # Loops through all logs
+```
+
+---
+
+# 7. Internal Working
+
+Magic methods act as hooks into Python's C-level evaluation loop.
+
+When you write `len(my_obj)`, the CPython interpreter looks at the underlying C structure of the object. It checks if a pointer named `sq_length` (sequence length) is populated. If it is, it executes the C function. Your Python `__len__` method maps directly to this C-level pointer, allowing your custom Python code to be executed seamlessly by the core interpreter.
+
+---
+
+# 8. Performance Table
+
+| Operation | Complexity | Note |
+|---|---|---|
+| Triggering a Dunder | O(1) overhead | Negligible overhead over normal method calls. |
+| `__slots__` usage | Memory Optimization | Prevents creation of `__dict__`, saving RAM. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Difference between `__str__` and `__repr__`? | `__str__` is for readable output meant for end-users (e.g., "User Alice"). `__repr__` is for unambiguous debugging output meant for developers (e.g., `User(name='Alice', id=42)`). |
+| What happens if you define `__repr__` but not `__str__`? | Python will fall back to using `__repr__` whenever `str()` or `print()` is called. |
+| How do you make an object callable like a function `obj()`? | Implement the `__call__(self, ...)` magic method. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+The Identity vs Equality Trap!
+
+```python
+class Product:
+    def __init__(self, id, name):
+        self.id = id
+        self.name = name
+
+p1 = Product(1, "Laptop")
+p2 = Product(1, "Laptop")
+
+# Interviewer: What do these print?
+print(p1 == p2)
+print(p1 is p2)
+```
+
+Bro, by default, `p1 == p2` is `False`! Why? Because if you don't define `__eq__`, Python falls back to comparing memory addresses (just like the `is` operator).
+
+To fix it:
+```python
+    def __eq__(self, other):
+        if not isinstance(other, Product):
+            return False
+        return self.id == other.id
+```
+
+---
+
+# 11. Real-World Usage
+
+- **Pandas DataFrames:** They heavily use `__getitem__` to let you do `df['column_name']`.
+- **SQLAlchemy:** Overloads `==` in its models so that `User.name == 'Alice'` returns an SQL expression object, not a boolean!
+- **Pathlib:** The `Path` object overloads `/` using `__truediv__` so you can join paths like `Path('/var') / 'log'`.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Always implement `__repr__` for your classes for easier debugging. | Create magic methods for arbitrary, confusing logic (e.g., using `+` to delete an item). |
+| Check types (`isinstance`) inside `__eq__` and `__add__` to avoid crashing when compared to unsupported types. | Return a string from `__len__`. It must return an integer! |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+When implementing `__eq__`, you should also implement `__hash__` if you want your objects to be usable as dictionary keys or stored in a `set`. If you define `__eq__` but not `__hash__`, Python makes the object unhashable to prevent data corruption in hash tables.
+
+---
+
+# 14. Common Mistakes
+
+- **Returning the wrong type from Dunders:** `__str__` MUST return a string. `__len__` MUST return an integer. Returning anything else raises a `TypeError`.
+- **Mutating objects during math operations:** When you implement `__add__`, you should return a *new* object, not modify `self`. Doing `w1 + w2` should not secretly change `w1`'s balance!
+
+---
+
+# 15. Related Topics
+
+- Classes & Objects
+- Iterators
+- Duck Typing
+- Context Managers (`__enter__` and `__exit__`)

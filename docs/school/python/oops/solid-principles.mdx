@@ -2,6 +2,253 @@
 sidebar_position: 9
 ---
 
-# Solid Principles
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Solid Principles.
+# SOLID Principles
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | SOLID Principles in Python OOP |
+| Difficulty | Advanced |
+| Used For | Writing scalable, maintainable, and bug-resistant enterprise code |
+| Common Mistake | Creating massive "God Classes" that do everything (Violating SRP) |
+| Core Idea | Code should be easy to extend, but hard to break |
+
+---
+
+# 2. Real-World Analogy
+
+Think of a modern kitchen, bro.
+- You have a toaster for bread, a blender for smoothies, and a stove for cooking. (Single Responsibility)
+- If you buy a new coffee machine, you just plug it in; you don't rebuild the entire kitchen wiring. (Open/Closed)
+- You can swap out a cheap blender for a premium Ninja blender, and it still plugs into the same wall socket perfectly. (Liskov Substitution & Dependency Inversion)
+
+SOLID is just organizing your codebase like a well-designed, modular kitchen so that upgrading one appliance doesn't burn the house down.
+
+---
+
+# 3. Concept Explanation
+
+SOLID is an acronym for 5 design principles intended to make software designs more understandable, flexible, and maintainable.
+
+1. **S - Single Responsibility Principle (SRP):** A class should have only one reason to change. It should do exactly one job.
+2. **O - Open/Closed Principle (OCP):** Software entities should be open for extension, but closed for modification. You should be able to add new features without altering existing code.
+3. **L - Liskov Substitution Principle (LSP):** Subtypes must be substitutable for their base types. If it expects a Bird, a Penguin shouldn't break the system because it can't fly.
+4. **I - Interface Segregation Principle (ISP):** Clients shouldn't be forced to depend on methods they don't use. Don't make a huge interface; break it into smaller ones.
+5. **D - Dependency Inversion Principle (DIP):** High-level modules shouldn't depend on low-level modules. Both should depend on abstractions (interfaces).
+
+---
+
+# 4. Syntax Table
+
+| Principle | Concept Goal | Python Implementation Tool |
+|---|---|---|
+| SRP | One job per class | Modular classes, splitting logic |
+| OCP | Add features without editing core | Inheritance, Composition, Decorators |
+| LSP | Subclasses don't break logic | Consistent return types, careful method overriding |
+| ISP | Small, specific interfaces | Multiple small Abstract Base Classes (ABCs) |
+| DIP | Depend on abstractions | Dependency Injection, Type hints with Protocols |
+
+---
+
+# 5. Beginner Example: Single Responsibility (SRP)
+
+Let's look at a bad class that does too much, and fix it.
+
+**BAD (Violates SRP):**
+```python
+class Invoice:
+    def __init__(self, amount):
+        self.amount = amount
+
+    def calculate_tax(self):
+        return self.amount * 0.2
+
+    # Why is an invoice saving itself to a database?
+    # What if we change from MySQL to Postgres?
+    # We have to edit the Invoice logic!
+    def save_to_db(self):
+        print(f"Saving {self.amount} to database...")
+```
+
+**GOOD (Follows SRP):**
+```python
+class Invoice:
+    def __init__(self, amount):
+        self.amount = amount
+
+    def calculate_tax(self):
+        return self.amount * 0.2
+
+# New class with ONE job: Database operations
+class InvoiceRepository:
+    def save(self, invoice: Invoice):
+        print(f"Saving {invoice.amount} to database...")
+
+inv = Invoice(100)
+repo = InvoiceRepository()
+repo.save(inv)
+```
+Bro, now if the database changes, the `Invoice` math logic is totally safe and untouched.
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'SOLID Design', detail: 'Clean Architecture', kind: 'core', x: 250, y: 50 },
+    { id: '2', title: 'S: Single Job', detail: 'Invoice / DB_Repo', kind: 'tool', x: 0, y: 150 },
+    { id: '3', title: 'O: Open/Closed', detail: 'Add Plugins, don\'t edit Core', kind: 'tool', x: 500, y: 150 },
+    { id: '4', title: 'D: Dep Inversion', detail: 'Depend on Interfaces', kind: 'process', x: 250, y: 250 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'SRP' },
+    { source: '1', target: '3', label: 'OCP' },
+    { source: '1', target: '4', label: 'DIP' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example: Dependency Inversion (DIP)
+
+Imagine building a notification system.
+
+**BAD:** High-level `NotificationManager` depends heavily on low-level `EmailSender`. If we want to add SMS, we have to rewrite the manager!
+
+**GOOD:** Both depend on an Abstraction.
+
+```python
+from abc import ABC, abstractmethod
+
+# The Abstraction (Interface)
+class MessageSender(ABC):
+    @abstractmethod
+    def send(self, message: str):
+        pass
+
+# Low-level module 1
+class EmailSender(MessageSender):
+    def send(self, message: str):
+        print(f"Sending Email: {message}")
+
+# Low-level module 2 (Easy to add without touching existing code!)
+class SMSSender(MessageSender):
+    def send(self, message: str):
+        print(f"Sending SMS: {message}")
+
+# High-level module: Depends on Abstraction, not concrete classes
+class NotificationManager:
+    def __init__(self, sender: MessageSender):
+        self.sender = sender  # Dependency Injection!
+
+    def notify(self, message: str):
+        self.sender.send(message)
+
+# Enterprise usage
+email_service = EmailSender()
+sms_service = SMSSender()
+
+app1 = NotificationManager(email_service)
+app1.notify("Server is down!") # Output: Sending Email: Server is down!
+
+app2 = NotificationManager(sms_service)
+app2.notify("Server is up!")   # Output: Sending SMS: Server is up!
+```
+
+---
+
+# 7. Internal Working
+
+SOLID isn't a Python library or syntax; it's a mental framework for object orchestration.
+
+When you follow SOLID, your dependency graph becomes shallow and interface-driven. Instead of tight coupling (Class A instantiates Class B inside its own `__init__`), you use loose coupling (Class A accepts Class B as a parameter). This makes the system modular at the memory and execution level, meaning isolated unit tests can mock interfaces easily without booting up heavy dependencies.
+
+---
+
+# 8. Performance Table
+
+| Area | Impact | Note |
+|---|---|---|
+| Execution Speed | Very Minor Overhead | Passing dependencies / interfaces adds slight function call overhead. |
+| Memory Usage | Neutral | More classes exist, but overall structure is cleaner. |
+| Developer Speed | Faster long-term | Initial setup takes longer, but refactoring and scaling is drastically faster. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Explain the Open/Closed Principle. | Code should be open for extension (adding new behaviors via inheritance/plugins) but closed for modification (you shouldn't have to rewrite existing, working, tested code to add the new feature). |
+| What is a common violation of the Liskov Substitution Principle? | Creating a `Penguin` class that inherits from `Bird`. If the system calls `bird.fly()`, the `Penguin` throws an exception, breaking the system. Subclasses must behave as expected by the base class. |
+| What is Dependency Injection? | Passing dependencies (like a database connection) into an object (usually via `__init__`) rather than letting the object create the dependency itself. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+The Interface Segregation Trap!
+
+```python
+from abc import ABC, abstractmethod
+
+class MultiFunctionPrinter(ABC):
+    @abstractmethod
+    def print_document(self): pass
+    @abstractmethod
+    def fax_document(self): pass
+    @abstractmethod
+    def scan_document(self): pass
+
+# Interviewer: We have a basic printer that CANNOT fax or scan. How do we implement this?
+class BasicPrinter(MultiFunctionPrinter):
+    def print_document(self): print("Printing")
+    def fax_document(self): raise NotImplementedError("I can't fax!")
+    def scan_document(self): raise NotImplementedError("I can't scan!")
+```
+
+Bro, raising `NotImplementedError` violates both the Liskov Substitution Principle AND the Interface Segregation Principle! The client is forced to depend on methods it doesn't use.
+
+**The Fix:** Split the big interface into `PrinterInterface`, `ScannerInterface`, and `FaxInterface`. Have `BasicPrinter` only inherit from `PrinterInterface`.
+
+---
+
+# 11. Real-World Usage
+
+- **FastAPI / FastAPI Dependencies:** The entire framework is built on Dependency Injection (DIP).
+- **Django Views:** Class-Based Views are highly modular, allowing you to override specific methods without rewriting the whole HTTP handler (Open/Closed Principle).
+- **AWS Boto3:** Clients are abstracted so that upgrading an internal mechanism doesn't break your external scripts.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Inject dependencies (like loggers, database sessions) into classes. | Hardcode global connections inside classes. |
+| Keep classes under 200-300 lines of code to naturally enforce SRP. | Create massive "Manager" or "Utils" classes that do 50 different things. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Don't be a SOLID zealot, bro. In early-stage startups or small scripts, strictly applying all 5 principles can lead to "architecture astronauting"—where you have 50 files with 1 line of code each. Apply SRP and DIP strictly, but use the others pragmatically as the system grows.
+
+---
+
+# 14. Common Mistakes
+
+- **Tight Coupling:** Instantiating objects inside other objects instead of passing them in. If `UserService` does `self.db = MySQLConnector()`, you can never test `UserService` without a real MySQL database.
+- **The God Object Anti-Pattern:** A single class `SystemController` that handles HTTP requests, talks to the DB, formats strings, and sends emails. This violates SRP completely.
+
+---
+
+# 15. Related Topics
+
+- Classes & Objects
+- Inheritance
+- Abstraction (Abstract Base Classes)
+- Design Patterns (Strategy, Factory)

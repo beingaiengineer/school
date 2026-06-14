@@ -2,6 +2,224 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Production Debugging
 
-Placeholder: introduce Production Debugging.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Production Debugging in Python |
+| Difficulty | Advanced |
+| Used For | Finding and fixing bugs in live, running environments where you cannot use `print()` or `breakpoint()` |
+| Common Mistake | Restarting the server immediately when it crashes, wiping out the logs and memory state needed to find the root cause |
+| Core Idea | "You are a detective investigating a crime scene after the suspect has left." |
+
+---
+
+# 2. Real-World Analogy
+
+Local Debugging is like fixing a broken toaster on your kitchen table. You can open it up, poke the wires, turn it on and off, and see exactly what's wrong (`breakpoint()`).
+
+**Production Debugging** is like trying to fix an airplane engine while the plane is flying at 30,000 feet with 300 passengers on board. You cannot turn the engine off. You cannot attach your tools directly to it. You have to rely on instrument panels, flight recorders (logs), and monitoring telemetry (metrics) to figure out why engine #2 is running hot, and figure out a fix without crashing the plane.
+
+---
+
+# 3. Concept Explanation
+
+When code runs on your laptop, you have full control. When code runs in Production (AWS, Kubernetes, Docker), you lose direct access.
+
+You cannot use `breakpoint()` because there is no terminal to type `c` (continue) into; the server will just freeze, and customers will get timeouts.
+
+Therefore, Production Debugging relies on **Observability**:
+1. **Logs:** The text records of what happened (`logging.error("Failed")`).
+2. **Metrics:** Time-series data (CPU usage is at 95%, Memory is spiking).
+3. **Traces:** Tracking a single request as it jumps from the API to the Database to the Cache.
+4. **APM (Application Performance Monitoring):** Tools like Datadog, Sentry, or New Relic that automatically capture errors and stack traces when they happen.
+
+---
+
+# 4. Syntax Table
+
+| Tool | Purpose | Python Implementation |
+|---|---|---|
+| Tracebacks | Seeing exactly which line crashed | `logger.error("Msg", exc_info=True)` |
+| Sentry | Auto-capturing unhandled exceptions | `sentry_sdk.init(dsn="...")` |
+| JSON Logs | Making logs searchable in ELK/Datadog | `python-json-logger` |
+| Prometheus | Tracking metrics (CPU, Request count) | `prometheus_client` |
+
+---
+
+# 5. Beginner Example: The Sentry Integration
+
+In production, you don't read raw log files via SSH. You use an Error Tracking tool like Sentry. It automatically intercepts crashes and sends them to a beautiful dashboard.
+
+```python
+import sentry_sdk
+from flask import Flask
+
+# 1. Initialize Sentry (usually done at the top of your app)
+sentry_sdk.init(
+    dsn="https://your-sentry-dsn-key@o0.ingest.sentry.io/0",
+    traces_sample_rate=1.0, # Capture 100% of performance traces
+)
+
+app = Flask(__name__)
+
+@app.route("/checkout")
+def checkout():
+    user = {"id": 42, "name": "Alice"}
+
+    # 2. You can manually attach context to the crash!
+    sentry_sdk.set_user({"id": user["id"], "username": user["name"]})
+    sentry_sdk.set_context("Cart", {"items": 5, "total": 100})
+
+    # BUG: Division by zero!
+    discount = 100 / 0
+
+    return "Success"
+
+# When this route is hit, the app crashes.
+# Sentry automatically catches the ZeroDivisionError, packages the stack trace,
+# attaches the User ID and Cart Context, and sends it to your web dashboard!
+```
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'User Request', detail: 'Hits /checkout', kind: 'core', x: 250, y: 50 },
+    { id: '2', title: 'Python App', detail: 'Crashes: 100 / 0', kind: 'process', x: 250, y: 150 },
+    { id: '3', title: 'Sentry SDK', detail: 'Intercepts Traceback', kind: 'tool', x: 0, y: 250 },
+    { id: '4', title: 'JSON Logger', detail: 'Writes to stdout', kind: 'data', x: 500, y: 250 },
+    { id: '5', title: 'Alerting', detail: 'Slack Ping: Critical Error!', kind: 'output', x: 250, y: 350 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'triggers' },
+    { source: '2', target: '3', label: 'exception raised' },
+    { source: '2', target: '4', label: 'logs written' },
+    { source: '3', target: '5', label: 'sends to dashboard' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example: Distributed Tracing
+
+In microservices, a bug might happen because Service A called Service B, which called Service C, and Service C failed. Looking at Service A's logs won't help you. You need **Distributed Tracing**.
+
+We use Correlation IDs (or Trace IDs).
+
+```python
+import logging
+import uuid
+import requests
+from flask import request
+
+logger = logging.getLogger(__name__)
+
+def process_order():
+    # 1. Extract the Trace ID from the incoming HTTP Headers
+    # If it doesn't exist, generate a new one.
+    trace_id = request.headers.get("X-Correlation-ID", str(uuid.uuid4()))
+
+    # 2. Log with the Trace ID so we can search for this exact request later
+    logger.info(f"[TraceID: {trace_id}] Starting order processing...")
+
+    try:
+        # 3. Pass the Trace ID to the NEXT microservice!
+        headers = {"X-Correlation-ID": trace_id}
+        response = requests.post("http://inventory-service/deduct", headers=headers)
+        response.raise_for_status()
+
+    except Exception as e:
+        logger.error(f"[TraceID: {trace_id}] Inventory failed!", exc_info=True)
+        return "Error", 500
+
+    logger.info(f"[TraceID: {trace_id}] Order successful.")
+    return "OK"
+```
+Bro, now if a user complains their order failed, you grab their Trace ID, paste it into Datadog, and you will see the logs from ALL microservices related to that exact transaction in chronological order!
+
+---
+
+# 7. Internal Working
+
+How does a tool like Sentry auto-catch errors without you writing `try/except` everywhere?
+
+It hooks into `sys.excepthook`. In Python, `sys.excepthook` is the function that gets called right before the interpreter terminates due to an unhandled exception. The Sentry SDK replaces the default excepthook with its own function. When a crash reaches the top level, Sentry's function grabs the traceback, sends an HTTP request to its servers, and *then* lets the program crash as usual.
+
+---
+
+# 8. Performance Table
+
+| Tooling | Performance Impact | Note |
+|---|---|---|
+| JSON Logging | Minimal | Standard practice. Handled asynchronously by infrastructure (Fluentd). |
+| Sentry (Error capture) | Minimal | Only impacts performance exactly when a crash happens. |
+| APM / Full Tracing | Moderate (1-5%) | Capturing every DB query time and HTTP request takes CPU cycles. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| A production server is throwing 500 errors, but the logs are empty. What do you do? | Check if the disk is full (`df -h`). If disk is full, logs can't write! Check if the load balancer is failing before it hits the app. Check if the app is getting OOM (Out of Memory) Killed by the OS, which leaves no Python tracebacks. |
+| What is a Correlation ID? | A unique string (like a UUID) generated at the start of a request and passed in headers to all downstream microservices, allowing logs to be tied together. |
+| Why format logs as JSON in production? | JSON is structured. If you log `{"event": "login", "user": 42}`, Datadog can instantly parse `user_id` as an integer and allow you to filter/graph it. Parsing raw string text via Regex is slow and fragile. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+The OOM Killer Trap!
+
+**Interviewer:** "Your Python background worker is processing large files. Every 3 hours, it stops working. Sentry shows zero errors. The logs just suddenly stop mid-sentence. What happened?"
+
+Bro, this is the classic **OOM (Out Of Memory) Kill**.
+When your Python script uses too much RAM (maybe reading a 10GB CSV into a list), the Linux kernel panics to protect the server. The Linux OOM Killer violently murders your Python process with a `SIGKILL` (Signal 9).
+
+Because `SIGKILL` cannot be caught or handled by Python, `sys.excepthook` never runs, Sentry never gets notified, and the `finally` blocks don't execute. The script just vanishes. You debug this by checking Linux system logs (`dmesg -T | grep -i oom`) or checking memory metrics in your APM.
+
+---
+
+# 11. Real-World Usage
+
+- **Sentry / Rollbar:** Essential for catching unhandled exceptions and grouping them so you know "Bug A happened 5,000 times to 300 users today."
+- **Datadog / New Relic:** Provides the "APM" dashboard showing that your `/login` route suddenly takes 4.5 seconds instead of 100ms.
+- **Grafana / Prometheus:** Graphing system metrics (CPU, RAM, Network) to detect memory leaks.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Attach context to your errors (User ID, URL, Request Payload) so you can reproduce the bug locally. | Blindly SSH into a production server and start editing Python files live to "test a fix". |
+| Set up Slack/Email alerts for when error rates spike above a normal threshold. | Ignore warnings until the system crashes. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+The most important rule of production debugging: **Do not panic.**
+When the database drops and alarms are blaring, junior devs randomly restart servers or push hotfixes they haven't tested. Senior devs look at the dashboard, isolate the bad traffic, revert the last Git deployment, and *then* take the time to find the root cause using the logs.
+
+---
+
+# 14. Common Mistakes
+
+- **Not logging the traceback:** Doing `logger.error("Failed: " + str(e))` instead of `logger.exception("Failed")`. You lose the line number where the error occurred!
+- **Logging secrets:** Writing `logger.info(f"User login attempt: {request.json}")` where the JSON contains the user's plaintext password. This is a massive security incident and will get you fired. Always scrub passwords and PII from logs.
+
+---
+
+# 15. Related Topics
+
+- Logging
+- Exceptions
+- Memory Management (Detecting Leaks)
+- Concurrency (Debugging Race Conditions)

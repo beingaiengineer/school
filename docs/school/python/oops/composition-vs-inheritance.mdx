@@ -2,6 +2,239 @@
 sidebar_position: 10
 ---
 
-# Composition Vs Inheritance
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Composition Vs Inheritance.
+# Composition vs Inheritance
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Composition vs Inheritance in Python |
+| Difficulty | Intermediate / Advanced |
+| Used For | Deciding how classes should share code and relate to each other |
+| Common Mistake | Using inheritance just to reuse a few methods, causing tight coupling |
+| Core Idea | "Is-A" (Inheritance) versus "Has-A" (Composition) |
+
+---
+
+# 2. Real-World Analogy
+
+**Inheritance (Is-A):**
+A `SportsCar` *is a* `Car`. It inherits everything a Car has (wheels, engine) and adds sports features. If the definition of `Car` changes, the `SportsCar` automatically changes.
+
+**Composition (Has-A):**
+A `Car` *has an* `Engine`. The Car isn't a type of Engine. Instead, the Car contains an Engine inside it. If you want a faster car, you don't build a new `SuperFastCar` class; you just compose the `Car` object with a V8 `Engine` object instead of a V4.
+
+---
+
+# 3. Concept Explanation
+
+In OOP, we often need to reuse code.
+
+**Inheritance** creates a strict parent-child relationship. The child gets all methods and properties of the parent. This is powerful but creates **tight coupling**. If the parent class changes, it can silently break all child classes (the fragile base class problem).
+
+**Composition** means putting objects of one class inside another class. Instead of inheriting behaviors, the main class delegates tasks to the objects it contains. This creates **loose coupling** and makes the code vastly more flexible at runtime.
+
+Modern software engineering highly favors: **"Favor Composition over Inheritance."**
+
+---
+
+# 4. Syntax Table
+
+| Concept | Python Code | Relationship |
+|---|---|---|
+| Inheritance | `class Dog(Animal):` | `Dog` **IS AN** `Animal` |
+| Composition | `self.engine = Engine()` | `Car` **HAS AN** `Engine` |
+| Execution (Inh) | `dog.breathe()` | Method is on the `Dog` (inherited) |
+| Execution (Comp) | `car.engine.start()` | Main object delegates to the inner object |
+
+---
+
+# 5. Beginner Example
+
+Let's look at a bad Inheritance design and how Composition fixes it.
+
+**BAD: Inheritance (Forced Is-A)**
+```python
+class Engine:
+    def start(self):
+        print("Engine starting...")
+
+# A Car is NOT an Engine. This is a terrible design just to reuse code!
+class Car(Engine):
+    def drive(self):
+        self.start() # Inherited from Engine
+        print("Car is driving")
+```
+
+**GOOD: Composition (Has-A)**
+```python
+class Engine:
+    def start(self):
+        print("Engine starting...")
+
+class Wheels:
+    def roll(self):
+        print("Wheels rolling...")
+
+class Car:
+    def __init__(self):
+        # The Car HAS an Engine and HAS Wheels
+        self.engine = Engine()
+        self.wheels = Wheels()
+
+    def drive(self):
+        self.engine.start() # Delegation
+        self.wheels.roll()  # Delegation
+        print("Car is driving")
+
+my_car = Car()
+my_car.drive()
+```
+Bro, see how much cleaner that is? The Car isn't burdened with being an Engine. It just *uses* one.
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Car (Composition)', detail: 'Delegates work', kind: 'core', x: 250, y: 50 },
+    { id: '2', title: 'Engine Object', detail: 'start()', kind: 'tool', x: 0, y: 200 },
+    { id: '3', title: 'Wheels Object', detail: 'roll()', kind: 'tool', x: 500, y: 200 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'HAS-A (uses)' },
+    { source: '1', target: '3', label: 'HAS-A (uses)' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+In games or complex UI systems, inheritance leads to explosive class hierarchies. Imagine characters in an RPG.
+
+**The Inheritance Nightmare:**
+You have `Character`. Then `Warrior(Character)` and `Mage(Character)`. Now you want a `MagicWarrior`. Do you use multiple inheritance? What if you want a `FlyingMagicWarrior`? The tree becomes a disaster.
+
+**The Composition Solution (Entity-Component System):**
+```python
+class MovementBehavior:
+    def move(self): print("Walking on ground.")
+
+class FlyingBehavior:
+    def move(self): print("Flying in the sky!")
+
+class AttackBehavior:
+    def attack(self): print("Swinging sword.")
+
+class MagicBehavior:
+    def attack(self): print("Casting fireball.")
+
+class Character:
+    # We compose the character using behaviors injected at runtime!
+    def __init__(self, movement, attack_style):
+        self.movement = movement
+        self.attack_style = attack_style
+
+    def perform_move(self):
+        self.movement.move()
+
+    def perform_attack(self):
+        self.attack_style.attack()
+
+# We can build ANY type of character dynamically!
+warrior = Character(MovementBehavior(), AttackBehavior())
+mage = Character(MovementBehavior(), MagicBehavior())
+flying_mage = Character(FlyingBehavior(), MagicBehavior()) # Magic! No new class needed!
+
+flying_mage.perform_move()   # Output: Flying in the sky!
+flying_mage.perform_attack() # Output: Casting fireball.
+```
+
+---
+
+# 7. Internal Working
+
+Inheritance relies on Python's **MRO (Method Resolution Order)**. When a method is called, Python searches the class, then its parent, then the grandparent. This is evaluated dynamically, but the hierarchy is static and hardcoded at compile-time.
+
+Composition relies on **Pointers (References)** in memory. A `Car` object's `__dict__` simply holds a pointer to an `Engine` object. Changing the behavior of the Car is as simple as swapping that pointer to point to a different `Engine` object at runtime.
+
+---
+
+# 8. Performance Table
+
+| Architecture | Memory | Method Resolution Speed |
+|---|---|---|
+| Inheritance | Slightly less (One object) | Slower (MRO traversal up the tree) |
+| Composition | Slightly more (Multiple objects) | Faster (Direct attribute access/delegation) |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why should you "Favor Composition over Inheritance"? | Inheritance tightly couples classes and creates fragile, rigid hierarchies. Composition allows assembling behaviors dynamically at runtime, creating modular, easily testable code. |
+| Give an example of an "Is-A" relationship. | A `CheckingAccount` is a `BankAccount`. (Inheritance is appropriate here). |
+| Give an example of a "Has-A" relationship. | A `User` has an `EmailAddress`. You shouldn't make `User` inherit from `String` just to hold the email. (Composition is appropriate here). |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+The Mixin vs Composition Debate!
+
+```python
+class LoggerMixin:
+    def log(self, msg):
+        print(f"LOG: {msg}")
+
+class Database(LoggerMixin):
+    def save(self):
+        self.log("Saving to DB")
+
+# Interviewer: Is using a Mixin considered Inheritance or Composition?
+```
+
+Bro, technically, Mixins use Python's multiple inheritance mechanism. However, conceptually, they act a bit like composition because they are small, independent behavior injected into a class, not full "Is-A" parent structures. But true composition would be `self.logger = Logger()`.
+
+---
+
+# 11. Real-World Usage
+
+- **React/Vue Components:** Frontend frameworks explicitly abandoned inheritance. A `<Button>` doesn't inherit from `<Form>`; the Form composes the Button inside it.
+- **Game Engines (Unity/Unreal):** They use Entity-Component systems. A 3D object is just an empty container; you compose it by adding a `PhysicsComponent` and `RenderComponent`.
+- **FastAPI / Django:** Request handlers compose Database Sessions and Authentication Managers instead of inheriting from them.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use inheritance strictly for "Is-A" relationships where the child is a true specialization of the parent. | Use inheritance just to get access to a few helper methods from another class. |
+| Inject dependencies (Composition) via `__init__` so you can easily mock them during unit testing. | Create inheritance trees deeper than 3 levels. It becomes impossible to debug. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Deep inheritance trees (e.g., `Class D(C)` -> `C(B)` -> `B(A)`) are a leading cause of technical debt in enterprise systems. When a junior developer edits class `A` to fix a bug for class `B`, they inadvertently crash classes `C` and `D`. Composition isolates these blast radiuses.
+
+---
+
+# 14. Common Mistakes
+
+- **Inheriting from built-in types improperly:** Inheriting directly from `dict` or `list` can cause weird bugs because Python's C-backend sometimes ignores overridden methods. Compose a list inside your class instead (`self._items = []`), or use `collections.UserList`.
+- **God Classes via Multiple Inheritance:** `class SuperHero(Person, Flying, LaserEyes, Bulletproof):`. This MRO will be a nightmare. Compose the powers instead: `self.powers = [Flying(), LaserEyes()]`.
+
+---
+
+# 15. Related Topics
+
+- Classes & Objects
+- Inheritance
+- SOLID Principles (Dependency Inversion)
+- Dependency Injection
