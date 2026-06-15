@@ -2,6 +2,203 @@
 sidebar_position: 9
 ---
 
-# Solid Principles
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Solid Principles.
+# SOLID Principles
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | SOLID Principles in Python |
+| Difficulty | Advanced |
+| Used For | Writing maintainable, scalable, and testable object-oriented code |
+| Common Mistake | Over-engineering simple scripts with unnecessary abstractions |
+| Performance | No direct runtime penalty, but improves developer velocity in the long run |
+
+## 2. Real-World Analogy
+
+Bro, imagine running a restaurant.
+- If the chef is also the waiter, the cashier, and the cleaner, everything breaks down when it gets busy (violating **Single Responsibility**).
+- If you have to tear down a wall every time you want to add a new dish to the menu, your building is poorly designed (violating **Open/Closed**).
+- If you hire a pastry chef and they refuse to bake bread because they "only do cakes," you can't substitute them for a regular baker (violating **Liskov Substitution**).
+
+SOLID principles are like a well-structured restaurant where every role is defined, easily replaceable, and scalable.
+
+## 3. Concept Explanation
+
+SOLID is an acronym for five design principles intended to make software designs more understandable, flexible, and maintainable.
+
+1. **S - Single Responsibility Principle (SRP):** A class should have one, and only one, reason to change.
+2. **O - Open/Closed Principle (OCP):** Software entities should be open for extension but closed for modification.
+3. **L - Liskov Substitution Principle (LSP):** Subtypes must be substitutable for their base types without altering the correctness of the program.
+4. **I - Interface Segregation Principle (ISP):** Many client-specific interfaces are better than one general-purpose interface.
+5. **D - Dependency Inversion Principle (DIP):** Depend upon abstractions (interfaces), not concretions (concrete classes).
+
+<LearningFlow
+  nodes={[
+    { id: '1', position: { x: 250, y: 0 }, data: { label: 'SOLID Codebase' }, type: 'core' },
+    { id: '2', position: { x: 50, y: 100 }, data: { label: 'S: One Job' }, type: 'process' },
+    { id: '3', position: { x: 150, y: 100 }, data: { label: 'O: Extendable' }, type: 'process' },
+    { id: '4', position: { x: 250, y: 100 }, data: { label: 'L: Substitutable' }, type: 'process' },
+    { id: '5', position: { x: 350, y: 100 }, data: { label: 'I: Focused Interfaces' }, type: 'process' },
+    { id: '6', position: { x: 450, y: 100 }, data: { label: 'D: Abstractions' }, type: 'process' },
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', type: 'smoothstep' },
+    { id: 'e1-3', source: '1', target: '3', type: 'smoothstep' },
+    { id: 'e1-4', source: '1', target: '4', type: 'smoothstep' },
+    { id: 'e1-5', source: '1', target: '5', type: 'smoothstep' },
+    { id: 'e1-6', source: '1', target: '6', type: 'smoothstep' },
+  ]}
+/>
+
+## 4. Syntax Table
+
+Python doesn't have native language keywords for SOLID (like Java's `interface`), so we rely on standard OOP patterns and the `abc` module.
+
+| Principle | Python Implementation Tool |
+|---|---|
+| SRP | Smaller classes and modules |
+| OCP | Inheritance, Strategy Pattern |
+| LSP | Type Hinting, Duck Typing |
+| ISP | Multiple small `abc.ABC` classes |
+| DIP | Dependency Injection, `abc.ABC` |
+
+## 5. Beginner Example
+
+Let's look at the **Single Responsibility Principle (SRP)**.
+
+**Bad (Violates SRP):**
+```python
+class Report:
+    def __init__(self, data):
+        self.data = data
+
+    def generate(self):
+        return f"Report Data: {self.data}"
+
+    # Formatting has nothing to do with generating data!
+    def format_to_pdf(self):
+        print("Converting to PDF...")
+```
+
+**Good (Follows SRP):**
+```python
+class Report:
+    def __init__(self, data):
+        self.data = data
+
+    def generate(self):
+        return f"Report Data: {self.data}"
+
+class ReportFormatter:
+    @staticmethod
+    def format_to_pdf(report):
+        print(f"Converting '{report.generate()}' to PDF...")
+
+r = Report("Q1 Earnings")
+ReportFormatter.format_to_pdf(r)
+```
+
+Bro, now if the PDF logic changes, the `Report` class doesn't need to be touched.
+
+## 6. Real-World Engineering Example
+
+Let's look at **Open/Closed (OCP)** and **Dependency Inversion (DIP)** in a real notification system. We want to add new notification methods (Slack, SMS) without modifying the core `AlertSystem`.
+
+```python
+from abc import ABC, abstractmethod
+
+# DIP: Depend on Abstraction
+class Notifier(ABC):
+    @abstractmethod
+    def send(self, message: str):
+        pass
+
+# OCP: We can add as many of these as we want without changing AlertSystem!
+class EmailNotifier(Notifier):
+    def send(self, message: str):
+        print(f"Sending Email: {message}")
+
+class SlackNotifier(Notifier):
+    def send(self, message: str):
+        print(f"Sending Slack Message: {message}")
+
+# AlertSystem is CLOSED for modification, but OPEN for extension
+class AlertSystem:
+    # DIP: Injecting the dependency (Notifier interface)
+    def __init__(self, notifier: Notifier):
+        self.notifier = notifier
+
+    def critical_error(self):
+        # We don't care HOW the message is sent.
+        self.notifier.send("CRITICAL: Server down!")
+
+# Inject Email
+email_system = AlertSystem(EmailNotifier())
+email_system.critical_error()
+
+# Inject Slack (Core logic didn't change!)
+slack_system = AlertSystem(SlackNotifier())
+slack_system.critical_error()
+```
+
+## 7. Internal Working
+
+SOLID principles are conceptual, not technical. Python doesn't enforce them at runtime or compile-time (though type checkers like `mypy` can help enforce LSP and ISP). Implementing SOLID relies purely on the developer structuring the code using classes, abstract base classes, and dependency injection.
+
+## 8. Performance Table
+
+| Area | Impact |
+|---|---|
+| Runtime Speed | Negligible impact. Method resolution takes slightly longer with deeper inheritance. |
+| Memory Usage | Slightly higher due to more small classes/objects being instantiated. |
+| Developer Velocity | Slower initially (setup), but exponentially faster for future modifications. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the Liskov Substitution Principle? | A subclass should be able to replace its parent class without breaking the application (e.g., a `Penguin` subclassing `Bird` but throwing an error on `fly()` violates LSP). |
+| How do you achieve Dependency Inversion in Python? | By passing dependencies (objects) into a class via its constructor (`__init__`), rather than hardcoding their creation inside the class. |
+| What happens if you violate the Open/Closed Principle? | You create fragile code. Every new feature requires modifying existing, tested code, increasing the risk of regressions. |
+| How does Python's "Duck Typing" relate to SOLID? | Duck Typing naturally supports the Interface Segregation Principle (ISP) and Liskov Substitution Principle (LSP) because Python doesn't require explicit interface declarations. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, does Python's dynamic nature make SOLID obsolete?
+
+**Trick:** Some developers argue that Python's duck typing makes ISP and DIP unnecessary because you don't *need* to inherit from abstract classes. However, in large codebases, relying entirely on duck typing leads to chaos. While you don't *have* to use `abc`, following the *conceptual* design of SOLID (using type hints and well-defined contracts) is absolutely necessary for maintaining large Python systems.
+
+## 11. Real-World Usage
+
+Companies use SOLID for:
+- **Web Frameworks (Django/FastAPI):** Request handling (SRP), middleware pipelines (OCP), and dependency injection containers (FastAPI `Depends`).
+- **Payment Gateways:** Supporting Stripe, PayPal, and Razorpay using the same core checkout logic (DIP & OCP).
+- **Data Engineering:** Building ETL pipelines where the Extractor, Transformer, and Loader are completely decoupled.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use Dependency Injection via constructors. | Don't instantiate complex services directly inside your core logic classes. |
+| Keep classes small and focused on a single domain. | Don't create "God Classes" (e.g., `AppManager` or `DataHandler`) that do everything. |
+| Use `abc.ABC` to define clear interfaces. | Don't over-engineer simple scripts that will only ever be run once. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+SOLID principles are a tool, not a religion. In a fast-moving startup, over-applying SOLID (premature abstraction) can slow you down heavily. You might not need a completely decoupled notification factory if you only ever plan to send emails. Apply SOLID when the pain of modifying code starts outweighing the cost of refactoring it.
+
+## 14. Common Mistakes
+
+- **Violating LSP with Not Implemented Errors:** Having a base class `Worker` with a method `code()`, and a subclass `Manager` that inherits `Worker` but raises `NotImplementedError` for `code()`. This breaks LSP!
+- **Hidden Dependencies:** Doing `from database import get_db_connection` and calling it deep inside a class method. This violates DIP because the class is tightly coupled to a specific database module and is very hard to mock for testing.
+
+## 15. Related Topics
+
+- Abstraction
+- Inheritance
+- Composition vs Inheritance
+- Testing & Mocking
