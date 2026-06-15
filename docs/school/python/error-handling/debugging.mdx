@@ -2,6 +2,226 @@
 sidebar_position: 4
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Debugging
 
-Placeholder: introduce Debugging.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Debugging Python Code |
+| Difficulty | Beginner / Intermediate |
+| Used For | Finding out exactly why your code is crashing or producing the wrong output |
+| Common Mistake | Guessing the bug and randomly changing code instead of tracing the variables |
+| Performance | Running code inside a debugger is slower than normal execution, but it saves hours of human time |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, debugging is like being a detective at a crime scene.
+
+Your code crashed. The victim is lying on the floor (the Error Traceback).
+If you just stare at the victim and guess who the killer is, you will probably be wrong.
+
+A detective sets up a timeline. They go back to 8:00 PM, then 8:05 PM, checking the security cameras at every step to see exactly who entered the room.
+Debugging tools (like `pdb` or VS Code's debugger) are your security cameras. They let you freeze time and look at exactly what value every variable holds at that exact microsecond.
+
+---
+
+# 3. Concept Explanation
+
+Debugging is the process of identifying and removing errors from computer software.
+
+While `print()` statements are the most common beginner debugging tool, they are slow to write, messy, and require you to constantly restart the script.
+
+Professional engineers use **Debuggers**. A debugger allows you to:
+1. **Set Breakpoints:** Tell Python to completely freeze execution at line 54.
+2. **Step Over/Into:** Execute the code one single line at a time.
+3. **Inspect State:** Look at the current values of all variables while the program is frozen.
+4. **Evaluate Expressions:** Run new test code in the terminal while the program is frozen to see what happens.
+
+---
+
+# 4. Syntax Table
+
+| Tool | Code / Command | Note |
+|---|---|---|
+| Built-in Debugger | `import pdb; pdb.set_trace()` | The classic Python debugger (Python < 3.7). |
+| Modern Built-in | `breakpoint()` | The modern way to pause execution (Python 3.7+). |
+| `pdb` command: Next | `n` (or `next`) | Execute the current line and go to the next line. |
+| `pdb` command: Step | `s` (or `step`) | Step *inside* the function call on the current line. |
+| `pdb` command: Continue | `c` (or `continue`) | Unfreeze and run normally until the next breakpoint. |
+| `pdb` command: Print | `p variable_name` | Print the value of a variable while frozen. |
+
+---
+
+# 5. Beginner Example
+
+Let's look at a buggy script. We want to double the numbers in a list, but something is wrong.
+
+```python
+def process_data(data_list):
+    results = []
+    for item in data_list:
+        # BUG: I accidentally added the list to itself instead of doubling the integer!
+        # new_item = item * 2
+        new_item = [item] + [item]
+
+        # 1. We drop a breakpoint here to freeze time!
+        breakpoint()
+
+        results.append(new_item)
+    return results
+
+my_numbers = [10, 20, 30]
+print(process_data(my_numbers))
+```
+
+**What happens in the terminal when you run this:**
+1. The script hits `breakpoint()` and literally stops.
+2. You see a prompt: `(Pdb)`
+3. You type `p new_item`. It prints `[10, 10]`.
+4. Bro, you instantly realize: "Ah! `new_item` is a list, not the number `20`. I used `+` instead of `*`."
+5. You type `q` to quit, fix the code, and you're done in 30 seconds.
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Line 12: new_item = item + item', detail: 'Bug execution', kind: 'warning', x: 250, y: 50 },
+    { id: '2', title: 'Line 13: breakpoint()', detail: 'Code freezes here!', kind: 'process', x: 250, y: 150 },
+    { id: '3', title: 'Interactive Pdb Terminal', detail: 'Developer types commands', kind: 'tool', x: 250, y: 250 },
+    { id: '4', title: '(Pdb) p item', detail: 'Output: 10', kind: 'data', x: 50, y: 350 },
+    { id: '5', title: '(Pdb) n', detail: 'Moves to Line 14', kind: 'process', x: 450, y: 350 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'runs into' },
+    { source: '2', target: '3', label: 'opens' },
+    { source: '3', target: '4', label: 'inspects state' },
+    { source: '3', target: '5', label: 'resumes flow' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+In the real world, you rarely use raw `pdb` in the terminal. You use an IDE debugger like VS Code or PyCharm.
+
+Instead of typing `breakpoint()`, you just click in the margin next to the line number to place a red dot (a visual breakpoint).
+
+When building an API, you might have a deeply nested dictionary coming from a database, and you don't know exactly what keys exist.
+
+```python
+def calculate_discount(user_profile):
+    # Imagine this dictionary came from a complex MongoDB query
+    # and we aren't sure if 'loyalty_points' is an int, a string, or missing!
+
+    # In VS Code, you'd place a red dot breakpoint on the line below.
+    points = user_profile.get("loyalty_points", 0)
+
+    # While frozen in the IDE, you look at the "Variables" panel.
+    # You see `user_profile` actually looks like: {'metrics': {'loyalty': 500}}
+    # You instantly realize your `.get()` call is looking in the wrong place!
+
+    if points > 100:
+        return 0.20
+    return 0.0
+
+fake_db_response = {'metrics': {'loyalty_points': 500}}
+calculate_discount(fake_db_response)
+```
+
+---
+
+# 7. Internal Working
+
+How does `pdb` or an IDE actually freeze your code?
+
+Python provides a built-in tracing facility via `sys.settrace()`. When a debugger is active, it registers a trace function that Python calls *before executing every single line of code*.
+
+When the trace function sees that the current line matches a breakpoint, it pauses the main execution thread and hands control over to an interactive loop (the REPL) where you can type commands. When you type `continue`, it breaks out of the REPL and lets the main thread resume.
+
+---
+
+# 8. Performance Table
+
+| Environment | Speed | Note |
+|---|---|---|
+| Normal Execution | 100% | Full speed. |
+| Running with Debugger Attached | ~50% - 80% | Slower because `sys.settrace` inspects every line. |
+| Frozen at Breakpoint | 0% | Code is paused waiting for human input. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does `breakpoint()` do? | It drops you into the Python debugger (`pdb`) at the exact line it is called, pausing execution and allowing you to inspect variables. |
+| What is the difference between "Step Into" and "Step Over"? | "Step Over" runs the current line and stops at the next line in the current function. "Step Into" dives *inside* the function call on the current line, allowing you to debug the inner function. |
+| How do you debug an infinite loop? | You can interrupt the script with `Ctrl+C` which raises a `KeyboardInterrupt`. If you run the script with `python -m pdb myscript.py`, `Ctrl+C` drops you into the debugger instead of killing the program! |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+The Shadow Variable Trap!
+
+When you are in the `pdb` terminal, you can type variable names to see their values. But what if your variable is named `c` or `n`?
+
+```python
+def tricky_math():
+    a = 5
+    b = 10
+    c = a + b
+    n = 20
+    breakpoint()
+    return c * n
+```
+
+Bro, if you type `c` in the `pdb` terminal, it WILL NOT print `15`. It will execute the `continue` command and unfreeze your program! If you type `n`, it will execute the `next` command!
+
+**The Fix:** If your variable name shadows a debugger command, you must use the `p` (print) command. Type `p c` or `p n`.
+
+---
+
+# 11. Real-World Usage
+
+- **VS Code / PyCharm:** 99% of professional Python developers use visual IDE debuggers. They allow you to see all variables at once, watch expressions update in real-time, and navigate the call stack visually.
+- **Jupyter Notebooks:** Data scientists use `import ipdb; ipdb.set_trace()` for a colorized, enhanced debugging experience in notebooks.
+- **Post-Mortem Debugging:** Running `python -m pdb my_script.py`. If the script crashes, it automatically opens the debugger AT the exact line of the crash, with all the dead variables still in memory!
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use an IDE debugger (VS Code/PyCharm) for complex bugs. It is much faster than `pdb`. | Leave `breakpoint()` statements in code that you push to Git. It will freeze your production server! |
+| Read the Traceback from bottom to top. The bottom line tells you *what* broke, the lines above tell you *how* you got there. | Stare at the code and guess. If you don't know the value of a variable, freeze the code and look at it. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+You cannot use `breakpoint()` or IDE debuggers on a live production server because it will freeze the HTTP thread, causing all user requests to hang and timeout. For production, you must rely exclusively on Logging and Application Performance Monitoring (APM) tools like Sentry or Datadog to capture stack traces.
+
+---
+
+# 14. Common Mistakes
+
+- **Committing `breakpoint()` to main:** This is the #1 rookie mistake. Your CI/CD pipeline runs tests, hits the breakpoint, freezes forever, and your deployment times out after 60 minutes. Always search your code for `breakpoint` before committing!
+- **Not looking at the Call Stack:** Sometimes the error happens on line 50, but the actual *bad data* was passed in from line 10. Use the debugger to look "up" the stack to see who called the function with bad data.
+
+---
+
+# 15. Related Topics
+
+- Exceptions
+- Logging
+- Production Debugging
+- Testing (Pytest)

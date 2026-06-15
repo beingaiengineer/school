@@ -76,18 +76,18 @@ This checklist tracks the implementation of Python School playbook topics. Compl
 - [x] Inheritance (`oops/inheritance.mdx`)
 - [x] Polymorphism (`oops/polymorphism.mdx`)
 - [x] Encapsulation (`oops/encapsulation.mdx`)
-- [ ] Abstraction (`oops/abstraction.mdx`)
-- [ ] Magic Methods (`oops/magic-methods.mdx`)
-- [ ] Dataclasses (`oops/dataclasses.mdx`)
-- [ ] SOLID Principles (`oops/solid-principles.mdx`)
-- [ ] Composition vs Inheritance (`oops/composition-vs-inheritance.mdx`)
+- [x] Abstraction (`oops/abstraction.mdx`)
+- [x] Magic Methods (`oops/magic-methods.mdx`)
+- [x] Dataclasses (`oops/dataclasses.mdx`)
+- [x] SOLID Principles (`oops/solid-principles.mdx`)
+- [x] Composition vs Inheritance (`oops/composition-vs-inheritance.mdx`)
 
 ## 8. Error Handling
-- [ ] Exceptions (`error-handling/exceptions.mdx`)
-- [ ] Custom Exceptions (`error-handling/custom-exceptions.mdx`)
-- [ ] Logging (`error-handling/logging.mdx`)
-- [ ] Debugging (`error-handling/debugging.mdx`)
-- [ ] Production Debugging (`error-handling/production-debugging.mdx`)
+- [x] Exceptions (`error-handling/exceptions.mdx`)
+- [x] Custom Exceptions (`error-handling/custom-exceptions.mdx`)
+- [x] Logging (`error-handling/logging.mdx`)
+- [x] Debugging (`error-handling/debugging.mdx`)
+- [x] Production Debugging (`error-handling/production-debugging.mdx`)
 
 ## 9. File Handling
 - [ ] Reading Files (`file-handling/reading-files.mdx`)

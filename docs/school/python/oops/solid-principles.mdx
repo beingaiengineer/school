@@ -2,6 +2,253 @@
 sidebar_position: 9
 ---
 
-# Solid Principles
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Solid Principles.
+# SOLID Principles
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | SOLID Principles in Python |
+| Difficulty | Advanced |
+| Used For | Writing maintainable, scalable, and robust Object-Oriented code |
+| Common Mistake | Creating massive "God Classes" that do everything |
+| Performance | No direct runtime overhead; purely architectural |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, imagine running a professional kitchen.
+- You don't have the Head Chef also taking out the trash and doing the plumbing (Single Responsibility).
+- If you buy a new blender, you shouldn't have to redesign the whole kitchen counter to fit it (Open/Closed).
+- Any Junior Chef should be able to step in and chop onions without breaking the recipe (Liskov Substitution).
+- A waiter shouldn't be forced to learn how to cook a steak just to serve water (Interface Segregation).
+- The restaurant owner depends on the *role* of a Chef, not specifically on "Chef John" (Dependency Inversion).
+
+That's SOLID in a nutshell!
+
+---
+
+# 3. Concept Explanation
+
+SOLID is an acronym for five design principles intended to make software designs more understandable, flexible, and maintainable.
+
+- **S** - Single Responsibility Principle (SRP)
+- **O** - Open/Closed Principle (OCP)
+- **L** - Liskov Substitution Principle (LSP)
+- **I** - Interface Segregation Principle (ISP)
+- **D** - Dependency Inversion Principle (DIP)
+
+Why do we use them? Because when a codebase hits 50,000 lines, spaghetti code becomes impossible to debug. SOLID keeps the code modular.
+
+---
+
+# 4. Syntax Table
+
+| Principle | Meaning | Python Implementation |
+|---|---|---|
+| **S**RP | A class should have one reason to change. | Split huge classes into smaller ones. |
+| **O**CP | Open for extension, closed for modification. | Use Inheritance or Composition instead of modifying existing code. |
+| **L**SP | Child classes must be swappable for parent classes. | Don't change return types or raise unexpected exceptions in child classes. |
+| **I**SP | Don't force clients to depend on methods they don't use. | Create smaller, specific Abstract Base Classes (ABCs). |
+| **D**IP | Depend on abstractions, not concretions. | Use type hints with ABCs, pass dependencies via `__init__`. |
+
+---
+
+# 5. Beginner Example: Single Responsibility Principle (SRP)
+
+**Bad Code (Breaks SRP):**
+```python
+class ReportGenerator:
+    def get_data(self):
+        print("Fetching data from DB...")
+
+    def format_report(self):
+        print("Formatting data into PDF...")
+
+    def email_report(self):
+        print("Emailing report to boss...")
+```
+Bro, this class does three completely different things! If the email API changes, you have to modify the report generator.
+
+**Good Code (Follows SRP):**
+```python
+class DataFetcher:
+    def get_data(self):
+        print("Fetching data from DB...")
+
+class ReportFormatter:
+    def format_report(self, data):
+        print("Formatting data into PDF...")
+
+class EmailService:
+    def email_report(self, report):
+        print("Emailing report to boss...")
+```
+Now, if you want to switch from PDF to Excel, you only touch the `ReportFormatter`. The `EmailService` doesn't care!
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'SOLID', detail: 'The 5 Pillars', kind: 'core', x: 250, y: 50 },
+    { id: '2', title: 'S', detail: 'Single Responsibility\n(Do one thing)', kind: 'process', x: 50, y: 150 },
+    { id: '3', title: 'O', detail: 'Open/Closed\n(Extend, dont edit)', kind: 'process', x: 150, y: 250 },
+    { id: '4', title: 'L', detail: 'Liskov\n(Swappable children)', kind: 'process', x: 250, y: 350 },
+    { id: '5', title: 'I', detail: 'Interface Segregation\n(Small interfaces)', kind: 'process', x: 350, y: 250 },
+    { id: '6', title: 'D', detail: 'Dependency Inversion\n(Rely on abstractions)', kind: 'process', x: 450, y: 150 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: '1' },
+    { source: '1', target: '3', label: '2' },
+    { source: '1', target: '4', label: '3' },
+    { source: '1', target: '5', label: '4' },
+    { source: '1', target: '6', label: '5' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example: Dependency Inversion (DIP)
+
+In production, you never want your high-level business logic hardcoded to a specific low-level tool (like MySQL). You should depend on an abstraction.
+
+```python
+from abc import ABC, abstractmethod
+
+# 1. The Abstraction (The Contract)
+class Database(ABC):
+    @abstractmethod
+    def save(self, data: str):
+        pass
+
+# 2. Low-level Modules (Implementations)
+class MySQLDatabase(Database):
+    def save(self, data: str):
+        print(f"Saving '{data}' to MySQL...")
+
+class MongoDatabase(Database):
+    def save(self, data: str):
+        print(f"Saving '{data}' to MongoDB...")
+
+# 3. High-level Module (Business Logic)
+class UserService:
+    # We inject the dependency! We don't hardcode MySQLDatabase() here.
+    def __init__(self, db: Database):
+        self.db = db
+
+    def register_user(self, username: str):
+        self.db.save(username)
+
+# Enterprise Usage:
+mysql_db = MySQLDatabase()
+mongo_db = MongoDatabase()
+
+# We can easily swap databases without changing the UserService!
+service1 = UserService(mysql_db)
+service1.register_user("Alice")
+
+service2 = UserService(mongo_db)
+service2.register_user("Bob")
+```
+
+---
+
+# 7. Internal Working
+
+SOLID principles are not enforced by the Python interpreter. They are architectural guidelines.
+However, Python provides tools to help you enforce them:
+- `abc` module helps enforce **Interface Segregation** and **Dependency Inversion**.
+- Duck typing inherently supports **Liskov Substitution**, provided your objects behave correctly.
+- Modules and packages help enforce **Single Responsibility**.
+
+---
+
+# 8. Performance Table
+
+| Aspect | Complexity | Note |
+|---|---|---|
+| Runtime Speed | O(1) | SOLID doesn't slow down your code. |
+| Memory | Slight Increase | More small classes mean slightly more object overhead. |
+| Developer Velocity | High | Slows you down on day 1, speeds you up 100x on day 300. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does Open/Closed mean? | A class should be open for extension (you can add new features by creating subclasses) but closed for modification (you shouldn't edit the existing, tested code). |
+| How do you violate the Liskov Substitution Principle? | If a parent class method returns an `int`, but your child class overrides it and returns a `string`, you broke LSP. The caller will crash. |
+| What is Dependency Injection? | It's a technique to implement the Dependency Inversion Principle. Instead of a class creating its own dependencies, they are passed (injected) into it via `__init__`. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+The Interface Segregation Trap!
+
+```python
+from abc import ABC, abstractmethod
+
+# BAD INTERFACE
+class Machine(ABC):
+    @abstractmethod
+    def print_document(self): pass
+
+    @abstractmethod
+    def staple_document(self): pass
+
+class BasicPrinter(Machine):
+    def print_document(self):
+        print("Printing...")
+
+    # Wait, a basic printer doesn't have a stapler!
+    def staple_document(self):
+        raise NotImplementedError("I can't staple!")
+```
+
+Bro, if you force `BasicPrinter` to implement `staple_document()`, you violate ISP. The caller might try to call it and crash.
+
+**The Fix:** Split them into `Printer(ABC)` and `Stapler(ABC)`.
+
+---
+
+# 11. Real-World Usage
+
+- **Django Framework:** Django's Class-Based Views heavily rely on SRP and OCP. You extend `ListView` to change behavior without modifying the core view logic.
+- **Testing:** Code that follows Dependency Inversion is 100x easier to test because you can easily pass in a "Mock Database" instead of a real one during unit tests.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Split large files and classes into smaller, focused modules. | Obsess over SOLID for a quick 50-line automation script. |
+| Use Dependency Injection (`__init__(self, db_client)`) for external services. | Hardcode `db = boto3.client('dynamodb')` inside your business logic methods. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Don't over-engineer! Applying SOLID principles blindly to a tiny startup MVP can lead to "AbstractSingletonProxyFactoryBean" hell. Use SOLID when the pain of managing the code starts to outweigh the pain of architecting it properly. Wait for the codebase to naturally demand it.
+
+---
+
+# 14. Common Mistakes
+
+- **God Classes:** Having a `utils.py` with a `Helper` class that handles database connections, formats dates, and sends emails.
+- **Ignoring Liskov:** Raising new, undocumented Exceptions in a subclass that the code calling the parent class isn't prepared to `try/except`.
+
+---
+
+# 15. Related Topics
+
+- Classes & Objects
+- Inheritance vs Composition
+- Abstraction (ABCs)
+- Design Patterns

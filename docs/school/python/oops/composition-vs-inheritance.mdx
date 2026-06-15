@@ -2,6 +2,235 @@
 sidebar_position: 10
 ---
 
-# Composition Vs Inheritance
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Composition Vs Inheritance.
+# Composition vs Inheritance
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Composition vs Inheritance |
+| Difficulty | Intermediate / Advanced |
+| Used For | Deciding how to reuse code and design class relationships |
+| Common Mistake | Using inheritance just to reuse a single method |
+| Performance | Composition uses slightly more memory (multiple objects), but provides vastly superior flexibility |
+
+---
+
+# 2. Real-World Analogy
+
+**Inheritance (IS-A Relationship):**
+A `GoldenRetriever` **IS-A** `Dog`. It inherits all dog behaviors (barking, running). If you change the `Dog` blueprint, all Golden Retrievers instantly change. It's rigid.
+
+**Composition (HAS-A Relationship):**
+A `Car` **HAS-A** `Engine`. A `Car` is NOT an engine. Instead of inheriting from `Engine`, the `Car` contains an `Engine` object inside it. If you want to upgrade the car to an electric engine later, you just swap out the part. It's modular.
+
+Bro, think of Composition like building with Lego blocks. You plug pieces together. Inheritance is like casting a solid metal statue.
+
+---
+
+# 3. Concept Explanation
+
+Both Composition and Inheritance are ways to reuse code.
+
+**Inheritance** is when a child class derives from a parent class. It gets everything the parent has. It creates a tight coupling between the two classes.
+
+**Composition** is when a class contains instances of other classes to achieve its functionality. It delegates work to these smaller, specialized objects.
+
+Modern software engineering strongly favors **Composition over Inheritance**. Inheritance trees often become bloated, brittle, and impossible to untangle (known as the "Gorilla Banana problem" — you wanted a banana, but you got a gorilla holding the banana, and the entire jungle).
+
+---
+
+# 4. Syntax Table
+
+| Concept | Code | Note |
+|---|---|---|
+| Inheritance | `class ElectricCar(Car):` | Child inherits all parent methods. |
+| Composition | `def __init__(self):`<br/>`  self.engine = Engine()` | Class instantiates or accepts other objects as attributes. |
+| Delegation | `def drive(self):`<br/>`  self.engine.start()` | The container class calls methods on its composed objects. |
+
+---
+
+# 5. Beginner Example
+
+Let's see how Inheritance breaks down, and how Composition fixes it.
+
+**The Inheritance Trap (Bad):**
+```python
+class Robot:
+    def turn_on(self):
+        print("Booting up...")
+
+class FlyingRobot(Robot):
+    def fly(self):
+        print("Flying...")
+
+class SwimmingRobot(Robot):
+    def swim(self):
+        print("Swimming...")
+
+# Wait, now I need a Flying AND Swimming robot?
+# class FlyingSwimmingRobot(FlyingRobot, SwimmingRobot): # Multiple Inheritance Hell!
+```
+
+**The Composition Fix (Good):**
+```python
+class FlyingModule:
+    def fly(self): print("Flying...")
+
+class SwimmingModule:
+    def swim(self): print("Swimming...")
+
+class Robot:
+    def __init__(self, fly_mod=None, swim_mod=None):
+        # The robot HAS-A flying module and HAS-A swimming module
+        self.fly_mod = fly_mod
+        self.swim_mod = swim_mod
+
+    def operate(self):
+        print("Booting up...")
+        if self.fly_mod: self.fly_mod.fly()
+        if self.swim_mod: self.swim_mod.swim()
+
+# Now we can mix and match like Legos!
+super_bot = Robot(fly_mod=FlyingModule(), swim_mod=SwimmingModule())
+super_bot.operate()
+```
+
+Bro, see how easy it is to create a new type of robot now without creating a massive inheritance tree?
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Robot Class', detail: 'Contains modules', kind: 'core', x: 250, y: 50 },
+    { id: '2', title: 'fly_mod', detail: 'FlyingModule()', kind: 'data', x: 50, y: 200 },
+    { id: '3', title: 'swim_mod', detail: 'SwimmingModule()', kind: 'data', x: 450, y: 200 },
+    { id: '4', title: 'fly()', detail: 'Executes flight', kind: 'process', x: 50, y: 350 },
+    { id: '5', title: 'swim()', detail: 'Executes swimming', kind: 'process', x: 450, y: 350 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'HAS-A' },
+    { source: '1', target: '3', label: 'HAS-A' },
+    { source: '2', target: '4', label: 'delegates to' },
+    { source: '3', target: '5', label: 'delegates to' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+In web development, a `User` class shouldn't inherit from a `DatabaseConnection` class just because it needs to save itself to the database. It should *compose* a database connection.
+
+```python
+class PostgresDB:
+    def insert(self, table, data):
+        print(f"INSERT INTO {table} VALUES {data}")
+
+class User:
+    # We pass the db object in (Composition via Dependency Injection)
+    def __init__(self, username: str, db: PostgresDB):
+        self.username = username
+        self.db = db
+
+    def save(self):
+        # We delegate the actual saving to the composed db object
+        self.db.insert("users", {"username": self.username})
+
+# Usage
+db_client = PostgresDB()
+new_user = User("alice_dev", db_client)
+new_user.save()
+```
+
+---
+
+# 7. Internal Working
+
+- **Inheritance** relies on Python's Method Resolution Order (MRO). When you call `obj.method()`, Python checks the class, then its parent, then its grandparent.
+- **Composition** relies on attribute lookup. When you call `obj.engine.start()`, Python first looks up the `engine` attribute in `obj.__dict__`, gets that object, and then looks up `start()` on that specific object.
+
+---
+
+# 8. Performance Table
+
+| Strategy | Speed | Memory | Note |
+|---|---|---|---|
+| Inheritance | Faster lookup | Lower | Only one object is created in memory. |
+| Composition | Slightly slower | Higher | Creates multiple objects (e.g., Robot + FlyingModule), taking up more RAM. |
+
+*Bro, the performance difference is usually microseconds. Optimize for clean architecture first!*
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does "Favor Composition over Inheritance" mean? | It means you should try to build complex objects by combining smaller, independent objects (HAS-A) rather than creating deep, rigid parent-child class hierarchies (IS-A). |
+| When SHOULD you use Inheritance? | When there is a strict, undeniable IS-A relationship (e.g., `AdminUser` IS-A `User`) AND you want the child to expose the exact same interface as the parent to the outside world. |
+| What is the "Gorilla Banana" problem? | It describes the issue where you want to inherit a small piece of functionality (a banana), but inheritance forces you to pull in the entire parent class and its dependencies (the gorilla holding the banana, and the whole jungle). |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+The God Parent Class problem.
+
+Imagine you have `class BaseController`. Over 5 years, developers keep adding random utility methods to it because "everyone inherits from it anyway."
+- `def format_date()`
+- `def send_email()`
+- `def connect_to_redis()`
+
+Now, your simple `LoginController` inherits 500 methods it doesn't need.
+**The Fix:** Pull those methods out into separate `EmailSender` or `DateFormatter` classes, and *compose* them only in the controllers that actually need them.
+
+---
+
+# 11. Real-World Usage
+
+- **Game Engines (Unity/Unreal):** Almost exclusively use Composition. A "Player" is just an empty GameObject composed of a `RenderComponent`, `PhysicsComponent`, and `HealthComponent`.
+- **UI Frameworks:** React uses Composition heavily. You build a `Dashboard` by composing smaller `Button` and `Navbar` components.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Ask yourself "Does a Car HAVE an engine, or IS it an engine?" | Inherit from `List` just because you want to add one custom method to a list. Compose a list instead. |
+| Inject composed objects via `__init__` so they can be easily mocked during testing. | Build inheritance trees more than 3 levels deep. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Deep inheritance hierarchies are the #1 cause of "Spaghetti Code" in legacy Python enterprise apps. When a bug occurs in a grandchild class, you often have to trace `super()` calls up 5 different files just to find out which parent actually modified the variable. Composition keeps the blast radius of bugs small.
+
+---
+
+# 14. Common Mistakes
+
+- **Inheriting for Utility:**
+  ```python
+  class Logger:
+      def log(self, msg): print(msg)
+
+  # Mistake: A User is NOT a Logger!
+  class User(Logger):
+      def do_stuff(self):
+          self.log("Doing stuff")
+  ```
+  Instead, `User` should HAVE a `Logger` instance as an attribute.
+
+---
+
+# 15. Related Topics
+
+- Classes & Objects
+- Inheritance
+- SOLID Principles (Single Responsibility & Dependency Inversion)
+- Dependency Injection

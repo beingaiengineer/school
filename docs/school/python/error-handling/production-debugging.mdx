@@ -2,6 +2,208 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Production Debugging
 
-Placeholder: introduce Production Debugging.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Production Debugging |
+| Difficulty | Advanced |
+| Used For | Finding and fixing bugs in live, remote servers where you cannot use `print()` or `breakpoint()` |
+| Common Mistake | Trying to SSH into a production server to edit code live |
+| Performance | Monitoring tools add a 1-5% performance overhead, but are absolutely mandatory |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, debugging locally on your laptop is like fixing a car in your own garage. You can turn off the engine, open the hood, take out the spark plugs, and take all the time you need.
+
+Debugging in production is like trying to fix the engine of a Formula 1 car *while it is driving at 200 mph during a race*.
+You cannot stop the car (you can't use `breakpoint()`). You have to rely on telemetry (Logging), the pit crew dashboard (APM/Metrics), and replay cameras (Error Tracking) to figure out why the engine is smoking without stopping the race.
+
+---
+
+# 3. Concept Explanation
+
+Production Debugging is the set of tools and practices used to identify bugs after your code has been deployed to real users.
+
+Because you cannot freeze a live server (it would cause thousands of users to timeout), you rely entirely on Observability:
+1. **Logs:** Text records of what happened (e.g., Datadog, ELK).
+2. **Metrics:** Dashboards showing CPU usage, memory, and HTTP 500 error rates (e.g., Prometheus, Grafana).
+3. **Traces:** Visualizing the path a single request took across 10 different microservices (e.g., Jaeger, OpenTelemetry).
+4. **Error Tracking:** Tools that automatically capture crashed code and stack traces (e.g., Sentry).
+
+---
+
+# 4. Syntax Table
+
+| Tool Category | Example Providers | Purpose |
+|---|---|---|
+| Centralized Logging | Datadog, Splunk, ELK | Search through millions of log lines from hundreds of servers. |
+| APM (Metrics & Tracing) | New Relic, Datadog APM | See which database query is taking 5 seconds to load. |
+| Exception Tracking | Sentry, Rollbar | Alerts you instantly when an unhandled exception crashes a script. |
+| Profiling | Py-Spy, cProfile | Seeing exactly which Python function is eating 100% of the CPU. |
+
+---
+
+# 5. Beginner Example
+
+Let's imagine you wrote an API and deployed it. Suddenly, users say "Checkout is broken!"
+
+**Bad Approach (The Rookie):**
+1. You panic.
+2. You try to reproduce it on your laptop. It works fine for you.
+3. You SSH into the live server, open `vim`, and add `print("here")` to the code.
+4. You break the server even worse.
+
+**Good Approach (The Engineer):**
+1. You open Sentry (Error Tracker).
+2. You see a spike in `KeyError: 'discount_code'` errors.
+3. You click the error and see the exact line of code, plus the local variables! The `user_payload` dictionary was missing the `discount_code` key because of a frontend bug.
+4. You push a fix: `code = user_payload.get('discount_code', None)`.
+
+Bro, with proper tools, you found and fixed a bug in 5 minutes without ever touching the live server.
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Live Server', detail: 'User hits an Exception', kind: 'warning', x: 50, y: 150 },
+    { id: '2', title: 'Sentry SDK', detail: 'Captures stack trace & locals', kind: 'tool', x: 250, y: 150 },
+    { id: '3', title: 'Sentry Dashboard', detail: 'Alerts Slack & shows UI', kind: 'output', x: 450, y: 150 },
+    { id: '4', title: 'Datadog Agent', detail: 'Collects Logs & CPU metrics', kind: 'tool', x: 250, y: 250 },
+    { id: '5', title: 'Datadog UI', detail: 'Shows CPU spike', kind: 'output', x: 450, y: 250 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'throws error' },
+    { source: '2', target: '3', label: 'sends payload' },
+    { source: '1', target: '4', label: 'emits metrics/logs' },
+    { source: '4', target: '5', label: 'sends payload' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+Integrating Sentry into a production Python application is shockingly easy. You just add the SDK at the very start of your app.
+
+```python
+import sentry_sdk
+import logging
+
+# 1. Initialize Sentry with your project URL (DSN)
+sentry_sdk.init(
+    dsn="https://examplePublicKey@o0.ingest.sentry.io/0",
+    traces_sample_rate=1.0, # Capture 100% of transactions for performance monitoring
+)
+
+def process_payment(user_id):
+    logging.info(f"Processing payment for {user_id}")
+
+    # 2. Oh no, a bug! We try to divide by zero!
+    result = 100 / 0
+
+    return result
+
+if __name__ == "__main__":
+    # 3. We don't even need a try/except block.
+    # Sentry automatically hooks into Python's global exception handler!
+    process_payment(99)
+```
+
+When this crashes in production, Sentry will instantly ping your Slack channel with a link. You click the link, and it shows you the exact line (`result = 100 / 0`) and even tells you that `user_id` was `99` at the time of the crash.
+
+---
+
+# 7. Internal Working
+
+How do Error Trackers (like Sentry) catch exceptions without `try/except` blocks?
+
+Python has a built-in hook called `sys.excepthook`. Whenever an unhandled exception reaches the very top of your program (right before it crashes), Python passes the exception type, value, and traceback to `sys.excepthook`.
+
+When you run `sentry_sdk.init()`, it replaces the default `sys.excepthook` with its own function. Its function grabs all the data, packages it into JSON, sends an HTTP POST request to the Sentry servers in the background, and *then* lets the program crash normally.
+
+---
+
+# 8. Performance Table
+
+| Observability Tool | Overhead | Note |
+|---|---|---|
+| Asynchronous Logging | < 1% | Extremely fast if batched and sent via background threads. |
+| Error Tracking (Sentry) | < 1% | Only triggers heavily when an error actually occurs. |
+| APM / Tracing | 2% - 5% | Tracing every single HTTP request adds slight latency, often mitigated by "Sampling" (only tracing 10% of requests). |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why can't you use `pdb` or `breakpoint()` in production? | Because it pauses the thread waiting for terminal input. In a web server, this means the user's browser will just spin forever until it times out. It completely blocks the server. |
+| What is "Observability"? | It is the ability to understand the internal state of a system just by looking at its external outputs (Logs, Metrics, and Traces). |
+| If a bug only happens in production and you can't reproduce it locally, what do you do? | I add extensive `logging.info()` and `logging.debug()` statements around the suspected area, deploy that code, and then read the centralized logs after the user hits the bug again. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+The OOM (Out Of Memory) Killer Trap!
+
+Sometimes your production server just completely dies. No Sentry error. No Python stack trace. Nothing. The container just restarts.
+
+Bro, what happened?
+You likely hit an **OOM Kill**. If your Python script tries to load a 10GB Pandas DataFrame into 8GB of RAM, the Linux operating system panics. To protect itself, Linux sends a `SIGKILL` (Signal 9) to your Python process.
+
+Python is instantly assassinated. It doesn't get a chance to run `sys.excepthook` or `finally` blocks.
+
+**The Fix:** You must look at the infrastructure metrics (like AWS CloudWatch or Kubernetes pod metrics) to see the memory graph spike to 100% right before the crash. Python can't tell you it died if the OS pulled the plug!
+
+---
+
+# 11. Real-World Usage
+
+- **Distributed Tracing:** If a user clicks "Checkout", the request might hit the API Gateway, then the Auth Service, then the Inventory Service, then the Payment Service. If it takes 10 seconds, tracing (like OpenTelemetry) gives you a Waterfall chart showing exactly which service caused the delay.
+- **Log Correlation:** Injecting a unique `request_id` into every log message so you can filter Datadog by `request_id=12345` and see only the logs for that specific user's journey.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Log the `user_id` and `request_id` in every single log message. | Log plaintext passwords, credit card numbers, or PII. |
+| Set up Alerts so you get paged if the 500 Error rate goes above 1%. | Ignore Sentry alerts until there are 50,000 unread errors in your dashboard. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Never change code directly on a production server (`vim main.py`). Your local changes will be overwritten the next time the CI/CD pipeline runs, and you bypass all automated testing, practically guaranteeing you will break something else. Always fix locally, test, and deploy through the proper pipeline.
+
+---
+
+# 14. Common Mistakes
+
+- **Swallowing Exceptions:**
+  ```python
+  try:
+      do_complex_thing()
+  except Exception:
+      pass # Mistake: You just blinded your production monitoring!
+  ```
+  If you catch an error and do nothing, Sentry will never see it, and you will have a silent, invisible bug rotting your database. If you must catch it, use `logging.exception("Failed!")` so it still gets recorded.
+
+---
+
+# 15. Related Topics
+
+- Logging
+- Exceptions
+- System Design
+- API Development

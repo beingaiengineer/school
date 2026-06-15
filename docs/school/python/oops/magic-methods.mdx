@@ -2,6 +2,237 @@
 sidebar_position: 7
 ---
 
-# Magic Methods
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Magic Methods.
+# Magic Methods (Dunder Methods)
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Magic Methods (Dunder Methods) |
+| Difficulty | Intermediate / Advanced |
+| Used For | Customizing how objects interact with built-in Python operations like `+`, `==`, or `len()` |
+| Common Mistake | Implementing `__eq__` without implementing `__hash__` if objects are used in a set/dict |
+| Performance | Fast, as Python internal operations natively hook into them |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, think of Magic Methods like setting up "Universal Translators" for your custom objects.
+
+If you have a generic "Box" object, Python doesn't know what it means to add two boxes together using `+`. Should it stack them? Combine their contents?
+
+Magic methods are secret instructions you give to your class that say: "Hey, if someone tries to use the `+` operator on us, here is exactly how you handle it."
+
+---
+
+# 3. Concept Explanation
+
+Magic Methods, also called **Dunder Methods** (because they have **D**ouble **Under**scores like `__init__`), allow your custom classes to integrate seamlessly with Python's built-in syntax.
+
+Instead of calling `obj.add(other_obj)`, you can define the `__add__` magic method and just write `obj + other_obj`. It makes your objects behave like native Python data types (strings, lists, ints).
+
+They aren't actually "magic"; they are just predefined hooks that Python looks for during certain operations.
+
+---
+
+# 4. Syntax Table
+
+| Magic Method | Triggered By | Purpose |
+|---|---|---|
+| `__init__(self)` | `obj = MyClass()` | Initializes the object (Constructor). |
+| `__str__(self)` | `print(obj)` or `str(obj)` | Returns a readable string for humans. |
+| `__repr__(self)` | `repr(obj)` | Returns an exact string representation for developers. |
+| `__add__(self, other)` | `obj + other` | Defines addition behavior. |
+| `__eq__(self, other)` | `obj == other` | Defines equality behavior. |
+| `__len__(self)` | `len(obj)` | Defines the length of the object. |
+| `__call__(self)` | `obj()` | Makes the object callable like a function. |
+
+---
+
+# 5. Beginner Example
+
+Let's make a custom `BankNote` class. We want to be able to add two notes together using `+`.
+
+```python
+class BankNote:
+    def __init__(self, value):
+        self.value = value
+
+    # Defines how it looks when printed
+    def __str__(self):
+        return f"${self.value} Note"
+
+    # Defines what happens when you use '+'
+    def __add__(self, other):
+        # We return a NEW BankNote with the combined value
+        return BankNote(self.value + other.value)
+
+note1 = BankNote(50)
+note2 = BankNote(20)
+
+print(note1)          # Output: $50 Note (triggers __str__)
+
+total_note = note1 + note2  # Triggers __add__
+print(total_note)     # Output: $70 Note
+```
+
+Bro, see how clean that is? We didn't have to write `note1.add_value(note2)`. We just used `+` like they were regular numbers.
+
+---
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Python Syntax', detail: 'note1 + note2', kind: 'tool', x: 250, y: 50 },
+    { id: '2', title: 'Python Interpreter', detail: 'Looks for magic hooks', kind: 'process', x: 250, y: 150 },
+    { id: '3', title: '__add__ Hook', detail: 'BankNote.__add__(note1, note2)', kind: 'process', x: 250, y: 250 },
+    { id: '4', title: 'Output Object', detail: 'BankNote(70)', kind: 'output', x: 250, y: 350 }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'evaluates' },
+    { source: '2', target: '3', label: 'translates to' },
+    { source: '3', target: '4', label: 'returns' }
+  ]
+}} />
+
+---
+
+# 6. Real-World Engineering Example
+
+Imagine you are building an AI engineering tool that processes vectors (like embeddings for a LLM). You need a custom `Vector` class that supports mathematical operations and comparisons.
+
+```python
+class Vector:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def __repr__(self):
+        # Developer-friendly representation
+        return f"Vector({self.x}, {self.y})"
+
+    def __add__(self, other):
+        if not isinstance(other, Vector):
+            raise TypeError("Can only add two Vectors together")
+        return Vector(self.x + other.x, self.y + other.y)
+
+    def __eq__(self, other):
+        if not isinstance(other, Vector):
+            return False
+        return self.x == other.x and self.y == other.y
+
+    def __len__(self):
+        # Let's say length means the number of dimensions
+        return 2
+
+v1 = Vector(1, 2)
+v2 = Vector(3, 4)
+v3 = Vector(1, 2)
+
+print(v1 + v2)  # Output: Vector(4, 6)
+print(v1 == v3) # Output: True
+print(len(v1))  # Output: 2
+```
+
+---
+
+# 7. Internal Working
+
+When Python sees an operator like `+`, `==`, or a built-in function like `len()`, it doesn't process it blindly.
+
+Instead, Python internally routes the call to the object's corresponding magic method.
+- `len(obj)` internally calls `obj.__len__()`
+- `obj1 + obj2` internally calls `obj1.__add__(obj2)`
+- `obj()` internally calls `obj.__call__()`
+
+If the class doesn't have the magic method implemented, Python throws a `TypeError` (e.g., "TypeError: object of type 'Vector' has no len()").
+
+---
+
+# 8. Performance Table
+
+| Operation | Complexity | Note |
+|---|---|---|
+| Native Operation (`+`) | O(1) | Extremely fast for built-in types (written in C). |
+| Dunder Method (`__add__`) | O(1)* | Slight overhead of Python function call, but generally very fast. *(Complexity depends on your logic)* |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between `__str__` and `__repr__`? | `__str__` is for end-users (readable string). `__repr__` is for developers (unambiguous, should ideally recreate the object). Python falls back to `__repr__` if `__str__` is missing. |
+| How do you make an object callable like a function (`obj()`)? | Implement the `__call__` magic method. |
+| Why is it dangerous to implement `__eq__` without `__hash__`? | Objects used as dictionary keys or in sets must be hashable. If you override `__eq__`, Python makes the object unhashable by default unless you also define `__hash__`. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+The `NotImplemented` trick!
+
+```python
+class Distance:
+    def __init__(self, meters):
+        self.meters = meters
+
+    def __add__(self, other):
+        if isinstance(other, Distance):
+            return Distance(self.meters + other.meters)
+        # What if someone adds an int to our Distance?
+        return NotImplemented
+
+d = Distance(10)
+
+# Python sees NotImplemented, and tries the REVERSE operation:
+# It calls (5).__radd__(d)
+result = d + 5
+# If int doesn't know how to add 'Distance', it throws TypeError.
+```
+
+Bro, returning `NotImplemented` is a powerful pattern. It tells Python "I don't know how to add this, try asking the other object if it knows how!"
+
+---
+
+# 11. Real-World Usage
+
+- **Pandas DataFrames:** DataFrames implement `__getitem__` to allow `df['column_name']` and `__add__` to allow `df1 + df2`.
+- **Pathlib:** The `pathlib.Path` module implements `__truediv__` so you can join paths using the `/` operator: `Path('/usr') / 'bin'`.
+- **Flask/Django:** Request objects often implement `__getitem__` to let you access headers via `request['Header-Name']`.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Implement `__repr__` for ALL classes. It makes debugging 10x easier. | Implement magic methods just to be "clever". It makes code hard to read. |
+| Raise `TypeError` or return `NotImplemented` if an operation isn't supported for a certain type. | Swallow errors or try to magically guess what the user meant. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Be very careful when overriding `__getattr__` or `__getattribute__` (the methods that intercept attribute lookups like `obj.something`). If you have a bug in there, it can cause infinite recursion and instantly crash your production servers with a `RecursionError`. Always use `super().__getattribute__` if you aren't sure.
+
+---
+
+# 14. Common Mistakes
+
+- **Returning a non-integer from `__len__`:**
+  `__len__` MUST return an integer >= 0. If you return a string or negative number, Python will crash.
+- **Forgetting `return` in `__str__`:**
+  If `__str__` doesn't explicitly return a string, it returns `None`, and Python will throw a `TypeError: __str__ returned non-string (type NoneType)`.
+
+---
+
+# 15. Related Topics
+
+- Classes & Objects
+- Operator Overloading (which is what magic methods do!)
+- The `dataclasses` Module (auto-generates magic methods)
+- Hashability and `__hash__`
