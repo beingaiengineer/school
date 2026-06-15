@@ -2,6 +2,221 @@
 sidebar_position: 10
 ---
 
-# Composition Vs Inheritance
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Composition Vs Inheritance.
+# Composition vs Inheritance
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Composition vs Inheritance |
+| Difficulty | Intermediate |
+| Used For | Deciding how objects should share behavior and structure |
+| Common Mistake | Using deep inheritance trees when composition would be cleaner |
+| Performance | Similar, but Composition avoids the overhead of deep Method Resolution Order (MRO) lookups |
+
+## 2. Real-World Analogy
+
+Bro, think about building a robot.
+
+**Inheritance ("Is-A"):** You create a `Robot` class. Then you create a `FlyingRobot` that inherits from it. Then a `SwimmingRobot`. But what if you want a `FlyingSwimmingRobot`? Do you inherit from both? It gets messy fast.
+
+**Composition ("Has-A"):** Instead of creating rigid types of robots, you build a basic `Robot` frame and *attach components* to it. You give it a `Jetpack` object to fly, and `Flippers` to swim. If a robot needs to stop flying, you just remove the `Jetpack` component. It's plug-and-play!
+
+## 3. Concept Explanation
+
+**Inheritance** establishes an "Is-A" relationship. A `Dog` *is an* `Animal`. It's great for tight hierarchies where behavior is universally shared and extended.
+
+**Composition** establishes a "Has-A" relationship. A `Car` *has an* `Engine`. Instead of inheriting behavior from a parent class, a class achieves its functionality by containing instances of other classes that implement the desired behavior.
+
+In modern software engineering, the rule of thumb is: **"Favor composition over inheritance."** Inheritance tightly couples classes and makes code rigid. Composition makes code flexible, modular, and easier to test.
+
+<LearningFlow
+  nodes={[
+    { id: '1', position: { x: 100, y: 0 }, data: { label: 'Inheritance (Is-A)' }, type: 'core' },
+    { id: '2', position: { x: 100, y: 100 }, data: { label: 'Animal' }, type: 'process' },
+    { id: '3', position: { x: 100, y: 200 }, data: { label: 'Dog' }, type: 'output' },
+    { id: '4', position: { x: 400, y: 0 }, data: { label: 'Composition (Has-A)' }, type: 'core' },
+    { id: '5', position: { x: 400, y: 100 }, data: { label: 'Car' }, type: 'process' },
+    { id: '6', position: { x: 300, y: 200 }, data: { label: 'Engine' }, type: 'tool' },
+    { id: '7', position: { x: 500, y: 200 }, data: { label: 'Wheels' }, type: 'tool' },
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', type: 'smoothstep' },
+    { id: 'e2-3', source: '2', target: '3', label: 'extends', type: 'step' },
+    { id: 'e4-5', source: '4', target: '5', type: 'smoothstep' },
+    { id: 'e5-6', source: '5', target: '6', label: 'contains', type: 'step' },
+    { id: 'e5-7', source: '5', target: '7', label: 'contains', type: 'step' },
+  ]}
+/>
+
+## 4. Syntax Table
+
+| Approach | Setup | Implementation |
+|---|---|---|
+| Inheritance | `class Parent:` | `class Child(Parent):` |
+| Composition | `class Engine:` | `class Car:`<br/>&nbsp;&nbsp;&nbsp;&nbsp;`def __init__(self):`<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`self.engine = Engine()` |
+
+## 5. Beginner Example
+
+Let's see the difference in a simple game scenario.
+
+**The Inheritance Way (Rigid):**
+```python
+class Character:
+    def attack(self):
+        print("Basic attack!")
+
+class Warrior(Character):
+    def attack(self):
+        print("Swings sword!")
+
+class Mage(Character):
+    def attack(self):
+        print("Casts fireball!")
+
+# What if we want a Warrior who can cast fireballs later? It's hard!
+```
+
+**The Composition Way (Flexible):**
+```python
+class SwordAttack:
+    def execute(self):
+        print("Swings sword!")
+
+class MagicAttack:
+    def execute(self):
+        print("Casts fireball!")
+
+class Character:
+    def __init__(self, attack_behavior):
+        # We compose the Character with a specific behavior
+        self.attack_behavior = attack_behavior
+
+    def attack(self):
+        self.attack_behavior.execute()
+
+# We can easily swap behaviors at runtime!
+hero = Character(SwordAttack())
+hero.attack() # Output: Swings sword!
+
+hero.attack_behavior = MagicAttack()
+hero.attack() # Output: Casts fireball!
+```
+
+Bro, notice how we changed the hero's attack without creating a whole new class!
+
+## 6. Real-World Engineering Example
+
+In web development, we often build services that need to log data and connect to databases.
+
+**Bad (Deep Inheritance):**
+```python
+class BaseService:
+    def log(self, msg): print(f"Log: {msg}")
+
+class DatabaseService(BaseService):
+    def connect(self): print("Connected to DB")
+
+class UserService(DatabaseService):
+    def create_user(self):
+        self.connect()
+        self.log("User created")
+```
+This forces `UserService` to inherit DB logic and Logging logic. What if we want a `UserService` that logs to a file but doesn't need a DB? We are stuck.
+
+**Good (Composition using Dependency Injection):**
+```python
+class Logger:
+    def log(self, msg): print(f"Log: {msg}")
+
+class Database:
+    def connect(self): print("Connected to DB")
+
+class UserService:
+    # We compose the service by passing in its dependencies
+    def __init__(self, logger: Logger, db: Database):
+        self.logger = logger
+        self.db = db
+
+    def create_user(self):
+        self.db.connect()
+        self.logger.log("User created")
+
+# We can pass ANY logger or ANY database here. Beautifully decoupled!
+user_service = UserService(logger=Logger(), db=Database())
+user_service.create_user()
+```
+
+## 7. Internal Working
+
+At the CPython level, inheritance creates a rigid `__mro__` (Method Resolution Order). When a method is called, Python searches up the inheritance tree. Deep trees make this search slightly slower.
+
+Composition simply stores references to other objects inside the instance's `__dict__`. Method calls are direct delegations (e.g., `self.logger.log()`). This avoids complex MRO lookups and prevents the "Diamond Problem" associated with multiple inheritance.
+
+## 8. Performance Table
+
+| Aspect | Inheritance | Composition |
+|---|---|---|
+| Method Lookup | Slower (requires traversing `__mro__` tree) | Faster (direct object reference lookup) |
+| Memory Footprint | Slightly smaller (attributes shared via class dictionary) | Slightly larger (requires holding references to component objects) |
+| Refactoring Speed | Very slow (changing base classes breaks everything) | Very fast (components are decoupled and isolated) |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| When should you use inheritance over composition? | Use inheritance *only* when there is a strict, undeniable "Is-A" relationship, and subclasses genuinely reuse and extend the parent's core behavior. |
+| What is the "Gorilla Banana" problem? | "You wanted a banana but what you got was a gorilla holding the banana and the entire jungle." It describes the issue where inheriting a class brings in massive amounts of unnecessary baggage. |
+| Does composition solve multiple inheritance problems? | Yes, by composing a class with multiple smaller components instead of inheriting from multiple base classes, you completely avoid the Diamond Problem and MRO confusion. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, what if you need to expose a composed object's methods on the main object?
+
+```python
+class Engine:
+    def start(self): print("Vroom!")
+
+class Car:
+    def __init__(self):
+        self._engine = Engine()
+
+    # We have to write boilerplate to delegate!
+    def start(self):
+        self._engine.start()
+```
+
+**Trick:** The downside of composition is "delegation boilerplate." If `Engine` has 20 methods, and `Car` needs to expose them all, you have to write 20 wrapper methods. In these rare cases, if `Car` *truly* behaves exactly like an `Engine` plus some extras, inheritance *might* be cleaner, or you can use `__getattr__` to dynamically forward calls (though that gets messy).
+
+## 11. Real-World Usage
+
+Companies use composition for:
+- **Game Development (Entity Component System):** An `Entity` is just an ID. It is *composed* of a `TransformComponent`, `RenderComponent`, and `PhysicsComponent`.
+- **UI Frameworks (React/Flutter):** Building a complex screen by composing smaller Button, TextField, and Card components together rather than subclassing `Screen`.
+- **Cloud Infrastructure:** A `Server` class composed of `NetworkInterface`, `StorageDrive`, and `ComputeNode` objects.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Favor Composition ("Has-A") as your default architecture choice. | Don't create inheritance trees deeper than 2 or 3 levels. |
+| Use Dependency Injection to pass composed objects into the constructor. | Don't tightly couple components by hardcoding their instantiation inside `__init__`. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+Deep inheritance hierarchies in production systems (like Django models inheriting from 4 different abstract bases) become maintenance nightmares. When a bug occurs, developers have to jump through 5 different files to figure out where a method is actually defined. Composition keeps code flat, readable, and localized.
+
+## 14. Common Mistakes
+
+- **Inheriting for Utility:** Inheriting from a `StringFormatter` class just so you can use its `to_camel_case()` method. Instead, you should just import `StringFormatter` or compose it.
+- **The "BaseBaseManager" Anti-pattern:** Creating classes like `BaseController` -> `AuthenticatedController` -> `AdminController`. Use middleware (composition) to handle authentication instead!
+
+## 15. Related Topics
+
+- Classes & Objects
+- Inheritance
+- SOLID Principles
+- Design Patterns (Strategy Pattern, Decorator Pattern)

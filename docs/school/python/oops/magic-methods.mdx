@@ -2,6 +2,187 @@
 sidebar_position: 7
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Magic Methods
 
-Placeholder: introduce Magic Methods.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Magic Methods (Dunder Methods) |
+| Difficulty | Intermediate to Advanced |
+| Used For | Customizing object behavior for built-in operations (like `+`, `len()`, `str()`) |
+| Common Mistake | Using them for regular application logic instead of core object behavior |
+| Performance | Fast, as they hook directly into Python's C-level evaluation |
+
+## 2. Real-World Analogy
+
+Bro, think of magic methods like customized physical buttons on a smart home device. Every device has standard expected behaviors when you "press the power button" or "turn the volume knob." Magic methods are how you tell Python what exactly should happen inside *your specific object* when someone "presses the power button" (like using the `+` operator or calling `len()`).
+
+## 3. Concept Explanation
+
+Magic methods, often called **dunder methods** (double underscore), are special methods in Python that start and end with double underscores, like `__init__` or `__str__`.
+
+They are rarely called directly. Instead, Python calls them behind the scenes when you perform certain operations on an object. For example, when you do `a + b`, Python internally calls `a.__add__(b)`. When you do `len(my_obj)`, Python calls `my_obj.__len__()`.
+
+By implementing these methods in your custom classes, you can make your objects behave exactly like built-in Python types, unlocking massive power and elegance.
+
+<LearningFlow
+  nodes={[
+    { id: '1', position: { x: 250, y: 0 }, data: { label: 'Code: obj1 + obj2' }, type: 'core' },
+    { id: '2', position: { x: 100, y: 100 }, data: { label: 'Python Interpreter' }, type: 'process' },
+    { id: '3', position: { x: 400, y: 100 }, data: { label: 'Checks type(obj1)' }, type: 'tool' },
+    { id: '4', position: { x: 250, y: 200 }, data: { label: 'Calls obj1.__add__(obj2)' }, type: 'warning' },
+    { id: '5', position: { x: 250, y: 300 }, data: { label: 'Returns New Object' }, type: 'output' },
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', type: 'smoothstep' },
+    { id: 'e2-3', source: '2', target: '3', type: 'smoothstep' },
+    { id: 'e3-4', source: '3', target: '4', type: 'step' },
+    { id: 'e4-5', source: '4', target: '5', type: 'smoothstep' },
+  ]}
+/>
+
+## 4. Syntax Table
+
+| Operation | Trigger | Magic Method |
+|---|---|---|
+| Initialization | `obj = Class()` | `__init__(self, ...)` |
+| String Repr | `print(obj)` | `__str__(self)` |
+| Developer Repr | `repr(obj)` | `__repr__(self)` |
+| Length | `len(obj)` | `__len__(self)` |
+| Addition | `obj1 + obj2` | `__add__(self, other)` |
+| Equality | `obj1 == obj2` | `__eq__(self, other)` |
+| Indexing | `obj[key]` | `__getitem__(self, key)` |
+
+## 5. Beginner Example
+
+Let's say we have a `Wallet` class and we want to be able to add two wallets together using the `+` operator.
+
+```python
+class Wallet:
+    def __init__(self, balance):
+        self.balance = balance
+
+    def __str__(self):
+        return f"Wallet with ${self.balance}"
+
+    def __add__(self, other):
+        # When someone does wallet1 + wallet2
+        return Wallet(self.balance + other.balance)
+
+w1 = Wallet(50)
+w2 = Wallet(100)
+
+print(w1)         # Output: Wallet with $50
+w3 = w1 + w2      # Calls w1.__add__(w2)
+print(w3)         # Output: Wallet with $150
+```
+
+Bro, notice how `w1 + w2` didn't crash? That's the magic of `__add__`.
+
+## 6. Real-World Engineering Example
+
+In engineering, you often build custom data structures that need to behave like Python lists or dictionaries. Let's build a custom `ConfigReader` that behaves like a dictionary but converts all keys to lowercase for safety.
+
+```python
+class ConfigReader:
+    def __init__(self, config_dict):
+        # Store everything internally in lowercase
+        self._config = {k.lower(): v for k, v in config_dict.items()}
+
+    def __getitem__(self, key):
+        # Called when doing config["key"]
+        return self._config.get(key.lower(), None)
+
+    def __setitem__(self, key, value):
+        # Called when doing config["key"] = value
+        self._config[key.lower()] = value
+
+    def __contains__(self, key):
+        # Called when doing "key" in config
+        return key.lower() in self._config
+
+config = ConfigReader({"API_KEY": "12345", "Timeout": 30})
+
+print(config["api_key"])  # Output: 12345
+print(config["TIMEOUT"])  # Output: 30
+print("HOST" in config)   # Output: False
+```
+
+## 7. Internal Working
+
+Python is highly object-oriented at its C core. When the interpreter sees an operator like `+`, it doesn't immediately know what to do. It looks at the type of the left operand. If that type implements the corresponding slot function (in C, this is `tp_as_number->nb_add`), Python calls it.
+
+If the left operand doesn't know how to add the right operand, it returns a special singleton called `NotImplemented`. Python will then check if the right operand has an `__radd__` (reverse add) method to try and salvage the operation before giving up and throwing a `TypeError`.
+
+## 8. Performance Table
+
+| Magic Method | Complexity | Note |
+|---|---|---|
+| `__str__` | O(n) | Depends on how much formatting you do |
+| `__eq__` | O(1) to O(n) | Depends on what you are comparing |
+| `__getitem__` | O(1) | Assuming dictionary or list internal lookup |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between `__str__` and `__repr__`? | `__str__` is for end-users (readable). `__repr__` is for developers (unambiguous, ideally valid Python code to recreate the object). |
+| What happens if `__str__` is missing but `__repr__` exists? | Python will fall back to using `__repr__` when `print()` or `str()` is called. |
+| How do you make an object callable like a function? | Implement the `__call__(self, *args, **kwargs)` method. |
+| What does returning `NotImplemented` do? | It tells Python "I don't know how to handle this operation with this type, try the reverse method on the other object." |
+| What is `__new__` vs `__init__`? | `__new__` actually creates and allocates the object (returns it). `__init__` only initializes the already created object. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, what happens if you compare a custom object to an integer, but your object only knows how to compare to itself?
+
+```python
+class Score:
+    def __init__(self, value):
+        self.value = value
+
+    def __eq__(self, other):
+        if not isinstance(other, Score):
+            # DON'T raise TypeError here!
+            return NotImplemented
+        return self.value == other.value
+
+s = Score(10)
+print(s == 10) # Output: False
+```
+
+**Trick:** By returning `NotImplemented` instead of raising an error or returning `False` manually, you give Python the chance to ask the integer `10` if *it* knows how to compare itself to a `Score`. The integer doesn't know either, so Python safely resolves the `==` to `False` by falling back to identity checks, avoiding a crash.
+
+## 11. Real-World Usage
+
+Companies use magic methods for:
+- **ORMs (Django/SQLAlchemy):** Overriding `__getattr__` and `__setattr__` to track when a database model field is changed.
+- **Pathlib:** Overriding `__truediv__` (`/`) so you can join file paths elegantly: `path = folder / "file.txt"`.
+- **Data Science (Pandas):** Overriding `__getitem__` so you can filter dataframes easily: `df[df['age'] > 20]`.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Implement `__repr__` for all classes to make debugging easier. | Don't use magic methods for non-standard behaviors (e.g., using `__add__` to delete something). |
+| Return `NotImplemented` from comparison methods if types don't match. | Don't raise `TypeError` inside `__eq__`. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+Be extremely careful when overriding `__getattr__` or `__getattribute__`. They are powerful but can lead to infinite recursion if you accidentally trigger attribute lookups inside them while trying to access internal state. Always use `super().__getattribute__('attr_name')` inside them to fetch internal state safely.
+
+## 14. Common Mistakes
+
+- **Returning values from `__init__`:** `__init__` must return `None`. If you try to `return True` or `return self`, Python will throw a `TypeError`.
+- **Confusing `__getattr__` with `__getattribute__`:** `__getattr__` is only called as a fallback when an attribute is *not found*. `__getattribute__` is called for *every single* attribute access, making it much more dangerous.
+
+## 15. Related Topics
+
+- Classes & Objects
+- Operator Overloading
+- Iterators (uses `__iter__` and `__next__`)
+- Context Managers (uses `__enter__` and `__exit__`)

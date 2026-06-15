@@ -2,6 +2,185 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Production Debugging
 
-Placeholder: introduce Production Debugging.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Production Debugging |
+| Difficulty | Advanced |
+| Used For | Finding and fixing bugs in live, running systems without taking them down |
+| Common Mistake | Using `breakpoint()` or changing code directly on the production server |
+| Performance | Critical to minimize impact; diagnostic tools shouldn't slow down the live app |
+
+## 2. Real-World Analogy
+
+Bro, debugging locally is like fixing your car in your garage. You can turn off the engine, take out the spark plugs, and take your time.
+
+Production debugging is like fixing a commercial airplane *while it is flying at 30,000 feet*. You cannot turn off the engines. You cannot use a regular wrench (a `breakpoint()`). You have to rely on instrument panels (logs), black box recorders (metrics/traces), and very careful remote diagnostics to figure out why the left wing is rattling without crashing the plane.
+
+## 3. Concept Explanation
+
+When code runs on a developer's laptop, you have full control. In production, code runs on isolated servers, in Docker containers, or serverless functions.
+
+You cannot attach a standard IDE debugger to a production system because pausing the code means pausing real users' requests. Production debugging relies entirely on **Observability**: Logging, Metrics, and Distributed Tracing. When a bug occurs, you reconstruct the state of the system using these clues.
+
+<LearningFlow
+  nodes={[
+    { id: '1', position: { x: 250, y: 0 }, data: { label: 'User Reports Bug' }, type: 'core' },
+    { id: '2', position: { x: 50, y: 100 }, data: { label: 'Check Dashboards (Metrics)' }, type: 'process' },
+    { id: '3', position: { x: 250, y: 100 }, data: { label: 'Search Logs (Elasticsearch/Datadog)' }, type: 'process' },
+    { id: '4', position: { x: 450, y: 100 }, data: { label: 'Trace Request ID' }, type: 'process' },
+    { id: '5', position: { x: 250, y: 200 }, data: { label: 'Reproduce Locally' }, type: 'tool' },
+    { id: '6', position: { x: 250, y: 300 }, data: { label: 'Deploy Fix' }, type: 'output' },
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', type: 'smoothstep' },
+    { id: 'e1-3', source: '1', target: '3', type: 'smoothstep' },
+    { id: 'e1-4', source: '1', target: '4', type: 'smoothstep' },
+    { id: 'e2-5', source: '2', target: '5', type: 'smoothstep' },
+    { id: 'e3-5', source: '3', target: '5', type: 'smoothstep' },
+    { id: 'e4-5', source: '4', target: '5', type: 'smoothstep' },
+    { id: 'e5-6', source: '5', target: '6', type: 'step' },
+  ]}
+/>
+
+## 4. Syntax Table
+
+Production debugging doesn't have "syntax." It relies on tools and patterns.
+
+| Tool / Pattern | Usage in Python |
+|---|---|
+| Structured Logging | `logger.info("msg", extra={"user_id": 123})` |
+| Sentry (Error Tracking) | `import sentry_sdk; sentry_sdk.init(...)` |
+| Correlation IDs | Generating a UUID per request and passing it everywhere |
+| Profiling | `import cProfile; cProfile.run(...)` |
+
+## 5. Beginner Example
+
+Let's look at how adding a Correlation ID saves you in production.
+
+**Bad Production Log:**
+```text
+2023-10-25 10:00:01 - INFO - Started checkout
+2023-10-25 10:00:02 - INFO - Started checkout
+2023-10-25 10:00:03 - ERROR - Payment failed
+```
+*Bro, which checkout failed? We have no idea.*
+
+**Good Production Log (Structured with Correlation ID):**
+```python
+import logging
+import uuid
+
+# Imagine this is a web framework middleware
+def process_request(user_req):
+    req_id = uuid.uuid4()
+    logger = logging.getLogger("ProdApp")
+
+    logger.info(f"[{req_id}] Started checkout for user {user_req['id']}")
+    try:
+        # Complex logic...
+        if user_req['amount'] < 0:
+            raise ValueError("Negative amount")
+    except Exception as e:
+        logger.error(f"[{req_id}] Payment failed: {e}")
+
+process_request({"id": 99, "amount": -10})
+
+# Output:
+# [a1b2c3d4-...] Started checkout for user 99
+# [a1b2c3d4-...] Payment failed: Negative amount
+```
+Now you can search your log aggregator (like Datadog) for `a1b2c3d4` and see the exact flow of that one specific request among thousands.
+
+## 6. Real-World Engineering Example
+
+In modern systems, engineers use **Sentry** to catch unhandled exceptions automatically.
+
+```python
+import sentry_sdk
+from sentry_sdk import capture_exception
+
+# Initialize Sentry at application startup
+sentry_sdk.init(
+    dsn="https://examplePublicKey@o0.ingest.sentry.io/0",
+    traces_sample_rate=1.0,
+)
+
+def divide_funds(total, users):
+    try:
+        return total / users
+    except ZeroDivisionError as e:
+        # We catch the error to prevent a crash,
+        # but we manually send it to Sentry for the engineers to see!
+        sentry_sdk.set_context("business_logic", {"total": total, "users": users})
+        capture_exception(e)
+        return 0
+
+# If users is 0, this sends a beautifully formatted stack trace
+# directly to your engineering team's Slack/Sentry dashboard.
+divide_funds(1000, 0)
+```
+
+## 7. Internal Working
+
+When tools like Sentry or Datadog APM hook into a Python application, they often monkey-patch standard libraries or use WSGI/ASGI middleware to intercept requests. When an exception bubbles up unhandled, they capture the `sys.exc_info()`, serialize the local variables in the stack frame, and send an async HTTP request to their servers before the process dies.
+
+## 8. Performance Table
+
+| Tool | Performance Impact | Note |
+|---|---|---|
+| Simple File Logging | Very Low | Negligible if configured right |
+| Sentry/Error Tracking | Low | Sending errors async; impact is only felt *when* errors occur |
+| APM (Distributed Tracing) | Medium | Adds slight latency to requests to inject/extract trace headers |
+| Live Debuggers (e.g., PySnooper) | Very High | NEVER use in production; strictly for local/staging |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| How do you debug an issue that only happens in production? | First, isolate the log traces using a request ID. Second, try to reproduce the exact state (database, inputs) locally. Never debug directly on the production server. |
+| What is structured logging? | Emitting logs as JSON objects rather than plain text strings. This allows log aggregators to parse, index, and query log data easily (e.g., `SELECT * FROM logs WHERE user_id = 5`). |
+| Why is `print()` useless in a Dockerized production app? | `print()` writes to standard output, which is often lost or unsearchable when containers restart or scale across multiple servers, unless specifically captured by the container runtime. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, a user reports a bug, but there are absolutely zero errors in the logs. What happened?
+
+**Trick:** This is a "Silent Failure." It usually happens when a developer uses a bare `except Exception: pass` block, effectively swallowing the error and blinding the team. Alternatively, the application might have run out of memory (OOMKilled by the OS), which crashes the process *before* Python can write a log. You must check system-level metrics (RAM/CPU usage) in this case!
+
+## 11. Real-World Usage
+
+Companies handle production debugging using the "Observability Triad":
+1. **Metrics (Grafana/Prometheus):** "Are we CPU bound? Is the API taking longer than 200ms?"
+2. **Logs (ELK/Splunk):** "What exactly did the application say when the error happened?"
+3. **Traces (Jaeger/Datadog):** "Which microservice in the chain of 5 services actually caused the failure?"
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Add Correlation IDs to all incoming API requests and pass them everywhere. | Don't log sensitive PII (credit cards, passwords) that violates GDPR/compliance. |
+| Use exception tracking software (Sentry, Rollbar) to group errors automatically. | Don't SSH into a production server and modify Python files using `nano` or `vim`. |
+| Write logs that provide context (state of variables), not just "Something failed." | Don't leave `DEBUG` level logging on in production; it will flood your disk. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+If you *must* run ad-hoc scripts to fix corrupted data in production, never run them directly against the live master database first. Write a dry-run script, test it on a sanitized staging database, and get another engineer to review the code. "Fixing" things quickly in production is the #1 way to cause a catastrophic outage.
+
+## 14. Common Mistakes
+
+- **Log Spamming:** Logging a warning inside a `for` loop that runs 10,000 times a second. It will cost the company thousands of dollars in Datadog ingestion fees.
+- **Missing Context:** Logging `Error: user not found`. *Which user? What endpoint? What time?* A log without context is almost useless.
+
+## 15. Related Topics
+
+- Logging
+- Exceptions
+- System Design Basics
+- Clean Code Practices
