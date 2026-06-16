@@ -235,11 +235,12 @@ Before deleting files:
 - `strings`: string-basics, string-methods, string-formatting, regex, unicode, f-strings
 - `oops`: classes-objects, constructors, inheritance, polymorphism, encapsulation, abstraction, magic-methods, dataclasses, solid-principles, composition-vs-inheritance
 - `error-handling`: exceptions, custom-exceptions, logging, debugging, production-debugging
+- `file-handling`: reading-files, writing-files, csv-files, json-files, pathlib, file-best-practices
+- `modules-packages`: modules, packages, virtual-environments, pip
 - `interview-prep`: top-python-interview-questions, tricky-python-questions, debugging-rounds, coding-round-patterns, system-design-rounds, senior-python-questions
 
 **Pending Topics (Next Up):**
-- `file-handling`: all topics (reading-files, writing-files, csv-files, json-files, pathlib, file-best-practices)
-- `modules-packages`: all topics (modules, packages, virtual-environments, pip, pyproject-toml, dependency-management)
+- `modules-packages`: pyproject-toml, dependency-management
 - `advanced-python`: all topics (memory-management, garbage-collection, shallow-vs-deep-copy, mutability, context-managers, descriptors, metaclasses, monkey-patching, dynamic-typing, python-internals)
 - `concurrency`: all topics (threading, multiprocessing, asyncio, async-await, race-conditions, queues, locks-semaphores, gil)
 - `api-development`: all topics (requests-library, rest-api-basics, fastapi, flask, authentication, middleware, api-versioning, rate-limiting)

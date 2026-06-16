@@ -2,6 +2,187 @@
 sidebar_position: 1
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Modules
 
-Placeholder: introduce Modules.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Python Modules |
+| Difficulty | Beginner |
+| Used For | Organizing code into separate files |
+| Main Idea | A module is just a `.py` file you can import into another file |
+| Common Mistake | Naming your file the same as a built-in module (e.g., `math.py`) |
+| Production Angle | Clean module design prevents circular imports and spaghetti code |
+
+Bro, as your script grows past 200 lines, you need to split it up. Modules are how Python organizes code into clean, reusable files.
+
+## 2. Real-World Analogy
+
+Think of a module like a toolbox in a mechanic's garage.
+
+| Garage Step | Python Step |
+|---|---|
+| A mechanic needs a wrench | Your code needs a function |
+| He doesn't carry every tool in his pocket | You don't write all code in `main.py` |
+| He goes to the "Engine Tools" box | You `import engine` |
+| He takes only the 10mm wrench | You use `from engine import start_motor` |
+
+## 3. Concept Explanation
+
+A module is literally just a Python file with a `.py` extension. When you import a module, Python executes that file from top to bottom and makes its functions, classes, and variables available to you.
+
+You can import built-in modules (like `math`), third-party modules (like `requests`), or your own custom files.
+
+## 4. Syntax Table
+
+| Action | Example |
+|---|---|
+| Import whole module | `import math` |
+| Use module function | `math.sqrt(9)` |
+| Import specific function | `from math import sqrt` |
+| Rename import (alias) | `import pandas as pd` |
+| Import everything (BAD) | `from math import *` |
+
+## 5. Beginner Example
+
+Let's say you create a file named `utils.py`:
+
+```python
+# utils.py
+def say_hello(name):
+    return f"Bro, what's up {name}!"
+```
+
+Now, in your `main.py` file in the same folder:
+
+```python
+# main.py
+import utils
+
+message = utils.say_hello("Alex")
+print(message)
+```
+
+## 6. Real-World Engineering Example
+
+```python
+# database.py
+def connect():
+    print("Connecting to Postgres...")
+
+# api.py
+def fetch_users():
+    return [{"id": 1, "name": "Alice"}]
+
+# main.py
+from database import connect
+from api import fetch_users
+
+def run_server():
+    connect()
+    users = fetch_users()
+    print(f"Loaded {len(users)} users")
+
+if __name__ == "__main__":
+    run_server()
+```
+
+Notice the `if __name__ == "__main__":` block? That prevents `run_server()` from executing if `main.py` is imported by someone else. It only runs if you execute `main.py` directly.
+
+## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'How Python Imports a Module',
+    height: 400,
+    nodes: [
+      {id: 'import', title: 'import utils', detail: 'Code hits import statement.', x: 20, y: 150, kind: 'process'},
+      {id: 'sys', title: 'sys.modules', detail: 'Checks if already loaded in memory.', x: 245, y: 150, kind: 'data'},
+      {id: 'path', title: 'sys.path Search', detail: 'Searches built-ins, current dir, site-packages.', x: 470, y: 150, kind: 'tool'},
+      {id: 'exec', title: 'Execute & Cache', detail: 'Runs code, stores in sys.modules.', x: 695, y: 150, kind: 'core'},
+      {id: 'error', title: 'ImportError', detail: 'File not found.', x: 470, y: 300, kind: 'warning'},
+    ],
+    edges: [
+      {source: 'import', target: 'sys', label: '1. check cache'},
+      {source: 'sys', target: 'path', label: '2. not found'},
+      {source: 'path', target: 'error', label: '3. fail', animated: true, type: 'step'},
+      {source: 'path', target: 'exec', label: '3. success'},
+    ],
+  }}
+/>
+
+When you import a module, Python checks a list of folders called `sys.path`. It stops at the first match. That's why if you name your file `math.py`, Python finds it *before* the real built-in `math` module, breaking your code!
+
+## 8. Performance Table
+
+| Action | Performance Impact |
+|---|---|
+| First `import x` | Slow (reads file, compiles, executes) |
+| Second `import x` | Zero cost (reads from RAM `sys.modules`) |
+| `import x` inside a loop | Negligible (cached), but bad style |
+| `from x import y` | Same speed as `import x` (entire file runs) |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does `if __name__ == "__main__":` do? | It ensures the code block only runs if the script is executed directly, not if it is imported as a module by another script. |
+| What happens if two modules import each other? | You get a Circular Import error. Python gets stuck in a loop trying to load them. |
+| Does `from x import y` save memory over `import x`? | No. Python still executes and loads the entire `x` module into `sys.modules`. It just binds `y` to your current namespace. |
+| How does Python know where to find modules? | It searches the directories listed in `sys.path` (current directory, standard library, site-packages). |
+| What is `__pycache__`? | It's a folder where Python saves compiled bytecode (`.pyc`) to make future imports faster. |
+
+## 10. Tricky Questions & Edge Cases
+
+```python
+# file_a.py
+import file_b
+print("Loaded A")
+
+# file_b.py
+import file_a
+print("Loaded B")
+```
+
+Bro, if you run `file_a.py`, it crashes with an `ImportError: cannot import name`.
+This is a **Circular Import**. `A` needs `B`, but `B` needs `A` before `A` is finished. Fix this by redesigning your code to put shared logic into a third file `C`.
+
+## 11. Real-World Usage
+
+| Scenario | Usage |
+|---|---|
+| Refactoring | Splitting a 1000-line script into `models.py`, `views.py`, and `controllers.py` |
+| Configs | Storing constants in `settings.py` and importing them everywhere |
+| Wrappers | Creating `db.py` to handle database connections so other files don't need SQL logic |
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Put all imports at the top of the file | Scatter imports inside functions |
+| Use `import pandas as pd` (standard aliases) | Make up weird aliases `import pandas as pndz` |
+| Use absolute imports | Use `from * import *` (pollutes namespace) |
+| Name files lowercase with underscores | Name files with dashes `my-module.py` (breaks imports) |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Never name your local files after standard libraries (`email.py`, `math.py`, `random.py`, `test.py`, `logging.py`). This is called "shadowing" and will cause bizarre bugs deep inside third-party packages that try to import the real library but hit your file instead.
+
+## 14. Common Mistakes
+
+| Mistake | Why It Hurts |
+|---|---|
+| Shadowing built-ins | Naming a file `json.py` breaks `import json`. |
+| `from module import *` | You lose track of where functions came from, and might overwrite your own variables. |
+| Executing code globally | Any code not inside a function or `if __name__ == "__main__":` runs immediately upon import. |
+
+## 15. Related Topics
+
+- Packages
+- Pip
+- Python Execution Flow
+- Virtual Environments

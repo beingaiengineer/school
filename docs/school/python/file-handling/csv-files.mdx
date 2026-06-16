@@ -2,6 +2,189 @@
 sidebar_position: 3
 ---
 
-# Csv Files
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Csv Files.
+# CSV Files
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | CSV Files (Comma Separated Values) |
+| Difficulty | Beginner / Intermediate |
+| Used For | Storing tabular data, importing/exporting with Excel or databases |
+| Main Idea | Use the built-in `csv` module to read and write rows of text data safely |
+| Common Mistake | Trying to parse CSVs with `.split(',')` instead of the `csv` module |
+| Production Angle | Always account for missing columns or weird encodings in real-world CSVs |
+
+Bro, CSV is the universal language of business data. Every database and spreadsheet app can speak CSV.
+
+## 2. Real-World Analogy
+
+Think of a CSV like a simple grid drawn on a whiteboard.
+
+| Board Step | Python Step |
+|---|---|
+| Draw the column headers | Write the first row |
+| Add a row of data | Call `writer.writerow()` |
+| Read down a specific column | Use `DictReader` to pull values by key |
+| Handle commas inside the data | Let the `csv` module handle quoting automatically |
+
+## 3. Concept Explanation
+
+CSV files are just text files where each line is a row, and values are separated by commas. However, parsing them manually is a bad idea because real-world data contains commas inside the text (e.g., `"Smith, John"`).
+
+Python provides a built-in `csv` module that handles all the quoting, parsing, and formatting rules automatically.
+
+## 4. Syntax Table
+
+| Action | Example |
+|---|---|
+| Import | `import csv` |
+| Read as Lists | `reader = csv.reader(file)` |
+| Read as Dicts | `reader = csv.DictReader(file)` |
+| Write Row | `writer.writerow(['John', 25])` |
+| Write Multiple | `writer.writerows([row1, row2])` |
+
+## 5. Beginner Example
+
+```python
+import csv
+
+# Writing a simple CSV
+with open('users.csv', 'w', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow(['Name', 'Age', 'Role'])
+    writer.writerow(['Alice', 28, 'Admin'])
+    writer.writerow(['Bob', 24, 'User'])
+
+# Reading it back
+with open('users.csv', 'r') as file:
+    reader = csv.reader(file)
+    for row in reader:
+        print(row)
+```
+
+Bro, notice `newline=''` when writing. Without it, Windows will insert extra blank lines between rows.
+
+## 6. Real-World Engineering Example
+
+```python
+import csv
+
+def process_sales_data(filepath):
+    total_sales = 0
+    # DictReader is the MVP for production. It uses the first row as keys.
+    with open(filepath, 'r', encoding='utf-8-sig') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            # We can access data by column name instead of confusing indexes
+            price = float(row['Price'])
+            qty = int(row['Quantity'])
+            total_sales += (price * qty)
+
+    return total_sales
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'How DictReader Parses CSVs',
+    height: 400,
+    nodes: [
+      {id: 'file', title: 'CSV File', detail: 'Raw text data.', x: 20, y: 150, kind: 'data'},
+      {id: 'headers', title: 'Header Extraction', detail: 'Reads line 1: ["Name", "Age"]', x: 245, y: 150, kind: 'process'},
+      {id: 'row', title: 'Row Parsing', detail: 'Reads line 2: "Alice,28"', x: 470, y: 150, kind: 'process'},
+      {id: 'dict', title: 'Dictionary Creation', detail: 'Zips headers & row: {"Name": "Alice"}', x: 695, y: 150, kind: 'core'},
+      {id: 'output', title: 'Your Code', detail: 'Accesses row["Name"]', x: 920, y: 150, kind: 'output'},
+    ],
+    edges: [
+      {source: 'file', target: 'headers', label: 'first line'},
+      {source: 'headers', target: 'row', label: 'next line'},
+      {source: 'row', target: 'dict', label: 'map values'},
+      {source: 'dict', target: 'output', label: 'yield'},
+    ],
+  }}
+/>
+
+`DictReader` is powerful because it links the values in the current row to the header names from the first row. It yields a dictionary on every iteration.
+
+## 8. Performance Table
+
+| Strategy | Performance | Memory Impact |
+|---|---|---|
+| `csv.reader` / `DictReader` | Fast, streams row by row | Very Low |
+| `list(csv.reader)` | Fast, loads everything | High (Dangerous for large files) |
+| Manual `.split(',')` | Buggy, doesn't handle quotes | Varies |
+| `pandas.read_csv()` | Highly optimized C code | High (Loads to RAM) |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why shouldn't you parse CSVs using `string.split(',')`? | It breaks if the data itself contains commas (like `"Los Angeles, CA"`). The `csv` module handles quote parsing safely. |
+| What is the difference between `csv.reader` and `csv.DictReader`? | `reader` returns rows as lists (accessed by index). `DictReader` returns rows as dictionaries (accessed by column name). |
+| Why use `newline=''` when writing CSVs? | To prevent the `csv` module and the OS from applying duplicate newline translations, which causes blank rows on Windows. |
+| How do you handle massive CSV files? | Iterate row-by-row using a loop over the reader object, so you don't load the entire file into RAM. |
+| What encoding should you use for CSVs from Excel? | Often `utf-8-sig` (UTF-8 with BOM) helps Excel read the file correctly without garbling characters. |
+
+## 10. Tricky Questions & Edge Cases
+
+```python
+import csv
+
+data = [
+    {"name": "Alice", "age": 30},
+    {"name": "Bob", "city": "NY"} # Missing 'age', extra 'city'
+]
+
+with open('out.csv', 'w', newline='') as f:
+    writer = csv.DictWriter(f, fieldnames=["name", "age"])
+    writer.writeheader()
+    for row in data:
+        writer.writerow(row)
+```
+
+Bro, this code will crash with a `ValueError` on Bob because his dict has a key (`city`) not in `fieldnames`.
+To fix it, you pass `extrasaction='ignore'` to `DictWriter`.
+
+## 11. Real-World Usage
+
+| Scenario | Usage |
+|---|---|
+| Data Migrations | Exporting users from an old DB to import into a new one |
+| Reporting | Generating end-of-month finance reports for business teams |
+| AI / ML | Loading training datasets |
+| ETL Pipelines | Standardizing flat files sent by third-party vendors |
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `csv.DictReader` for clarity | Use index-based `reader` for wide files |
+| Include `newline=''` when writing | Forget `newline=''` and get angry at Windows |
+| Use `utf-8` or `utf-8-sig` encoding | Let default encodings corrupt special characters |
+| Handle missing columns gracefully | Assume vendor CSVs will never change format |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> For files over a few gigabytes, standard Python `csv` loops might be too slow. In heavy data engineering, switch to `pandas` (if you have enough RAM) or `polars` (for blazing fast chunked processing).
+
+## 14. Common Mistakes
+
+| Mistake | Why It Hurts |
+|---|---|
+| Assuming column order | If a vendor swaps column 1 and 2, index-based code breaks. Use `DictReader`. |
+| Loading whole files into memory | `rows = list(reader)` on a 10GB file crashes the server. |
+| Forgetting `writeheader()` | The output file will lack column names, confusing everyone. |
+| Not handling empty values | `int(row['Age'])` crashes if the cell is blank. Always validate. |
+
+## 15. Related Topics
+
+- Reading Files
+- Writing Files
+- JSON Files
+- Pandas
+- Generators

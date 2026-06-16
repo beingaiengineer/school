@@ -2,6 +2,179 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Pathlib
 
-Placeholder: introduce Pathlib.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Pathlib |
+| Difficulty | Beginner / Intermediate |
+| Used For | Modern, object-oriented file path manipulation |
+| Main Idea | Replace messy `os.path.join` strings with clean `Path` objects |
+| Common Mistake | Hardcoding slashes (`\` or `/`) instead of using `/` operator |
+| Production Angle | Prevents bugs when deploying code across Windows and Linux |
+
+Bro, `pathlib` is the modern way to handle files in Python. Stop using strings for paths!
+
+## 2. Real-World Analogy
+
+Think of managing paths like giving directions.
+
+| Old Way (`os.path`) | Modern Way (`pathlib`) |
+|---|---|
+| "Go to C drive plus slash plus users plus slash plus docs" | "Start at `C:` / `users` / `docs`" |
+| Treating the directions as raw text | Treating the location as an actual place |
+| Needs manual string checking | Has built-in methods like `.exists()` |
+
+## 3. Concept Explanation
+
+Before `pathlib`, Python developers used the `os` and `os.path` modules. It meant treating file paths as normal strings and using messy functions like `os.path.join("folder", "file.txt")`.
+
+`pathlib` treats paths as objects. These objects overload the `/` operator, meaning you can join paths elegantly. They also contain built-in methods to check if a file exists, get its extension, or read its text instantly.
+
+## 4. Syntax Table
+
+| Action | `os.path` (Old) | `pathlib.Path` (Modern) |
+|---|---|---|
+| Import | `import os` | `from pathlib import Path` |
+| Join Paths | `os.path.join(d, "f.txt")` | `d / "f.txt"` |
+| Check Exists | `os.path.exists(p)` | `p.exists()` |
+| Get Name | `os.path.basename(p)` | `p.name` |
+| Get Extension| `os.path.splitext(p)[1]` | `p.suffix` |
+| Read Text | `with open(p) as f: f.read()`| `p.read_text()` |
+
+## 5. Beginner Example
+
+```python
+from pathlib import Path
+
+# Get the current directory
+current_dir = Path.cwd()
+
+# Join paths using the / operator
+file_path = current_dir / "data" / "users.txt"
+
+# Check if it exists
+if file_path.exists():
+    print("File found!")
+else:
+    print(f"Bro, {file_path} is missing.")
+```
+
+## 6. Real-World Engineering Example
+
+```python
+from pathlib import Path
+
+def find_all_csvs(directory_string):
+    # Convert string to Path object
+    target_dir = Path(directory_string)
+
+    if not target_dir.is_dir():
+        raise ValueError("Not a valid directory!")
+
+    # .rglob() does recursive searching easily
+    csv_files = list(target_dir.rglob("*.csv"))
+
+    return [f.name for f in csv_files]
+
+print(find_all_csvs("./reports"))
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'How Pathlib Unifies OS Paths',
+    height: 400,
+    nodes: [
+      {id: 'dev', title: 'Your Code', detail: 'Path("folder") / "file.txt"', x: 20, y: 150, kind: 'process'},
+      {id: 'pathlib', title: 'pathlib.Path', detail: 'Determines the OS dynamically.', x: 245, y: 150, kind: 'core'},
+      {id: 'win', title: 'WindowsPath', detail: 'Uses \\ separator.', x: 470, y: 50, kind: 'tool'},
+      {id: 'posix', title: 'PosixPath', detail: 'Uses / separator.', x: 470, y: 250, kind: 'tool'},
+      {id: 'fs', title: 'File System', detail: 'Correct API call made.', x: 695, y: 150, kind: 'output'},
+    ],
+    edges: [
+      {source: 'dev', target: 'pathlib', label: 'creates'},
+      {source: 'pathlib', target: 'win', label: 'on Windows'},
+      {source: 'pathlib', target: 'posix', label: 'on Linux/Mac'},
+      {source: 'win', target: 'fs', label: 'resolves'},
+      {source: 'posix', target: 'fs', label: 'resolves'},
+    ],
+  }}
+/>
+
+Under the hood, `Path` acts as a factory. Depending on the operating system running your code, it instantiates either a `WindowsPath` or a `PosixPath` (for Linux/Mac). This guarantees your code runs anywhere without changes.
+
+## 8. Performance Table
+
+| Operation | Performance | Best Used For |
+|---|---|---|
+| Path creation | Extremely Fast | Everywhere |
+| `path.read_text()` | Fast | Small to medium files |
+| `path.rglob()` | O(n) based on file tree | Finding files recursively |
+| `os.scandir()` | Slightly faster than pathlib | Ultra-high performance directory crawling |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why prefer `pathlib` over `os.path`? | It is object-oriented, cleaner, chains methods easily, and handles cross-platform slashes automatically. |
+| How do you join paths in `pathlib`? | Use the forward slash `/` operator: `Path('folder') / 'file.txt'`. |
+| What does `path.resolve()` do? | It returns the absolute, fully qualified path (resolving symlinks and `..`). |
+| How do you get the parent directory? | Use `path.parent`. You can chain it: `path.parent.parent`. |
+| What is the difference between `is_file()` and `exists()`? | `exists()` is true for files *and* directories. `is_file()` is true only if it is an actual file. |
+
+## 10. Tricky Questions & Edge Cases
+
+```python
+from pathlib import Path
+
+p = Path("config") / "/etc/app.conf"
+
+print(p)
+```
+
+Bro, what prints here? It prints `/etc/app.conf` (or `\etc\app.conf` on Windows).
+Why? Because `"/etc/app.conf"` starts with a slash, it is considered an *absolute* root path. When you join an absolute path, it overrides everything before it!
+
+## 11. Real-World Usage
+
+| Scenario | Usage |
+|---|---|
+| Web Servers | Defining absolute paths to static CSS/JS folders |
+| CLI Tools | Checking if an output directory exists, and `p.mkdir(parents=True)` if not |
+| Pytest | Resolving paths to mock data files relative to the test script |
+| Data Science | Recursively finding all `.parquet` files in a dataset folder |
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use the `/` operator | Use `os.path.join` |
+| Use `p.read_text()` for quick reads | Write full `with open()` blocks for tiny reads |
+| Pass `Path` objects to `open()` (it works natively) | Convert `Path` to string first: `open(str(p))` |
+| Use `p.suffix` to get extensions | Use `.split('.')[-1]` manually |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> When writing Dockerfiles or deploying to cloud servers, you often deal with Linux paths. If you hardcode `C:\\data` in your script, it will crash in production. `pathlib` forces you to think abstractly and avoid hardcoded slashes.
+
+## 14. Common Mistakes
+
+| Mistake | Why It Hurts |
+|---|---|
+| Concatenating strings | `dir + "/" + file` fails on Windows and causes subtle bugs. |
+| Forgetting `mkdir(parents=True)` | `p.mkdir()` crashes if the parent folders don't exist yet. |
+| Confusing `cwd` and `__file__` | `Path.cwd()` is where you ran the terminal command from. `Path(__file__).parent` is where the script actually lives. |
+
+## 15. Related Topics
+
+- Reading Files
+- Writing Files
+- File Best Practices
+- Modules

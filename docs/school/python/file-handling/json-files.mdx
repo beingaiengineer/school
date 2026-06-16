@@ -2,6 +2,191 @@
 sidebar_position: 4
 ---
 
-# Json Files
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Json Files.
+# JSON Files
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | JSON Files (JavaScript Object Notation) |
+| Difficulty | Beginner |
+| Used For | APIs, configuration files, and data exchange |
+| Main Idea | Convert Python dictionaries/lists into JSON strings to save or send data |
+| Common Mistake | Trying to convert custom Python classes to JSON directly |
+| Production Angle | Always validate JSON structure before relying on its fields |
+
+Bro, JSON is the universal language of the web. Almost every API responds with it.
+
+## 2. Real-World Analogy
+
+Think of JSON like a packing slip inside an Amazon box.
+
+| Packing Slip Step | Python Step |
+|---|---|
+| It lists the items inside clearly | It uses nested `{}` and `[]` structures |
+| It uses a standard format anyone can read | It is plain text |
+| A person translates it to verify the items | `json.loads()` converts text to a Python dict |
+| The warehouse generates the slip from their system | `json.dumps()` converts a Python dict to text |
+
+## 3. Concept Explanation
+
+JSON looks exactly like Python dictionaries and lists. But here is the catch: JSON is just a *string* of text. Python dictionaries are living objects in memory.
+
+The `json` module translates between the two.
+- Translating Python objects to a JSON string is called **serialization** (or encoding).
+- Translating a JSON string back into Python objects is called **deserialization** (or decoding).
+
+## 4. Syntax Table
+
+| Action | Example |
+|---|---|
+| Import | `import json` |
+| Dict to String | `json_str = json.dumps(my_dict)` |
+| String to Dict | `my_dict = json.loads(json_str)` |
+| Dict to File | `json.dump(my_dict, file_obj)` |
+| File to Dict | `my_dict = json.load(file_obj)` |
+
+## 5. Beginner Example
+
+```python
+import json
+
+# Start with a Python dictionary
+user_data = {
+    "name": "Alice",
+    "age": 28,
+    "is_admin": True,
+    "skills": ["Python", "AWS"]
+}
+
+# 1. Convert to a JSON string
+json_string = json.dumps(user_data, indent=4)
+print("JSON String:")
+print(json_string)
+
+# 2. Convert back to Python
+parsed_dict = json.loads(json_string)
+print("\nParsed Python dictionary:")
+print(parsed_dict["skills"][0])
+```
+
+## 6. Real-World Engineering Example
+
+```python
+import json
+
+def update_config(key, value):
+    # 1. Read existing config
+    try:
+        with open('config.json', 'r') as file:
+            config = json.load(file)
+    except FileNotFoundError:
+        config = {}
+
+    # 2. Update memory
+    config[key] = value
+
+    # 3. Write it back safely
+    with open('config.json', 'w') as file:
+        json.dump(config, file, indent=2)
+
+update_config("max_retries", 5)
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'How JSON Serialization Works',
+    height: 400,
+    nodes: [
+      {id: 'pydict', title: 'Python Dict', detail: '{"age": 30, "is_admin": True}', x: 20, y: 150, kind: 'data'},
+      {id: 'jsonmod', title: 'json Module', detail: 'Applies mapping rules.', x: 245, y: 150, kind: 'process'},
+      {id: 'jsonstr', title: 'JSON String', detail: '{"age": 30, "is_admin": true}', x: 470, y: 150, kind: 'output'},
+      {id: 'types', title: 'Type Conversion', detail: 'True -> true, None -> null', x: 245, y: 300, kind: 'tool'},
+    ],
+    edges: [
+      {source: 'pydict', target: 'jsonmod', label: 'json.dumps()'},
+      {source: 'jsonmod', target: 'jsonstr', label: 'serializes'},
+      {source: 'types', target: 'jsonmod', label: 'applies rules', animated: true},
+    ],
+  }}
+/>
+
+Notice how Python's `True` becomes `true` (lowercase) in JSON, and `None` becomes `null`. The `json` module applies standard mapping rules automatically.
+
+## 8. Performance Table
+
+| Strategy | Performance | Best For |
+|---|---|---|
+| `json` (built-in) | Decent | General use, config files |
+| `orjson` (third-party) | Blazing fast | High-throughput APIs |
+| `ujson` (third-party) | Very fast | Legacy high-performance apps |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between `json.dump` and `json.dumps`? | `dump` writes directly to a file object. `dumps` (dump string) returns a string in memory. |
+| Can you serialize a custom Python class to JSON? | Not directly. You must convert the class instance to a dictionary first (e.g., using `__dict__` or a custom encoder). |
+| How do you handle non-standard types like `datetime`? | Pass a custom function to the `default` argument in `json.dumps` to format the date as a string. |
+| What happens if a JSON string has invalid syntax? | `json.loads` raises a `json.decoder.JSONDecodeError`. |
+| How does JSON differ from a Python dictionary? | JSON is a text format; a dict is a data structure in RAM. JSON requires double quotes for keys, while dicts allow single quotes. |
+
+## 10. Tricky Questions & Edge Cases
+
+```python
+import json
+
+data = {1: "apple", 2: "banana"}
+
+json_str = json.dumps(data)
+parsed = json.loads(json_str)
+
+print(parsed[1])
+```
+
+Bro, this crashes with a `KeyError`.
+Why? JSON only supports strings as keys. When you `dumps`, Python converts the integer `1` to the string `"1"`. When you `loads`, it remains the string `"1"`. `parsed[1]` is an integer lookup that no longer exists!
+
+## 11. Real-World Usage
+
+| Scenario | Usage |
+|---|---|
+| APIs | Creating the payload for a POST request using `requests` |
+| Web Frameworks | FastAPI and Flask returning JSON responses to frontend apps |
+| Document Databases | Storing nested JSON documents in MongoDB |
+| Configs | Defining package metadata in `package.json` |
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `indent=4` for human-readable files | Use `indent` when sending data over network |
+| Handle `JSONDecodeError` | Assume external APIs will always send valid JSON |
+| Use `orjson` for massive payloads | Rely on the standard library for strict perf needs |
+| Convert `datetime` to ISO-8601 strings | Try to inject Python objects into JSON |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> If an API goes down, it might return an HTML error page (like a 502 Bad Gateway) instead of JSON. Calling `.json()` or `json.loads()` on HTML will throw an exception. Always validate the response content type or wrap it in a `try/except`.
+
+## 14. Common Mistakes
+
+| Mistake | Why It Hurts |
+|---|---|
+| Single quotes in JSON | JSON strict spec requires double quotes `"`. Manually writing `{'key': 'val'}` inside a file breaks parsers. |
+| `loads` vs `load` | Beginners pass a file path string to `loads` and get confused. `loads` expects the raw JSON string; `load` expects an open file object. |
+| Trailing commas | Valid in Python lists/dicts, but technically invalid in strict JSON parsing. |
+| Unserializable objects | Attempting to `json.dumps()` a file object, socket, or function causes a `TypeError`. |
+
+## 15. Related Topics
+
+- CSV Files
+- Reading Files
+- Writing Files
+- API Development
+- Dictionaries

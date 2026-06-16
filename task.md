@@ -90,18 +90,18 @@ This checklist tracks the implementation of Python School playbook topics. Compl
 - [x] Production Debugging (`error-handling/production-debugging.mdx`)
 
 ## 9. File Handling
-- [ ] Reading Files (`file-handling/reading-files.mdx`)
-- [ ] Writing Files (`file-handling/writing-files.mdx`)
-- [ ] CSV Files (`file-handling/csv-files.mdx`)
-- [ ] JSON Files (`file-handling/json-files.mdx`)
-- [ ] Pathlib (`file-handling/pathlib.mdx`)
-- [ ] File Best Practices (`file-handling/file-best-practices.mdx`)
+- [x] Reading Files (`file-handling/reading-files.mdx`)
+- [x] Writing Files (`file-handling/writing-files.mdx`)
+- [x] CSV Files (`file-handling/csv-files.mdx`)
+- [x] JSON Files (`file-handling/json-files.mdx`)
+- [x] Pathlib (`file-handling/pathlib.mdx`)
+- [x] File Best Practices (`file-handling/file-best-practices.mdx`)
 
 ## 10. Modules & Packages
-- [ ] Modules (`modules-packages/modules.mdx`)
-- [ ] Packages (`modules-packages/packages.mdx`)
-- [ ] Virtual Environments (`modules-packages/virtual-environments.mdx`)
-- [ ] Pip (`modules-packages/pip.mdx`)
+- [x] Modules (`modules-packages/modules.mdx`)
+- [x] Packages (`modules-packages/packages.mdx`)
+- [x] Virtual Environments (`modules-packages/virtual-environments.mdx`)
+- [x] Pip (`modules-packages/pip.mdx`)
 - [ ] Pyproject.toml (`modules-packages/pyproject-toml.mdx`)
 - [ ] Dependency Management (`modules-packages/dependency-management.mdx`)
 
