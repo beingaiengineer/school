@@ -2,6 +2,211 @@
 sidebar_position: 4
 ---
 
-# Json Files
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Json Files.
+# JSON Files
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | JSON Files (JavaScript Object Notation) |
+| Difficulty | Beginner |
+| Used For | Storing and transmitting structured data like dictionaries and lists |
+| Core Idea | Use Python's built-in `json` module to convert text into Python dictionaries, and vice versa |
+| Common Mistake | Confusing `json.load()` (files) with `json.loads()` (strings) |
+| Performance | Fast, but loads the entire JSON structure into memory at once |
+
+Bro, JSON is the backbone of the modern web. Every API response you get from a server is likely in JSON format. In Python, JSON maps perfectly to dictionaries and lists.
+
+## 2. Real-World Analogy
+
+Think of JSON like a standard shipping container.
+
+If you want to send a complex object (like a car engine) across the world, you can't just throw it on a ship. You have to pack it securely into a standard container (serialization/JSON). When it arrives, the receiver unboxes it (deserialization) and puts the engine back together in their own garage (Python dictionary).
+
+## 3. Concept Explanation
+
+You can't write a raw Python dictionary to a text file. You have to convert it into a string first. The `json` module does exactly this.
+
+- **Serialization (Dumping):** Converting a Python dictionary to a JSON string.
+- **Deserialization (Loading):** Converting a JSON string back into a Python dictionary.
+
+The module provides four main functions:
+- `json.dump()`: Write a Python object directly to a file.
+- `json.dumps()`: Convert a Python object to a string (the "s" stands for string).
+- `json.load()`: Read a JSON file and convert it to a Python object.
+- `json.loads()`: Parse a JSON string into a Python object.
+
+## 4. Syntax Table
+
+| Operation | Function | Example |
+|---|---|---|
+| Read from a File | `load()` | `data = json.load(file)` |
+| Write to a File | `dump()` | `json.dump(data, file)` |
+| Parse from a String | `loads()` | `data = json.loads('{"name": "Rahul"}')` |
+| Convert to a String | `dumps()` | `json_str = json.dumps({"name": "Rahul"})` |
+
+## 5. Beginner Example
+
+Here is how you write a dictionary to a JSON file, and then read it back.
+
+```python
+import json
+
+user_data = {
+    "name": "Rahul",
+    "age": 25,
+    "is_engineer": True,
+    "skills": ["Python", "SQL"]
+}
+
+# Write dictionary to a JSON file
+with open("user.json", "w") as f:
+    json.dump(user_data, f, indent=4) # indent makes it pretty!
+
+# Read JSON file back into a dictionary
+with open("user.json", "r") as f:
+    loaded_data = json.load(f)
+    print(loaded_data["skills"])
+```
+
+**Output:**
+```
+['Python', 'SQL']
+```
+
+## 6. Real-World Engineering Example
+
+In the real world, APIs return JSON. You often need to read an API response saved to a file, modify it, and save it back.
+
+```python
+import json
+
+def update_api_config(config_file, new_timeout):
+    # 1. Read existing config
+    with open(config_file, "r") as f:
+        config = json.load(f)
+
+    # 2. Modify the dictionary
+    config["api"]["timeout_seconds"] = new_timeout
+
+    # 3. Write it back safely
+    with open(config_file, "w") as f:
+        json.dump(config, f, indent=4)
+
+# Example usage:
+# update_api_config("app_settings.json", 30)
+```
+
+## 7. Internal Working
+
+When you call `json.loads()`, the module's C-based scanner reads the string character by character.
+
+It maps JSON types to Python types:
+- JSON `{}` -> Python `dict`
+- JSON `[]` -> Python `list`
+- JSON `true`/`false` -> Python `True`/`False`
+- JSON `null` -> Python `None`
+
+<LearningFlow
+  elements={[
+    {
+      id: '1',
+      type: 'data',
+      data: { label: 'Python Dict (Memory)' },
+      position: { x: 50, y: 150 },
+    },
+    {
+      id: '2',
+      type: 'process',
+      data: { label: 'json.dumps()' },
+      position: { x: 300, y: 50 },
+    },
+    {
+      id: '3',
+      type: 'process',
+      data: { label: 'json.loads()' },
+      position: { x: 300, y: 250 },
+    },
+    {
+      id: '4',
+      type: 'output',
+      data: { label: 'JSON String (Text)' },
+      position: { x: 550, y: 150 },
+    },
+    { id: 'e1-2', source: '1', target: '2', label: 'Serialize' },
+    { id: 'e2-4', source: '2', target: '4', label: 'String Output' },
+    { id: 'e4-3', source: '4', target: '3', label: 'Parse text' },
+    { id: 'e3-1', source: '3', target: '1', label: 'Deserialize' },
+  ]}
+/>
+
+## 8. Performance Table
+
+| Operation | Speed | Memory Impact |
+|---|---|---|
+| `json.load()` | Fast (C implementation) | High (Loads entire object graph into RAM) |
+| `json.dump()` | Fast | Low-Medium (Streams to file) |
+| `orjson` (3rd Party) | Very Fast | Lower (Better optimized for huge files) |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Difference between `load` and `loads`? | `load()` takes a file object. `loads()` takes a string (s for string). |
+| What happens if a JSON file contains invalid formatting? | Python raises a `json.decoder.JSONDecodeError`. |
+| Can you serialize a custom Python class to JSON directly? | No. You must convert it to a dictionary first, or write a custom `JSONEncoder`. |
+| How do you pretty-print JSON? | Pass `indent=4` to the `dump()` or `dumps()` function. |
+
+## 10. Tricky Questions & Edge Cases
+
+**Edge Case: Tuple mutation**
+
+Bro, JSON does not have tuples! Only lists (`[]`).
+
+```python
+import json
+
+data = {"coordinates": (10, 20)}
+json_str = json.dumps(data)
+
+# When you load it back, it's a list!
+recovered_data = json.loads(json_str)
+print(type(recovered_data["coordinates"]))
+```
+
+**Output:** `<class 'list'>`
+If your code relies on tuples being immutable, serializing and deserializing via JSON will break that assumption.
+
+## 11. Real-World Usage
+
+- **Web Development:** Sending responses from a FastAPI or Django backend to a React frontend.
+- **Configuration:** Storing application settings (e.g., `settings.json`, AWS IAM policies).
+- **Data Pipelines:** Passing messages between microservices using Kafka or RabbitMQ.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `indent=4` when saving files that humans need to read. | Try to serialize `datetime` objects directly (it will crash). |
+| Catch `json.JSONDecodeError` when loading JSON from external APIs. | Trust that an external file will always be perfectly formatted JSON. |
+| Convert custom objects to dicts before serializing. | Try to pass a custom class instance straight into `json.dump()`. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+The built-in `json` module is great, but if you are processing massive JSON files (like 500MB+ logs), it will block your CPU and eat all your RAM. In production data pipelines, switch to a faster third-party library like `orjson` or `ujson`, which are written in Rust/C and are significantly faster and more memory efficient.
+
+## 14. Common Mistakes
+
+- **Forgetting the "s":** Trying to use `json.load('{"a": 1}')`. This fails because `load()` expects a file, not a string. You need `loads()`.
+- **Single Quotes in Strings:** JSON requires double quotes `"`. If you try to parse `{'name': 'Rahul'}`, `json.loads()` will throw an error. It must be `{"name": "Rahul"}`.
+- **Datetime serialization:** The `json` module does not know how to handle `datetime` objects. You must convert them to ISO strings (`dt.isoformat()`) first.
+
+## 15. Related Topics
+
+- Dictionaries
+- File Reading/Writing
+- API Development
+- REST API Basics
