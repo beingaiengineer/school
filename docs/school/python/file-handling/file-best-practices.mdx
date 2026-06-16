@@ -2,6 +2,226 @@
 sidebar_position: 6
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # File Best Practices
 
-Placeholder: introduce File Best Practices.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | File Best Practices |
+| Difficulty | Intermediate |
+| Used For | Writing safe, scalable, and crash-proof file operations in production |
+| Core Idea | Use context managers, `pathlib`, stream large files, and handle exceptions |
+| Common Mistake | Using `.read()` on a 5GB file and crashing the server |
+| Performance | Massive performance gains if you stream files instead of buffering them into RAM |
+
+Bro, writing files on your laptop is easy. Writing files in a production server where 1,000 users are hitting your API simultaneously is a completely different game. These are the rules you must follow to not get paged at 3 AM.
+
+## 2. Real-World Analogy
+
+Think of handling files like handling cash at a bank counter.
+
+You don't leave the cash drawer open all day (forgetting to `close()` files). You don't dump 5 million rupees on the counter at once (loading huge files into RAM). You process transactions one by one, lock the drawer when done, and use security cameras (Exception handling) in case something goes wrong.
+
+## 3. Concept Explanation
+
+The major rules of file handling in Python:
+1. **Always use context managers (`with` statement):** Guarantees the file closes, even if your code crashes.
+2. **Use `pathlib` for paths:** Avoids OS-specific path bugs (Windows `\` vs Linux `/`).
+3. **Never load huge files into memory:** Use generators or iterators to process files line-by-line or chunk-by-chunk.
+4. **Handle Exceptions:** Files can be locked, deleted, or you might not have permission to read them. Wrap operations in `try/except`.
+5. **Use temporary files:** Don't write directly to the final file destination if the process takes a long time. Write to a temp file, then rename it.
+
+## 4. Syntax Table
+
+| Best Practice | Example |
+|---|---|
+| Context Manager | `with open("data.txt", "r") as f:` |
+| Pathlib | `path = Path("logs") / "app.log"` |
+| Streaming | `for line in f:` |
+| Exception Handling | `try: f.read() except FileNotFoundError: ...` |
+
+## 5. Beginner Example
+
+A typical beginner mistake vs the right way:
+
+```python
+# Bad Way:
+# 1. No context manager
+# 2. Hardcoded string path
+# 3. No error handling
+f = open("logs/error.txt", "r")
+print(f.read())
+f.close()
+
+# Good Way:
+from pathlib import Path
+
+log_path = Path("logs") / "error.txt"
+
+try:
+    with open(log_path, "r", encoding="utf-8") as f:
+        # Process line by line
+        for line in f:
+            print(line.strip())
+except FileNotFoundError:
+    print(f"Bro, the file {log_path.name} is missing!")
+except PermissionError:
+    print("You don't have permission to read this file.")
+```
+
+## 6. Real-World Engineering Example
+
+In production, if you are downloading or writing a massive file, and the process crashes halfway through, you are left with a corrupted, half-written file.
+
+The best practice is the "Atomic Write" pattern. Write to a `.tmp` file first. When the write is 100% finished successfully, rename the `.tmp` file to the final name. Renaming a file on the same disk is an atomic OS operation (it either happens instantly or fails instantly; there is no "halfway").
+
+```python
+import tempfile
+import os
+from pathlib import Path
+
+def atomic_write(file_path, data):
+    target = Path(file_path)
+    # Create a temporary file
+    temp = target.with_suffix('.tmp')
+
+    try:
+        with open(temp, "w", encoding="utf-8") as f:
+            f.write(data)
+            # Ensure it is flushed to disk!
+            f.flush()
+            os.fsync(f.fileno())
+
+        # Atomic rename
+        temp.replace(target)
+    except Exception as e:
+        # Clean up the temp file if something went wrong
+        if temp.exists():
+            temp.unlink()
+        print(f"Write failed: {e}")
+```
+
+## 7. Internal Working
+
+Why do we need atomic writes? When you write a file, data goes from Python -> RAM Buffer -> OS Kernel -> Hard Drive.
+
+If the server loses power, data in the RAM buffer is gone forever. `f.flush()` pushes data to the OS. `os.fsync()` forces the OS hardware driver to actually spin the physical disk and save it immediately.
+
+<LearningFlow
+  elements={[
+    {
+      id: '1',
+      type: 'core',
+      data: { label: 'Write to temp.tmp' },
+      position: { x: 250, y: 0 },
+    },
+    {
+      id: '2',
+      type: 'process',
+      data: { label: 'f.flush() & os.fsync()' },
+      position: { x: 250, y: 100 },
+    },
+    {
+      id: '3',
+      type: 'warning',
+      data: { label: 'Crash occurs' },
+      position: { x: 50, y: 200 },
+    },
+    {
+      id: '4',
+      type: 'process',
+      data: { label: 'temp.replace(final.txt)' },
+      position: { x: 450, y: 200 },
+    },
+    {
+      id: '5',
+      type: 'output',
+      data: { label: 'Final file untouched' },
+      position: { x: 50, y: 300 },
+    },
+    {
+      id: '6',
+      type: 'output',
+      data: { label: 'Atomic Rename Success' },
+      position: { x: 450, y: 300 },
+    },
+    { id: 'e1-2', source: '1', target: '2', label: 'Save data' },
+    { id: 'e2-3', source: '2', target: '3', label: 'If interrupted' },
+    { id: 'e2-4', source: '2', target: '4', label: 'If completes' },
+    { id: 'e3-5', source: '3', target: '5', label: 'Safe failure' },
+    { id: 'e4-6', source: '4', target: '6', label: 'Instant swap' },
+  ]}
+/>
+
+## 8. Performance Table
+
+| Practice | Performance Impact | Reliability Impact |
+|---|---|---|
+| Line-by-line reading | Very Low RAM usage | High |
+| Atomic Renames | Negligible overhead | Prevents corrupted files |
+| `os.fsync()` | Slows down writes significantly | Maximum data safety |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| How do you prevent Out of Memory (OOM) errors when reading files? | Iterate over the file object directly (`for line in f:`), which reads it chunk by chunk, instead of `f.read()`. |
+| What is an atomic write? | Writing to a temporary file first, and only renaming it to the final filename once the write is completely successful. |
+| Why use `encoding="utf-8"` explicitly? | Windows defaults to `cp1252`, while Linux defaults to `utf-8`. If you don't specify it, your app will crash on Linux if it reads a file created on Windows containing emojis. |
+| Why is `os.fsync()` necessary sometimes? | `f.close()` only flushes data to the OS cache. If the server loses power instantly, data in the OS cache is lost. `fsync` forces a hardware-level disk write. |
+
+## 10. Tricky Questions & Edge Cases
+
+**Edge Case: `PermissionError` when deleting/renaming**
+
+On Windows, if another program (like Antivirus or Excel) has the file open, you cannot delete or rename it.
+
+```python
+from pathlib import Path
+import time
+
+target = Path("report.csv")
+
+# A naive replace might fail on Windows if locked
+try:
+    target.unlink()
+except PermissionError:
+    print("Bro, someone else has the file open!")
+    # Real-world fix: wait and retry, or alert the user.
+```
+
+Linux generally allows you to delete or rename a file even if another process is currently reading it.
+
+## 11. Real-World Usage
+
+- **Database Backups:** Dumping a database to `dump_temp.sql` and renaming to `dump_final.sql` so a monitoring script doesn't try to upload a half-finished backup.
+- **Log Rotation:** Renaming `app.log` to `app.log.1` exactly at midnight so the main application can create a fresh `app.log` without losing data.
+- **Microservices:** Using `pathlib` heavily so the code runs perfectly on a Macbook (development) and in an Alpine Linux Docker container (production).
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `pathlib.Path` for all file manipulation. | Use `os.path.join()` or raw string concatenation. |
+| explicitly state `encoding="utf-8"`. | Rely on the system default encoding. |
+| Use atomic writes for critical data files. | Overwrite critical files directly in `'w'` mode. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+If you are writing logs in a multi-threaded or multi-process environment (like Gunicorn/Uvicorn), do not write to the same text file using standard `open()`. They will overwrite each other. Use the built-in `logging.handlers.RotatingFileHandler` or send logs to stdout and let Docker/Kubernetes handle the file writing.
+
+## 14. Common Mistakes
+
+- **Loading JSON fully into memory:** `json.load()` reads the whole file. If the JSON is 2GB, your pod will crash. Use libraries like `ijson` to stream large JSON files iteratively.
+- **Catching generic Exceptions:** `except Exception:` catches everything. Always catch specific errors like `FileNotFoundError` or `PermissionError` so you know exactly why the file operation failed.
+
+## 15. Related Topics
+
+- Pathlib
+- Reading Files
+- Writing Files
+- JSON Files
