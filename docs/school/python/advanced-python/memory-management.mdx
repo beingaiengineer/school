@@ -2,6 +2,139 @@
 sidebar_position: 1
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Memory Management
 
-Placeholder: introduce Memory Management.
+## 1. Quick Summary
+Bro, memory management in Python is how the interpreter handles the allocation (giving out) and deallocation (taking back) of computer memory for your objects. The beauty of Python is that it handles almost all of this automatically using an internal Memory Manager, Reference Counting, and a Garbage Collector, so you rarely have to think about `malloc()` or `free()` like you do in C.
+
+## 2. Real-World Analogy
+Think of Python memory like a giant hotel. The Python Memory Manager is the front desk clerk.
+When you create a variable, you request a room. The clerk finds an empty room, puts your data in it, and gives you the room key (a reference). When you leave the hotel (delete the variable), the clerk cleans the room and makes it available for the next guest.
+
+## 3. Concept Explanation
+In Python, **everything is an object**. When you assign a value to a variable, you are actually creating an object in memory and pointing a "name tag" (the variable) at it.
+
+Python handles memory in two main spaces:
+1. **The Stack:** Stores method calls and references (pointers) to the objects. It's fast and operates in a Last-In, First-Out (LIFO) manner.
+2. **The Private Heap:** This is where the actual objects (the data) live. Python has a private heap that you cannot access directly. The Python Memory Manager handles the API to this heap.
+
+<LearningFlow
+  diagram={{
+    nodes: [
+      { id: "1", title: "Variable 'x'", detail: "Stack Memory", x: 0, y: 50, kind: "core" },
+      { id: "2", title: "Reference Pointer", detail: "Memory Address", x: 250, y: 50, kind: "process" },
+      { id: "3", title: "Integer Object (10)", detail: "Private Heap", x: 500, y: 50, kind: "data" },
+      { id: "4", title: "Variable 'y'", detail: "Stack Memory", x: 0, y: 150, kind: "core" }
+    ],
+    edges: [
+      { source: "1", target: "2", type: "straight" },
+      { source: "2", target: "3", label: "Points to", type: "straight", animated: true },
+      { source: "4", target: "2", label: "y = x", type: "straight", animated: true }
+    ]
+  }}
+/>
+
+## 4. Syntax Table
+
+| Concept | Explanation | Example |
+|---|---|---|
+| **`id()`** | Returns the memory address of an object. | `id(my_var)` |
+| **`sys.getrefcount()`** | Shows how many variables point to an object. | `sys.getrefcount(my_var)` |
+| **`is` operator** | Checks if two variables point to the *exact same memory address*. | `a is b` |
+| **`del`** | Removes a variable name (decreases reference count). | `del my_var` |
+
+## 5. Beginner Example
+Let's see how assigning variables really works under the hood.
+
+```python
+a = 100
+b = a
+
+# Both point to the exact same object in memory!
+print(id(a) == id(b))  # Output: True
+print(a is b)          # Output: True
+
+# If we reassign 'a', it points to a NEW object
+a = 200
+print(id(a) == id(b))  # Output: False
+
+# 'b' still safely points to 100
+print(b)               # Output: 100
+```
+
+## 6. Real-World Engineering Example
+Bro, understanding memory is critical when dealing with large datasets (like pandas DataFrames or large lists). If you aren't careful, you can accidentally copy giant objects in memory and crash your server.
+
+```python
+import sys
+
+def process_large_data(data):
+    # BAD: Making a full copy of a huge list doubles your memory!
+    # data_copy = data[:]
+
+    # GOOD: Just read from the reference, or use generators
+    count = sum(1 for item in data if item > 0)
+    return count
+
+huge_list = [x for x in range(10_000_000)]
+print(f"Memory used by list: {sys.getsizeof(huge_list) / 1024 / 1024:.2f} MB")
+
+# Passing to a function does NOT copy the list, it just passes the reference pointer.
+process_large_data(huge_list)
+```
+
+## 7. Internal Working
+CPython (the standard Python implementation) uses **Reference Counting** as its primary memory management technique.
+Every object has a hidden field tracking how many names (variables) point to it.
+- `x = []` (Count = 1)
+- `y = x` (Count = 2)
+- `del x` (Count = 1)
+- `del y` (Count = 0) -> The Memory Manager instantly deletes the list from the heap to free space.
+
+## 8. Performance Table
+
+| Mechanism | Speed | Memory Overhead | Note |
+|---|---|---|---|
+| **Stack Allocation** | Extremely Fast | Very Low | Used for function frames and local variable pointers. |
+| **Heap Allocation** | Slower | Higher | Used for the actual objects (lists, strings, classes). |
+| **Reference Counting** | Fast / Real-time | Low | Reclaims memory the instant count hits 0. |
+
+## 9. Top Interview Questions
+
+| Question | Answer | Explanation |
+|---|---|---|
+| How does Python manage memory? | Via a Private Heap, Reference Counting, and a Garbage Collector. | The Memory Manager allocates objects in the heap. Ref-counting destroys them when unused. The GC handles circular references. |
+| What does the `is` operator do? | Compares memory addresses. | `==` checks if the *values* are equal. `is` checks if they are the exact same object in the heap. |
+| Does passing a list to a function copy the list? | No. | Python passes by "object reference". The function receives a pointer to the original list in memory. |
+
+## 10. Tricky Questions & Edge Cases
+**Q: Why do `a = 256; b = 256; print(a is b)` output `True`, but `a = 257; b = 257; print(a is b)` output `False`?**
+Bro, this is a classic Python trick called **Integer Interning**. CPython automatically pre-creates and caches small integers from `-5` to `256` because they are used so often. Variables assigned these values point to the pre-cached memory. Numbers above 256 get new memory addresses created on the fly.
+
+**Q: What is a Memory Leak in Python?**
+Even with automatic management, you can leak memory if you keep appending objects to a global list and never clear it, or if you create infinite circular references that a custom `__del__` method prevents the GC from cleaning up.
+
+## 11. Real-World Usage
+- **Data Engineering:** Avoiding `.copy()` on massive Pandas DataFrames to prevent out-of-memory (OOM) kills.
+- **Web Servers:** Ensuring global dictionaries (used for caching) have size limits so they don't eat all the server RAM.
+- **Microcontrollers:** Using MicroPython on devices with only kilobytes of RAM requires strict memory control.
+
+## 12. Best Practices
+- **Use Generators:** Instead of returning massive lists from functions, `yield` items one by one.
+- **Use `slots`:** If you are creating millions of class instances, use `__slots__` to prevent Python from creating a memory-heavy dictionary for each instance.
+- **Let Python do its job:** Don't try to manually call `gc.collect()` or use `del` constantly unless you are doing serious optimization.
+
+## 13. Production Notes
+In containerized environments (like Docker in Kubernetes), if your Python app uses more memory than the container limit, the Linux OOM Killer will forcefully terminate your app without warning. You won't get a Python traceback, just a `Killed` message in the logs. Always monitor memory usage in production.
+
+## 14. Common Mistakes
+- **Modifying arguments:** Because Python passes memory references, if you do `def add_item(my_list): my_list.append(1)`, you are modifying the original list that was passed in!
+- **Default mutable arguments:** `def func(my_list=[])` is a disaster because the list object is created *once* in memory when the function is defined, not every time it's called.
+- **Confusing `==` and `is`:** Using `is` to check for value equality will introduce silent bugs.
+
+## 15. Related Topics
+- **Garbage Collection:** The system that runs alongside ref-counting to catch circular loops.
+- **Shallow vs Deep Copy:** How to actually duplicate memory when you need a safe copy.
+- **Mutability:** Why changing a list affects all references, but changing a string doesn't.

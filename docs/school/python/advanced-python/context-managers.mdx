@@ -2,6 +2,169 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Context Managers
 
-Placeholder: introduce Context Managers.
+## 1. Quick Summary
+Bro, Context Managers are the clean, professional way to handle resources in Python. Whenever you need to "setup" something, do some work, and guarantee it gets "torn down" (even if an error happens), you use a Context Manager. The most common way you see this is the `with` statement.
+
+## 2. Real-World Analogy
+Think of a Context Manager like renting a car.
+1. **Enter:** You sign the papers and get the keys.
+2. **Body:** You drive the car around (do your work).
+3. **Exit:** You return the car to the lot.
+Even if you crash the car (throw an Exception), the rental company *guarantees* they are taking the car back and closing the contract. You never have to remember to "close" the rental yourself.
+
+## 3. Concept Explanation
+Without context managers, you have to use messy `try...finally` blocks to ensure things like files or database connections are closed. If you forget the `finally` block, a crash leaves the file locked or the database connection dangling forever.
+
+A Context Manager wraps that logic up. It relies on two magic methods:
+- `__enter__()`: Runs before your block of code.
+- `__exit__()`: Runs after your block of code, automatically handling cleanup and catching exceptions.
+
+<LearningFlow
+  diagram={{
+    nodes: [
+      { id: "1", title: "with open(...) as f:", detail: "Triggers __enter__()", x: 0, y: 50, kind: "core" },
+      { id: "2", title: "Acquire Resource", detail: "Lock / File Handle", x: 250, y: 50, kind: "process" },
+      { id: "3", title: "Execute Block", detail: "f.read() or f.write()", x: 500, y: 50, kind: "tool" },
+      { id: "4", title: "Block Ends / Exception", detail: "Triggers __exit__()", x: 750, y: 50, kind: "warning" },
+      { id: "5", title: "Release Resource", detail: "Close File / Unlock", x: 1000, y: 50, kind: "output" }
+    ],
+    edges: [
+      { source: "1", target: "2", type: "smoothstep" },
+      { source: "2", target: "3", label: "Yields to", type: "smoothstep", animated: true },
+      { source: "3", target: "4", type: "smoothstep", animated: true },
+      { source: "4", target: "5", label: "Guarantees", type: "smoothstep", animated: true }
+    ]
+  }}
+/>
+
+## 4. Syntax Table
+
+| Approach | Syntax | Best For |
+|---|---|---|
+| **Built-in `with`** | `with open('file.txt') as f:` | Standard library resources (files, locks, sessions). |
+| **Class-based** | `class MyManager: def __enter__... def __exit__...` | Complex state management where you need full OOP control. |
+| **Generator (`@contextmanager`)** | `@contextmanager def my_manager(): yield` | Quick, simple context managers without writing a whole class. |
+
+## 5. Beginner Example
+Here is the old, messy way vs the clean `with` statement way.
+
+```python
+# THE OLD WAY (Error prone)
+file = open("data.txt", "w")
+try:
+    file.write("Hello Bro!")
+    # If a crash happens here, the file stays locked if we didn't have 'finally'
+finally:
+    file.close()
+
+# THE CLEAN WAY (Context Manager)
+with open("data.txt", "w") as file:
+    file.write("Hello Bro!")
+    # file is automatically closed the moment we unindent!
+```
+
+## 6. Real-World Engineering Example
+Bro, in backend engineering, you write custom context managers all the time for Database Transactions. You want to commit if successful, but rollback if there's an error.
+
+Here is how you build one using the `contextlib` decorator (the cleanest way).
+
+```python
+from contextlib import contextmanager
+
+class FakeDatabase:
+    def commit(self): print("Changes Committed! 💾")
+    def rollback(self): print("Changes Rolled Back! ⏪")
+    def close(self): print("Connection Closed. 🔌")
+
+db = FakeDatabase()
+
+@contextmanager
+def db_transaction():
+    print("Opening DB Connection... 🔗")
+    try:
+        # This is where we hand control to the 'with' block
+        yield db
+        # If the block finishes without errors, we commit
+        db.commit()
+    except Exception as e:
+        # If the block crashes, we catch it and rollback
+        print(f"Error caught: {e}")
+        db.rollback()
+        raise  # Re-raise the error if needed
+    finally:
+        # This ALWAYS runs
+        db.close()
+
+# Using our custom Context Manager
+print("--- Success Run ---")
+with db_transaction() as conn:
+    print("Writing user to DB...")
+
+print("\n--- Failure Run ---")
+try:
+    with db_transaction() as conn:
+        print("Writing user to DB...")
+        raise ValueError("Duplicate Email!")
+except ValueError:
+    pass
+```
+
+## 7. Internal Working
+When Python sees `with X() as y:`, here is the exact execution flow:
+1. It evaluates `X()`.
+2. It calls `X().__enter__()`.
+3. Whatever `__enter__()` returns is assigned to the variable `y`.
+4. It executes the indented block of code.
+5. It calls `X().__exit__(exc_type, exc_value, traceback)`.
+   - If there was no error, the `exc` arguments are `None`.
+   - If there was an error, the `exc` arguments contain the crash info. If `__exit__` returns `True`, it swallows the error. If it returns `False` (or None), the error crashes the program as normal.
+
+## 8. Performance Table
+
+| Method | Speed / Overhead | Readability | Use Case |
+|---|---|---|---|
+| **Class `__enter__/__exit__`** | Medium | Good | Heavy resource managers that need their own internal state. |
+| **`@contextmanager` decorator** | Fast | Excellent | Wrapping simple setup/teardown logic cleanly. |
+| **Naked `try/finally`** | Fastest (No function calls) | Terrible | Low-level C-like optimizations (rarely needed). |
+
+## 9. Top Interview Questions
+
+| Question | Answer | Explanation |
+|---|---|---|
+| What does the `with` statement do? | It simplifies exception handling by encapsulating common preparation and cleanup tasks. | It guarantees that the `__exit__` method is called, regardless of whether the code block succeeded or crashed. |
+| What are the required magic methods for a context manager? | `__enter__` and `__exit__`. | `__enter__` sets up the resource. `__exit__` tears it down and handles potential exceptions. |
+| Can a context manager suppress an exception? | Yes. | If the `__exit__` method explicitly returns `True`, Python will ignore the exception that occurred inside the `with` block and continue execution. |
+
+## 10. Tricky Questions & Edge Cases
+**Q: I used `@contextmanager`, but my cleanup code didn't run when an error happened!**
+Bro, if you use `@contextmanager`, everything *after* the `yield` statement is basically your `__exit__`. BUT, if an exception happens in the `with` block, that exception is thrown *at the `yield` line*. If you don't put a `try...finally` around the `yield`, your generator crashes and the cleanup code never runs!
+
+**Q: Do I always need `as variable`?**
+No. `with lock:` is perfectly valid if you don't need to interact with the object returned by `__enter__`.
+
+## 11. Real-World Usage
+- **Threading:** `with lock:` to acquire a mutex lock and guarantee it gets released so you don't deadlock your server.
+- **Testing:** `with pytest.raises(ValueError):` to temporarily tell the test runner that we *expect* a crash to happen right now.
+- **Timing:** Creating a `with Timer() as t:` to measure how many milliseconds a specific block of code takes to execute.
+
+## 12. Best Practices
+- **Use `@contextmanager` over Classes:** 90% of the time, the generator decorator is shorter, cleaner, and easier to read than writing a full class with `__enter__` and `__exit__`.
+- **Keep blocks short:** Only put the code that *needs* the resource inside the `with` block. Don't do heavy CPU math inside a `with db_connection:` block, holding the database hostage.
+- **Always yield:** If you use the decorator, do not forget the `yield` statement, or Python will yell at you.
+
+## 13. Production Notes
+In Async Python (FastAPI/Asyncio), you must use **Async Context Managers**. They use the `async with` syntax, and the magic methods become `__aenter__` and `__aexit__`. This is mandatory for things like async database connections (`asyncpg`) or async HTTP clients (`aiohttp`).
+
+## 14. Common Mistakes
+- **Forgetting the `()`:** Doing `with threading.Lock:` instead of `with threading.Lock():`. You must instantiate the object!
+- **Returning the wrong thing:** Having `__enter__` return `None` when the user expects to use `as f`.
+- **Swallowing errors accidentally:** Writing an `__exit__` method that accidentally returns `True` (or a truthy value), which silently hides all crashes in your application.
+
+## 15. Related Topics
+- **File Handling:** The most common place beginners use `with`.
+- **Exceptions:** The exact mechanisms that `__exit__` is designed to handle.
+- **Decorators:** How `@contextmanager` modifies a simple generator.

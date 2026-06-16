@@ -2,6 +2,158 @@
 sidebar_position: 7
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Metaclasses
 
-Placeholder: introduce Metaclasses.
+## 1. Quick Summary
+Bro, if an Object is an instance of a Class, then a Class is an instance of a **Metaclass**.
+Metaclasses allow you to intercept the creation of *classes themselves*. You use them when you want to enforce rules, automatically add methods, or modify the behavior of a class before it even exists in memory.
+
+## 2. Real-World Analogy
+- An **Object** is a car.
+- A **Class** is the blueprint for the car.
+- A **Metaclass** is the *factory supervisor* who inspects the blueprint before it goes to the assembly line. If the supervisor sees the blueprint is missing seatbelts, they can either automatically draw them in, or throw the blueprint in the trash and refuse to build it.
+
+## 3. Concept Explanation
+In Python, everything is an object, including classes. The default metaclass that creates all classes is called `type`.
+
+When Python reads a class definition (`class MyClass:`), it gathers the class name, its parent classes (bases), and all its methods/attributes (dictionary). It then passes these three things to the Metaclass (`type(name, bases, dict)`).
+
+By writing your own Metaclass (inheriting from `type`), you can hook into this `__new__` method and mutate the class dictionary before the class is officially constructed.
+
+<LearningFlow
+  diagram={{
+    nodes: [
+      { id: "1", title: "class Developer:", detail: "User writes code", x: 0, y: 50, kind: "core" },
+      { id: "2", title: "Metaclass __new__", detail: "Intercepts blueprint", x: 250, y: 50, kind: "process" },
+      { id: "3", title: "Inspect / Modify", detail: "e.g., enforces docstrings", x: 500, y: 50, kind: "tool" },
+      { id: "4", title: "type.__new__", detail: "Creates the actual Class", x: 750, y: 50, kind: "process" },
+      { id: "5", title: "Developer Class", detail: "Ready to make objects", x: 1000, y: 50, kind: "output" }
+    ],
+    edges: [
+      { source: "1", target: "2", type: "smoothstep" },
+      { source: "2", target: "3", label: "Validates", type: "smoothstep", animated: true },
+      { source: "3", target: "4", label: "Approves", type: "smoothstep", animated: true },
+      { source: "4", target: "5", type: "smoothstep" }
+    ]
+  }}
+/>
+
+## 4. Syntax Table
+
+| Method | Signature | Purpose |
+|---|---|---|
+| `class Meta(type):` | Inherits from `type`. | This is how you define a Metaclass. |
+| `__new__` | `(mcs, name, bases, dct)` | Modifies the class dictionary *before* creation. |
+| `__init__` | `(cls, name, bases, dct)` | Initializes the class *after* creation. |
+| `metaclass=` | `class A(metaclass=Meta):` | Tells Python to use your custom metaclass instead of `type`. |
+
+## 5. Beginner Example
+Let's build a strict supervisor. We want a Metaclass that crashes the program if a developer tries to create a class without a docstring.
+
+```python
+class RequireDocstringMeta(type):
+    # mcs = the metaclass itself
+    # name = "MyAPI"
+    # bases = ()
+    # dct = {"__module__": "...", "do_work": <function>}
+    def __new__(mcs, name, bases, dct):
+        # We don't care about magic methods, just normal classes
+        if not dct.get('__doc__'):
+            raise TypeError(f"Bro! The class '{name}' is missing a docstring!")
+
+        # Pass the (modified) data up to the default type constructor
+        return super().__new__(mcs, name, bases, dct)
+
+# This will work perfectly
+class GoodClass(metaclass=RequireDocstringMeta):
+    """This class is well documented."""
+    pass
+
+# This will crash IMMEDIATELY when the file is run, before any objects are made!
+# class BadClass(metaclass=RequireDocstringMeta):
+#     pass
+# TypeError: Bro! The class 'BadClass' is missing a docstring!
+```
+
+## 6. Real-World Engineering Example
+Bro, Django Models use Metaclasses heavily. When you define `email = models.CharField()`, how does the model know the name of the database table?
+The Metaclass loops through the attributes, finds all the fields, registers them in an internal registry, and creates the table schema behind the scenes.
+
+Let's build a simple Metaclass that automatically converts all method names to lowercase, so if a Java dev tries to use `camelCase`, we fix it automatically.
+
+```python
+class SnakeCaseEnforcerMeta(type):
+    def __new__(mcs, name, bases, dct):
+        new_dct = {}
+        for attr_name, attr_value in dct.items():
+            if not attr_name.startswith('__'):
+                # Force lowercase
+                clean_name = attr_name.lower()
+                new_dct[clean_name] = attr_value
+            else:
+                new_dct[attr_name] = attr_value
+
+        return super().__new__(mcs, name, bases, new_dct)
+
+class JavaDev(metaclass=SnakeCaseEnforcerMeta):
+    def doWorkToday(self):
+        return "Working..."
+
+dev = JavaDev()
+# dev.doWorkToday()  <-- AttributeError!
+print(dev.doworktoday()) # Working... (The metaclass renamed it!)
+```
+
+## 7. Internal Working
+The flow of Metaclasses is confusing for beginners because of the layers of instantiation.
+1. `__call__` on the Metaclass is triggered when you do `MyClass()`. It controls object instantiation!
+2. `__new__` on the Metaclass allocates memory for the *Class Object*.
+3. `__init__` on the Metaclass initializes the *Class Object*.
+Only AFTER all of this does `__new__` and `__init__` on the actual class run to create a user object.
+
+## 8. Performance Table
+
+| Pattern | Speed at Runtime | Speed at Import Time | Note |
+|---|---|---|---|
+| **Normal Class** | Fastest | Fastest | Standard `type` creation. |
+| **Metaclass** | Fastest | Slower | Extra logic runs once when the script is imported. Object creation remains fast. |
+| **`__init_subclass__`** | Fastest | Slower | A modern, simpler alternative to metaclasses for basic hooks. |
+
+## 9. Top Interview Questions
+
+| Question | Answer | Explanation |
+|---|---|---|
+| What is a Metaclass? | A class whose instances are classes. | Just like an object is created by a class, a class is created by a metaclass (default is `type`). |
+| When should you use a Metaclass? | Almost never. | As Tim Peters (Python core dev) said: "Metaclasses are deeper magic than 99% of users should ever worry about." Use them only for complex frameworks (like ORMs). |
+| What is the difference between `type` and `object`? | `object` is the base of all inheritance. `type` is the base of all creation. | `type` inherits from `object`, but `object` is an instance of `type`. (Brain explosion). |
+
+## 10. Tricky Questions & Edge Cases
+**Q: I have Class A with Metaclass X, and Class B with Metaclass Y. I want Class C to inherit from both A and B. What happens?**
+Bro, you will get a `TypeError: metaclass conflict`. Python cannot figure out which metaclass should construct Class C. You have to create a new Metaclass Z that manually inherits from both X and Y to resolve the conflict. This is why overusing metaclasses creates nightmares.
+
+**Q: Can I achieve Metaclass behavior without Metaclasses?**
+Yes! Python 3.6 introduced `__init_subclass__`. If you just want to register subclasses or check attributes, you can define `__init_subclass__` in the parent class. It is vastly simpler and avoids metaclass conflicts.
+
+## 11. Real-World Usage
+- **Singletons:** You can write a Metaclass whose `__call__` method ensures only one instance of the class is ever created.
+- **Abstract Base Classes:** Python's `abc.ABCMeta` uses a metaclass to prevent you from instantiating a class if it hasn't implemented the required abstract methods.
+- **API generation:** Frameworks like Pydantic or FastAPI reading class type hints and generating JSON schemas on the fly.
+
+## 12. Best Practices
+- **Don't use them.** Seriously, if you can solve the problem with decorators, standard inheritance, or `__init_subclass__`, do that instead.
+- **Keep it Simple:** If you must use one, document exactly what it is mutating in the `__new__` method, because it is invisible to other developers.
+- **Inherit from `type`:** Never forget to have your metaclass inherit from `type`, or it won't be able to construct the class properly.
+
+## 13. Production Notes
+Metaclasses run at *import time*. If you put a heavy network call or complex algorithm inside a Metaclass `__new__` method, your entire application will freeze the moment someone tries to `import` your file, long before `main()` even starts.
+
+## 14. Common Mistakes
+- **Confusing `__new__` in metaclass vs class:** In a metaclass, `__new__` creates the *class*. In a regular class, `__new__` creates the *object*.
+- **Forgetting to return:** In `__new__`, if you forget to `return super().__new__(...)`, your class will silently evaluate to `None`.
+
+## 15. Related Topics
+- **Classes and Objects:** The standard building blocks.
+- **Decorators:** Class decorators can often achieve the same result as a metaclass with less headache.
+- **Python Internals:** How `type` and `object` form the core of Python's memory system.

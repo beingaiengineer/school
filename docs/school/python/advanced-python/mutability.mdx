@@ -2,6 +2,147 @@
 sidebar_position: 4
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Mutability
 
-Placeholder: introduce Mutability.
+## 1. Quick Summary
+Bro, mutability simply means "can this object be changed after it is created?" In Python, some objects can be modified in place (**Mutable**), while others are permanently locked the moment they are born (**Immutable**). Understanding this difference is the key to preventing mysterious bugs where data changes when you didn't expect it to.
+
+## 2. Real-World Analogy
+- **Mutable (A Whiteboard):** You can draw a picture, erase part of it, and draw something else. The whiteboard itself stays in the exact same spot on the wall, but its contents change.
+- **Immutable (A Photograph):** Once you take a Polaroid picture, you cannot change the image. If you want a picture of something else, you must take a brand-new photograph (creating a whole new object).
+
+## 3. Concept Explanation
+When you modify a **mutable** object (like a `list`), Python changes the data directly inside the existing memory address. Any variable pointing to that address immediately sees the change.
+
+When you try to modify an **immutable** object (like a `string`), Python physically cannot alter the memory. Instead, it creates a brand new string in a new memory address, and points your variable to the new address. Any *other* variables pointing to the old address are completely unaffected.
+
+<LearningFlow
+  diagram={{
+    nodes: [
+      { id: "1", title: "Variable X", detail: "String 'cat'", x: 0, y: 0, kind: "core" },
+      { id: "2", title: "X += 's'", detail: "Immutable Action", x: 250, y: 0, kind: "process" },
+      { id: "3", title: "New String 'cats'", detail: "New Memory Address", x: 500, y: 0, kind: "data" },
+      { id: "4", title: "Variable Y", detail: "List [1, 2]", x: 0, y: 150, kind: "core" },
+      { id: "5", title: "Y.append(3)", detail: "Mutable Action", x: 250, y: 150, kind: "process" },
+      { id: "6", title: "Same List [1, 2, 3]", detail: "Same Memory Address", x: 500, y: 150, kind: "data" }
+    ],
+    edges: [
+      { source: "1", target: "2", type: "smoothstep" },
+      { source: "2", target: "3", label: "Creates New", type: "smoothstep", animated: true },
+      { source: "4", target: "5", type: "smoothstep" },
+      { source: "5", target: "6", label: "Mutates in-place", type: "smoothstep", animated: true }
+    ]
+  }}
+/>
+
+## 4. Syntax Table
+
+| Data Type | Mutability | What happens when you change it? |
+|---|---|---|
+| **List (`[]`)** | Mutable | Modifies the exact same object in memory. |
+| **Dictionary (`{}`)**| Mutable | Modifies the exact same object in memory. |
+| **Set (`set()`)** | Mutable | Modifies the exact same object in memory. |
+| **String (`""`)** | Immutable | Creates a completely new object in memory. |
+| **Tuple (`()`)** | Immutable | Cannot be changed. Must create a new tuple. |
+| **Integer/Float** | Immutable | Creates a completely new object in memory. |
+
+## 5. Beginner Example
+Let's look at memory addresses (`id()`) to see this in action.
+
+```python
+# IMMUTABLE EXAMPLE (Strings)
+name = "Bro"
+print(id(name))  # e.g., 432100
+
+name += " Code"   # Looks like we changed it, right?
+print(id(name))  # e.g., 432500 - WRONG! It's a brand new memory address!
+
+# MUTABLE EXAMPLE (Lists)
+items = [1, 2]
+print(id(items)) # e.g., 888800
+
+items.append(3)  # Actually changing the data
+print(id(items)) # e.g., 888800 - Exact same address! The whiteboard was updated.
+```
+
+## 6. Real-World Engineering Example
+Bro, the most dangerous bug in Python is using a mutable object as a default argument in a function.
+
+```python
+# BAD: The default list is created ONCE when the server starts.
+def add_user(user, user_list=[]):
+    user_list.append(user)
+    return user_list
+
+print(add_user("Alice")) # ['Alice']
+print(add_user("Bob"))   # ['Alice', 'Bob'] - Wait, where did Alice come from?!
+
+# GOOD: Use None (immutable), and create the mutable object INSIDE the function.
+def add_user_safe(user, user_list=None):
+    if user_list is None:
+        user_list = []
+    user_list.append(user)
+    return user_list
+
+print(add_user_safe("Alice")) # ['Alice']
+print(add_user_safe("Bob"))   # ['Bob'] - Safe!
+```
+
+## 7. Internal Working
+Why are dictionaries so fast? Because they use **Hash Tables**.
+To put a key in a dictionary, Python runs a mathematical formula (a hash) on the key to find where to store the value.
+If the key could change its data (if it were mutable), its hash would change, and Python would lose track of where it stored the value!
+This is why **Dictionary Keys MUST be Immutable** (like strings or tuples). You cannot use a list as a dictionary key.
+
+## 8. Performance Table
+
+| Operation | Mutable (List) | Immutable (Tuple) | Note |
+|---|---|---|---|
+| **Memory Footprint** | Larger | Smaller | Lists need extra space allocated for future appends. |
+| **Creation Speed** | Slower | Faster | Python can cache and reuse small immutable objects. |
+| **Iteration Speed** | Slower | Faster | Tuples are optimized by the C compiler. |
+
+## 9. Top Interview Questions
+
+| Question | Answer | Explanation |
+|---|---|---|
+| Why can't you use a List as a Dictionary key? | Because Lists are mutable. | Dict keys must be hashable. If a key mutates, its hash changes, breaking the dictionary's lookup mechanism. |
+| Is a Tuple containing a List mutable or immutable? | It's a tricky hybrid! | The Tuple itself cannot point to a *different* list, but the list *inside* it can still be mutated (`my_tuple[0].append(1)` works). |
+| What is the "Default Mutable Argument" bug? | Using `def func(x=[])` | The list is allocated once at definition time, so all subsequent function calls share the exact same list in memory. |
+
+## 10. Tricky Questions & Edge Cases
+**Q: I used `+=` on a Tuple, and it worked! I thought Tuples were immutable?!**
+```python
+t = (1, 2)
+print(id(t))
+t += (3, 4)
+print(id(t))
+```
+Bro, look closely at the `id()`. It *looks* like you mutated the tuple, but Python actually created a brand new tuple `(1, 2, 3, 4)` and threw the old one away. The original tuple was never mutated.
+
+**Q: Are custom classes mutable?**
+By default, yes! You can do `my_obj.new_attr = 5` at any time. If you want an immutable class, you can use `@dataclass(frozen=True)` which prevents any attribute mutation after the object is created.
+
+## 11. Real-World Usage
+- **Caching/Memoization:** You can only cache function results based on their arguments if the arguments are immutable (tuples, strings).
+- **Concurrency (Threading):** Immutable objects are inherently thread-safe because no thread can accidentally overwrite the data while another thread is reading it.
+- **Configurations:** Passing configs as immutable `NamedTuples` prevents junior devs from accidentally changing global config states during runtime.
+
+## 12. Best Practices
+- **Use Tuples for static data:** If you have a sequence of items that will never change (like days of the week), use a tuple, not a list. It's faster and safer.
+- **Never use `[]` or `{}` as default arguments.** Always use `None`.
+- **Defensive Programming:** If a function receives a list and needs to alter it for processing, make a copy first so you don't accidentally mutate the caller's data.
+
+## 13. Production Notes
+In functional programming patterns (which are heavily used in data pipelines like Spark/PySpark), mutability is the enemy. Data engineering prefers "pure functions" that take in immutable data, and return brand new immutable data, ensuring that failures can be perfectly re-run without side effects.
+
+## 14. Common Mistakes
+- **String concatenation in loops:** Because strings are immutable, doing `string += "a"` 10,000 times inside a loop creates and destroys 10,000 strings in memory. (Use `"".join(list_of_strings)` instead).
+- **Mutating lists while iterating:** `for item in my_list: my_list.remove(item)` will cause the loop to skip elements because the list size changes underneath the iterator.
+
+## 15. Related Topics
+- **Memory Management:** How Python handles the actual creation of these new objects.
+- **Tuples vs Lists:** The most common application of the mutability concept.
+- **Shallow vs Deep Copy:** The techniques required to safely duplicate mutable objects.

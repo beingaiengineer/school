@@ -237,10 +237,11 @@ Before deleting files:
 - `error-handling`: exceptions, custom-exceptions, logging, debugging, production-debugging
 - `interview-prep`: top-python-interview-questions, tricky-python-questions, debugging-rounds, coding-round-patterns, system-design-rounds, senior-python-questions
 - `file-handling`: all topics (reading-files, writing-files, csv-files, json-files, pathlib, file-best-practices)
+- `modules-packages`: all topics (modules, packages, virtual-environments, pip, pyproject-toml, dependency-management)
+- `advanced-python`: partial topics completed (memory-management, garbage-collection, shallow-vs-deep-copy, mutability, context-managers, descriptors, metaclasses, monkey-patching)
 
 **Pending Topics (Next Up):**
-- `modules-packages`: partial topics completed (modules, packages, virtual-environments, pip); still pending: (pyproject-toml, dependency-management)
-- `advanced-python`: all topics (memory-management, garbage-collection, shallow-vs-deep-copy, mutability, context-managers, descriptors, metaclasses, monkey-patching, dynamic-typing, python-internals)
+- `advanced-python`: still pending (dynamic-typing, python-internals)
 - `concurrency`: all topics (threading, multiprocessing, asyncio, async-await, race-conditions, queues, locks-semaphores, gil)
 - `api-development`: all topics (requests-library, rest-api-basics, fastapi, flask, authentication, middleware, api-versioning, rate-limiting)
 - `databases`: all topics (sqlite, postgresql, sqlalchemy, orm-vs-raw-sql, transactions, indexing, connection-pooling)
