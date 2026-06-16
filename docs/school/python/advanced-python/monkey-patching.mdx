@@ -2,6 +2,145 @@
 sidebar_position: 8
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Monkey Patching
 
-Placeholder: introduce Monkey Patching.
+## 1. Quick Summary
+Bro, Monkey Patching is dynamically changing the behavior of a module, class, or function at *runtime*. Instead of rewriting the source code, you write code that overwrites the existing logic while the program is running. It's a powerful hack, mostly used for testing, but can be extremely dangerous if overused in production.
+
+## 2. Real-World Analogy
+Imagine you buy a fancy coffee machine, but it plays an annoying song every time it brews. You don't have the factory blueprint to rebuild the machine. Instead, you unscrew the back panel while it's plugged in, snip the wire to the speaker, and attach a wire to a lightbulb instead. You just "monkey patched" the machine's behavior without returning it to the factory.
+
+## 3. Concept Explanation
+In Python, because classes and functions are just objects in memory, you can literally reassign them like any other variable.
+If a 3rd party library has a function `math_lib.calculate()`, you can write your own `fake_calculate()` function, and then do `math_lib.calculate = fake_calculate`.
+For the rest of the application's lifecycle, any code that calls `math_lib.calculate()` will actually execute your fake function.
+
+<LearningFlow
+  diagram={{
+    nodes: [
+      { id: "1", title: "App Code", detail: "Calls lib.fetch_data()", x: 0, y: 50, kind: "core" },
+      { id: "2", title: "Original Function", detail: "Makes Real API Call", x: 300, y: 0, kind: "warning" },
+      { id: "3", title: "Monkey Patch", detail: "lib.fetch_data = mock_data", x: 300, y: 100, kind: "tool" },
+      { id: "4", title: "Patched Function", detail: "Returns Fake JSON", x: 600, y: 100, kind: "output" }
+    ],
+    edges: [
+      { source: "1", target: "2", label: "Before Patch", type: "smoothstep", animated: false, style: { strokeDasharray: "5,5" } },
+      { source: "3", target: "2", label: "Overwrites Memory", type: "straight", animated: true },
+      { source: "1", target: "4", label: "After Patch", type: "smoothstep", animated: true }
+    ]
+  }}
+/>
+
+## 4. Syntax Table
+
+| Approach | Code Example | Use Case |
+|---|---|---|
+| **Direct Assignment** | `module.func = my_func` | Quick scripts or debugging. |
+| **Class Method Override**| `User.save = fake_save` | Overriding database calls in memory. |
+| **Testing (Mocking)** | `@patch('module.func')` | Safely patching only during a single test. |
+
+## 5. Beginner Example
+Let's patch the built-in `math.pi` value just to prove we can.
+
+```python
+import math
+
+print(f"Original Pi: {math.pi}")
+
+# Write our own behavior
+def fake_pow(x, y):
+    print("Bro, we intercepted the power function!")
+    return x + y
+
+# MONKEY PATCHING
+math.pow = fake_pow
+math.pi = 3.0
+
+print(f"Patched Pi: {math.pi}")
+print(f"Patched Pow (2, 3): {math.pow(2, 3)}") # Wait, 2+3 is 5!
+
+# Output:
+# Original Pi: 3.141592653589793
+# Patched Pi: 3.0
+# Bro, we intercepted the power function!
+# Patched Pow (2, 3): 5
+```
+
+## 6. Real-World Engineering Example
+Bro, in the real world, you use this when a 3rd party library has a bug, but you can't wait weeks for them to merge your pull request and release a new version.
+
+```python
+# Imagine this is a 3rd party library 'payment_gateway.py'
+class StripeClient:
+    def charge_card(self, amount):
+        # BUG: The library has a typo and crashes!
+        raise ValueError("Oops, Stripe library is broken!")
+
+# Inside YOUR application code 'main.py'
+from payment_gateway import StripeClient
+
+# 1. Store the original method just in case
+original_charge = StripeClient.charge_card
+
+# 2. Define the fixed version
+def fixed_charge_card(self, amount):
+    print(f"Successfully charged ${amount} using the patched method!")
+    return True
+
+# 3. Apply the Monkey Patch
+StripeClient.charge_card = fixed_charge_card
+
+# Now the rest of your app works perfectly
+client = StripeClient()
+client.charge_card(100) # Output: Successfully charged $100 using the patched method!
+```
+
+## 7. Internal Working
+Monkey patching works because of Python's dynamic typing and dictionaries.
+When you do `StripeClient.charge_card = fixed_charge_card`, Python simply looks up the `__dict__` of the `StripeClient` class in the private heap, deletes the memory pointer to the old function, and inserts a new pointer to your `fixed_charge_card` function.
+Because the lookup happens at runtime, the compiler doesn't care.
+
+## 8. Performance Table
+
+| Environment | Safety | Performance Impact | Note |
+|---|---|---|---|
+| **Unit Testing** | Very Safe | None | Use `unittest.mock.patch` to auto-revert patches after the test. |
+| **Production** | Dangerous | None | Overwrites are permanent for the life of the server process. |
+| **Gevent / Async** | Mandatory | High (Positive) | Gevent monkey-patches standard library sockets to make them async. |
+
+## 9. Top Interview Questions
+
+| Question | Answer | Explanation |
+|---|---|---|
+| What is Monkey Patching? | Modifying classes or modules at runtime. | It is typically used to alter third-party library behavior without forking their repository. |
+| What is the danger of Monkey Patching? | Global state mutation. | If you patch a method in one file, it affects *every other file* in the application that imports that module, leading to impossible-to-trace bugs. |
+| How do you safely Monkey Patch in tests? | Using `unittest.mock.patch`. | The `@patch` decorator applies the monkey patch before the test runs, and cleanly removes it after the test finishes, ensuring no other tests are affected. |
+
+## 10. Tricky Questions & Edge Cases
+**Q: I monkey patched `datetime.now()` but my other module is still using the old time! Why?**
+Bro, this is the classic "import from" trap.
+If `file_a.py` does `from datetime import datetime`, it copies a local reference. If you monkey patch `datetime.datetime` in `file_b.py` *after* `file_a` was imported, `file_a` still points to the old memory address! Always patch the object exactly where it is being *used*, or use the `@patch` decorator carefully.
+
+## 11. Real-World Usage
+- **Testing:** Mocking out `requests.get` so your unit tests don't actually hit the live Stripe API and charge real money.
+- **Gevent:** The async library `gevent` literally runs `gevent.monkey.patch_all()` at the top of your script. It rips out Python's built-in synchronous `socket`, `time`, and `threading` modules and replaces them with async versions.
+- **Hotfixes:** Fixing a critical zero-day vulnerability in an old Django version running on your servers without bringing the servers down for a full upgrade.
+
+## 12. Best Practices
+- **Don't do it in production unless desperate.** If you can fix the source code or subclass the object cleanly, do that instead.
+- **Document aggressively.** If you monkey patch a library in production, write a massive comment explaining *why* and link to the upstream GitHub issue so junior devs know when they can delete your patch.
+- **Patch as early as possible.** If you must patch globally, do it in the absolute top-level file (`main.py` or `__init__.py`) before any other modules import the broken code.
+
+## 13. Production Notes
+If you monkey patch in a threaded environment (like a Flask server), remember that the patch affects ALL threads instantly. If Thread A is currently executing the function while Thread B monkey patches it, you can cause unpredictable race conditions.
+
+## 14. Common Mistakes
+- **Forgetting `self`:** When patching a class method, forgetting to include `self` in your replacement function signature will cause `TypeError: missing 1 required positional argument`.
+- **Leaving tests patched:** Using manual monkey patching in a test setup but forgetting to revert it in the `teardown`, causing the next 500 unit tests to mysteriously fail.
+
+## 15. Related Topics
+- **Mocking (Testing):** The safe, formalized version of monkey patching used in Pytest.
+- **Dynamic Typing:** The language feature that makes this possible.
+- **Concurrency (Gevent):** How entire networking libraries rely on monkey patching to function.

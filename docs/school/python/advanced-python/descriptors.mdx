@@ -2,6 +2,183 @@
 sidebar_position: 6
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Descriptors
 
-Placeholder: introduce Descriptors.
+## 1. Quick Summary
+Bro, Descriptors are the hidden magic behind Python's object-oriented features. A Descriptor is simply any class that implements `__get__`, `__set__`, or `__delete__`. When you assign a descriptor to a class attribute, it intercepts and controls what happens when someone tries to read, write, or delete that attribute.
+
+## 2. Real-World Analogy
+Think of a standard class attribute like an open box of cookies on a table. Anyone can reach in, grab one, or put a rock inside it. No security.
+A Descriptor is like putting a security guard in front of the box.
+- When you ask for a cookie (`__get__`), the guard checks if you are allowed to have one.
+- When you try to put something in the box (`__set__`), the guard checks if it's actually a cookie and not a rock.
+The guard intercepts the interaction.
+
+## 3. Concept Explanation
+In normal Python OOP, when you do `user.age = 25`, it just saves `25` into the object's internal dictionary (`user.__dict__['age']`).
+
+But if `age` is defined as a Descriptor, Python skips the dictionary completely. Instead, it calls the Descriptor's `__set__` method. This allows you to add validation, logging, or dynamic computation *behind the scenes*, while the user still uses normal dot notation (`user.age = 25`).
+
+<LearningFlow
+  diagram={{
+    nodes: [
+      { id: "1", title: "User types:", detail: "person.age = 25", x: 0, y: 50, kind: "core" },
+      { id: "2", title: "Is 'age' a Descriptor?", detail: "Checks Class Dict", x: 250, y: 50, kind: "process" },
+      { id: "3", title: "Yes!", detail: "Calls Age.__set__(...)", x: 500, y: 0, kind: "tool" },
+      { id: "4", title: "No.", detail: "Saves to person.__dict__", x: 500, y: 100, kind: "data" },
+      { id: "5", title: "Validation Logic", detail: "Raises Error if < 0", x: 750, y: 0, kind: "output" }
+    ],
+    edges: [
+      { source: "1", target: "2", type: "smoothstep" },
+      { source: "2", target: "3", label: "Intercepted", type: "smoothstep", animated: true },
+      { source: "2", target: "4", label: "Normal OOP", type: "smoothstep" },
+      { source: "3", target: "5", type: "smoothstep" }
+    ]
+  }}
+/>
+
+## 4. Syntax Table
+
+To build a Descriptor, create a class with any of these methods:
+
+| Magic Method | Signature | Triggered By |
+|---|---|---|
+| **`__get__`** | `(self, obj, objtype)` | `print(user.age)` |
+| **`__set__`** | `(self, obj, value)` | `user.age = 25` |
+| **`__delete__`** | `(self, obj)` | `del user.age` |
+| **`__set_name__`** | `(self, owner, name)` | When class is created (Py 3.6+). Tells the descriptor its variable name. |
+
+## 5. Beginner Example
+Let's build a basic "Type Checker" descriptor that refuses to let you assign a string to an integer field.
+
+```python
+class IntegerField:
+    # Called when the class is built to know its own name
+    def __set_name__(self, owner, name):
+        self.public_name = name
+        self.private_name = '_' + name
+
+    # Called when user.age is read
+    def __get__(self, obj, objtype=None):
+        print(f"Reading {self.public_name}")
+        return getattr(obj, self.private_name)
+
+    # Called when user.age = X is executed
+    def __set__(self, obj, value):
+        if not isinstance(value, int):
+            raise TypeError(f"Bro, {self.public_name} must be an integer!")
+        print(f"Setting {self.public_name} to {value}")
+        setattr(obj, self.private_name, value)
+
+class Person:
+    # We assign the Descriptor to the CLASS attribute
+    age = IntegerField()
+    score = IntegerField()
+
+    def __init__(self, age, score):
+        self.age = age
+        self.score = score
+
+p = Person(20, 100)
+# Output: Setting age to 20
+# Output: Setting score to 100
+
+print(p.age)
+# Output: Reading age
+# Output: 20
+
+# p.age = "Twenty"  <-- This raises TypeError!
+```
+
+## 6. Real-World Engineering Example
+Bro, if you have ever used Django ORM or SQLAlchemy, you've used Descriptors. When you type `class User(Model): email = models.CharField()`, that `CharField` is a Descriptor!
+Let's build a micro-ORM descriptor that lazily loads an image from S3 only when requested.
+
+```python
+class LazyS3Image:
+    def __init__(self, bucket):
+        self.bucket = bucket
+
+    def __set_name__(self, owner, name):
+        self.name = name
+
+    def __get__(self, obj, objtype=None):
+        if obj is None:
+            return self
+
+        # Check if we already downloaded it
+        cache_key = f"_{self.name}_cache"
+        if not hasattr(obj, cache_key):
+            print(f"🌍 Downloading {self.name} from {self.bucket} S3 bucket...")
+            # Simulate network delay...
+            image_data = b"fake_image_bytes"
+            setattr(obj, cache_key, image_data)
+
+        print(f"⚡ Returning cached {self.name}")
+        return getattr(obj, cache_key)
+
+class UserProfile:
+    avatar = LazyS3Image("user-avatars-bucket")
+
+# Using it:
+user = UserProfile()
+print("User created. S3 not hit yet.")
+
+# First access triggers the download
+img1 = user.avatar
+# Output: 🌍 Downloading avatar from user-avatars-bucket S3 bucket...
+# Output: ⚡ Returning cached avatar
+
+# Second access uses cache
+img2 = user.avatar
+# Output: ⚡ Returning cached avatar
+```
+
+## 7. Internal Working
+There are two types of Descriptors:
+1. **Data Descriptors:** Define `__set__` or `__delete__`. (Usually also have `__get__`). These have *highest priority*. If an object has a dictionary key `age`, but the class has a Data Descriptor named `age`, the Descriptor wins.
+2. **Non-Data Descriptors:** Define ONLY `__get__`. These have *lower priority*. If the object's dictionary has the key, the dictionary wins. (This is exactly how Python class methods work!)
+
+## 8. Performance Table
+
+| Pattern | Speed | Scalability | Note |
+|---|---|---|---|
+| **Direct Attribute (`__dict__`)** | Fastest | High | No overhead, but no validation. |
+| **`@property` decorator** | Fast | Medium | Great for 1-off fields, but repetitive if you need 50 integer fields. |
+| **Custom Descriptor** | Medium | High | Reusable logic across hundreds of fields and classes. Slight method-call overhead. |
+
+## 9. Top Interview Questions
+
+| Question | Answer | Explanation |
+|---|---|---|
+| What is a Descriptor in Python? | A class that defines `__get__`, `__set__`, or `__delete__`. | It intercepts attribute access to allow custom logic like validation or lazy-loading. |
+| How does `@property` relate to Descriptors? | `@property` is just a built-in Descriptor! | It is a C-implemented descriptor that maps your getter/setter functions to the `__get__` and `__set__` methods under the hood. |
+| Where must you instantiate a Descriptor? | At the Class level. | If you put `self.age = IntegerField()` inside `__init__`, it won't work. Descriptors must be class variables. |
+
+## 10. Tricky Questions & Edge Cases
+**Q: I built a descriptor, but changing `user1.age` is also changing `user2.age`! Why?**
+Bro, this is the #1 Descriptor mistake. Because the descriptor is instantiated at the *Class* level, `user1` and `user2` share the exact same `IntegerField` instance. If your `__set__` method does `self.value = value`, you are overwriting the shared state! You MUST store the value inside the `obj` (the instance), usually via `setattr(obj, self.private_name, value)`.
+
+## 11. Real-World Usage
+- **ORMs:** Django and SQLAlchemy use descriptors to map class attributes to database columns.
+- **Validation:** Pydantic uses descriptor-like logic to ensure data types are strictly enforced.
+- **Methods:** Python's built-in `@classmethod`, `@staticmethod`, and even normal functions are technically Non-Data Descriptors! That's how `self` gets injected automatically.
+
+## 12. Best Practices
+- **Use `@property` first:** If you only need validation for ONE specific attribute on ONE class, just use `@property`. It's simpler.
+- **Use Descriptors for reuse:** If you need the *exact same* validation (like "must be a positive integer") across 20 different models, write a Descriptor to keep your code DRY.
+- **Leverage `__set_name__`:** Always use this method (added in Python 3.6) to dynamically get the name of the variable, so you don't have to do `age = IntegerField('age')`.
+
+## 13. Production Notes
+Heavy use of descriptors can slow down attribute access because instead of a direct dictionary lookup in C, Python has to execute a Python method (`__get__`). In high-frequency trading or massive game loops, this overhead can become a bottleneck.
+
+## 14. Common Mistakes
+- **Storing state in the Descriptor:** As mentioned, doing `self.val = val` in `__set__` causes a memory leak and state corruption across all instances.
+- **Infinite Recursion:** If your `__get__` method tries to do `return getattr(obj, self.public_name)`, it will trigger `__get__` again, creating an infinite loop. Always store the actual data under a *different* private name (like `_age`).
+
+## 15. Related Topics
+- **Magic Methods:** The broader category of double-underscore methods.
+- **Properties:** The built-in, simpler version of a descriptor.
+- **OOP / Classes:** How instance dictionaries (`__dict__`) interact with class variables.
