@@ -2,6 +2,224 @@
 sidebar_position: 7
 ---
 
-# Locks Semaphores
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Locks Semaphores.
+# Locks & Semaphores
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Locks and Semaphores |
+| Difficulty | Advanced |
+| Used For | Synchronizing threads to prevent race conditions and limit resources |
+| Common Mistake | Forgetting to release a lock, causing a Deadlock |
+| Performance | Decreases concurrency (forces threads to wait), but ensures data safety |
+
+---
+
+## 2. Real-World Analogy
+
+**A Lock (Mutex)** is like the key to a single-occupancy gas station bathroom, bro.
+Only one person (thread) can hold the key. If you have the key, you go inside and lock the door. Anyone else who wants to use the bathroom has to stand outside and wait. When you leave, you hand the key to the next person.
+
+**A Semaphore** is like a parking lot with exactly 5 spaces.
+The attendant (the Semaphore) lets cars (threads) in until the lot is full. The 6th car has to wait at the gate. When one car leaves, the attendant lets the next car in. It allows *limited* concurrent access, rather than strictly *single* access.
+
+---
+
+## 3. Concept Explanation
+
+When multiple threads access shared memory, you get Race Conditions. To prevent this, we use **Synchronization Primitives**:
+
+1. **Lock (Mutex):** Ensures that a specific block of code (the Critical Section) is only executed by exactly ONE thread at a time.
+2. **Semaphore:** An internal counter that allows up to `N` threads to execute a block of code at the same time. Useful for limiting access to a scarce resource (like a database connection pool).
+
+Python provides these in the `threading`, `multiprocessing`, and `asyncio` modules.
+
+---
+
+## 4. Syntax Table
+
+| Primitive | Operation | Description |
+|---|---|---|
+| Lock | `lock = threading.Lock()` | Creates a Lock object |
+| Acquire Lock | `lock.acquire()` | Blocks until the lock is available, then takes it |
+| Release Lock | `lock.release()` | Frees the lock. (Will error if called by a thread that doesn't own it) |
+| Semaphore | `sem = threading.Semaphore(5)` | Creates a Semaphore allowing 5 concurrent accesses |
+| Context Manager | `with lock:` / `with sem:` | Automatically acquires and releases safely |
+
+---
+
+## 5. Beginner Example
+
+Bro, watch how a lock protects our bathroom code.
+
+```python
+import threading
+import time
+
+bathroom_lock = threading.Lock()
+
+def use_bathroom(person_id):
+    print(f"Person {person_id} is waiting for the bathroom...")
+
+    # Only one thread can enter this block at a time
+    with bathroom_lock:
+        print(f"Person {person_id} is USING the bathroom.")
+        time.sleep(1) # Simulating time taken
+        print(f"Person {person_id} left.")
+
+# Create 3 people trying to use it at the same time
+threads = [threading.Thread(target=use_bathroom, args=(i,)) for i in range(1, 4)]
+
+for t in threads: t.start()
+for t in threads: t.join()
+```
+
+Without the `with bathroom_lock:`, all 3 people would print "USING the bathroom" simultaneously!
+
+---
+
+## 6. Real-World Engineering Example
+
+In production, you might want to scrape an API, but the API will ban you if you make more than 3 requests at the exact same time. A Semaphore is perfect for this rate-limiting.
+
+```python
+import threading
+import time
+import random
+
+# Allow a maximum of 3 concurrent API connections
+api_semaphore = threading.Semaphore(3)
+
+def fetch_api(thread_id):
+    print(f"Thread {thread_id} waiting to connect...")
+
+    with api_semaphore:
+        print(f"--> Thread {thread_id} CONNECTED! (Max 3 allowed)")
+        time.sleep(random.uniform(1, 2)) # Simulate network request
+        print(f"<-- Thread {thread_id} DISCONNECTED.")
+
+# Spin up 10 threads all at once
+threads = [threading.Thread(target=fetch_api, args=(i,)) for i in range(10)]
+
+for t in threads: t.start()
+for t in threads: t.join()
+```
+Watch the output carefully. You will never see more than 3 threads "CONNECTED" at the same time. The 4th thread waits until one disconnects.
+
+---
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { title: 'Semaphore (Counter = 2)', label: 'Controls access' }, position: { x: 400, y: 50 } },
+    { id: '2', type: 'process', data: { title: 'Thread 1', label: 'Acquires (Count 1)' }, position: { x: 100, y: 150 } },
+    { id: '3', type: 'process', data: { title: 'Thread 2', label: 'Acquires (Count 0)' }, position: { x: 400, y: 150 } },
+    { id: '4', type: 'warning', data: { title: 'Thread 3', label: 'Blocked! (Count 0)' }, position: { x: 700, y: 150 } },
+    { id: '5', type: 'output', data: { title: 'Database', label: 'Resource' }, position: { x: 250, y: 300 } },
+    { id: 'e1', source: '2', target: '1', label: 'Ask', type: 'straight' },
+    { id: 'e2', source: '3', target: '1', label: 'Ask', type: 'straight' },
+    { id: 'e3', source: '4', target: '1', label: 'Ask (Denied)', style: { strokeDasharray: '5,5' } },
+    { id: 'e4', source: '2', target: '5', label: 'Access', type: 'smoothstep' },
+    { id: 'e5', source: '3', target: '5', label: 'Access', type: 'smoothstep' }
+  ]}
+/>
+
+A Semaphore is just an atomic integer counter wrapped in an OS-level sleep queue.
+- `acquire()`: If counter > 0, decrement counter and proceed. If counter == 0, put the thread to sleep in a queue.
+- `release()`: Increment counter. If threads are sleeping in the queue, wake the first one up so it can proceed.
+
+---
+
+## 8. Performance Table
+
+| Tool | Concurrency Level | Performance Impact |
+|---|---|---|
+| No Lock | Maximum | Fast, but unsafe (Data Corruption). |
+| Lock | Strict Sequential (1 at a time) | Slowest. Removes concurrency benefits for that specific code block. |
+| Semaphore | Bounded (N at a time) | Balanced. Protects scarce resources without forcing 1-by-1 execution. |
+
+---
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Difference between a Lock and a Semaphore? | A Lock allows only 1 thread to access a resource. A Semaphore allows up to N threads. (A Lock is basically a Semaphore with a count of 1). |
+| What is a Deadlock? | When Thread A holds Lock 1 and waits for Lock 2, but Thread B holds Lock 2 and waits for Lock 1. Both wait forever, and the program freezes. |
+| What is an `RLock` (Reentrant Lock)? | A standard Lock will block if a thread tries to acquire it *again* while already holding it. An `RLock` allows the same thread to acquire the lock multiple times (useful in recursive functions). |
+| Why use the `with` statement for locks? | If an exception occurs inside the lock block, `with` guarantees the lock is released. If you use `lock.acquire()` manually and an error crashes the thread before `lock.release()`, the lock is permanently stuck. |
+
+---
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, spot the catastrophic bug here:
+
+```python
+import threading
+
+lock_A = threading.Lock()
+lock_B = threading.Lock()
+
+def task_1():
+    with lock_A:
+        print("T1 got A, waiting for B")
+        with lock_B:
+            print("T1 got both!")
+
+def task_2():
+    with lock_B:
+        print("T2 got B, waiting for A")
+        with lock_A:
+            print("T2 got both!")
+
+t1 = threading.Thread(target=task_1); t1.start()
+t2 = threading.Thread(target=task_2); t2.start()
+```
+
+**Why it's tricky:** This is a classic **Deadlock**. Task 1 locks A. Before it can lock B, the OS switches to Task 2. Task 2 locks B. Now Task 1 is waiting for B (held by Task 2), and Task 2 is waiting for A (held by Task 1). The script will hang forever. **Rule:** Always acquire multiple locks in the exact same order across all threads.
+
+---
+
+## 11. Real-World Usage
+
+- **Locks:** Writing data to a shared memory cache, appending text to a shared log file, or updating a global counter.
+- **Semaphores:** Throttling API requests, limiting the number of simultaneous Database connections (Connection Pooling), or limiting heavy background image-processing tasks to not max out the CPU.
+
+---
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Keep the code inside the `with lock:` block as short and fast as absolutely possible. | Do heavy I/O (like network requests) inside a Lock. You will destroy your application's concurrency. |
+| Always use Context Managers (`with`) to handle locks. | Manually acquire and release locks unless you have an extremely complex edge case. |
+
+---
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Using Python Threading Semaphores only limits concurrency *within that single Python process*. If you deploy your app using Gunicorn with 4 workers, or run 10 Docker containers in Kubernetes, a local Semaphore(5) actually means 5 * 4 * 10 = 200 concurrent requests! For distributed rate limiting, you must use a centralized store like a **Redis Semaphore** or API Gateway limits.
+
+---
+
+## 14. Common Mistakes
+
+- **Locking the wrong thing:** Creating a lock locally inside the function instead of globally. Every thread gets its own separate lock, defeating the purpose.
+- **Starvation:** One thread constantly acquiring the lock very quickly, preventing other threads from ever getting a turn.
+- **Leaking Semaphores:** Calling `.release()` more times than `.acquire()`. The semaphore's internal counter grows past its initial limit, completely breaking the rate limit.
+
+---
+
+## 15. Related Topics
+
+- Threading
+- Race Conditions
+- Queues
+- Asyncio Concurrency
+- Database Connection Pooling

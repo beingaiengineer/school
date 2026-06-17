@@ -2,6 +2,250 @@
 sidebar_position: 3
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Asyncio
 
-Placeholder: introduce Asyncio.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Asyncio (Asynchronous I/O) |
+| Difficulty | Advanced |
+| Used For | Handling thousands of concurrent I/O operations efficiently |
+| Common Mistake | Using blocking code (like `time.sleep()`) inside an async function |
+| Performance | Massive scalability for network-bound tasks with very low memory footprint |
+
+---
+
+## 2. Real-World Analogy
+
+Think of Asyncio like a master chess player playing 50 games simultaneously at a tournament, bro.
+
+Instead of playing one game from start to finish before moving to the next person (Sequential), or hiring 50 different players to play the games for him (Threading/Multiprocessing), he plays differently:
+He looks at Board 1, makes a move, and while Player 1 is thinking, he immediately walks to Board 2 and makes a move there.
+
+He is only one guy (one thread), but he handles 50 games concurrently because he never stands around waiting. The moment someone makes a move, he goes back to them.
+
+---
+
+## 3. Concept Explanation
+
+`asyncio` is a library to write **concurrent code using the async/await syntax**.
+Unlike Threading, which relies on the Operating System to switch between threads (which uses memory and CPU overhead), Asyncio runs entirely in a **single thread** using an **Event Loop**.
+
+When an `async` function hits an I/O operation (like fetching a URL), it uses the `await` keyword. This tells the Event Loop: "I am waiting for data. Pause me, and go run some other function while I wait."
+This is called **cooperative multitasking**, because the functions explicitly yield control back to the Event Loop.
+
+---
+
+## 4. Syntax Table
+
+| Operation | Example |
+|---|---|
+| Define async function | `async def fetch_data():` |
+| Pause execution / yield control | `await some_async_function()` |
+| Run the Event Loop | `asyncio.run(main())` |
+| Run multiple tasks concurrently | `await asyncio.gather(task1, task2)` |
+
+---
+
+## 5. Beginner Example
+
+Bro, let's see how the Event Loop switches tasks when it hits `await`.
+
+```python
+import asyncio
+import time
+
+async def make_tea():
+    print("Boiling water...")
+    await asyncio.sleep(2)  # Simulating a 2-second wait (DO NOT use time.sleep!)
+    print("Water boiled. Tea is ready!")
+
+async def make_toast():
+    print("Toasting bread...")
+    await asyncio.sleep(1)  # Simulating a 1-second wait
+    print("Toast is ready!")
+
+async def main():
+    start = time.time()
+    # Run both tasks concurrently
+    await asyncio.gather(make_tea(), make_toast())
+    print(f"Total time: {time.time() - start:.2f} seconds")
+
+# Start the event loop
+asyncio.run(main())
+```
+
+**Output:**
+```
+Boiling water...
+Toasting bread...
+Toast is ready!
+Water boiled. Tea is ready!
+Total time: 2.00 seconds
+```
+Because they waited together, the total time was 2 seconds, not 3!
+
+---
+
+## 6. Real-World Engineering Example
+
+In production, Asyncio is heavily used for making non-blocking HTTP requests. Standard `requests` blocks the thread, so we use `aiohttp` or `httpx`.
+
+```python
+import asyncio
+import httpx
+
+async def fetch_status(client, url):
+    # This network call doesn't block the thread!
+    response = await client.get(url)
+    return response.status_code
+
+async def main():
+    urls = [
+        "https://httpbin.org/status/200",
+        "https://httpbin.org/status/404",
+        "https://httpbin.org/status/500"
+    ]
+
+    # Use a single async HTTP client session
+    async with httpx.AsyncClient() as client:
+        # Create a list of async tasks
+        tasks = [fetch_status(client, url) for url in urls]
+        # Run them all concurrently
+        results = await asyncio.gather(*tasks)
+
+    print("Status Codes:", results)
+
+asyncio.run(main())
+```
+
+---
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    {
+      id: '1',
+      type: 'core',
+      data: { title: 'The Event Loop', label: 'Manages all tasks in 1 Thread' },
+      position: { x: 350, y: 50 },
+    },
+    {
+      id: '2',
+      type: 'process',
+      data: { title: 'Task 1 (API Call)', label: 'Executes until await' },
+      position: { x: 100, y: 200 },
+    },
+    {
+      id: '3',
+      type: 'process',
+      data: { title: 'Task 2 (DB Query)', label: 'Executes until await' },
+      position: { x: 600, y: 200 },
+    },
+    {
+      id: '4',
+      type: 'data',
+      data: { title: 'OS Kernel / Sockets', label: 'Notifies Event Loop when data arrives' },
+      position: { x: 350, y: 350 },
+    },
+    { id: 'e1', source: '1', target: '2', label: 'Runs Task 1', type: 'smoothstep' },
+    { id: 'e2', source: '2', target: '4', label: 'Awaits Network', style: { strokeDasharray: '5,5' }, type: 'straight' },
+    { id: 'e3', source: '2', target: '1', label: 'Yields Control', animated: true, type: 'smoothstep' },
+    { id: 'e4', source: '1', target: '3', label: 'Switches to Task 2', type: 'smoothstep' },
+    { id: 'e5', source: '4', target: '1', label: 'Data Ready! (Resume T1)', animated: true, type: 'straight' }
+  ]}
+/>
+
+When you call `asyncio.run()`, Python starts the **Event Loop**.
+The Event Loop takes a task and runs it. When the task hits `await network_call()`, it basically registers a listener with the Operating System (using `select` or `epoll` at the C level) and says, "Wake me up when data comes in."
+The task then yields control back to the Event Loop. The Event Loop instantly grabs the next task and runs it. It's incredibly fast because there is no OS context-switching overhead like in Threading.
+
+---
+
+## 8. Performance Table
+
+| Mechanism | Memory Overhead | Max Concurrent Connections | CPU Efficiency |
+|---|---|---|---|
+| Threading | High (~8MB per thread) | ~1,000 before OS chokes | Poor (Context switching) |
+| Asyncio | Extremely Low | 10,000+ | Excellent (Single thread loop) |
+
+---
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Asyncio vs Threading? | Both handle I/O. Threading uses OS threads (preemptive multitasking, high memory). Asyncio uses one thread and an event loop (cooperative multitasking, low memory). |
+| What happens if you put `time.sleep()` in an async function? | It ruins everything. `time.sleep()` blocks the *entire thread*, meaning the Event Loop freezes and no other async tasks can run. You must use `await asyncio.sleep()`. |
+| Can you use Asyncio for CPU-heavy tasks? | No. If an async function starts calculating primes for 5 seconds, it blocks the single thread, freezing the event loop. Use Multiprocessing for CPU tasks. |
+| What does `asyncio.gather()` do? | It takes multiple coroutines, schedules them concurrently on the event loop, and waits for all of them to finish, returning their results in a list. |
+
+---
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, what is wrong with this code?
+
+```python
+import asyncio
+import requests # standard blocking library
+
+async def fetch(url):
+    # This is a trap!
+    response = requests.get(url)
+    return response.status_code
+
+async def main():
+    await asyncio.gather(
+        fetch("http://example.com"),
+        fetch("http://example.org")
+    )
+```
+
+**Why it's tricky:** Even though the functions are defined with `async def` and called with `gather`, they will run **sequentially**, not concurrently! The `requests.get()` function is blocking. It does not yield control to the Event Loop. To fix this, you must use an async HTTP library like `aiohttp` or `httpx.AsyncClient`, and use `await`.
+
+---
+
+## 11. Real-World Usage
+
+- **High-Concurrency Web Frameworks:** FastAPI and Starlette are built entirely on Asyncio, allowing them to handle thousands of requests per second on a single server.
+- **WebSockets:** Chat applications where the server needs to keep 10,000 open connections simultaneously without spawning 10,000 threads.
+- **Microservice Orchestration:** An API gateway that needs to fetch data from 5 different backend microservices concurrently before returning a response to the user.
+
+---
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use async-compatible libraries (`aiohttp`, `asyncpg` for Postgres, `motor` for Mongo). | Mix sync blocking code (`requests`, `time.sleep`) inside async functions. |
+| Use `asyncio.create_task()` if you want to fire-and-forget a task in the background. | Try to run CPU-bound work inside the event loop. |
+
+---
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Asyncio is contagious. Once you make your top-level function `async`, everything all the way down to your database drivers must be async. If you use a blocking database driver (like standard `psycopg2` or `SQLAlchemy` sync engine) inside a FastAPI route, under high load, your event loop will block, and your application's performance will plummet. Always ensure your entire stack (HTTP client, DB driver, Redis client) is async-native.
+
+---
+
+## 14. Common Mistakes
+
+- **Forgetting `await`:** Calling `make_tea()` without `await`. It just returns a coroutine object and does absolutely nothing. Python will warn you: `RuntimeWarning: coroutine 'make_tea' was never awaited`.
+- **Blocking the Loop:** Running a heavy JSON parsing operation or regex on a massive string inside an async function. It blocks other tasks.
+- **Not handling exceptions in `gather`:** If one task in `asyncio.gather()` fails, the exception propagates up, but the other tasks keep running in the background. Use `return_exceptions=True` to handle failures gracefully.
+
+---
+
+## 15. Related Topics
+
+- Async/Await Syntax
+- FastAPI
+- Threading
+- Multiprocessing
+- Cooperative Multitasking

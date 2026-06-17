@@ -2,6 +2,222 @@
 sidebar_position: 9
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Dynamic Typing
 
-Placeholder: introduce Dynamic Typing.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Dynamic Typing |
+| Difficulty | Beginner / Intermediate |
+| Used For | Flexibility and rapid development |
+| Common Mistake | Assuming a variable's type never changes |
+| Performance | Slower than static typing due to runtime checks |
+
+---
+
+## 2. Real-World Analogy
+
+Think of dynamic typing like assigning tasks to a highly versatile employee in an office, bro.
+Today, they might be carrying the "coffee mug" (a string), tomorrow they might be holding the "budget spreadsheet" (a list). You don't label the employee as "Coffee Guy forever." You label them based on what they are holding *right now*.
+
+If they try to add "coffee" to "budget spreadsheet", the system will throw an error at the exact moment they try to do it, not before.
+
+---
+
+## 3. Concept Explanation
+
+In Python, variables don't have types; only the *values* have types.
+When you write `x = 10`, Python doesn't create an "integer box" named `x`. It creates an integer object `10` in memory, and makes the name `x` point to it.
+
+Because `x` is just a label, you can later make it point to a string, a list, or any other object. The type is checked at **runtime** (when the code actually runs), not at **compile time**.
+
+This gives you massive flexibility but requires you to be careful, as type errors won't be caught until that specific line of code is executed.
+
+---
+
+## 4. Syntax Table
+
+| Concept | Example |
+|---|---|
+| Reassigning Types | `x = 5`<br/>`x = "Hello"` |
+| Checking Type | `type(x)` |
+| Type Hinting (Optional) | `def add(a: int, b: int) -> int:` |
+
+---
+
+## 5. Beginner Example
+
+Bro, watch how the type of `data` changes freely:
+
+```python
+data = 42
+print(type(data))  # <class 'int'>
+
+data = "Now I'm a string"
+print(type(data))  # <class 'str'>
+
+data = [1, 2, 3]
+print(type(data))  # <class 'list'>
+```
+
+Python allows this seamlessly because `data` is just a name tag pointing to different objects.
+
+---
+
+## 6. Real-World Engineering Example
+
+In an API that processes varying payloads, dynamic typing allows a function to handle different data structures flexibly:
+
+```python
+def process_payload(payload):
+    # payload could be a dict (JSON), a string (raw text), or a list
+    if isinstance(payload, dict):
+        return payload.get("status", "unknown")
+    elif isinstance(payload, str):
+        return payload.strip()
+    elif isinstance(payload, list):
+        return len(payload)
+    else:
+        raise TypeError("Unsupported payload type")
+
+print(process_payload({"status": "success"})) # dict
+print(process_payload("   raw string data   ")) # str
+print(process_payload([1, 2, 3]))             # list
+```
+
+---
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    {
+      id: '1',
+      type: 'core',
+      data: { title: 'Variable Name', label: 'x (Label)' },
+      position: { x: 100, y: 100 },
+    },
+    {
+      id: '2',
+      type: 'data',
+      data: { title: 'Memory Object', label: 'Integer: 10' },
+      position: { x: 400, y: 50 },
+    },
+    {
+      id: '3',
+      type: 'data',
+      data: { title: 'Memory Object', label: 'String: "Hello"' },
+      position: { x: 400, y: 150 },
+    },
+    {
+      id: 'e1',
+      source: '1',
+      target: '2',
+      label: 'Points to initially',
+      animated: true,
+      type: 'smoothstep',
+    },
+    {
+      id: 'e2',
+      source: '1',
+      target: '3',
+      label: 'Reassigned to',
+      animated: true,
+      type: 'smoothstep',
+      style: { strokeDasharray: '5,5' },
+    }
+  ]}
+/>
+
+Under the hood, variables in Python are just references (pointers) to objects in memory.
+When you say `a = 5`, Python creates a `PyObject` for the integer `5`. This object contains:
+1. The value (`5`)
+2. The type (`int`)
+3. A reference count (for garbage collection)
+
+The variable `a` is added to the namespace dictionary, pointing to this object. If you do `a = "hello"`, Python simply updates the dictionary so `a` points to a new string object. The old integer object's reference count drops.
+
+---
+
+## 8. Performance Table
+
+| Operation | Performance Impact |
+|---|---|
+| Variable Assignment | Fast (just updating a pointer) |
+| Runtime Type Checking | Adds overhead to every operation (e.g., `a + b` requires checking types of both `a` and `b` first) |
+| Garbage Collection | Overhead when objects lose references |
+
+---
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does "duck typing" mean? | "If it walks like a duck and quacks like a duck, it must be a duck." Python checks if an object has the required methods, not its actual type. |
+| Does Python have compile-time type checking? | No, type checking happens at runtime. However, external tools like `mypy` can do static analysis using type hints. |
+| What is the difference between strong typing and dynamic typing? | Dynamic means types are checked at runtime. Strong means Python won't implicitly convert types (e.g., `"5" + 5` throws an error, unlike JavaScript). Python is strongly, dynamically typed. |
+| How do you enforce types in Python? | You can't strictly enforce them natively, but you can use Type Hints (`a: int`) and linters/checkers like `mypy` or frameworks like Pydantic. |
+| Why is Python slower than C? | Because of dynamic typing (and being interpreted). Before adding `a + b`, Python must inspect the type of `a` and `b` to figure out which addition method to call. |
+
+---
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, watch out for this one:
+
+```python
+def add(x, y):
+    return x + y
+
+print(add(5, 10))      # 15
+print(add("5", "10"))  # "510"
+# print(add("5", 10))  # TypeError!
+```
+
+**Why it's tricky:** Because Python is dynamically typed, `add` accepts *anything*. But because it's **strongly typed**, it will crash if you try to add a string to an int. The bug only appears at runtime when that specific line runs.
+
+---
+
+## 11. Real-World Usage
+
+- **Data Science Scripts:** Rapid prototyping where defining strict schemas upfront would slow down exploration.
+- **JSON Parsing:** Handling dynamic API responses where the shape of the data isn't 100% known or changes frequently.
+- **Testing:** Easily passing mock objects into functions without needing to implement complex interfaces (thanks to Duck Typing).
+
+---
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use type hints (`x: int`) to help your IDE and team. | Rely on type hints for runtime security (they do nothing at runtime). |
+| Write unit tests to catch type-related bugs. | Assume your function will only ever receive the type you expect. |
+| Use `isinstance(var, type)` if you *must* check types. | Use `type(var) == type` (fails with inheritance). |
+
+---
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> In massive codebases, dynamic typing becomes a nightmare for maintainability. Bro, you'll look at `process_data(data)` and have no idea if `data` is a dictionary, a string, or a custom object. Always use **Type Hints** and validate inputs at the edges of your system (e.g., using **Pydantic** in FastAPI) to prevent garbage data from crashing your app deep in the business logic.
+
+---
+
+## 14. Common Mistakes
+
+- **Shadowing built-ins:** Reassigning a dynamically typed variable over a built-in function (e.g., `list = [1, 2]`, now you can't use `list()` anymore).
+- **Ignoring Type Hints:** Writing modern Python without type hints makes it incredibly hard for other engineers to read your code.
+- **Assuming implicit conversion:** Thinking `"Age: " + 25` will work. It won't. You need `"Age: " + str(25)`.
+
+---
+
+## 15. Related Topics
+
+- Type Hints (Typing Module)
+- Memory Management
+- Garbage Collection
+- Duck Typing
+- Python Internals
