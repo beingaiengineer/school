@@ -2,6 +2,241 @@
 sidebar_position: 2
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Multiprocessing
 
-Placeholder: introduce Multiprocessing.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Multiprocessing |
+| Difficulty | Advanced |
+| Used For | CPU-bound tasks (math, data processing, machine learning) |
+| Common Mistake | Using multiprocessing for I/O tasks or sharing memory without locks |
+| Performance | Fast for CPU-bound work; bypasses the GIL |
+
+---
+
+## 2. Real-World Analogy
+
+Think of multiprocessing like opening an entirely new branch of your Indian restaurant, bro.
+
+If you have a massive catering order (CPU-heavy task), one kitchen (one Python process) is too slow, even if you have multiple waiters (threads) jumping around. The single kitchen is the bottleneck.
+
+So, you rent 3 more kitchens (spawn new processes) across the city. They each have their own ingredients, their own stoves, and their own staff. They work completely independently and in parallel. But, if they need to share a recipe, they have to send a delivery driver back and forth (Inter-Process Communication), which is slow.
+
+---
+
+## 3. Concept Explanation
+
+Multiprocessing in Python creates completely separate OS processes, each with its own Python interpreter and its own memory space.
+
+Because each process has its own memory, it has its own Global Interpreter Lock (GIL). This completely bypasses the GIL bottleneck that limits Threading. Therefore, multiprocessing allows you to use all the CPU cores on your machine simultaneously for heavy computational work.
+
+The tradeoff is that starting processes is slow and uses a lot of RAM, and sharing data between them requires serialization (pickling) and special communication channels like Queues or Pipes.
+
+---
+
+## 4. Syntax Table
+
+| Operation | Example |
+|---|---|
+| Import | `import multiprocessing` |
+| Create Process | `p = multiprocessing.Process(target=worker)` |
+| Start Process | `p.start()` |
+| Wait for Process | `p.join()` |
+
+---
+
+## 5. Beginner Example
+
+Bro, let's max out a CPU core with a heavy math function, and then use two cores.
+
+```python
+import multiprocessing
+import time
+
+def heavy_math():
+    count = 0
+    for i in range(50000000):
+        count += i
+    print("Done computing!")
+
+if __name__ == '__main__':
+    start_time = time.time()
+
+    # Spawn two separate processes
+    p1 = multiprocessing.Process(target=heavy_math)
+    p2 = multiprocessing.Process(target=heavy_math)
+
+    p1.start()
+    p2.start()
+
+    p1.join()
+    p2.join()
+
+    print(f"Time taken: {time.time() - start_time} seconds")
+```
+
+*(Note: Always use `if __name__ == '__main__':` on Windows, or it will infinitely spawn processes and crash your PC!)*
+
+---
+
+## 6. Real-World Engineering Example
+
+In data engineering, you might use a Process Pool to apply a heavy function to thousands of images or data rows.
+
+```python
+import concurrent.futures
+import math
+
+# A CPU-bound task
+def process_data(number):
+    return sum(math.sqrt(i) for i in range(number))
+
+if __name__ == '__main__':
+    data_chunks = [1000000, 2000000, 3000000, 4000000]
+
+    # ProcessPoolExecutor automatically manages the worker processes
+    with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
+        results = list(executor.map(process_data, data_chunks))
+
+    print("Results computed:", results)
+```
+
+---
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    {
+      id: '1',
+      type: 'core',
+      data: { title: 'Parent Process', label: 'Main script execution' },
+      position: { x: 300, y: 50 },
+    },
+    {
+      id: '2',
+      type: 'process',
+      data: { title: 'Child Process 1', label: 'Own Memory & GIL' },
+      position: { x: 100, y: 200 },
+    },
+    {
+      id: '3',
+      type: 'process',
+      data: { title: 'Child Process 2', label: 'Own Memory & GIL' },
+      position: { x: 500, y: 200 },
+    },
+    {
+      id: '4',
+      type: 'data',
+      data: { title: 'Inter-Process Communication', label: 'Queues / Pipes (Pickling)' },
+      position: { x: 300, y: 350 },
+    },
+    { id: 'e1', source: '1', target: '2', label: 'Fork/Spawn', type: 'smoothstep' },
+    { id: 'e2', source: '1', target: '3', label: 'Fork/Spawn', type: 'smoothstep' },
+    { id: 'e3', source: '2', target: '4', label: 'Sends Result', animated: true, type: 'straight' },
+    { id: 'e4', source: '3', target: '4', label: 'Sends Result', animated: true, type: 'straight' },
+    { id: 'e5', source: '4', target: '1', label: 'Reads Results', style: { strokeDasharray: '5,5' }, type: 'straight' }
+  ]}
+/>
+
+When you call `Process.start()`, the OS duplicates your Python environment (using `fork` on Linux/Mac, or `spawn` on Windows). It creates a brand-new process in the OS task manager.
+
+Because they have separate memory, `Process 1` cannot read a global variable modified by `Process 2`. If they need to talk, Python must serialize the data (pickle it), send it over an OS pipe, and the other process must deserialize it. This is why passing massive objects between processes is slow.
+
+---
+
+## 8. Performance Table
+
+| Resource | Threading | Multiprocessing |
+|---|---|---|
+| Creation Speed | Fast (Lightweight) | Slow (Heavy OS overhead) |
+| Memory Usage | Low (Shared) | High (Duplicated per process) |
+| CPU-Bound Tasks | Terribly slow (GIL block) | Blazing fast (Uses all cores) |
+
+---
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Multiprocessing vs Threading? | Multiprocessing uses separate memory and bypasses the GIL (good for CPU-bound). Threading shares memory and is blocked by the GIL (good for I/O-bound). |
+| Why must we use `if __name__ == '__main__':` on Windows? | Windows doesn't have `fork()`. It uses `spawn()`, which imports the main module from scratch. Without the `if` guard, the new process would recursively spawn more processes, crashing the PC. |
+| How do processes share data? | They don't share memory by default. They must use `multiprocessing.Queue`, `multiprocessing.Pipe`, or shared memory objects like `Value` or `Array`. |
+| Is passing large data between processes fast? | No. The data must be pickled (serialized) and unpickled, which adds massive overhead. It's better to let processes read data directly from disk/DB if possible. |
+
+---
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, why doesn't this code change the global variable?
+
+```python
+import multiprocessing
+
+results = []
+
+def add_to_list(item):
+    results.append(item)
+    print(f"Inside process: {results}")
+
+if __name__ == '__main__':
+    p1 = multiprocessing.Process(target=add_to_list, args=("Apple",))
+    p1.start()
+    p1.join()
+
+    print(f"Main program: {results}")
+```
+
+**Output:**
+```text
+Inside process: ['Apple']
+Main program: []
+```
+
+**Why it's tricky:** `p1` gets a *copy* of the `results` list when it forks. It modifies its own copy. The parent process's `results` list remains empty. To fix this, you must use a `multiprocessing.Manager().list()`.
+
+---
+
+## 11. Real-World Usage
+
+- **Machine Learning Data Pipelines:** Pre-processing thousands of images (resizing, normalizing) before feeding them to a GPU.
+- **Financial Modeling:** Running thousands of Monte Carlo simulations simultaneously across a 64-core server.
+- **Video Encoding:** Splitting a 1-hour video into chunks and having different processes encode each chunk.
+
+---
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `concurrent.futures.ProcessPoolExecutor` for managing workers easily. | Spawn thousands of processes (you will run out of RAM and crash the server). |
+| Chunk your data (e.g., give 1 process 10,000 items, instead of creating 10,000 processes). | Pass giant Pandas DataFrames through a `Queue` between processes. |
+
+---
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> While `multiprocessing` is powerful, in modern distributed systems (like microservices), we often use entirely different machines rather than maxing out one server's cores. If a job is too heavy for one core, it might be better handled by pushing the tasks to a message queue (like RabbitMQ or Redis/Celery) and having multiple Kubernetes pods process them independently.
+
+---
+
+## 14. Common Mistakes
+
+- **Zombie Processes:** Forgetting to `.join()` processes or kill them when an exception occurs, leaving orphaned Python processes eating up RAM in the server background.
+- **Using Multiprocessing for Network calls:** Spawning heavy processes just to wait for an API response wastes massive amounts of RAM. Use `asyncio` or `threading` for that.
+- **Pickling Errors:** Trying to pass lambda functions, file handles, or unpicklable objects to a child process. Python will throw a `PicklingError`.
+
+---
+
+## 15. Related Topics
+
+- Threading
+- The GIL (Global Interpreter Lock)
+- Asyncio
+- Celery / Distributed Task Queues
+- Concurrency vs Parallelism

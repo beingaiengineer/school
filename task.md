@@ -114,18 +114,18 @@ This checklist tracks the implementation of Python School playbook topics. Compl
 - [x] Descriptors (`advanced-python/descriptors.mdx`)
 - [x] Metaclasses (`advanced-python/metaclasses.mdx`)
 - [x] Monkey Patching (`advanced-python/monkey-patching.mdx`)
-- [ ] Dynamic Typing (`advanced-python/dynamic-typing.mdx`)
-- [ ] Python Internals (`advanced-python/python-internals.mdx`)
+- [x] Dynamic Typing (`advanced-python/dynamic-typing.mdx`)
+- [x] Python Internals (`advanced-python/python-internals.mdx`)
 
 ## 12. Concurrency
-- [ ] Threading (`concurrency/threading.mdx`)
-- [ ] Multiprocessing (`concurrency/multiprocessing.mdx`)
-- [ ] Asyncio (`concurrency/asyncio.mdx`)
-- [ ] Async/Await (`concurrency/async-await.mdx`)
-- [ ] Race Conditions (`concurrency/race-conditions.mdx`)
-- [ ] Queues (`concurrency/queues.mdx`)
-- [ ] Locks & Semaphores (`concurrency/locks-semaphores.mdx`)
-- [ ] GIL (`concurrency/gil.mdx`)
+- [x] Threading (`concurrency/threading.mdx`)
+- [x] Multiprocessing (`concurrency/multiprocessing.mdx`)
+- [x] Asyncio (`concurrency/asyncio.mdx`)
+- [x] Async/Await (`concurrency/async-await.mdx`)
+- [x] Race Conditions (`concurrency/race-conditions.mdx`)
+- [x] Queues (`concurrency/queues.mdx`)
+- [x] Locks & Semaphores (`concurrency/locks-semaphores.mdx`)
+- [x] GIL (`concurrency/gil.mdx`)
 
 ## 13. API Development
 - [ ] Requests Library (`api-development/requests-library.mdx`)

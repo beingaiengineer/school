@@ -2,6 +2,227 @@
 sidebar_position: 4
 ---
 
-# Async Await
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Async Await.
+# Async / Await
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Async/Await Syntax |
+| Difficulty | Intermediate |
+| Used For | Writing clean, readable asynchronous code |
+| Common Mistake | Forgetting to use `await` when calling an `async` function |
+| Performance | No direct performance boost on its own; it's the syntax that enables `asyncio` |
+
+---
+
+## 2. Real-World Analogy
+
+Think of `async / await` like ordering food at a busy fast-food restaurant, bro.
+
+**Async (The Order):** When you say `async def make_burger()`, you are defining a process that takes time. You are placing an order.
+**Await (The Buzzer):** When you say `await make_burger()`, the cashier hands you a buzzer. You step aside and let other people order. You are **pausing** your interaction with the cashier until the buzzer rings.
+
+If you don't use `await`, you just stare at the cashier holding your receipt, but you never actually wait to receive the burger.
+
+---
+
+## 3. Concept Explanation
+
+`async` and `await` are the keywords in Python used to write asynchronous code. They were introduced to make async code look exactly like normal, synchronous, top-to-bottom code.
+
+- **`async def`**: Defines a function as a **Coroutine**. Calling it doesn't run it; it returns a coroutine object.
+- **`await`**: Can only be used *inside* an `async def` function. It tells Python: "Pause this function here until the awaited task is finished. Meanwhile, let the Event Loop do other things."
+
+Before `async/await`, Python developers had to use confusing callbacks and generator yields to achieve concurrency. Now, it reads like normal code.
+
+---
+
+## 4. Syntax Table
+
+| Concept | Syntax |
+|---|---|
+| Define Coroutine | `async def my_func():` |
+| Pause for result | `result = await another_async_func()` |
+| Async Context Manager | `async with aiofiles.open('file.txt') as f:` |
+| Async Loop | `async for item in async_generator():` |
+
+---
+
+## 5. Beginner Example
+
+Bro, watch how calling an `async` function behaves differently than a normal function.
+
+```python
+import asyncio
+
+async def fetch_data():
+    print("Fetching data...")
+    await asyncio.sleep(1)
+    return {"status": 200}
+
+async def main():
+    # TRAP: If we just call the function, it doesn't run!
+    coro = fetch_data()
+    print("Coroutine object:", coro) # <coroutine object fetch_data...>
+
+    # We MUST use await to actually execute it and get the result
+    result = await coro
+    print("Result:", result)
+
+asyncio.run(main())
+```
+
+---
+
+## 6. Real-World Engineering Example
+
+In modern web development (like FastAPI), you often need to read files or hit databases asynchronously so you don't block other web requests.
+
+```python
+import asyncio
+# You must use async libraries, like aiofiles, not the standard 'open()'
+import aiofiles
+
+async def log_request(request_data):
+    # 'async with' ensures the file is closed properly without blocking the thread
+    async with aiofiles.open("server_logs.txt", mode="a") as f:
+        await f.write(f"Logged: {request_data}\n")
+
+async def process_api_call():
+    # We can await the logging to finish
+    await log_request("User 123 logged in")
+    print("API Process complete")
+
+asyncio.run(process_api_call())
+```
+
+---
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    {
+      id: '1',
+      type: 'core',
+      data: { title: 'Calling Function', label: 'result = await my_task()' },
+      position: { x: 100, y: 150 },
+    },
+    {
+      id: '2',
+      type: 'process',
+      data: { title: 'Interpreter', label: 'Creates Coroutine Object' },
+      position: { x: 400, y: 50 },
+    },
+    {
+      id: '3',
+      type: 'warning',
+      data: { title: 'Event Loop', label: 'Suspends Caller, runs other tasks' },
+      position: { x: 400, y: 250 },
+    },
+    {
+      id: '4',
+      type: 'output',
+      data: { title: 'Result Ready', label: 'Resumes Caller with value' },
+      position: { x: 700, y: 150 },
+    },
+    { id: 'e1', source: '1', target: '2', label: 'Without await', type: 'straight' },
+    { id: 'e2', source: '1', target: '3', label: 'Hits await', animated: true, type: 'smoothstep' },
+    { id: 'e3', source: '3', target: '4', label: 'Task finishes', type: 'smoothstep' },
+    { id: 'e4', source: '4', target: '1', label: 'Returns value', style: { strokeDasharray: '5,5' }, type: 'straight' }
+  ]}
+/>
+
+Under the hood, an `async def` function is converted by Python into a **Generator**.
+When Python hits `await`, it internally calls `yield`, which suspends the function's execution state (saving all local variables) and returns control to the Event Loop. When the awaited task finishes, the Event Loop calls `.send(result)` on the generator, resuming the function exactly where it left off, but now with the result data.
+
+---
+
+## 8. Performance Table
+
+| Metric | Detail |
+|---|---|
+| Speed | `await` itself is just syntax. It's fast, but its power comes from allowing the *Event Loop* to run other things. |
+| Overhead | Very slight overhead to create the coroutine object compared to a standard function call, but negligible in I/O tasks. |
+
+---
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What happens if you forget `await`? | The function returns a `coroutine object` but does not execute the code inside it. You will get a `RuntimeWarning: coroutine was never awaited`. |
+| Can you use `await` outside an `async` function? | No. You will get a SyntaxError. (Exception: Top-level await is supported in some REPLs like Jupyter Notebooks). |
+| What is a Coroutine? | A special type of function defined by `async def` that can pause its execution and resume later. |
+| How do you run the top-level async function? | You cannot `await` it at the global script level. You must use `asyncio.run(main())` to start the Event Loop. |
+
+---
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, why does this code take 2 seconds instead of 1 second?
+
+```python
+import asyncio
+import time
+
+async def fetch():
+    await asyncio.sleep(1)
+
+async def main():
+    start = time.time()
+
+    # TRAP: Awaiting them sequentially!
+    await fetch()
+    await fetch()
+
+    print(f"Time: {time.time() - start:.2f}s") # Time: 2.00s
+
+asyncio.run(main())
+```
+
+**Why it's tricky:** You used `await`, but you awaited them one after the other. The Event Loop pauses `main`, runs `fetch 1`, waits for it to finish, then runs `fetch 2`. To run them concurrently, you MUST use `await asyncio.gather(fetch(), fetch())`.
+
+---
+
+## 11. Real-World Usage
+
+- **Database Queries:** Using `asyncpg` to say `user = await db.fetch_row("SELECT * FROM users")` without freezing the web server.
+- **Microservices:** Using `async with httpx.AsyncClient() as client: await client.get(...)` to call other services.
+- **Discord/Telegram Bots:** Bot libraries are almost exclusively async, using `await message.channel.send("Hello")` so the bot can process other users' messages while waiting for the network.
+
+---
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `await` when calling `async` functions. | Mix `sync` functions inside `async` code if those sync functions take a long time to run. |
+| Group independent tasks with `asyncio.gather()` to maximize concurrency. | Await tasks sequentially in a `for` loop if they don't depend on each other. |
+
+---
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> If you have a massive legacy synchronous codebase and you want to use one `async` library, you can't just slap `await` in the middle of a standard Django view. It creates a "color" problem (sync code is blue, async code is red). To call async code from sync code safely in production, you use `asyncio.run_coroutine_threadsafe()` combined with a background Event Loop thread. Otherwise, stick to one paradigm.
+
+---
+
+## 14. Common Mistakes
+
+- **Awaiting normal functions:** `await my_normal_func()` throws a `TypeError: object NoneType can't be used in 'await' expression`. You can only await coroutines.
+- **Using `time.sleep()`:** Writing `time.sleep(1)` inside an `async def`. It blocks the whole thread. Always use `await asyncio.sleep(1)`.
+- **Top-Level Await:** Writing `await main()` at the very bottom of `script.py`. It crashes. You must use `asyncio.run()`.
+
+---
+
+## 15. Related Topics
+
+- Asyncio
+- Generators
+- Event Loop
+- Concurrency (Threading vs Asyncio)

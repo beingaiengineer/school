@@ -2,6 +2,252 @@
 sidebar_position: 6
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Queues
 
-Placeholder: introduce Queues.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Queues in Concurrency |
+| Difficulty | Intermediate |
+| Used For | Safely passing data between Threads or Processes |
+| Common Mistake | Using a standard list `[]` instead of `queue.Queue` between threads |
+| Performance | Fast, thread-safe, and avoids the need for manual locking |
+
+---
+
+## 2. Real-World Analogy
+
+Think of a Queue like the order ticket rail at an Indian diner, bro.
+
+**The Waiter (Producer):** Takes an order and clips the ticket to the rail. He doesn't go into the kitchen and tell the chef how to cook it. He just drops the ticket and walks away to help another table.
+**The Chef (Consumer):** Looks at the rail. He pulls the first ticket off, cooks it, and then grabs the next one.
+
+They don't shout at each other (shared variables). They don't fight over the same ticket (race condition). The rail (Queue) safely manages the handover of work.
+
+---
+
+## 3. Concept Explanation
+
+When you have multiple threads or processes running, they often need to send data to each other.
+If you try to use a standard Python list to pass data between threads, you risk Race Conditions unless you manually write complex Lock logic.
+
+Python provides the `queue` module for Threading, and `multiprocessing.Queue` for Multiprocessing. These queues are **thread-safe** and **process-safe**. They handle all the underlying Locks automatically. You simply `put()` data in on one side, and `get()` it out on the other.
+
+This implements the famous **Producer-Consumer** pattern.
+
+---
+
+## 4. Syntax Table
+
+| Operation | Example |
+|---|---|
+| Import | `import queue` |
+| Create Queue | `q = queue.Queue(maxsize=10)` |
+| Add item | `q.put("Data")` (blocks if full) |
+| Get item | `item = q.get()` (blocks if empty) |
+| Mark task done | `q.task_done()` |
+
+---
+
+## 5. Beginner Example
+
+Bro, watch a Producer thread hand off work to a Consumer thread safely.
+
+```python
+import threading
+import queue
+import time
+
+def producer(q):
+    for i in range(3):
+        print(f"Producer making item {i}")
+        q.put(i)
+        time.sleep(1)
+
+def consumer(q):
+    while True:
+        # Blocks until an item is available
+        item = q.get()
+        if item is None:
+            break # Poison pill to stop
+        print(f"Consumer processing item {item}")
+        q.task_done()
+
+q = queue.Queue()
+
+t1 = threading.Thread(target=producer, args=(q,))
+t2 = threading.Thread(target=consumer, args=(q,))
+
+t1.start()
+t2.start()
+
+t1.join()
+q.put(None) # Send the poison pill to stop consumer
+t2.join()
+```
+
+---
+
+## 6. Real-World Engineering Example
+
+In web scraping, we often have one thread gathering URLs (Producer), while 10 worker threads download the HTML simultaneously (Consumers).
+
+```python
+import threading
+import queue
+import requests
+
+# Thread-safe queue
+url_queue = queue.Queue()
+
+def downloader():
+    while True:
+        url = url_queue.get()
+        if url is None:
+            break
+
+        try:
+            res = requests.get(url)
+            print(f"Downloaded {url}: Status {res.status_code}")
+        except Exception as e:
+            print(f"Error {url}: {e}")
+        finally:
+            # Tell the queue we finished this specific task
+            url_queue.task_done()
+
+# Start 3 worker threads
+workers = []
+for _ in range(3):
+    t = threading.Thread(target=downloader)
+    t.start()
+    workers.append(t)
+
+# Producer adds work to the queue
+urls_to_scrape = ["http://example.com", "http://example.org", "http://example.net"]
+for u in urls_to_scrape:
+    url_queue.put(u)
+
+# Wait until all items in the queue have been task_done()
+url_queue.join()
+
+# Stop the workers
+for _ in range(3):
+    url_queue.put(None)
+for t in workers:
+    t.join()
+
+print("All scraping finished!")
+```
+
+---
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { title: 'Producer Thread', label: 'q.put(data)' }, position: { x: 100, y: 150 } },
+    { id: '2', type: 'data', data: { title: 'Queue Object', label: 'Internal Locks & Conditions' }, position: { x: 400, y: 150 } },
+    { id: '3', type: 'process', data: { title: 'Consumer Thread 1', label: 'q.get()' }, position: { x: 700, y: 50 } },
+    { id: '4', type: 'process', data: { title: 'Consumer Thread 2', label: 'q.get()' }, position: { x: 700, y: 250 } },
+    { id: 'e1', source: '1', target: '2', label: 'Pushes', type: 'straight' },
+    { id: 'e2', source: '2', target: '3', label: 'Pops safely', type: 'smoothstep' },
+    { id: 'e3', source: '2', target: '4', label: 'Pops safely', type: 'smoothstep' }
+  ]}
+/>
+
+Under the hood, `queue.Queue` uses Python's `threading.Lock` and `threading.Condition` objects.
+When `Consumer 1` calls `.get()`, the Queue acquires a lock, pulls the item, and releases the lock. If the queue is empty, the `Condition` makes `Consumer 1` sleep (yielding the CPU) until a Producer calls `.put()`, which triggers the `Condition` to wake up the sleeping Consumer.
+
+---
+
+## 8. Performance Table
+
+| Queue Type | Best Use Case | Performance Note |
+|---|---|---|
+| `queue.Queue` | Threading (I/O bound) | Fast, light memory, handles locks internally. |
+| `multiprocessing.Queue` | Multiprocessing (CPU bound) | Slower, data must be pickled (serialized) to cross OS memory boundaries. |
+| `asyncio.Queue` | Asyncio Event Loop | Extremely fast, zero OS context switching overhead. |
+
+---
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why use a Queue instead of a List for threads? | Lists are not fully thread-safe for complex operations. Queues are specifically designed for thread-safe data exchange and have built-in blocking/waiting mechanisms. |
+| What is a "Poison Pill"? | A special value (like `None` or a string `"STOP"`) sent into a queue by a producer to tell the consumer threads that no more work is coming and they should exit their infinite loops. |
+| What does `queue.join()` do? | It blocks the main thread until every item placed in the queue has been processed AND `q.task_done()` has been called for every item. |
+| What happens if `maxsize` is set and the queue is full? | `q.put()` will block the producer thread, making it wait until a consumer removes an item. This prevents memory overflow if producers are faster than consumers. |
+
+---
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, why does this script hang forever?
+
+```python
+import threading
+import queue
+
+q = queue.Queue()
+
+def worker():
+    item = q.get()
+    print(f"Processed {item}")
+    # TRAP: Missing q.task_done()
+
+t = threading.Thread(target=worker)
+t.start()
+
+q.put("Job 1")
+
+# The main thread waits forever here!
+q.join()
+```
+
+**Why it's tricky:** You called `q.join()`, which waits for the internal counter of unfinished tasks to hit zero. The queue knows `1` item was put in. The worker processed it, but *never told the queue it was finished*. The queue's internal counter is still `1`, so `q.join()` blocks forever. You MUST call `q.task_done()`.
+
+---
+
+## 11. Real-World Usage
+
+- **Log Processing Pipeline:** Web requests write logs to a Queue quickly so the user doesn't wait. A background thread reads the Queue and writes to the DB slowly.
+- **Task Distribution:** A master node puts video encoding tasks into a Queue, and 10 worker nodes pull tasks off to render them.
+- **Rate Limiting API calls:** Putting requests into a queue and having a consumer pull exactly 5 per second to avoid API bans.
+
+---
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Always call `q.task_done()` immediately after finishing the work for an item. | Use `multiprocessing.Queue` to pass massive DataFrames. Pickling will destroy performance. |
+| Use `maxsize=N` to prevent out-of-memory errors if your Producer is 100x faster than your Consumer. | Forget to send Poison Pills to workers, leaving them running as zombie threads in the background. |
+
+---
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Python's built-in Queues only exist in the RAM of the single server running the script. If the server crashes, all pending jobs in the queue are lost permanently! In real distributed production systems, we replace Python's internal queues with robust message brokers like **RabbitMQ**, **Redis (Celery)**, or **AWS SQS**, which persist the queue to disk and allow multiple different servers to act as consumers.
+
+---
+
+## 14. Common Mistakes
+
+- **Polling instead of blocking:** Doing `while not q.empty():` and `time.sleep()`. This is bad. Just use `item = q.get()`, it handles the waiting efficiently at the OS level.
+- **Using `q.get(block=False)` without try-except:** It will instantly throw a `queue.Empty` exception if the queue happens to be empty at that exact millisecond.
+- **Deadlocks on `put`:** Setting `maxsize=1`, the producer puts an item (queue full). Producer tries to put a second item, blocks. If the Consumer crashed and isn't reading, the Producer is stuck forever.
+
+---
+
+## 15. Related Topics
+
+- Threading
+- Multiprocessing
+- Locks & Semaphores
+- Race Conditions
+- Celery / RabbitMQ

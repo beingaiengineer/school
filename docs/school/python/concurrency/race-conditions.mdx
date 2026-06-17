@@ -2,6 +2,229 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Race Conditions
 
-Placeholder: introduce Race Conditions.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Race Conditions |
+| Difficulty | Advanced |
+| Used For | Debugging concurrency bugs |
+| Common Mistake | Assuming `x += 1` is a single, atomic operation |
+| Performance | Fixing them (via Locks) slows down the program slightly due to waiting |
+
+---
+
+## 2. Real-World Analogy
+
+Think of a Race Condition like a joint bank account, bro.
+
+You and your wife both go to different ATMs at the exact same time. The account has $100.
+1. You check the balance: $100.
+2. She checks the balance: $100.
+3. You withdraw $50. The ATM calculates: $100 - $50 = $50. It updates the database to $50.
+4. She withdraws $50. Her ATM calculates: $100 - $50 = $50. It updates the database to $50.
+
+You both withdrew $50 (total $100), but the bank thinks you still have $50 left!
+Because you "raced" to read and write the data at the same time, the final state is corrupted.
+
+---
+
+## 3. Concept Explanation
+
+A **Race Condition** occurs in multi-threaded (or asynchronous) programming when two or more threads attempt to read, modify, and write shared data at the same time.
+
+Because the OS schedules threads unpredictably, Thread A might read a variable, get paused by the OS, and Thread B might change that variable before Thread A gets to write its update.
+
+This leads to silent, unpredictable bugs that might only happen 1 in 10,000 executions, making them an absolute nightmare to debug.
+
+---
+
+## 4. Syntax Table
+
+There isn't specific "syntax" for a race condition (it's a bug), but here is how you *fix* them:
+
+| Tool | Example | Description |
+|---|---|---|
+| Lock | `lock = threading.Lock()` | Creates a mutex (mutual exclusion) lock |
+| Acquire | `lock.acquire()` | Blocks other threads from proceeding past this line |
+| Release | `lock.release()` | Allows other threads to acquire the lock |
+| Context Manager | `with lock:` | Safely acquires and releases the lock automatically |
+
+---
+
+## 5. Beginner Example
+
+Bro, watch a Race Condition destroy this simple counter.
+
+```python
+import threading
+
+# Shared variable
+counter = 0
+
+def increment():
+    global counter
+    for _ in range(100000):
+        # NOT an atomic operation. It is: Read, Add, Write.
+        counter += 1
+
+# Create 2 threads
+t1 = threading.Thread(target=increment)
+t2 = threading.Thread(target=increment)
+
+t1.start(); t2.start()
+t1.join(); t2.join()
+
+# You expect 200,000.
+# But you will get something like 142,893!
+print("Final Counter:", counter)
+```
+
+The threads interrupted each other while updating the same variable.
+
+---
+
+## 6. Real-World Engineering Example
+
+How do we fix the bank account (or the counter) in production? We use a **Lock**.
+
+```python
+import threading
+
+counter = 0
+# 1. Create a Lock
+safe_lock = threading.Lock()
+
+def safe_increment():
+    global counter
+    for _ in range(100000):
+        # 2. Acquire the lock before modifying shared data
+        with safe_lock:
+            counter += 1
+        # Lock is automatically released here
+
+t1 = threading.Thread(target=safe_increment)
+t2 = threading.Thread(target=safe_increment)
+
+t1.start(); t2.start()
+t1.join(); t2.join()
+
+# Guaranteed to be exactly 200,000 every time!
+print("Safe Counter:", counter)
+```
+
+---
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { title: 'Shared Variable', label: 'Counter = 5' }, position: { x: 300, y: 50 } },
+    { id: '2', type: 'process', data: { title: 'Thread 1', label: 'Reads 5' }, position: { x: 100, y: 150 } },
+    { id: '3', type: 'process', data: { title: 'Thread 2', label: 'Reads 5' }, position: { x: 500, y: 150 } },
+    { id: '4', type: 'process', data: { title: 'Thread 1', label: 'Adds 1 (Has 6)' }, position: { x: 100, y: 250 } },
+    { id: '5', type: 'process', data: { title: 'Thread 2', label: 'Adds 1 (Has 6)' }, position: { x: 500, y: 250 } },
+    { id: '6', type: 'warning', data: { title: 'Thread 1 Writes', label: 'Counter = 6' }, position: { x: 100, y: 350 } },
+    { id: '7', type: 'warning', data: { title: 'Thread 2 Writes', label: 'Counter = 6 (Overwrites T1!)' }, position: { x: 500, y: 350 } },
+
+    { id: 'e1', source: '1', target: '2', animated: true },
+    { id: 'e2', source: '1', target: '3', animated: true },
+    { id: 'e3', source: '2', target: '4', type: 'straight' },
+    { id: 'e4', source: '3', target: '5', type: 'straight' },
+    { id: 'e5', source: '4', target: '6', type: 'straight' },
+    { id: 'e6', source: '5', target: '7', type: 'straight' },
+    { id: 'e7', source: '6', target: '1', label: 'Writes 6', style: { strokeDasharray: '5,5' } },
+    { id: 'e8', source: '7', target: '1', label: 'Writes 6 (Lost increment)', style: { strokeDasharray: '5,5' } }
+  ]}
+/>
+
+In Python, the GIL prevents two threads from executing *bytecode* at the exact same millisecond. BUT, `counter += 1` translates to multiple bytecodes: `LOAD_GLOBAL`, `LOAD_CONST`, `INPLACE_ADD`, `STORE_GLOBAL`.
+
+The GIL can (and will) switch threads right in the middle of these instructions. That is why Race Conditions still exist in Python despite the GIL!
+
+---
+
+## 8. Performance Table
+
+| Fix Strategy | Performance Impact |
+|---|---|
+| `with lock:` | Moderate overhead. Threads have to wait in line, reducing concurrency. |
+| Message Queues | Low overhead, safer. Threads don't share memory, they pass messages. |
+| Atomic Operations | Fast. (Using operations that cannot be interrupted, e.g., `list.append()`). |
+
+---
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is a Race Condition? | A bug where the output of a program depends on the unpredictable timing or sequence of thread/process execution. |
+| How do you prevent Race Conditions? | By using synchronization primitives like Locks, Semaphores, or by avoiding shared mutable state entirely (e.g., using Queues). |
+| Does the Python GIL prevent Race Conditions? | NO. The GIL prevents multiple threads from executing simultaneously, but it does not prevent thread-switching *between* the steps of a non-atomic operation (like `+=`). |
+| What is a Critical Section? | The piece of code that accesses shared variables and must not be executed by more than one thread at a time. This is where you put your Lock. |
+
+---
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, is this code safe from Race Conditions?
+
+```python
+import threading
+
+my_list = []
+
+def add_items():
+    for i in range(1000):
+        my_list.append(i)
+
+# Running this in 10 threads...
+```
+
+**Why it's tricky:** Yes, it is safe! In CPython, `list.append()` is an **atomic** operation. It is executed entirely in C under the hood without releasing the GIL. You do not need a lock for `list.append()`. However, `my_list[0] += 1` is NOT atomic and would require a lock.
+
+---
+
+## 11. Real-World Usage
+
+- **E-Commerce:** Preventing two users from buying the last concert ticket at the exact same millisecond.
+- **Database Counters:** Keeping track of total likes on a YouTube video. (Databases handle this using Row Locks).
+- **File Systems:** Two processes trying to write to the same log file at the same time, causing garbled text.
+
+---
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `with lock:` instead of manual `lock.acquire()` and `lock.release()`. It ensures the lock is released even if an exception crashes the thread. | Lock huge blocks of code. Keep your Critical Sections as tiny as possible to maintain performance. |
+| Prefer using `queue.Queue` to pass data between threads instead of sharing variables. Queues are inherently thread-safe. | Forget to release a lock. This causes a **Deadlock**, freezing the entire program forever. |
+
+---
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Relying heavily on manual `Threading.Lock()` in massive applications usually leads to Deadlocks and spaghetti code. In modern backend systems (like Celery workers or FastAPI), we avoid sharing memory entirely. Instead of locking a Python variable, we use tools like **Redis Distributed Locks** (Redlock) or let the PostgreSQL database handle concurrency via ACID transactions and row-level locking (`SELECT ... FOR UPDATE`).
+
+---
+
+## 14. Common Mistakes
+
+- **Testing locally and thinking it works:** Race conditions might not appear on your 4-core laptop during testing, but the moment you deploy to a 32-core production server under heavy traffic, data gets corrupted.
+- **Deadlocks:** Thread A locks X and waits for Y. Thread B locks Y and waits for X. Both wait forever.
+- **Locking purely read-only data:** You don't need to lock a variable if all threads are only *reading* from it. You only lock when at least one thread is *writing*.
+
+---
+
+## 15. Related Topics
+
+- Threading
+- Locks & Semaphores
+- Queues
+- The GIL (Global Interpreter Lock)
+- Asyncio Concurrency
