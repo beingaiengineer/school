@@ -2,6 +2,180 @@
 sidebar_position: 2
 ---
 
-# Rest Api Basics
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Rest Api Basics.
+# REST API Basics
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | REST API Basics |
+| Difficulty | Beginner |
+| Used For | Allowing systems to communicate over HTTP |
+| Common Mistake | Using GET to modify data or POST to just read data |
+| Main Idea | Treating data as 'resources' accessed via standard HTTP verbs |
+
+Bro, a REST API is essentially a set of rules that lets different software applications talk to each other over the web, usually using JSON. It’s the backbone of modern web services.
+
+## 2. Real-World Analogy
+
+Think of a REST API like ordering food at an Indian restaurant.
+
+You (the Client) sit at the table and look at the menu. The waiter (the API) takes your order (the Request) to the kitchen (the Server/Database). The kitchen prepares the food (Data), and the waiter brings it back to you (the Response). You don't need to know how the kitchen cooks the food, you just need to know how to ask the waiter for it using the menu.
+
+## 3. Concept Explanation
+
+REST stands for Representational State Transfer. It's an architectural style for building web APIs.
+
+Instead of writing custom functions for every action (like `get_user_info_by_id_and_email`), REST treats everything as a **Resource** (like a `User`). You then use standard HTTP methods (Verbs) to perform CRUD operations (Create, Read, Update, Delete) on those resources.
+
+**Key constraints of REST:**
+- **Client-Server Separation:** The UI and data storage are separate.
+- **Stateless:** Every request contains all the info needed to process it. The server doesn't remember previous requests.
+- **Cacheable:** Responses can be cached to improve performance.
+
+## 4. Syntax Table
+
+Here’s how standard HTTP methods map to a RESTful resource (e.g., `/users`):
+
+| HTTP Method | CRUD Operation | Example URL | Action |
+|---|---|---|---|
+| **GET** | Read | `/users` | Get a list of users |
+| **GET** | Read | `/users/123` | Get details of user 123 |
+| **POST** | Create | `/users` | Create a new user |
+| **PUT** | Update | `/users/123` | Replace user 123 completely |
+| **PATCH** | Update | `/users/123` | Update specific fields of user 123 |
+| **DELETE** | Delete | `/users/123` | Delete user 123 |
+
+## 5. Beginner Example
+
+Let's look at what a JSON response from a REST API `GET /users/1` usually looks like:
+
+```json
+{
+  "id": 1,
+  "name": "Rahul Sharma",
+  "email": "rahul@example.com",
+  "role": "engineer"
+}
+```
+
+If you wanted to create that user, you would send a `POST /users` request with that JSON payload in the body.
+
+## 6. Real-World Engineering Example
+
+Bro, in a real-world Python application, you might use the `requests` library to interact with a REST API like this:
+
+```python
+import requests
+
+API_BASE_URL = "https://api.myapp.com/v1"
+
+def update_user_email(user_id, new_email):
+    url = f"{API_BASE_URL}/users/{user_id}"
+    payload = {"email": new_email}
+    headers = {"Authorization": "Bearer token123"}
+
+    # We use PATCH because we are only updating one field, not the whole resource
+    response = requests.patch(url, json=payload, headers=headers)
+
+    if response.status_code == 200:
+        return response.json()
+    elif response.status_code == 404:
+        print("Bro, user not found.")
+    else:
+        print(f"Failed: {response.status_code}")
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'How a REST API Request Works',
+    height: 400,
+    nodes: [
+      {id: 'client', title: 'Client (App/Browser)', detail: 'Sends HTTP Request', x: 20, y: 150, kind: 'process'},
+      {id: 'request', title: 'HTTP Request', detail: 'GET /users/123', x: 280, y: 150, kind: 'data'},
+      {id: 'api', title: 'API Server (Flask/FastAPI)', detail: 'Routes request, checks auth', x: 540, y: 150, kind: 'core'},
+      {id: 'db', title: 'Database', detail: 'SELECT * FROM users WHERE id=123', x: 800, y: 150, kind: 'tool'},
+      {id: 'response', title: 'HTTP Response', detail: '200 OK + JSON Data', x: 540, y: 280, kind: 'output'},
+    ],
+    edges: [
+      {source: 'client', target: 'request', label: 'Sends'},
+      {source: 'request', target: 'api', label: 'Over Internet'},
+      {source: 'api', target: 'db', label: 'Queries'},
+      {source: 'db', target: 'api', label: 'Returns Data', type: 'smoothstep', animated: true},
+      {source: 'api', target: 'response', label: 'Formats JSON', type: 'step'},
+      {source: 'response', target: 'client', label: 'Receives', type: 'smoothstep'},
+    ],
+  }}
+/>
+
+The magic of REST is that the client has no idea *how* the API gets the data. It just asks via HTTP, and the API does the heavy lifting (querying databases, calling other services) and returns standard JSON.
+
+## 8. Performance Table
+
+| Concept | Performance Impact |
+|---|---|
+| Statelessness | High scalability. Any server can handle any request. |
+| Payload Size | Large JSON responses slow down network transfer. |
+| N+1 Problem | Making 1 request for a list, then N requests for details is very slow. |
+| Caching | GET requests can be cached via CDNs, vastly improving speed. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between PUT and PATCH? | PUT replaces the entire resource. PATCH updates specific fields partially. |
+| Is REST stateful or stateless? | Stateless. Every request must contain all context needed. |
+| What does a 401 status code mean? | Unauthorized (Client needs to authenticate). |
+| What does a 404 status code mean? | Not Found (The resource doesn't exist). |
+| What is idempotent? | An operation that yields the same result whether called once or multiple times (e.g., PUT, DELETE, GET). POST is usually *not* idempotent. |
+
+## 10. Tricky Questions & Edge Cases
+
+**Question:** If I want to trigger an action that doesn't fit CRUD, like "activate a user", how do I do it in REST?
+
+Bro, pure REST can be tricky here.
+- **Option 1 (Resource state change):** `PATCH /users/123` with payload `{"status": "active"}`. (Preferred REST way)
+- **Option 2 (Sub-resource controller):** `POST /users/123/activate`. (Pragmatic, widely used, though slightly breaking pure REST).
+
+**Edge Case:** Calling `DELETE /users/123` twice. The first call returns 200 (or 204). The second call usually returns 404. This is still considered idempotent because the *server state* (user is gone) remains the same.
+
+## 11. Real-World Usage
+
+Almost every major tech company uses REST APIs:
+- GitHub API for managing repos.
+- Stripe API for processing payments.
+- Your frontend React/Vue app talking to your backend Python app.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use plural nouns for endpoints (`/users`). | Use verbs in URLs (`/getUsers` or `/createUser`). |
+| Return appropriate HTTP status codes (200, 201, 400, 404, 500). | Always return 200 OK even if there's an error in the JSON. |
+| Version your APIs (`/v1/users`). | Change payload structures without versioning. |
+| Implement pagination for list endpoints. | Return 10,000 records in one GET request. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Never trust user input in a REST API. Always validate the incoming JSON payload (using tools like Pydantic in Python) before processing it or hitting the database.
+
+## 14. Common Mistakes
+
+| Mistake | Why It Hurts |
+|---|---|
+| Storing session state on the server | Breaks horizontal scaling. If user hits server A then server B, B won't know them. |
+| Returning raw database errors | Leaks sensitive internal schema info to attackers. |
+| Using GET for destructive actions | Browsers pre-fetch GET links, which could accidentally delete data! |
+
+## 15. Related Topics
+
+- Requests Library
+- FastAPI
+- Flask
+- HTTP Status Codes
+- JSON Data Handling

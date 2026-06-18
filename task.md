@@ -128,18 +128,18 @@ This checklist tracks the implementation of Python School playbook topics. Compl
 - [x] GIL (`concurrency/gil.mdx`)
 
 ## 13. API Development
-- [ ] Requests Library (`api-development/requests-library.mdx`)
-- [ ] REST API Basics (`api-development/rest-api-basics.mdx`)
-- [ ] FastAPI (`api-development/fastapi.mdx`)
-- [ ] Flask (`api-development/flask.mdx`)
-- [ ] Authentication (`api-development/authentication.mdx`)
-- [ ] Middleware (`api-development/middleware.mdx`)
-- [ ] API Versioning (`api-development/api-versioning.mdx`)
-- [ ] Rate Limiting (`api-development/rate-limiting.mdx`)
+- [x] Requests Library (`api-development/requests-library.mdx`)
+- [x] REST API Basics (`api-development/rest-api-basics.mdx`)
+- [x] FastAPI (`api-development/fastapi.mdx`)
+- [x] Flask (`api-development/flask.mdx`)
+- [x] Authentication (`api-development/authentication.mdx`)
+- [x] Middleware (`api-development/middleware.mdx`)
+- [x] API Versioning (`api-development/api-versioning.mdx`)
+- [x] Rate Limiting (`api-development/rate-limiting.mdx`)
 
 ## 14. Databases
-- [ ] SQLite (`databases/sqlite.mdx`)
-- [ ] PostgreSQL (`databases/postgresql.mdx`)
+- [x] SQLite (`databases/sqlite.mdx`)
+- [x] PostgreSQL (`databases/postgresql.mdx`)
 - [ ] SQLAlchemy (`databases/sqlalchemy.mdx`)
 - [ ] ORM vs Raw SQL (`databases/orm-vs-raw-sql.mdx`)
 - [ ] Transactions (`databases/transactions.mdx`)

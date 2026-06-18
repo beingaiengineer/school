@@ -2,6 +2,190 @@
 sidebar_position: 8
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Rate Limiting
 
-Placeholder: introduce Rate Limiting.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | API Rate Limiting |
+| Difficulty | Intermediate |
+| Used For | Protecting your API from abuse, spam, and DDoS attacks |
+| Common Mistake | Using an in-memory dictionary for rate limiting across multiple servers |
+| Main Idea | Restricting how many requests a user or IP can make in a given timeframe |
+
+Bro, rate limiting is your API's shield. Without it, one malicious script or poorly coded frontend loop can send 10,000 requests a second, crashing your database and bringing down the entire system for everyone else.
+
+## 2. Real-World Analogy
+
+Think of an all-you-can-eat buffet.
+
+Even though it's "all you can eat," the restaurant only gives you two small plates at a time. Why? Because if they let you take a wheelbarrow to the buffet line, you would empty the trays in 10 seconds, and the other 50 customers would get angry and leave.
+
+Rate limiting ensures fair usage. You can have as much data as you want, but only "100 requests per minute."
+
+## 3. Concept Explanation
+
+Rate limiting controls the traffic sent to or from a network. For APIs, it means keeping track of how many requests a specific identifier (like an IP address or an API Key) has made recently.
+
+If the client exceeds the limit (e.g., more than 5 requests in 1 second), the server rejects the request immediately, returning an HTTP `429 Too Many Requests` status code, saving the database from processing the heavy logic.
+
+## 4. Syntax Table
+
+Rate limits are usually communicated back to the client via HTTP headers so they know when to slow down:
+
+| Header | Meaning |
+|---|---|
+| `X-RateLimit-Limit` | The maximum number of requests allowed in the time window (e.g., 60). |
+| `X-RateLimit-Remaining` | How many requests the client has left in the current window. |
+| `X-RateLimit-Reset` | The Unix timestamp when the limit will reset back to the maximum. |
+| `Retry-After` | (Often sent with a 429) How many seconds to wait before trying again. |
+
+## 5. Beginner Example
+
+A naive, purely conceptual rate limiter in Python using an in-memory dictionary. (Do not use this in production if you have multiple server instances!)
+
+```python
+import time
+from fastapi import FastAPI, HTTPException, Request
+
+app = FastAPI()
+
+# Stores {ip_address: [timestamp1, timestamp2]}
+request_history = {}
+LIMIT = 5 # max requests
+WINDOW = 60 # per 60 seconds
+
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    client_ip = request.client.host
+    now = time.time()
+
+    # Clean up old requests
+    history = request_history.get(client_ip, [])
+    history = [t for t in history if now - t < WINDOW]
+
+    if len(history) >= LIMIT:
+        raise HTTPException(status_code=429, detail="Bro, slow down! Too Many Requests.")
+
+    # Log this new request
+    history.append(now)
+    request_history[client_ip] = history
+
+    return await call_next(request)
+
+@app.get("/")
+def home():
+    return {"message": "Success!"}
+```
+
+## 6. Real-World Engineering Example
+
+In a real system, you use Redis to store the request counts because Redis is extremely fast, atomic, and shared across all your API servers.
+
+A common algorithm used is the "Token Bucket". In FastAPI, you'd usually use a library like `slowapi`.
+
+```python
+from fastapi import FastAPI, Request
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+# Initialize limiter to track by IP address
+limiter = Limiter(key_func=get_remote_address)
+app = FastAPI()
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+@app.get("/expensive-query")
+@limiter.limit("5/minute") # Only 5 requests per minute allowed
+async def expensive_data(request: Request):
+    # This won't even run if the limit is exceeded
+    return {"data": "This took a lot of CPU to calculate"}
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'Redis-backed Rate Limiting',
+    height: 400,
+    nodes: [
+      {id: 'client', title: 'Client IP: 1.2.3.4', detail: 'Sends HTTP Request', x: 20, y: 150, kind: 'process'},
+      {id: 'api', title: 'API Server', detail: 'Receives Request', x: 250, y: 150, kind: 'core'},
+      {id: 'redis', title: 'Redis Cache', detail: 'Checks count for key "limit:1.2.3.4"', x: 500, y: 50, kind: 'tool'},
+      {id: '429', title: '429 Response', detail: 'Limit Exceeded', x: 500, y: 250, kind: 'warning'},
+      {id: 'db', title: 'Database', detail: 'Processes request', x: 750, y: 50, kind: 'data'},
+    ],
+    edges: [
+      {source: 'client', target: 'api', label: 'Request'},
+      {source: 'api', target: 'redis', label: '1. Check Count'},
+      {source: 'redis', target: 'api', label: '2. Count < Limit', type: 'smoothstep', animated: true},
+      {source: 'api', target: 'db', label: '3. Allow'},
+      {source: 'redis', target: '429', label: 'Or: Count > Limit', type: 'step'},
+      {source: '429', target: 'client', label: 'Return 429 Error', type: 'smoothstep'},
+    ],
+  }}
+/>
+
+Redis is perfect for this because it supports atomic operations (like `INCR`) and automatic key expiration (`EXPIRE`). You increment the count for an IP, and if it's over the limit, you block it. The key automatically deletes itself after 1 minute, resetting the limit.
+
+## 8. Performance Table
+
+| Strategy | Performance / Scale |
+|---|---|
+| In-Memory (Dict) | Fastest, but fails completely if you have multiple servers (instances don't share memory). |
+| Redis (Token Bucket) | Standard production choice. Sub-millisecond latency, scales across thousands of servers. |
+| API Gateway | (e.g., AWS API Gateway, Cloudflare). Best choice. Stops the request before it even reaches your Python code! |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What HTTP status code is used for Rate Limiting? | 429 Too Many Requests. |
+| What is the Token Bucket algorithm? | Imagine a bucket holding tokens. Tokens are added at a constant rate. A request costs 1 token. If the bucket is empty, the request is denied. |
+| Why not use a SQL database for rate limiting? | Rate limiting requires an update on *every single request*. SQL databases are too slow for this write-heavy load; Redis is built for it. |
+| How do you rate limit an authenticated user? | Rate limit based on their `user_id` or `api_key` instead of their IP address. (IPs can be shared by whole corporate offices). |
+
+## 10. Tricky Questions & Edge Cases
+
+**Question:** What happens if you rate limit purely by IP address, and a large university campus (where 5,000 students share the same public IP) uses your app?
+
+Bro, you just blocked the whole university! If one student spams the API, the other 4,999 students get 429 errors.
+**Solution:** If the endpoints require login, always rate limit by the User ID. Only rate limit by IP for public/unauthenticated routes (like the Login page itself) to prevent brute-force attacks.
+
+## 11. Real-World Usage
+
+- **Twitter API:** Very strict rate limits (e.g., 15 requests per 15 minutes for some endpoints).
+- **Stripe:** Uses sophisticated rate limiting to ensure their payment processing stays fast for everyone.
+- **Cloudflare:** Offers DDoS protection by rate limiting suspicious traffic at the DNS/CDN level before it even touches your server.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Return standard `X-RateLimit` headers so clients know when to back off. | Secretly block users without telling them why or when they can retry. |
+| Rate limit the Login/Reset Password routes strictly. | Allow unlimited guesses on passwords (Brute force vulnerability). |
+| Use Redis or Memcached for distributed rate limiting. | Use Python global variables in a multi-worker production environment. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> The absolute best place to rate limit is at the infrastructure layer (Nginx, AWS API Gateway, HAProxy, Cloudflare). If a malicious bot is sending 100k requests a second, having your Python app process them to return a 429 is still going to burn massive CPU. Block them at the edge!
+
+## 14. Common Mistakes
+
+| Mistake | Why It Hurts |
+|---|---|
+| Not informing the client | If you return a 500 error instead of a 429, the client's automated retry logic will keep hammering your server harder. |
+| Forgetting to limit file uploads | If you rate limit by "requests", an attacker can still crash your server by uploading massive 5GB files very slowly. Rate limit size and bandwidth too. |
+| Trusting `X-Forwarded-For` blindly | If you are behind a load balancer, `request.client.host` is the load balancer's IP. You must read the `X-Forwarded-For` header to get the real IP, but beware: attackers can spoof this header if your load balancer isn't configured correctly to overwrite it. |
+
+## 15. Related Topics
+
+- REST API Basics
+- Authentication
+- Middleware
+- Security Best Practices

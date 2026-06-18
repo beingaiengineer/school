@@ -2,6 +2,198 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Authentication
 
-Placeholder: introduce Authentication.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | API Authentication |
+| Difficulty | Intermediate |
+| Used For | Verifying WHO is making the request to your API |
+| Common Mistake | Storing plaintext passwords or hardcoding secret keys |
+| Main Idea | Clients provide proof of identity (like a token), and the API validates it before allowing access |
+
+Bro, authentication is simply answering the question: "Who are you?" When someone calls your API, you need to know if it's Rahul, Priya, or a malicious hacker.
+
+*(Note: Authorization, a separate concept, answers "Are you allowed to do this?")*
+
+## 2. Real-World Analogy
+
+Think of authentication like entering a corporate office building.
+
+1. **Login:** You show your government ID to the security desk on the ground floor.
+2. **Token Generation:** They verify your ID and hand you a temporary plastic keycard.
+3. **Authentication:** Every time you try to open a door on the 5th floor, you don't show your government ID again. You just tap the keycard. The card scanner verifies the card is valid and hasn't expired.
+
+In an API, your Username/Password is the ID. The JWT (JSON Web Token) or Session Cookie is the keycard.
+
+## 3. Concept Explanation
+
+Because REST APIs are **stateless**, the server doesn't remember that you logged in 5 minutes ago. Therefore, *every single request* to a protected route must contain proof of identity.
+
+The most common ways to do this in modern APIs are:
+1. **Bearer Tokens (JWT):** The client sends a token in the HTTP Headers.
+2. **API Keys:** A long string usually used for server-to-server communication (like hitting the Stripe API).
+3. **Session Cookies:** Handled automatically by browsers, commonly used when the API directly serves a frontend website.
+
+## 4. Syntax Table
+
+Here is how you typically pass authentication data in an HTTP request:
+
+| Auth Type | HTTP Header Example |
+|---|---|
+| **API Key** | `x-api-key: d3b07384d113edec49eaa6238ad5` |
+| **Bearer Token** | `Authorization: Bearer eyJhbGciOi...` |
+| **Basic Auth** | `Authorization: Basic QWxhZGRpbjp...` (Base64 encoded user:pass) |
+
+## 5. Beginner Example
+
+Let's look at a simple Flask example using a hardcoded API key for authentication:
+
+```python
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+SECRET_API_KEY = "my_super_secret_key"
+
+@app.route("/secure-data")
+def get_secure_data():
+    # 1. Look for the key in the headers
+    client_key = request.headers.get("x-api-key")
+
+    # 2. Check if it matches
+    if client_key != SECRET_API_KEY:
+        return jsonify({"error": "Bro, unauthorized access!"}), 401
+
+    # 3. If it matches, return data
+    return jsonify({"data": "Here is the top secret info."})
+```
+
+## 6. Real-World Engineering Example
+
+In production, you usually use JWTs (JSON Web Tokens). A JWT contains user data (like user_id) signed by the server so the client can't tamper with it.
+
+Here is how you verify a JWT in FastAPI using dependency injection:
+
+```python
+from fastapi import FastAPI, Depends, HTTPException, Header
+import jwt # pip install pyjwt
+
+app = FastAPI()
+JWT_SECRET = "production_secret_key_from_env_variables"
+
+def get_current_user(authorization: str = Header(None)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing Token")
+
+    token = authorization.split(" ")[1]
+
+    try:
+        # Verifies the signature and expiration automatically
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        return payload.get("user_id")
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Bro, token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+@app.get("/my-profile")
+def read_profile(user_id: int = Depends(get_current_user)):
+    # If we reach here, the user is 100% authenticated
+    return {"message": f"Welcome user {user_id}"}
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'JWT Authentication Flow',
+    height: 450,
+    nodes: [
+      {id: 'client', title: 'Client', detail: 'App / Browser', x: 20, y: 150, kind: 'process'},
+      {id: 'login', title: 'POST /login', detail: 'Sends User + Pass', x: 250, y: 50, kind: 'data'},
+      {id: 'api_login', title: 'Auth Server', detail: 'Validates DB, Signs JWT', x: 500, y: 50, kind: 'core'},
+      {id: 'jwt', title: 'JWT Token', detail: 'Returned to Client', x: 250, y: 150, kind: 'tool'},
+      {id: 'request', title: 'GET /profile', detail: 'Header: Bearer <JWT>', x: 250, y: 300, kind: 'data'},
+      {id: 'api_app', title: 'API Server', detail: 'Verifies JWT Signature', x: 500, y: 300, kind: 'core'},
+      {id: 'db', title: 'Database', detail: 'Fetches secure data', x: 750, y: 300, kind: 'tool'},
+    ],
+    edges: [
+      {source: 'client', target: 'login', label: '1. Login'},
+      {source: 'login', target: 'api_login', label: 'Checks DB'},
+      {source: 'api_login', target: 'jwt', label: '2. Issues JWT'},
+      {source: 'jwt', target: 'client', label: 'Stores Token'},
+      {source: 'client', target: 'request', label: '3. API Call'},
+      {source: 'request', target: 'api_app', label: 'Validates'},
+      {source: 'api_app', target: 'db', label: 'If Valid'},
+      {source: 'db', target: 'api_app', label: 'Data'},
+      {source: 'api_app', target: 'client', label: '4. 200 OK', type: 'smoothstep', animated: true},
+    ],
+  }}
+/>
+
+With JWTs, the API server doesn't even need to query the database to know *who* the user is. The `user_id` is embedded in the token. The server just does a mathematical check (using the `JWT_SECRET`) to ensure the token wasn't tampered with. This makes JWTs extremely fast and scalable.
+
+## 8. Performance Table
+
+| Auth Mechanism | Performance Impact |
+|---|---|
+| **JWT** | High performance. CPU validates signature; no DB lookup required to check token validity. |
+| **Sessions (DB)** | Slower. Requires a database or Redis lookup on *every single request* to ensure session is valid. |
+| **API Keys** | Usually requires a DB lookup to match the key to a user, though often cached in Redis. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between Authentication and Authorization? | Authentication is checking *who* the user is (Login). Authorization is checking *what* they are allowed to do (Admin vs User). |
+| What is a JWT and what are its three parts? | JSON Web Token. It consists of a Header (algorithm), Payload (data like user_id), and Signature (to prevent tampering). |
+| Can a client read the payload of a JWT? | Yes! JWT payloads are just Base64 encoded, not encrypted. Never put passwords or sensitive data in a JWT payload. |
+| Where should you store a JWT on the frontend? | Ideally in an HttpOnly, Secure cookie to prevent XSS attacks. LocalStorage is vulnerable to XSS. |
+| How do you revoke a JWT before it expires? | It's difficult because they are stateless. You must maintain a "blacklist" in Redis of revoked tokens, or use short-lived tokens with refresh tokens. |
+
+## 10. Tricky Questions & Edge Cases
+
+**Question:** If I change a user's role from 'User' to 'Admin' in the database, but they have a JWT that lasts for 24 hours, what happens?
+
+Bro, if the role is stored *inside* the JWT payload, the user will still be a 'User' for the next 24 hours until they get a new token! The server trusts the token completely. To fix this, either keep JWT lifespans very short (e.g., 15 minutes) or query the DB for the role instead of storing it in the token.
+
+## 11. Real-World Usage
+
+- **GitHub APIs:** Use Personal Access Tokens (API Keys) passed in the header.
+- **Mobile Apps:** Heavily rely on JWTs with short expiration times and long-lived Refresh Tokens.
+- **SSO (Single Sign-On):** Uses protocols like OAuth2 and OIDC (which issue JWTs under the hood).
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Hash passwords in the DB using `bcrypt` or `argon2`. | Store plaintext passwords or use `MD5`. |
+| Pass tokens via the `Authorization` header. | Pass tokens in the URL query parameters (they get logged in server logs). |
+| Enforce HTTPS/TLS everywhere. | Send Basic Auth or Tokens over HTTP. Anyone on the network can steal them. |
+| Use environment variables for your secret keys. | Hardcode `SECRET_KEY = "my_secret"` in your source code. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Never build your own cryptography or session management logic from scratch unless you are an expert. Use established libraries like `Passlib` for hashing, and framework-specific plugins (like `FastAPI-Users` or `Flask-Login`).
+
+## 14. Common Mistakes
+
+| Mistake | Why It Hurts |
+|---|---|
+| Trusting JWT Payloads | If you don't verify the signature, an attacker can just decode the JWT, change `user_id=1` to `user_id=admin`, and hack your app. |
+| Infinite Token Lifetimes | If a token never expires and gets stolen, the attacker has permanent access. Always use expirations (`exp` claim). |
+| Timing Attacks | Comparing API keys with `==` allows timing attacks. Always use `hmac.compare_digest(user_key, actual_key)` to prevent this. |
+
+## 15. Related Topics
+
+- REST API Basics
+- FastAPI
+- Flask
+- Security Best Practices
+- Middleware

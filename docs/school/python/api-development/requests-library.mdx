@@ -2,6 +2,186 @@
 sidebar_position: 1
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Requests Library
 
-Placeholder: introduce Requests Library.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Python Requests Library |
+| Difficulty | Beginner |
+| Used For | Making HTTP requests easily in Python |
+| Common Mistake | Forgetting to check `.raise_for_status()` for errors |
+| Performance | Synchronous/blocking network calls |
+
+Bro, `requests` is the de facto standard for making HTTP requests in Python. It abstracts the complexities of making requests behind a beautiful, simple API so that you can focus on interacting with services and getting data.
+
+## 2. Real-World Analogy
+
+Think of `requests` like a professional courier service for your data.
+
+Instead of figuring out how to build the truck, navigate the roads, and deliver the package (which is what built-in `urllib` feels like), you just give the courier the address (URL) and the package (payload/params). The courier goes there, drops it off, gets the reply (Response), and hands it right back to you.
+
+## 3. Concept Explanation
+
+The `requests` library allows you to send HTTP/1.1 requests extremely easily. There's no need to manually add query strings to your URLs, or to form-encode your `PUT` & `POST` data.
+
+You use it when your Python script needs to talk to the outside world—whether it's fetching a JSON payload from an API, downloading an image, or scraping a webpage.
+
+**When not to use it:** When you need high-concurrency, non-blocking asynchronous requests (use `aiohttp` or `httpx` instead).
+
+## 4. Syntax Table
+
+| Operation | Example |
+|---|---|
+| Import | `import requests` |
+| GET Request | `res = requests.get('https://api.github.com')` |
+| POST Request | `res = requests.post(url, json={'key':'value'})` |
+| Get JSON | `data = res.json()` |
+| Status Code | `res.status_code` |
+
+## 5. Beginner Example
+
+Let's fetch a joke from a public API:
+
+```python
+import requests
+
+response = requests.get("https://official-joke-api.appspot.com/random_joke")
+data = response.json()
+
+print(f"Setup: {data['setup']}")
+print(f"Punchline: {data['punchline']}")
+```
+
+Bro, it’s that simple. `requests.get()` fetches it, and `.json()` parses the JSON response into a Python dictionary.
+
+## 6. Real-World Engineering Example
+
+In production, you don't just blindly make requests. You add timeouts, headers, and check for errors.
+
+```python
+import requests
+import logging
+
+def fetch_user_profile(user_id):
+    url = f"https://api.internal.company.com/v1/users/{user_id}"
+    headers = {"Authorization": "Bearer <TOKEN>"}
+
+    try:
+        # Always set a timeout in production!
+        response = requests.get(url, headers=headers, timeout=5.0)
+
+        # This will raise an exception for 4xx and 5xx status codes
+        response.raise_for_status()
+
+        return response.json()
+
+    except requests.exceptions.Timeout:
+        logging.error(f"Timeout fetching user {user_id}")
+    except requests.exceptions.HTTPError as e:
+        logging.error(f"HTTP Error fetching user {user_id}: {e}")
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Fatal network error: {e}")
+
+    return None
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'How Requests handles HTTP calls',
+    height: 400,
+    nodes: [
+      {id: 'python', title: 'Python Code', detail: 'Calls requests.get(url)', x: 20, y: 150, kind: 'process'},
+      {id: 'requests', title: 'Requests Lib', detail: 'Prepares Request, Headers, Auth', x: 250, y: 150, kind: 'tool'},
+      {id: 'urllib3', title: 'urllib3 PoolManager', detail: 'Handles connection pooling & thread safety', x: 500, y: 150, kind: 'core'},
+      {id: 'network', title: 'Network Socket', detail: 'Actual TCP/IP transmission', x: 750, y: 150, kind: 'data'},
+      {id: 'server', title: 'Remote Server', detail: 'API Endpoint (e.g. GitHub)', x: 980, y: 150, kind: 'output'},
+    ],
+    edges: [
+      {source: 'python', target: 'requests', label: 'get()'},
+      {source: 'requests', target: 'urllib3', label: 'delegates'},
+      {source: 'urllib3', target: 'network', label: 'socket write'},
+      {source: 'network', target: 'server', label: 'HTTP GET', type: 'smoothstep'},
+      {source: 'server', target: 'network', label: 'HTTP 200', type: 'smoothstep', animated: true},
+      {source: 'network', target: 'requests', label: 'Response', type: 'step'},
+    ],
+  }}
+/>
+
+Internally, `requests` sits on top of another library called `urllib3`. `urllib3` handles the messy stuff like thread-safe connection pooling, client-side SSL/TLS verification, and file uploads. `requests` just provides the gorgeous API on top.
+
+## 8. Performance Table
+
+| Concern | Note |
+|---|---|
+| Concurrency | Blocking (synchronous). One request blocks the thread until response. |
+| Connection Pooling | Enabled by default when using `requests.Session()`. |
+| Memory | Reads response fully into memory unless `stream=True` is used. |
+| Speed | Fast enough for most scripts, but not meant for high-throughput async. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| How do you handle timeouts in `requests`? | Pass the `timeout` parameter: `requests.get(url, timeout=5)`. |
+| What does `raise_for_status()` do? | Raises an `HTTPError` if the HTTP request returned an unsuccessful status code (4xx or 5xx). |
+| How do you keep connections open across multiple requests? | Use a `requests.Session()` object. |
+| How do you download large files without running out of memory? | Use `requests.get(url, stream=True)` and iterate over `response.iter_content()`. |
+| How do you send JSON in a POST request? | Use the `json` parameter: `requests.post(url, json={"key":"value"})`. |
+
+## 10. Tricky Questions & Edge Cases
+
+```python
+import requests
+
+# What happens if we don't set a timeout?
+res = requests.get('http://example.com/slow-api')
+```
+
+Bro, if you don't pass a `timeout`, your request can hang *forever* if the server doesn't respond. This is a classic way to kill a production worker process.
+
+Also, `requests.get('url', data={'key': 'val'})` vs `requests.get('url', params={'key': 'val'})`.
+For GET requests, query string arguments go in `params`. For POST requests, form-encoded data goes in `data`, and JSON goes in `json`.
+
+## 11. Real-World Usage
+
+Companies use `requests` everywhere:
+- Writing quick integration scripts.
+- Building SDKs/wrappers for third-party REST APIs (like Stripe or Twilio).
+- Scraping data off websites (often combined with Beautiful Soup).
+- Testing APIs in QA automation pipelines.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| ALWAYS set a `timeout`. | Leave `timeout` empty. |
+| Use `requests.Session()` for repeated calls to the same host. | Make new connections for every single request. |
+| Call `.raise_for_status()` to catch HTTP errors early. | Assume 200 OK and blindly call `.json()`. |
+| Use the `json=` parameter for sending JSON payloads. | Manually `json.dumps()` and pass to `data=`. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Using `requests.Session()` is critical for performance when hitting the same API repeatedly. It reuses the underlying TCP connection (HTTP Keep-Alive), which saves significant time bypassing the TCP and TLS handshakes.
+
+## 14. Common Mistakes
+
+| Mistake | Why It Hurts |
+|---|---|
+| Missing `raise_for_status()` | Your code might try to parse an HTML error page as JSON, causing a confusing `JSONDecodeError`. |
+| Infinite hangs | Forgetting `timeout` causes worker threads in Celery/RQ to get stuck forever. |
+| Not handling Exceptions | Network requests fail randomly. Catch `requests.exceptions.RequestException`. |
+
+## 15. Related Topics
+
+- REST API Basics
+- FastAPI (Building the APIs you call)
+- Flask
+- Asyncio (When `requests` is too slow and you need async)
+- JSON Files (Handling API responses)

@@ -2,6 +2,194 @@
 sidebar_position: 4
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Flask
 
-Placeholder: introduce Flask.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Flask Microframework |
+| Difficulty | Beginner |
+| Used For | Building simple to complex web applications and REST APIs |
+| Common Mistake | Putting all logic in one massive `app.py` file |
+| Main Idea | Giving developers full control over the tools they use |
+
+Bro, Flask is a "microframework." Unlike Django, which gives you an ORM, an admin panel, and form validation out of the box, Flask gives you the bare minimum to route web requests and render templates. You get to choose the rest.
+
+## 2. Real-World Analogy
+
+Think of building an app like furnishing an apartment.
+
+**Django:** Moving into a fully furnished apartment. You get a sofa, a bed, and a TV. It's fast to move in, but if you don't like the sofa, it's annoying to replace it.
+
+**Flask:** Moving into an empty apartment with just electricity and plumbing. You have to buy your own sofa (SQLAlchemy for DB), your own TV (Jinja for templates), and build it exactly how you want. It takes more upfront thought, but you only have what you actually need.
+
+## 3. Concept Explanation
+
+Flask is built on two main dependencies:
+1. **Werkzeug:** A toolkit for handling the nitty-gritty of HTTP requests (WSGI).
+2. **Jinja2:** A powerful templating engine to render HTML.
+
+Because it's a microframework, it doesn't force a specific database or directory layout on you. It's incredibly popular for building quick prototypes, microservices, and webhook receivers.
+
+## 4. Syntax Table
+
+| Concept | Example |
+|---|---|
+| Initialize App | `app = Flask(__name__)` |
+| Define Route | `@app.route('/hello')` |
+| Different Methods | `@app.route('/login', methods=['GET', 'POST'])` |
+| Return JSON | `return jsonify({"status": "ok"})` |
+| Access Request | `data = request.json` |
+| Run Server | `app.run(debug=True)` |
+
+## 5. Beginner Example
+
+This is a complete web server in Flask:
+
+```python
+from flask import Flask, jsonify
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Hello, Bro!"
+
+@app.route("/api/data")
+def get_data():
+    return jsonify({"user": "Rahul", "role": "admin"})
+
+if __name__ == "__main__":
+    app.run(debug=True)
+```
+
+Run this file, and you instantly have a web server running on port 5000.
+
+## 6. Real-World Engineering Example
+
+In a real API, you handle different HTTP methods and read data from the incoming `request` object.
+
+```python
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+# Fake database
+users_db = []
+
+@app.route("/users", methods=["GET", "POST"])
+def manage_users():
+    if request.method == "POST":
+        # Getting JSON payload from request
+        user_data = request.get_json()
+
+        if not user_data or "name" not in user_data:
+            return jsonify({"error": "Bro, name is required"}), 400
+
+        users_db.append(user_data)
+        return jsonify({"message": "User created", "user": user_data}), 201
+
+    # Handling GET request
+    return jsonify({"users": users_db}), 200
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'Flask Request Handling via WSGI',
+    height: 400,
+    nodes: [
+      {id: 'client', title: 'Web Browser', detail: 'Sends HTTP Request', x: 20, y: 150, kind: 'process'},
+      {id: 'gunicorn', title: 'WSGI Server', detail: 'e.g. Gunicorn / uWSGI', x: 250, y: 150, kind: 'tool'},
+      {id: 'werkzeug', title: 'Werkzeug', detail: 'Parses HTTP into Python Objects', x: 500, y: 150, kind: 'core'},
+      {id: 'routing', title: 'Flask Router', detail: 'Matches @app.route()', x: 750, y: 150, kind: 'data'},
+      {id: 'view', title: 'View Function', detail: 'Your Python Code', x: 980, y: 150, kind: 'output'},
+    ],
+    edges: [
+      {source: 'client', target: 'gunicorn', label: 'HTTP'},
+      {source: 'gunicorn', target: 'werkzeug', label: 'Environ Dict'},
+      {source: 'werkzeug', target: 'routing', label: 'Request Context'},
+      {source: 'routing', target: 'view', label: 'Calls def()'},
+      {source: 'view', target: 'routing', label: 'Returns String/Dict', type: 'smoothstep', animated: true},
+      {source: 'routing', target: 'client', label: 'HTTP Response', type: 'smoothstep'},
+    ],
+  }}
+/>
+
+Flask relies heavily on Thread Locals (like `request` and `g`). This means `request` looks like a global variable, but Flask actually isolates it per-thread so one user's request data doesn't mix with another user's request data.
+
+## 8. Performance Table
+
+| Concern | Note |
+|---|---|
+| Architecture | Synchronous by default (WSGI). Doesn't handle long-lived connections (like WebSockets) well without extensions. |
+| Speed | Fast enough for traditional web apps, but outpaced by async frameworks like FastAPI for I/O heavy APIs. |
+| Scaling | Scales horizontally beautifully by running multiple Gunicorn workers. |
+| Overhead | Very low overhead compared to Django. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is a WSGI? | Web Server Gateway Interface. It's the standard for how web servers communicate with Python web applications. |
+| How does Flask's `request` object work if it's imported globally? | It uses Werkzeug's thread-locals (Context Locals) to keep request data isolated per active thread/request. |
+| What is a Blueprint in Flask? | A way to organize a Flask application into smaller, reusable modules instead of keeping all routes in one file. |
+| How do you connect Flask to a database? | You use extensions like Flask-SQLAlchemy or write raw SQL using a driver like `psycopg2`. |
+| Is Flask thread-safe? | Yes, Werkzeug's local proxies ensure that thread-local variables like `request` and `session` are thread-safe. |
+
+## 10. Tricky Questions & Edge Cases
+
+**Question:** If I define a variable outside my route function in Flask, does it reset on every request?
+
+```python
+counter = 0
+
+@app.route("/")
+def index():
+    global counter
+    counter += 1
+    return f"Visits: {counter}"
+```
+
+Bro, this is a trap! In development (`app.run`), it might work. But in production, you use multiple workers (like Gunicorn with 4 workers). Each worker has its own memory space. So Worker A's counter might be 10, while Worker B's counter is 2. **Never store application state in global Python variables; use a database or Redis!**
+
+## 11. Real-World Usage
+
+Companies use Flask for:
+- Internal admin tools and dashboards.
+- Microservices in a larger architecture (e.g., a dedicated service just for generating PDFs).
+- Heavy machine learning model inference APIs (because data scientists find Flask very easy to learn).
+- Pinterest and Patreon both heavily utilized Flask.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use Flask Blueprints to split your code across multiple files. | Keep 100 endpoints inside `app.py`. |
+| Use `gunicorn` to run your app in production. | Use `app.run()` in production. |
+| Handle configuration via environment variables (using `python-dotenv`). | Hardcode database passwords in your `config.py`. |
+| Use `jsonify()` for API responses to ensure correct `Content-Type`. | Just return JSON strings manually. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> The development server built into Flask is NOT secure or scalable. It processes one request at a time. In production, you must put a WSGI server like Gunicorn or uWSGI in front of Flask, and ideally Nginx in front of that.
+
+## 14. Common Mistakes
+
+| Mistake | Why It Hurts |
+|---|---|
+| Forgetting `methods=['POST']` | Flask defaults routes to GET only. POSTing to it will throw a 405 Method Not Allowed error. |
+| Circular Imports | Because of how Flask apps and models are often structured, you can easily cause circular imports if you aren't careful with `db.init_app()`. |
+| Using the Dev Server | `flask run` will fall over under minimal production load. |
+
+## 15. Related Topics
+
+- FastAPI
+- REST API Basics
+- Middleware
+- SQLAlchemy (Databases)

@@ -2,6 +2,189 @@
 sidebar_position: 1
 ---
 
-# Sqlite
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Sqlite.
+# SQLite
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | SQLite Database |
+| Difficulty | Beginner |
+| Used For | Lightweight, file-based relational databases |
+| Common Mistake | Using it for a high-traffic web application |
+| Main Idea | A fully functioning SQL database contained in a single `.db` file on disk |
+
+Bro, SQLite is the most widely deployed database engine in the world. It doesn't run as a separate server background process. Instead, your Python code talks directly to a file on your hard drive using the built-in `sqlite3` library.
+
+## 2. Real-World Analogy
+
+Think of databases like storage units.
+
+**PostgreSQL / MySQL:** A massive, multi-story commercial warehouse. It requires security guards (passwords), forklift drivers (background processes), and loading docks (network ports) to move things in and out. It can handle 100 trucks at once.
+
+**SQLite:** A filing cabinet sitting right next to your desk. You just open the drawer, put the file in, and close it. It's incredibly fast for one person (one app), but if 10 people try to open the same drawer at the exact same time, things get stuck.
+
+## 3. Concept Explanation
+
+SQLite is a C-language library that implements a small, fast, self-contained, high-reliability, full-featured, SQL database engine.
+
+It is built into Python natively. You don't need to `pip install` anything or start a Docker container to use it. You just import `sqlite3` and start writing SQL.
+
+It is perfect for:
+- Desktop applications (like the browser history in Chrome).
+- Mobile apps (iOS/Android).
+- Testing your backend locally before deploying to production.
+- Simple, low-traffic web scripts.
+
+## 4. Syntax Table
+
+| Operation | Example |
+|---|---|
+| Connect to file | `conn = sqlite3.connect('app.db')` |
+| Connect to memory | `conn = sqlite3.connect(':memory:')` |
+| Create Cursor | `cursor = conn.cursor()` |
+| Execute SQL | `cursor.execute("SELECT * FROM users")` |
+| Fetch Data | `rows = cursor.fetchall()` |
+| Save Changes | `conn.commit()` |
+| Close Connection | `conn.close()` |
+
+## 5. Beginner Example
+
+Let's create a database, insert a user, and read them back:
+
+```python
+import sqlite3
+
+# 1. Connect (creates the file if it doesn't exist)
+conn = sqlite3.connect('tutorial.db')
+cursor = conn.cursor()
+
+# 2. Create a table
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY,
+        name TEXT,
+        age INTEGER
+    )
+''')
+
+# 3. Insert data (Use ? to prevent SQL injection!)
+cursor.execute("INSERT INTO users (name, age) VALUES (?, ?)", ("Rahul", 28))
+conn.commit() # Save it!
+
+# 4. Read data
+cursor.execute("SELECT * FROM users")
+print(cursor.fetchall()) # Output: [(1, 'Rahul', 28)]
+
+conn.close()
+```
+
+## 6. Real-World Engineering Example
+
+In a real script, you should use Python's `with` statement (Context Manager) to ensure connections and transactions are closed properly, even if an error occurs.
+
+```python
+import sqlite3
+import logging
+
+def get_active_users(db_path="production.db"):
+    # The 'with' statement handles the commit/rollback automatically!
+    try:
+        with sqlite3.connect(db_path) as conn:
+            # Return rows as dictionaries instead of tuples
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT id, name FROM users WHERE status = ?", ("active",))
+
+            # Convert the sqlite3.Row objects to standard dictionaries
+            return [dict(row) for row in cursor.fetchall()]
+
+    except sqlite3.Error as e:
+        logging.error(f"Database error: {e}")
+        return []
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'How SQLite Operates',
+    height: 350,
+    nodes: [
+      {id: 'python', title: 'Python App', detail: 'import sqlite3', x: 20, y: 150, kind: 'process'},
+      {id: 'lib', title: 'SQLite C-Library', detail: 'Parses SQL to Disk Ops', x: 280, y: 150, kind: 'tool'},
+      {id: 'lock', title: 'OS File Lock', detail: 'Prevents concurrent writes', x: 540, y: 150, kind: 'warning'},
+      {id: 'disk', title: 'app.db (Disk)', detail: 'Binary file storing B-Trees', x: 800, y: 150, kind: 'data'},
+    ],
+    edges: [
+      {source: 'python', target: 'lib', label: 'cursor.execute()'},
+      {source: 'lib', target: 'lock', label: 'Requests Write'},
+      {source: 'lock', target: 'disk', label: 'Modifies Bytes', type: 'step'},
+      {source: 'disk', target: 'python', label: 'Returns Data', type: 'smoothstep', animated: true},
+    ],
+  }}
+/>
+
+Unlike Postgres, which talks over a TCP/IP network port (e.g., 5432), SQLite is just a library that reads and writes directly to a binary file on your disk. When it writes, it locks the *entire* database file.
+
+## 8. Performance Table
+
+| Operation | Performance |
+|---|---|
+| Reads (SELECT) | Extremely fast. Concurrent reads are highly supported. |
+| Writes (INSERT/UPDATE) | Slow under high concurrency. Locks the whole file during a write. |
+| Network Latency | Zero. It's a local file. |
+| Memory Mode | `sqlite3.connect(':memory:')` is blisteringly fast for temporary data. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the main difference between SQLite and PostgreSQL? | SQLite is a serverless, file-based database. Postgres is a client-server background process. |
+| Does SQLite support concurrent writes? | Historically no, it locks the whole file. (Though WAL mode improves this slightly). |
+| What does `sqlite3.connect(':memory:')` do? | It creates a database purely in RAM. It vanishes the moment the script finishes. |
+| How do you prevent SQL injection in SQLite? | Always use parameterized queries (the `?` placeholder) instead of f-strings. |
+
+## 10. Tricky Questions & Edge Cases
+
+**Question:** I inserted the string `"Hello"` into an `INTEGER` column in SQLite, and it didn't throw an error. Why?
+
+Bro, SQLite uses "Dynamic Typing". Unlike Postgres which enforces strict types, SQLite will happily store a string in an integer column unless you explicitly enforce strict typing modes (available in newer SQLite versions). It's very flexible, but can lead to annoying bugs if you aren't careful.
+
+## 11. Real-World Usage
+
+- **Your Web Browser:** Chrome and Firefox store your bookmarks, history, and cookies in local SQLite databases.
+- **Mobile Apps:** iOS (CoreData) and Android natively use SQLite for offline storage.
+- **Testing:** Django and Flask developers often use SQLite for running automated tests quickly without needing to spin up a Docker container.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Enable WAL (Write-Ahead Logging) mode for better concurrency `PRAGMA journal_mode=WAL;`. | Use SQLite for a web app getting 100 requests per second. |
+| Use parameterized queries (`?`). | Use `f"SELECT * FROM users WHERE name='{name}'"`. |
+| Use `conn.row_factory = sqlite3.Row` to get dict-like results. | Rely on positional tuples `row[0]` which break if schema changes. |
+| Backup the `.db` file regularly. | Put the `.db` file in your `git` repository. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Do not use SQLite if your application runs on multiple servers (like AWS ECS or Heroku) that sit behind a load balancer. Since SQLite is a local file, Server A will have `app.db` and Server B will have its own separate `app.db`. They will not share data! You must use a central database like PostgreSQL for distributed web apps.
+
+## 14. Common Mistakes
+
+| Mistake | Why It Hurts |
+|---|---|
+| Forgetting `conn.commit()` | You run an `INSERT`, the script finishes without error, but the data isn't in the database next time you check. |
+| 'Database is locked' Error | You tried to write to the database from two different Python scripts (or threads) at the exact same millisecond. |
+| Storing Dates as strings badly | SQLite has no `DATETIME` type. It stores dates as strings. If you don't use standard ISO8601 format (`YYYY-MM-DD`), sorting by date will fail. |
+
+## 15. Related Topics
+
+- PostgreSQL
+- SQLAlchemy
+- File Handling (since SQLite is just a file)
+- Testing (using `:memory:`)

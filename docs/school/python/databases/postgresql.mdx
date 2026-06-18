@@ -2,6 +2,195 @@
 sidebar_position: 2
 ---
 
-# Postgresql
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Postgresql.
+# PostgreSQL
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | PostgreSQL (Postgres) Database |
+| Difficulty | Intermediate |
+| Used For | Robust, highly scalable, enterprise-grade relational data storage |
+| Common Mistake | Leaving idle connections open until the database crashes |
+| Main Idea | An advanced, open-source object-relational database system |
+
+Bro, PostgreSQL is the absolute workhorse of modern backend engineering. If you are building a serious web application today, 9 times out of 10, you should be using Postgres.
+
+## 2. Real-World Analogy
+
+Think of PostgreSQL like a massive, high-security corporate bank.
+
+It has multiple tellers (concurrent connections) handling transactions simultaneously. If you try to deposit $100 while your wife tries to withdraw $100 from the same account at the exact same millisecond, the bank has strict rules (ACID properties, Row-Level Locking) to ensure the math never gets corrupted.
+
+It runs as its own massive building (a separate background process/server), totally independent of the customers (your Python apps) who visit it.
+
+## 3. Concept Explanation
+
+PostgreSQL is a client-server relational database.
+
+Your Python application (the client) connects to the Postgres server over a network (even if it's just `localhost`). Postgres is incredibly strict about data types, ensuring high data integrity.
+
+Unlike SQLite, it thrives under heavy concurrency. It supports advanced features like JSONB (storing JSON documents efficiently), array types, full-text search, and geographic data (PostGIS).
+
+## 4. Syntax Table
+
+To talk to Postgres in Python, you usually use the `psycopg2` or `asyncpg` drivers.
+
+| Operation | Example (psycopg2) |
+|---|---|
+| Connect | `conn = psycopg2.connect("dbname=app user=admin")` |
+| Create Cursor | `cursor = conn.cursor()` |
+| Execute SQL | `cursor.execute("SELECT * FROM users")` |
+| Insert Data | `cursor.execute("INSERT INTO users (name) VALUES (%s)", ("Rahul",))` |
+| Commit | `conn.commit()` |
+
+## 5. Beginner Example
+
+Here is how you connect and run a simple query:
+
+```python
+import psycopg2
+
+try:
+    # Connect to your local postgres server
+    conn = psycopg2.connect(
+        dbname="mydb",
+        user="postgres",
+        password="mysecretpassword",
+        host="127.0.0.1",
+        port="5432"
+    )
+
+    cursor = conn.cursor()
+
+    # Notice we use %s instead of ? like in SQLite
+    cursor.execute("SELECT id, name FROM users WHERE age > %s", (25,))
+
+    records = cursor.fetchall()
+    print("Bro, here are the older users:", records)
+
+except psycopg2.Error as e:
+    print(f"Database error: {e}")
+finally:
+    if conn:
+        cursor.close()
+        conn.close()
+```
+
+## 6. Real-World Engineering Example
+
+In production, you never open a brand new connection for every single HTTP request. That takes too long! You use a **Connection Pool**.
+
+```python
+import psycopg2
+from psycopg2 import pool
+
+# Create a pool of 5 to 20 connections when the app starts
+db_pool = psycopg2.pool.SimpleConnectionPool(5, 20,
+    dbname="production_db",
+    user="app_user",
+    password="supersecret",
+    host="db.internal.cloud.com"
+)
+
+def get_user_data(user_id):
+    # Get an already-open connection from the pool
+    conn = db_pool.getconn()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT name, email FROM users WHERE id = %s", (user_id,))
+            return cursor.fetchone()
+    finally:
+        # Give the connection back to the pool! Very important!
+        db_pool.putconn(conn)
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'PostgreSQL Architecture',
+    height: 450,
+    nodes: [
+      {id: 'app1', title: 'Python App 1', detail: 'psycopg2 (Client)', x: 20, y: 100, kind: 'process'},
+      {id: 'app2', title: 'Python App 2', detail: 'psycopg2 (Client)', x: 20, y: 250, kind: 'process'},
+      {id: 'postmaster', title: 'Postmaster', detail: 'Main Daemon, accepts connections', x: 280, y: 175, kind: 'core'},
+      {id: 'backend1', title: 'Backend Process 1', detail: 'Handles App 1', x: 550, y: 100, kind: 'tool'},
+      {id: 'backend2', title: 'Backend Process 2', detail: 'Handles App 2', x: 550, y: 250, kind: 'tool'},
+      {id: 'shared_mem', title: 'Shared Buffers', detail: 'In-Memory Cache', x: 800, y: 100, kind: 'data'},
+      {id: 'disk', title: 'Storage Data Files', detail: 'Actual hard drive', x: 800, y: 250, kind: 'output'},
+    ],
+    edges: [
+      {source: 'app1', target: 'postmaster', label: 'TCP:5432'},
+      {source: 'app2', target: 'postmaster', label: 'TCP:5432'},
+      {source: 'postmaster', target: 'backend1', label: 'Forks Process', type: 'step'},
+      {source: 'postmaster', target: 'backend2', label: 'Forks Process', type: 'step'},
+      {source: 'backend1', target: 'shared_mem', label: 'Reads'},
+      {source: 'backend2', target: 'shared_mem', label: 'Reads'},
+      {source: 'shared_mem', target: 'disk', label: 'Flushes to disk'},
+    ],
+  }}
+/>
+
+When a Python app connects to Postgres, the main `postmaster` process receives the TCP connection and actually "forks" a brand new OS process just to handle that specific client. This makes it incredibly stable, but means connections are heavy and consume RAM.
+
+## 8. Performance Table
+
+| Area | Performance Note |
+|---|---|
+| Concurrency | MVCC (Multi-Version Concurrency Control) means readers don't block writers. Highly concurrent. |
+| Connection Cost | High. Use a connection pooler like `PgBouncer` or SQLAlchemy's built-in pool. |
+| JSON | The `JSONB` data type allows you to index and query JSON almost as fast as a NoSQL database. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is MVCC in PostgreSQL? | Multi-Version Concurrency Control. It allows multiple transactions to read and write to the DB simultaneously without locking each other by keeping multiple versions of rows. |
+| What is the difference between JSON and JSONB? | `JSON` stores exact text (including whitespace). `JSONB` stores it in a decomposed binary format, which is slightly slower to insert but vastly faster to query and can be indexed. |
+| Why use a Connection Pool? | Opening a new TCP connection and forking a Postgres process for every web request is extremely slow and eats RAM. A pool reuses existing connections. |
+| What is the default port for Postgres? | 5432. |
+
+## 10. Tricky Questions & Edge Cases
+
+**Question:** I started a transaction, did an `UPDATE`, and then my Python script crashed before I called `conn.commit()`. What happens to the database?
+
+Bro, the database is safe! Postgres follows the "A" in ACID (Atomicity). Because the connection dropped unexpectedly before a `COMMIT`, Postgres will automatically `ROLLBACK` that transaction. The `UPDATE` never happened.
+
+**Edge Case:** "Idle in Transaction". If you open a transaction, do a query, and then your Python script goes to sleep for 5 minutes (maybe waiting on an external API) before committing, you hold a lock on those rows for 5 minutes. This will destroy your database performance. Never put slow Python logic inside an open DB transaction.
+
+## 11. Real-World Usage
+
+- **Instagram:** Initially built their entire backend on Postgres (and Django).
+- **Uber/Reddit/Twitch:** All heavily rely on Postgres for relational data storage.
+- **Geospatial Apps:** Anything mapping-related uses the PostGIS extension for Postgres.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `JSONB` if you need flexible, NoSQL-like documents alongside relational data. | Use `JSON` (unless you strictly need to preserve exact whitespace). |
+| Always use connection pooling (PgBouncer, SQLAlchemy). | Connect directly to Postgres for every serverless Lambda function invocation. |
+| Close cursors and connections (or return them to the pool) using `try/finally` blocks or Context Managers. | Leave connections hanging open. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> If you are running FastAPI/Asyncio, do NOT use `psycopg2`. It is synchronous and will block your event loop. You must use an async driver like `asyncpg` or the async version of SQLAlchemy.
+
+## 14. Common Mistakes
+
+| Mistake | Why It Hurts |
+|---|---|
+| Max Connections Error | `FATAL: sorry, too many clients already`. You exhausted the `max_connections` setting in Postgres because your Python apps are leaking connections. |
+| Using `?` instead of `%s` | `psycopg2` uses `%s` for parameterized queries. If you try to use SQLite's `?`, it will crash. |
+| N+1 Query Problem | Doing `SELECT * from Users`, looping over them in Python, and then doing `SELECT * from Posts WHERE user_id = X` inside the loop. This kills performance. Use `JOIN`s! |
+
+## 15. Related Topics
+
+- SQLite (For local dev/testing)
+- SQLAlchemy (The ORM for Postgres)
+- Connection Pooling
+- Transactions

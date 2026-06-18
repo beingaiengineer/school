@@ -2,6 +2,181 @@
 sidebar_position: 7
 ---
 
-# Api Versioning
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Api Versioning.
+# API Versioning
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | API Versioning |
+| Difficulty | Intermediate |
+| Used For | Updating an API without breaking existing clients |
+| Common Mistake | Changing the data structure of an existing endpoint without changing the version |
+| Main Idea | Creating a contract with frontend/mobile apps so they know exactly what data shape to expect |
+
+Bro, API versioning is how you upgrade your backend without forcing all your mobile app users to download an update on the exact same day. It's about maintaining backwards compatibility.
+
+## 2. Real-World Analogy
+
+Think of API Versioning like car models.
+
+In 2020, Honda released the Civic V1. In 2024, they released the Civic V2 with a different engine and digital dashboard. They didn't sneak into your garage at night and replace your V1 dashboard with a V2 dashboard. They let you keep driving your V1, while new buyers get the V2.
+
+In software, if a user has an old version of your mobile app installed, it expects the V1 API. If you change the API, their app crashes.
+
+## 3. Concept Explanation
+
+When you first build an API, you define a "contract" (the JSON structure). If you later decide to rename a field from `user_name` to `username`, or change a string to an integer, you have broken that contract.
+
+Any client (web browser, mobile app, partner server) expecting `user_name` will now throw an error.
+
+To solve this, you create a new version of the endpoint (e.g., `/v2/users`). Old apps continue calling `/v1/users` (which still returns `user_name`), while new apps call `/v2/users` (which returns `username`).
+
+## 4. Syntax Table
+
+There are three common ways to pass the version in an HTTP request:
+
+| Strategy | Example | Pros / Cons |
+|---|---|---|
+| **URL Path (Most Common)** | `GET /v1/users` | Easy to see in logs, easy to route. Not pure REST. |
+| **Query Parameter** | `GET /users?version=1` | Easy to implement. Can complicate caching. |
+| **Custom Header** | `Accept-Version: v1` | Keeps URLs clean. Harder to test in a browser. |
+
+## 5. Beginner Example
+
+Here is how you might handle URL versioning in FastAPI using routers:
+
+```python
+from fastapi import FastAPI, APIRouter
+
+app = FastAPI()
+
+# V1 Router
+router_v1 = APIRouter(prefix="/v1")
+
+@router_v1.get("/users")
+def get_users_v1():
+    return [{"user_name": "Rahul"}] # Old format
+
+# V2 Router
+router_v2 = APIRouter(prefix="/v2")
+
+@router_v2.get("/users")
+def get_users_v2():
+    return [{"username": "Rahul", "age": 28}] # New format
+
+app.include_router(router_v1)
+app.include_router(router_v2)
+```
+
+Bro, now both versions run simultaneously. You haven't broken the old apps!
+
+## 6. Real-World Engineering Example
+
+In production, keeping two sets of code for V1 and V2 can become a nightmare. Usually, you map both endpoints to the same underlying database logic, but have different "presentation" layers (serializers).
+
+```python
+# A simplified example of how an adapter pattern might work
+def get_user_from_db(user_id):
+    # Returns raw DB model
+    return {"id": 1, "first_name": "Rahul", "last_name": "Sharma"}
+
+@router_v1.get("/users/{user_id}")
+def get_v1(user_id: int):
+    db_user = get_user_from_db(user_id)
+    # V1 expected a single 'name' string
+    return {"id": db_user["id"], "name": f"{db_user['first_name']} {db_user['last_name']}"}
+
+@router_v2.get("/users/{user_id}")
+def get_v2(user_id: int):
+    db_user = get_user_from_db(user_id)
+    # V2 expects them split
+    return db_user
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'API Version Routing',
+    height: 400,
+    nodes: [
+      {id: 'app_old', title: 'Old Mobile App', detail: 'Calls /v1/data', x: 20, y: 100, kind: 'process'},
+      {id: 'app_new', title: 'New Web App', detail: 'Calls /v2/data', x: 20, y: 250, kind: 'process'},
+      {id: 'gateway', title: 'API Gateway / Router', detail: 'Inspects URL / Header', x: 280, y: 175, kind: 'tool'},
+      {id: 'v1_logic', title: 'V1 Controller', detail: 'Returns old schema', x: 550, y: 100, kind: 'core'},
+      {id: 'v2_logic', title: 'V2 Controller', detail: 'Returns new schema', x: 550, y: 250, kind: 'core'},
+      {id: 'db', title: 'Shared Database', detail: 'Single source of truth', x: 800, y: 175, kind: 'data'},
+    ],
+    edges: [
+      {source: 'app_old', target: 'gateway', label: 'GET /v1'},
+      {source: 'app_new', target: 'gateway', label: 'GET /v2'},
+      {source: 'gateway', target: 'v1_logic', label: 'Routes to V1', type: 'step'},
+      {source: 'gateway', target: 'v2_logic', label: 'Routes to V2', type: 'step'},
+      {source: 'v1_logic', target: 'db', label: 'Query', type: 'smoothstep'},
+      {source: 'v2_logic', target: 'db', label: 'Query', type: 'smoothstep'},
+    ],
+  }}
+/>
+
+At the database level, there is usually only one version of the truth. The versioning happens at the "edge" of your application, translating that core truth into the format the specific client requested.
+
+## 8. Performance Table
+
+| Concern | Performance Impact |
+|---|---|
+| Routing Overhead | Checking a URL path or header is extremely fast (microseconds). Negligible impact. |
+| Code Bloat | Keeping old versions around increases memory usage and app size. |
+| Database Translations | If V1 requires you to aggregate data that your new DB schema no longer supports easily, V1 performance will tank. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| When should you increment an API version? | When you make a "breaking change" (e.g., removing a field, changing a type from int to string). |
+| Is adding a new field a breaking change? | Usually no. Well-written clients will ignore new fields they don't recognize. |
+| What is the best way to version an API? | URL versioning (`/v1/`) is the most pragmatic and widely adopted, though Header versioning is technically more "RESTful". |
+| How do you eventually get rid of an old version? | Deprecation. You announce a sunset date, monitor logs to see who is still using it, contact them, and eventually turn it off, returning a 410 Gone error. |
+
+## 10. Tricky Questions & Edge Cases
+
+**Question:** I changed an endpoint from returning a single object `{}` to returning an array of objects `[{}]`. Is that a breaking change?
+
+Bro, 100% yes! That is a massive breaking change. If a mobile app is expecting a dictionary and tries to do `response['name']` on an array, the app will completely crash with a TypeError. You must bump the version for this.
+
+## 11. Real-World Usage
+
+- **Stripe:** Famous for their date-based header versioning (e.g., `Stripe-Version: 2020-08-27`).
+- **Twitter / X:** Deprecated their V1 API and forced developers to migrate to V2, breaking thousands of bots in the process.
+- **GitHub:** Uses header versioning (`Accept: application/vnd.github.v3+json`).
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Version from Day 1 (start with `/v1/`). | Wait until you have a breaking change to figure out how to route versions. |
+| Support old versions until traffic drops to near zero. | Delete V1 the moment you deploy V2. |
+| Keep business logic separate from version serializers. | Copy-paste 500 lines of DB logic just to change one JSON field name. |
+| Monitor usage per version in your logs. | Guess when it's safe to turn off V1. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Supporting multiple versions incurs a high "maintenance tax" on your engineering team. Every new feature might have to be tested against V1, V2, and V3. Be aggressive about deprecating old versions by forcing mobile users to update their apps via "Force Update" screens.
+
+## 14. Common Mistakes
+
+| Mistake | Why It Hurts |
+|---|---|
+| Silent Breaking Changes | Changing the format of a date string from `MM/DD/YYYY` to ISO8601 without bumping the version. Mobile apps will fail to parse it. |
+| Changing error codes | Changing a standard validation error from `400` to `422` without versioning can break client-side retry logic. |
+| Versioning the whole API for one endpoint | If only `/users` changes, you don't necessarily need to force clients to use `/v2/products` if products didn't change (though some frameworks enforce global versions for simplicity). |
+
+## 15. Related Topics
+
+- REST API Basics
+- FastAPI
+- Middleware
+- Production Checklists
