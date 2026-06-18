@@ -2,6 +2,205 @@
 sidebar_position: 2
 ---
 
-# Postgresql
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Postgresql.
+# PostgreSQL
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | PostgreSQL (with Python) |
+| Difficulty | Intermediate |
+| Used For | Production-grade relational database management |
+| Common Mistake | Forgetting to use connection pooling in production web apps |
+| Performance | Incredible for massive, highly-concurrent data workloads |
+
+## 2. Real-World Analogy
+
+Think of PostgreSQL (Postgres) like an enterprise-grade bank vault.
+
+SQLite is like a lockbox under your bed; it's yours, it's fast, but you wouldn't let a thousand people access it at once. Postgres is a massive vault with security guards, transaction ledgers, multiple teller windows, and strict rules about what goes in and out. Bro, it handles thousands of users trying to deposit and withdraw money at the exact same millisecond without ever losing a cent or crashing.
+
+## 3. Concept Explanation
+
+PostgreSQL is a powerful, open-source object-relational database system (RDBMS). It uses a client-server architecture. Your Python script (the client) talks over a network (TCP/IP) to the Postgres daemon (the server) running on a specific port (usually `5432`).
+
+To connect Python to Postgres, you need a driver. The most popular synchronous driver is `psycopg2` (or the newer `psycopg3`). For async frameworks like FastAPI, `asyncpg` is the standard.
+
+When to use it:
+- The backend database for web applications (Django, FastAPI, Flask).
+- Financial systems requiring strict ACID compliance.
+- Geographic Information Systems (using the PostGIS extension).
+- When you need robust JSON storage (Postgres handles JSONB brilliantly).
+
+When NOT to use it:
+- A simple local desktop app that doesn't need a heavy background server (use SQLite).
+
+## 4. Syntax Table
+
+| Operation | `psycopg2` Example |
+|---|---|
+| Connect | `conn = psycopg2.connect("dbname=test user=admin password=123 host=localhost")` |
+| Execute | `cursor.execute("SELECT * FROM users")` |
+| Parameterized | `cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))` |
+| Commit | `conn.commit()` |
+| Fetch | `rows = cursor.fetchall()` |
+
+## 5. Beginner Example
+
+To run this, you need a Postgres server running and `pip install psycopg2-binary`.
+
+```python
+import psycopg2
+
+try:
+    # 1. Connect to the database server
+    conn = psycopg2.connect(
+        dbname="my_database",
+        user="postgres",
+        password="mysecretpassword",
+        host="localhost",
+        port="5432"
+    )
+
+    # 2. Open a cursor to perform database operations
+    cursor = conn.cursor()
+
+    # 3. Execute a query (Notice %s instead of ? for parameters in psycopg2)
+    cursor.execute("INSERT INTO users (name, role) VALUES (%s, %s)", ("Alice", "Admin"))
+
+    # 4. Commit the transaction
+    conn.commit()
+
+    print("User inserted successfully!")
+
+except Exception as e:
+    print(f"Database error: {e}")
+    if conn:
+        conn.rollback() # Undo the transaction if it failed!
+finally:
+    # 5. Always close your connections!
+    if cursor: cursor.close()
+    if conn: conn.close()
+```
+
+## 6. Real-World Engineering Example
+
+Bro, in a high-throughput async application (like FastAPI), blocking the event loop with `psycopg2` is a disaster. You use `asyncpg` combined with a **Connection Pool**.
+
+```python
+import asyncpg
+import asyncio
+
+async def run_db_query():
+    # 1. Create a connection pool (keeps connections open for reuse)
+    pool = await asyncpg.create_pool(
+        user='postgres', password='mysecretpassword',
+        database='my_database', host='127.0.0.1',
+        min_size=5, max_size=20 # Manage connection counts
+    )
+
+    # 2. Acquire a connection from the pool
+    async with pool.acquire() as connection:
+        # 3. Execute async query (Notice $1, $2 for asyncpg parameters)
+        values = await connection.fetch(
+            'SELECT name FROM users WHERE role = $1', 'Admin'
+        )
+        print([dict(row) for row in values])
+
+    # 4. Close the pool on app shutdown
+    await pool.close()
+
+# Run the async loop
+asyncio.run(run_db_query())
+```
+This ensures your app can handle 10,000 requests without trying to open 10,000 separate TCP connections to the database.
+
+## 7. Internal Working
+
+<LearningFlow
+    layout="horizontal"
+    nodes={[
+        { id: 'app', data: { label: 'Python App\n(psycopg2)', type: 'process' }, kind: 'process' },
+        { id: 'tcp', data: { label: 'Network\n(TCP Port 5432)', type: 'tool' }, kind: 'tool' },
+        { id: 'pgbouncer', data: { label: 'PgBouncer\n(Connection Pooler)', type: 'tool' }, kind: 'tool' },
+        { id: 'postgres', data: { label: 'Postgres Server\n(Daemon)', type: 'core' }, kind: 'core' },
+        { id: 'storage', data: { label: 'Disk Storage\n(Data/WAL Files)', type: 'data' }, kind: 'output' }
+    ]}
+    edges={[
+        { source: 'app', target: 'tcp', label: 'SQL over wire', type: 'straight' },
+        { source: 'tcp', target: 'pgbouncer', label: 'Handshake', type: 'smoothstep' },
+        { source: 'pgbouncer', target: 'postgres', label: 'Multiplexes connections', type: 'smoothstep' },
+        { source: 'postgres', target: 'storage', label: 'Reads/Writes Blocks', type: 'straight', animated: true }
+    ]}
+/>
+
+Postgres uses a process-per-connection model. Every time a client connects, the main Postgres daemon forks a completely new OS process to handle that client's queries. This is incredibly stable, but memory intensive. That is why connection pooling (using something like PgBouncer or SQLAlchemy pools) is absolutely mandatory in production to prevent RAM exhaustion.
+
+## 8. Performance Table
+
+| Operation | Performance Context |
+|---|---|
+| Read/Write (Single) | Fast, but has network latency (TCP/IP) compared to SQLite. |
+| High Concurrency | Unbeatable. Uses MVCC (Multi-Version Concurrency Control) so readers don't block writers. |
+| Connection Creation | Slow. Opening a new TCP connection and authenticating takes time. Always pool. |
+| JSON Operations | `JSONB` columns in Postgres are incredibly fast and fully indexable. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why use Postgres over MySQL? | Postgres is generally stricter about data integrity, supports advanced features like partial indexes and window functions better, and handles complex JSON/Geospatial workloads flawlessly. |
+| What parameter marker does `psycopg2` use? | It uses `%s`. (Note: SQLite uses `?`, and `asyncpg` uses `$1, $2`). |
+| What is a connection pool? | A cache of pre-established database connections maintained in memory. Instead of opening and closing a TCP connection for every API request, the app borrows one from the pool and returns it when done. |
+| What is MVCC? | Multi-Version Concurrency Control. When updating data, Postgres doesn't overwrite the old row immediately. It creates a new version. This means someone reading the data doesn't get locked out while someone else is writing. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, look at this script that deletes a user and then creates a log entry.
+
+```python
+cursor.execute("DELETE FROM users WHERE id = %s", (10,))
+raise Exception("Oh no, the server crashed!")
+cursor.execute("INSERT INTO logs (msg) VALUES ('Deleted user 10')")
+conn.commit()
+```
+
+**The Trap:**
+If the script crashes halfway through, is the user deleted?
+If you are using psycopg2, by default, it starts a transaction block automatically. Because `conn.commit()` is never reached, the database automatically issues a `ROLLBACK`. The user is *not* deleted. The database remains in a consistent state.
+
+**The Fix:**
+Understand transaction boundaries. Always use `try/except/finally` to explicitly call `conn.rollback()` on errors and `conn.close()` in the finally block to release the connection back to the pool.
+
+## 11. Real-World Usage
+
+- **Instagram:** Uses massive Postgres clusters to store user relationships and data.
+- **Reddit:** Historically relied heavily on Postgres to handle massive comment threads.
+- **Data Warehousing:** Companies use Postgres (or variants like Amazon Redshift) to run heavy analytical queries across terabytes of data.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| **DO** use parameterized queries (`%s`) to stop SQL injection. | **DON'T** use Python f-strings to inject data into queries. |
+| **DO** use Connection Pooling (SQLAlchemy, asyncpg, or PgBouncer). | **DON'T** open a brand new `psycopg2.connect()` inside every API route. |
+| **DO** use `JSONB` instead of `JSON` if you are storing JSON data. `JSONB` is binary, parsed, and indexable. | **DON'T** store large files (like images) directly in the database. Store the AWS S3 URL instead. |
+
+## 13. Production Notes
+
+> ⚠ **Production Note:** The Connection Exhaustion Crash
+Bro, if your web server has 50 workers, and each worker opens 10 database connections, you have 500 connections. If your Postgres server is configured with `max_connections = 100` (the default), your app will violently crash under load with a "FATAL: sorry, too many clients already" error. Configure PgBouncer in front of your database to multiplex thousands of client connections into a small handful of actual database connections.
+
+## 14. Common Mistakes
+
+- **Leaving Idle in Transaction:** Opening a cursor, executing a `SELECT` (which starts a transaction in psycopg2), and then writing Python logic that takes 10 minutes before committing. This locks rows and causes database bloat (prevents autovacuum).
+- **Ignoring Indexes:** Running `SELECT * FROM users WHERE email = %s` on a table with 10 million rows without an index on the `email` column, causing a slow Sequential Scan.
+- **Committing inside a loop:** Doing `conn.commit()` inside a `for` loop of 10,000 inserts. It causes immense disk I/O. Do all the inserts, then commit once at the end.
+
+## 15. Related Topics
+- SQLite
+- SQLAlchemy
+- ORM vs Raw SQL
+- Connection Pooling

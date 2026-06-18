@@ -2,6 +2,198 @@
 sidebar_position: 2
 ---
 
-# Rest Api Basics
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Rest Api Basics.
+# REST API Basics
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | REST API Basics |
+| Difficulty | Beginner |
+| Used For | Standardized communication between client and server |
+| Common Mistake | Using GET to modify data or POST to retrieve data |
+| Performance | Stateless (scales easily), but can suffer from over-fetching/under-fetching |
+
+## 2. Real-World Analogy
+
+Think of a REST API like ordering food at a restaurant using a structured menu.
+
+You (the client) look at the menu and place an order (the request) with the waiter. You have to follow the menu's rules (endpoints). You can't just yell "make me food"; you ask for item #5 (a specific resource). The waiter takes your request to the kitchen (the server), and brings back your food on a plate (the JSON response). Bro, REST is just an agreed-upon set of rules for how your app talks to a server.
+
+## 3. Concept Explanation
+
+REST (Representational State Transfer) is an architectural style for designing networked applications. It relies on standard HTTP methods to perform CRUD (Create, Read, Update, Delete) operations on resources.
+
+In REST, everything revolves around "resources" (like Users, Posts, Orders). Each resource is identified by a URL.
+
+Key constraints of REST:
+- **Client-Server Separation:** The UI and the data storage are independent.
+- **Stateless:** Every request from the client must contain all the information the server needs to understand it. The server does not store any "session" about the client between requests.
+- **Uniform Interface:** Standard use of HTTP methods, URLs, and JSON/XML representations.
+
+When to use it:
+- Building web backends.
+- Creating public APIs for third-party developers.
+- Microservices communication.
+
+When NOT to use it:
+- If you need real-time bi-directional streaming (use WebSockets).
+- If you suffer from massive over-fetching of data (consider GraphQL).
+
+## 4. Syntax Table
+
+| Concept | Description | Example |
+|---|---|---|
+| Base URL | The root address of the API | `https://api.example.com/v1` |
+| Endpoint (Resource) | The specific path to a resource | `/users` |
+| Path Parameter | Identifier embedded in the URL | `/users/123` |
+| Query Parameter | Filters added to the end of the URL | `/users?role=admin&limit=10` |
+| Body (Payload) | The data sent in POST/PUT requests | `{"name": "Alice"}` |
+
+## 5. Beginner Example
+
+Let's look at how HTTP methods map to CRUD operations for a `books` resource.
+
+- **Create a book:** `POST /books` (with JSON body `{"title": "Python 101"}`)
+- **Read all books:** `GET /books`
+- **Read book #5:** `GET /books/5`
+- **Update book #5:** `PUT /books/5` (with JSON body `{"title": "Python 102"}`)
+- **Delete book #5:** `DELETE /books/5`
+
+It's clean, predictable, and standard.
+
+## 6. Real-World Engineering Example
+
+Bro, in a real production system, an API response isn't just raw data. It includes pagination, metadata, and standard status codes.
+
+```json
+// GET /api/v1/orders?status=shipped&page=2
+{
+  "metadata": {
+    "total_records": 1500,
+    "current_page": 2,
+    "has_next": true
+  },
+  "data": [
+    {
+      "order_id": "ORD-992",
+      "customer_id": "CUST-11",
+      "total_amount": 145.50,
+      "shipped_at": "2024-03-10T14:30:00Z"
+    },
+    // ... more orders
+  ]
+}
+```
+
+Notice the query parameters `?status=shipped&page=2` filtering the data, and the JSON payload wrapping the actual `data` inside an envelope alongside `metadata`.
+
+## 7. Internal Working
+
+<LearningFlow
+    layout="vertical"
+    nodes={[
+        { id: 'client', data: { label: 'Client App\n(React/iOS)', type: 'process' }, kind: 'process' },
+        { id: 'req', data: { label: 'HTTP GET\n/api/users/123', type: 'data' }, kind: 'data' },
+        { id: 'server', data: { label: 'Web Server\n(FastAPI/Flask)', type: 'core' }, kind: 'core' },
+        { id: 'db', data: { label: 'Database\n(PostgreSQL)', type: 'tool' }, kind: 'tool' },
+        { id: 'res', data: { label: 'HTTP 200 OK\n{"id": 123, "name": "Alice"}', type: 'data' }, kind: 'output' }
+    ]}
+    edges={[
+        { source: 'client', target: 'req', label: 'Initiates request', type: 'smoothstep' },
+        { source: 'req', target: 'server', label: 'Routing', type: 'smoothstep' },
+        { source: 'server', target: 'db', label: 'SQL Query', type: 'step' },
+        { source: 'db', target: 'server', label: 'Raw Data', type: 'step' },
+        { source: 'server', target: 'res', label: 'Serialize to JSON', type: 'smoothstep' },
+        { source: 'res', target: 'client', label: 'Response Received', type: 'smoothstep' }
+    ]}
+/>
+
+1. The client formats an HTTP request.
+2. The web framework (like FastAPI or Django) router matches the URL `/users/123` to a specific Python function.
+3. The function queries the database for user 123.
+4. The function serializes the database row into a JSON object.
+5. The server wraps the JSON in an HTTP response with a status code (e.g., 200) and sends it back.
+
+Because it is stateless, if the server reboots between request 1 and request 2, the client doesn't care.
+
+## 8. Performance Table
+
+| REST Characteristic | Impact on Performance |
+|---|---|
+| Statelessness | Great for scaling. You can put load balancers in front of 100 API servers trivially. |
+| Over-fetching | Bad. If you only need a user's name, but `GET /users/1` returns 50 fields, bandwidth is wasted. |
+| Under-fetching | Bad. If you need a user and their recent orders, you might have to make `GET /users/1` and then `GET /users/1/orders` (N+1 requests). |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does it mean for a REST API to be "stateless"? | The server doesn't store client context between requests. Each request must contain everything (like an auth token) needed to process it. |
+| What is the difference between PUT and PATCH? | `PUT` replaces the entire resource. `PATCH` applies a partial update to the resource. |
+| What are idempotent methods? | Methods that produce the same result no matter how many times you call them. `GET`, `PUT`, `DELETE` are idempotent. `POST` is NOT idempotent (calling it twice creates two resources). |
+| How do you version a REST API? | Usually in the URL path (e.g., `/api/v1/users`) or via a custom request Header (e.g., `Accept-Version: v1`). |
+| What status code is returned for a successful POST request creating a resource? | `201 Created`. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, imagine you are updating a user's email address.
+
+```json
+// The user currently has { "name": "Alice", "email": "old@example.com", "age": 30 }
+
+// You send:
+PUT /users/1
+{
+  "email": "new@example.com"
+}
+```
+
+**The Trap:**
+If the backend strictly follows REST semantics for `PUT`, it will replace the entire resource. The user's name and age will be wiped out (set to null) because they weren't in the payload!
+
+**The Fix:**
+You should either send the entire representation in the `PUT` body, or use `PATCH` for partial updates.
+
+```json
+PATCH /users/1
+{
+  "email": "new@example.com"
+}
+```
+
+## 11. Real-World Usage
+
+REST is the backbone of the internet:
+- **GitHub API:** To manage repositories and pull requests.
+- **Stripe API:** To manage customers, subscriptions, and charges.
+- **Twitter/X API:** To read tweets and post updates.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| **DO** use nouns in URLs (e.g., `/articles/12`). | **DON'T** use verbs in URLs (e.g., `/getArticle/12`). |
+| **DO** use plural nouns for collections (`/users`). | **DON'T** mix singular and plural (`/user/1` and `/users`). |
+| **DO** return proper HTTP status codes (200, 400, 404, 500). | **DON'T** return `200 OK` with an error message inside the JSON body. |
+| **DO** version your API from day one (`/v1/`). | **DON'T** change response structures without changing the version. |
+
+## 13. Production Notes
+
+> ⚠ **Production Note:** Proper Status Codes Matter
+Bro, if your API returns `200 OK` for everything and hides the real error in the JSON like `{"status": "error", "message": "Not Found"}`, you break HTTP tooling. Caching layers (like Cloudflare), API gateways, and monitoring dashboards rely on standard HTTP status codes (like 404 or 500) to trigger alerts, cache data, or block traffic. Follow the spec.
+
+## 14. Common Mistakes
+
+- **N+1 Problem:** Making a client do 100 individual GET requests to fetch data that could have been combined into a single batch endpoint.
+- **Leaking DB Structure:** Exposing internal database column names directly in the JSON response payload. Use a serialization layer.
+- **Ignoring Rate Limiting:** Exposing an expensive endpoint without limits, allowing an attacker (or a buggy script) to DDoS your database.
+
+## 15. Related Topics
+- Requests Library
+- FastAPI
+- HTTP Status Codes
+- API Versioning
+- Authentication (OAuth/JWT)

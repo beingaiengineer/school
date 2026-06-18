@@ -2,6 +2,211 @@
 sidebar_position: 6
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Middleware
 
-Placeholder: introduce Middleware.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Middleware |
+| Difficulty | Intermediate |
+| Used For | Intercepting requests/responses globally before they hit your routes |
+| Common Mistake | Doing heavy DB queries in middleware, slowing down every single API request |
+| Performance | Adds overhead to *every* request. Keep it light and fast. |
+
+## 2. Real-World Analogy
+
+Think of Middleware like the airport security checkpoint.
+
+Before you can get to your specific boarding gate (the API route), you have to walk through security. The security team (Middleware) checks your ID, scans your bags, and makes sure you aren't carrying anything dangerous. If you fail the check, they kick you out before you ever see the airplane.
+
+Once you land and leave the airport, you pass through customs (another piece of Middleware checking the *response*). Bro, middleware is just a piece of code that sits in the middle of the traffic, inspecting everything going in and out.
+
+## 3. Concept Explanation
+
+Middleware is a function that executes on every incoming HTTP request before it reaches your specific route handler, and/or executes on every outgoing HTTP response before it is sent back to the client.
+
+It allows you to extract global logic that applies to your entire application out of your individual route functions.
+
+When to use it:
+- **CORS (Cross-Origin Resource Sharing):** Managing which domains can call your API.
+- **Logging:** Recording request execution times and IP addresses.
+- **Authentication:** Verifying a token globally.
+- **Rate Limiting:** Blocking IPs that spam the server.
+- **Security Headers:** Adding headers like `X-Frame-Options` to responses.
+
+When NOT to use it:
+- If logic only applies to *one* specific route. Just put the logic in that route, or use a dependency injection tool (like FastAPI's `Depends`).
+
+## 4. Syntax Table
+
+| Framework | Implementation Style |
+|---|---|
+| FastAPI | `@app.middleware("http")` |
+| Flask | `@app.before_request` / `@app.after_request` |
+| Django | Custom classes in `settings.MIDDLEWARE` |
+
+## 5. Beginner Example
+
+Let's look at how to implement a simple logging middleware in FastAPI that measures how long a request takes.
+
+```python
+import time
+from fastapi import FastAPI, Request
+
+app = FastAPI()
+
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    # 1. Before the route runs
+    start_time = time.time()
+
+    # 2. Hand control over to the actual route handler
+    response = await call_next(request)
+
+    # 3. After the route runs
+    process_time = time.time() - start_time
+    print(f"Request to {request.url.path} took {process_time:.4f} seconds")
+
+    # Add a custom header to the outgoing response
+    response.headers["X-Process-Time"] = str(process_time)
+
+    return response
+
+@app.get("/hello")
+def hello():
+    time.sleep(0.1) # Simulate work
+    return {"message": "World"}
+```
+
+Every time you hit `/hello` (or any other route), the middleware wraps the execution.
+
+## 6. Real-World Engineering Example
+
+In production, CORS (Cross-Origin Resource Sharing) is the most common middleware you will configure. If a React app running on `localhost:3000` tries to call a FastAPI backend on `localhost:8000`, the browser blocks it for security unless the backend explicitly allows it via CORS headers.
+
+```python
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+# Only allow these specific domains to talk to the API
+origins = [
+    "https://my-production-app.com",
+    "http://localhost:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT"],
+    allow_headers=["Authorization", "Content-Type"],
+)
+
+@app.get("/")
+def main():
+    return {"message": "CORS allows you to see this!"}
+```
+
+## 7. Internal Working
+
+<LearningFlow
+    layout="horizontal"
+    nodes={[
+        { id: 'client', data: { label: 'Client', type: 'process' }, kind: 'process' },
+        { id: 'mw1', data: { label: 'Middleware 1\n(CORS)', type: 'tool' }, kind: 'tool' },
+        { id: 'mw2', data: { label: 'Middleware 2\n(Logger)', type: 'tool' }, kind: 'tool' },
+        { id: 'route', data: { label: 'Route Handler\n(DB Logic)', type: 'core' }, kind: 'core' }
+    ]}
+    edges={[
+        { source: 'client', target: 'mw1', label: 'HTTP Request', type: 'straight' },
+        { source: 'mw1', target: 'mw2', label: 'Passes Down', type: 'smoothstep' },
+        { source: 'mw2', target: 'route', label: 'Passes Down', type: 'smoothstep' },
+        { source: 'route', target: 'mw2', label: 'Returns Response', type: 'step' },
+        { source: 'mw2', target: 'mw1', label: 'Passes Up', type: 'step' },
+        { source: 'mw1', target: 'client', label: 'Final Output', type: 'straight', animated: true }
+    ]}
+/>
+
+Middleware operates like an onion. The request goes in through the outer layers (CORS, then Logger), hits the core (the Route), and the response goes back out through the same layers in reverse order.
+
+If `Middleware 1` decides the request is invalid (e.g., bad CORS origin), it can immediately return an HTTP 403 response, short-circuiting the chain. `Middleware 2` and the `Route` will never even execute.
+
+## 8. Performance Table
+
+| Middleware Type | Impact |
+|---|---|
+| Header Modification (CORS) | Almost zero latency (O(1) memory/CPU). |
+| Logging / Metrics | Extremely fast. |
+| Database Auth Verification | High impact. It runs a DB query on *every single request* across the app. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the "onion model" in middleware? | Requests flow inward through layers of middleware to the route handler, and responses flow outward through those same layers in reverse order. |
+| If you want to check a user's role (Admin vs User), should you use middleware? | No. Middleware runs on *all* routes. Role checking is usually route-specific. Use Route Dependencies (like FastAPI's `Depends`) or route-specific decorators instead. |
+| What happens if a middleware raises an exception? | The request chain is broken. The server will likely return an HTTP 500 error unless an exception handler catches it. |
+| What is CORS and why is it implemented as middleware? | CORS controls which frontends can call your API. It's middleware because the browser sends an `OPTIONS` request before the actual request, and the middleware intercepts it and responds globally without you writing code in every route. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, look at this Flask middleware code designed to read the JSON payload before passing it to the route:
+
+```python
+from flask import Flask, request
+
+app = Flask(__name__)
+
+@app.before_request
+def log_request_body():
+    # Read the raw body data stream
+    data = request.get_data()
+    print(f"Incoming payload: {data}")
+
+@app.route("/submit", methods=["POST"])
+def submit():
+    # Route tries to parse JSON
+    payload = request.get_json()
+    return {"status": "ok"}
+```
+
+**The Trap:**
+In many web servers (like older ASGI/WSGI environments), the HTTP request body is a stream (a buffer). If the middleware consumes (reads) the stream, the buffer is emptied. When the route handler calls `request.get_json()`, the body is empty, and the app crashes!
+
+**The Fix:**
+Avoid consuming the raw request body stream in global middleware unless the framework explicitly caches it for you.
+
+## 11. Real-World Usage
+
+- **Datadog / New Relic:** APM (Application Performance Monitoring) tools are installed as middleware. They silently wrap your app, track execution times, and send the metrics to a dashboard.
+- **Sentry:** Error tracking middleware that catches unhandled exceptions globally and sends the traceback to Sentry.io.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| **DO** keep middleware extremely fast. | **DON'T** do external API calls or complex processing in global middleware. |
+| **DO** use middleware for security headers (HSTS, Content-Security-Policy). | **DON'T** use middleware to format or alter the JSON business logic of your API responses. |
+| **DO** put the CORS middleware at the very top of your stack. | **DON'T** put CORS after authentication, or the browser's preflight check will fail. |
+
+## 13. Production Notes
+
+> ⚠ **Production Note:** The Danger of Global DB Queries
+Bro, I once saw a team implement an IP ban-list middleware that queried a PostgreSQL database to check if the IP was banned. Suddenly, an endpoint that used to take 5ms started taking 30ms. Why? Because the DB connection pool was exhausted by the middleware. If you must check a ban-list globally, cache that list in Redis or directly in memory.
+
+## 14. Common Mistakes
+
+- **Swallowing Exceptions:** Wrapping the `call_next` in a broad `try/except Exception:` block and returning a custom JSON error, completely hiding the traceback from your logs and error-tracking software.
+- **Modifying the Request Object:** Trying to add custom properties to the `request` object (like `request.user = "Alice"`). While Flask supports `g`, in FastAPI you should inject dependencies or use `request.state` (e.g., `request.state.user = "Alice"`).
+
+## 15. Related Topics
+- FastAPI
+- Flask
+- REST API Basics
+- Authentication
+- Rate Limiting

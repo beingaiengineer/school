@@ -2,6 +2,222 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Authentication
 
-Placeholder: introduce Authentication.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | API Authentication |
+| Difficulty | Intermediate |
+| Used For | Proving *who* the client is to the server |
+| Common Mistake | Storing plaintext passwords or keeping JWT secrets in source code |
+| Performance | Checking tokens locally (JWT) is very fast; checking database sessions adds slight latency |
+
+## 2. Real-World Analogy
+
+Think of authentication like getting into an exclusive club.
+
+When you first arrive, you show your ID card (username and password) to the bouncer. The bouncer checks a list to verify you are who you say you are. Once verified, instead of making you show your ID every time you order a drink, the bouncer gives you a VIP wristband (a Token or Session Cookie).
+
+Now, every time you talk to the bartender (the API), you just show the wristband. Bro, authentication is just the process of trading your hard credentials for a temporary, easy-to-verify wristband.
+
+## 3. Concept Explanation
+
+Authentication (AuthN) is the process of verifying a user's identity. (Note: *Authorization* / AuthZ is verifying what that user is *allowed* to do).
+
+In modern Python APIs, authentication usually takes one of two forms:
+1. **Session-based (Stateful):** The server gives the client a random session ID cookie. The server remembers this ID in its database or Redis.
+2. **Token-based (Stateless/JWT):** The server gives the client a cryptographically signed token containing user data. The server does not store the token; it simply verifies the math (the signature) on subsequent requests.
+
+When to use what:
+- **Web Applications (Browsers):** Use Session cookies (they are automatically handled by the browser and are more secure against XSS if set to `HttpOnly`).
+- **Mobile Apps & Microservices:** Use Tokens / JWT (JSON Web Tokens), sent via the `Authorization: Bearer <token>` header.
+
+## 4. Syntax Table
+
+| Method | Example Implementation Context |
+|---|---|
+| Basic Auth | `Authorization: Basic base64(user:pass)` (Rarely used today) |
+| Session/Cookies | `Set-Cookie: session_id=123xyz; HttpOnly; Secure` |
+| Bearer Token (JWT) | `Authorization: Bearer eyJhbGci...` |
+| OAuth2 | Delegating auth to Google/GitHub (trading codes for tokens) |
+
+## 5. Beginner Example
+
+Here is a simplified example of generating and verifying a JWT (JSON Web Token) using the `PyJWT` library.
+
+```python
+import jwt
+import datetime
+
+SECRET_KEY = "super_secret_bro" # In real life, use environment variables!
+
+def login(username, password):
+    # 1. Verify credentials (pretend we checked a DB)
+    if username == "alice" and password == "password123":
+        # 2. Generate token (valid for 1 hour)
+        payload = {
+            "user_id": 1,
+            "username": "alice",
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+        }
+        token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+        return token
+    return None
+
+def verify_token(token):
+    try:
+        # 3. Decode and verify signature
+        decoded_payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        return decoded_payload
+    except jwt.ExpiredSignatureError:
+        return "Token expired!"
+    except jwt.InvalidTokenError:
+        return "Invalid token!"
+
+# Usage
+token = login("alice", "password123")
+print(verify_token(token)) # {'user_id': 1, 'username': 'alice', ...}
+```
+
+## 6. Real-World Engineering Example
+
+In FastAPI, you don't manually decode tokens in every route. You use Dependency Injection to protect endpoints globally.
+
+```python
+from fastapi import FastAPI, Depends, HTTPException, Security
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+import jwt
+
+app = FastAPI()
+security = HTTPBearer()
+SECRET_KEY = "production_secret_key"
+
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        return payload["username"]
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+@app.get("/secure-data")
+def read_secure_data(username: str = Depends(get_current_user)):
+    # If the token is bad, FastAPI returns 401 before this line ever runs.
+    return {"message": f"Welcome to the VIP area, {username}."}
+```
+
+## 7. Internal Working
+
+<LearningFlow
+    layout="horizontal"
+    nodes={[
+        { id: 'client', data: { label: 'Client App\n(Sends Credentials)', type: 'process' }, kind: 'process' },
+        { id: 'auth', data: { label: 'Auth Endpoint\n(/login)', type: 'core' }, kind: 'core' },
+        { id: 'db', data: { label: 'Database\n(Verify Hash)', type: 'tool' }, kind: 'tool' },
+        { id: 'jwt', data: { label: 'Generate JWT\n(Sign with Secret)', type: 'tool' }, kind: 'tool' },
+        { id: 'res', data: { label: 'Return Token\n(eyJh...)', type: 'output' }, kind: 'output' }
+    ]}
+    edges={[
+        { source: 'client', target: 'auth', label: 'POST /login', type: 'straight' },
+        { source: 'auth', target: 'db', label: 'Compare Passwords', type: 'step' },
+        { source: 'db', target: 'auth', label: 'Match OK', type: 'step' },
+        { source: 'auth', target: 'jwt', label: 'Create Payload', type: 'smoothstep' },
+        { source: 'jwt', target: 'res', label: 'Encode Token', type: 'smoothstep', animated: true }
+    ]}
+/>
+
+When using JWTs, the system is stateless.
+1. The client sends a password. The server hashes it (using `bcrypt` or `argon2`) and compares it to the database.
+2. If it matches, the server builds a JSON payload (the claims).
+3. The server runs an algorithm (like HMAC SHA256) using a Secret Key to generate a signature.
+4. It concatenates `Base64(Header) + . + Base64(Payload) + . + Base64(Signature)` to form the JWT.
+5. On the next request, the server recalculates the signature using its Secret Key. If it matches the signature in the token, the token is valid. No database lookup is required!
+
+## 8. Performance Table
+
+| Authentication Type | Performance Impact | Scaling Considerations |
+|---|---|---|
+| JWT (Stateless) | Fastest. Just CPU math. | Scales infinitely. But hard to invalidate tokens immediately (you have to wait for them to expire). |
+| Database Session | Slower. Requires DB hit per request. | Harder to scale. Use Redis to store sessions to speed up lookups. |
+| Basic Auth | Slow. Hashing a password is CPU-heavy. | Doing bcrypt hashing on every single API request will crash your server under load. Never use for APIs. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between Authentication and Authorization? | Authentication is checking *who* you are (login). Authorization is checking *what* you can do (admin vs user). |
+| Can the client read the payload of a JWT? | Yes! The payload is just Base64 encoded, not encrypted. Never put passwords or sensitive data inside a JWT payload. |
+| How do you invalidate a stateless JWT before it expires? | It's difficult. You either maintain a database "blacklist" of revoked tokens (defeating the stateless purpose), or keep expiration times very short (e.g., 15 mins) and use Refresh Tokens. |
+| What is a Refresh Token? | A long-lived token (e.g., 30 days) stored securely, used solely to request a new short-lived Access Token when it expires, without making the user log in again. |
+| Why shouldn't you store JWTs in `localStorage` in a browser? | `localStorage` is vulnerable to Cross-Site Scripting (XSS). If a malicious script runs on your page, it can steal the token. Use `HttpOnly` cookies instead for browsers. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, a developer implements this API endpoint:
+
+```python
+@app.post("/login")
+def login(user_data: dict):
+    # Bad practice: vulnerable to timing attacks
+    user = db.get_user(user_data['username'])
+    if not user:
+        return {"error": "User not found"}
+
+    if bcrypt.checkpw(user_data['password'].encode(), user.password_hash):
+        return {"token": "success"}
+    else:
+        return {"error": "Invalid password"}
+```
+
+**The Trap:**
+This is vulnerable to **User Enumeration**. Because checking a password hash takes ~300ms, but returning "User not found" is instant (1ms), an attacker can measure the response times to figure out exactly which usernames exist in your database.
+
+**The Fix:**
+Always return a generic error message, and ensure the code path takes roughly the same amount of time regardless of whether the user exists.
+
+```python
+# Better: Return the same message.
+return {"error": "Invalid credentials"}
+```
+
+## 11. Real-World Usage
+
+- **Microservices:** Service A talks to Service B using JWTs. Service B doesn't need to ask the database if the token is valid; it just verifies the signature math.
+- **SSO (Single Sign-On):** Companies use OAuth2 and OpenID Connect (OIDC) to let you "Sign in with Google", which eventually issues your backend a token.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| **DO** use `bcrypt` or `argon2` to hash passwords in the database. | **DON'T** use MD5 or SHA-256 for passwords. They are too fast and easily cracked. |
+| **DO** set expiration times (`exp` claim) on all tokens. | **DON'T** issue tokens that live forever. |
+| **DO** use strong, long, random environment variables for your JWT Secret. | **DON'T** hardcode `"secret123"` in your source code. |
+| **DO** mandate HTTPS for all API traffic. | **DON'T** send tokens over plain HTTP (they can be sniffed on the network). |
+
+## 13. Production Notes
+
+> ⚠ **Production Note:** The "None" Algorithm Attack
+Bro, early JWT libraries had a massive flaw. An attacker could change the token header to `{"alg": "none"}` and remove the signature. The server would see "none", say "cool, no signature required," and log them in as admin. Always hardcode the accepted algorithms when decoding tokens in production.
+
+```python
+# Production Code
+jwt.decode(token, SECRET, algorithms=["HS256"]) # Strictly enforce HS256!
+```
+
+## 14. Common Mistakes
+
+- **Putting passwords in JWTs:** JWTs are not encrypted. Anyone can decode the payload. Only put non-sensitive data like `user_id` or `role`.
+- **Rolling your own crypto:** Never try to write your own hashing or encryption logic. Use standard libraries like `passlib` or `PyJWT`.
+- **Not rotating secrets:** If a developer leaves the company, you should rotate the JWT secret keys. If you don't, they could forge admin tokens from their basement.
+
+## 15. Related Topics
+- Middleware
+- REST API Basics
+- FastAPI
+- Security Best Practices

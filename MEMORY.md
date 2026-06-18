@@ -240,10 +240,11 @@ Before deleting files:
 - `modules-packages`: all topics (modules, packages, virtual-environments, pip, pyproject-toml, dependency-management)
 - `advanced-python`: all topics (memory-management, garbage-collection, shallow-vs-deep-copy, mutability, context-managers, descriptors, metaclasses, monkey-patching, dynamic-typing, python-internals)
 - `concurrency`: all topics (threading, multiprocessing, asyncio, async-await, race-conditions, queues, locks-semaphores, gil)
+- `api-development`: all topics (requests-library, rest-api-basics, fastapi, flask, authentication, middleware, api-versioning, rate-limiting)
+- `databases` (completed): sqlite, postgresql
 
 **Pending Topics (Next Up):**
-- `api-development`: all topics (requests-library, rest-api-basics, fastapi, flask, authentication, middleware, api-versioning, rate-limiting)
-- `databases`: all topics (sqlite, postgresql, sqlalchemy, orm-vs-raw-sql, transactions, indexing, connection-pooling)
+- `databases`: remaining topics (sqlalchemy, orm-vs-raw-sql, transactions, indexing, connection-pooling)
 - `testing`: all topics (pytest, unit-testing, mocking, integration-testing, load-testing, test-best-practices)
 - `performance`: all topics (profiling, memory-optimization, caching, lazy-loading, vectorization, numpy-performance, performance-best-practices)
 - `system-design`: all topics (python-architecture, scalable-python, event-driven-systems, queue-systems, distributed-systems, microservices, production-patterns)
