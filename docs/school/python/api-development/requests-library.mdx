@@ -2,6 +2,223 @@
 sidebar_position: 1
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Requests Library
 
-Placeholder: introduce Requests Library.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Requests Library |
+| Difficulty | Beginner |
+| Used For | Making HTTP requests (GET, POST, etc.) |
+| Main Strength | Incredibly simple and readable API |
+| Common Mistake | Forgetting to set a timeout |
+| Performance | Synchronous/blocking; not ideal for massive concurrent I/O |
+
+Bro, the `requests` library is the standard way to talk to other servers in Python. It's not built-in, but it's universally used because it makes HTTP simple.
+
+## 2. Real-World Analogy
+
+Think of the `requests` library like a delivery boy.
+
+If you want food from a restaurant, you don't go there yourself. You give the delivery boy an address (URL) and your order (payload). He goes to the restaurant, waits for the food, and brings it back to you in a nice package (Response object).
+
+If the restaurant is closed (404), he comes back and tells you. If the restaurant is taking too long (timeout), he gives up and comes back.
+
+## 3. Concept Explanation
+
+The `requests` library abstracts the complexities of making HTTP requests behind a beautiful, simple API.
+
+Under the hood, it handles:
+- Connection pooling
+- DNS resolution
+- SSL/TLS verification
+- URL encoding
+- JSON serialization/deserialization
+
+You use it when your Python script needs to fetch data from an API, scrape a webpage, or send data to another service.
+
+Bro, you should NOT use it if you need high-concurrency async operations (use `aiohttp` or `httpx` instead).
+
+## 4. Syntax Table
+
+| Operation | Code Example |
+|---|---|
+| GET request | `requests.get("https://api.example.com/data")` |
+| POST request | `requests.post(url, json={"key": "value"})` |
+| Add Headers | `requests.get(url, headers={"Auth": "Token"})` |
+| Query Params | `requests.get(url, params={"page": 2})` |
+| Parse JSON | `response.json()` |
+| Raise Error on Bad Status | `response.raise_for_status()` |
+
+## 5. Beginner Example
+
+```python
+import requests
+
+# Make a GET request
+response = requests.get("https://api.github.com/users/octocat")
+
+# Print the status code
+print(f"Status Code: {response.status_code}")
+
+# Get the JSON data
+data = response.json()
+print(f"Name: {data.get('name')}")
+```
+
+Output:
+```text
+Status Code: 200
+Name: The Octocat
+```
+
+Bro, it's that easy. Just call `.get()` and then `.json()` to get your data as a Python dictionary.
+
+## 6. Real-World Engineering Example
+
+In production, you never just `.get()` without error handling and timeouts. Here is a real-world retry loop using standard libraries.
+
+```python
+import requests
+from requests.exceptions import RequestException
+import time
+
+def fetch_user_data(user_id, retries=3):
+    url = f"https://api.company.com/v1/users/{user_id}"
+
+    for attempt in range(retries):
+        try:
+            # Always set a timeout!
+            response = requests.get(url, timeout=5)
+            # Raise an exception for 4xx or 5xx errors
+            response.raise_for_status()
+
+            return response.json()
+        except RequestException as e:
+            print(f"Attempt {attempt + 1} failed: {e}")
+            time.sleep(2 ** attempt)  # Exponential backoff
+
+    print("All retries failed.")
+    return None
+
+data = fetch_user_data(101)
+```
+
+## 7. Internal Working
+
+When you call `requests.get()`, it doesn't just do raw socket programming.
+
+<LearningFlow
+  diagram={{
+    title: 'Requests Execution Flow',
+    height: 400,
+    miniMap: true,
+    nodes: [
+      {id: 'app', title: 'Python Code', detail: 'requests.get(url)', x: 20, y: 150, kind: 'core'},
+      {id: 'session', title: 'Session Manager', detail: 'Manages cookies, auth, connection pools.', x: 250, y: 150, kind: 'process'},
+      {id: 'urllib3', title: 'urllib3 Engine', detail: 'Handles sockets, SSL, and HTTP protocols.', x: 480, y: 150, kind: 'data'},
+      {id: 'internet', title: 'External API', detail: 'The actual server responding.', x: 700, y: 150, kind: 'output'},
+      {id: 'pool', title: 'Connection Pool', detail: 'Reuses TCP connections.', x: 480, y: 280, kind: 'tool'},
+    ],
+    edges: [
+      {source: 'app', target: 'session', label: 'calls'},
+      {source: 'session', target: 'urllib3', label: 'delegates'},
+      {source: 'urllib3', target: 'internet', label: 'HTTP GET'},
+      {source: 'urllib3', target: 'pool', label: 'uses', type: 'step'},
+    ],
+  }}
+/>
+
+`requests` relies on `urllib3` under the hood. When you make a request, `urllib3` checks if there's an existing TCP connection in its connection pool. If yes, it reuses it (saving SSL handshake time). If no, it opens a new socket.
+
+## 8. Performance Table
+
+| Operation | Performance Impact | Recommendation |
+|---|---|---|
+| Single Request | Blocks the thread until server responds | Use threading or async if doing many |
+| Reusing Connections | Saves ~50-100ms per request (no SSL handshake) | Use `requests.Session()` for multiple calls |
+| Streaming Large Files | High memory if loaded at once | Use `stream=True` and read in chunks |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Is `requests` built-in? | No, it's a third-party package (`pip install requests`), unlike `urllib`. |
+| What happens if you don't set a timeout? | The request can hang forever if the server stops responding but doesn't close the socket. |
+| How do you handle authentication? | Pass an `auth=(user, pass)` tuple or set headers explicitly. |
+| Why use `requests.Session()`? | It persists cookies, headers, and reuses underlying TCP connections (connection pooling) across multiple requests. |
+| What does `raise_for_status()` do? | It raises an `HTTPError` if the response status code is 4xx or 5xx. |
+
+## 10. Tricky Questions & Edge Cases
+
+### The Infinite Hang
+
+```python
+# Bad: No timeout
+res = requests.get("https://api.slow-server.com/data")
+```
+
+If the server drops packets but never closes the TCP connection, your Python script will hang forever on this line.
+
+Bro, ALWAYS set a timeout: `requests.get(..., timeout=5)`.
+
+### Memory Crash on Large Files
+
+```python
+# Bad: Loads 2GB file into RAM
+res = requests.get("https://example.com/huge.zip")
+with open("huge.zip", "wb") as f:
+    f.write(res.content)
+```
+
+If the file is 2GB, it loads all 2GB into your RAM at once.
+
+Instead, stream it:
+```python
+res = requests.get("https://example.com/huge.zip", stream=True)
+with open("huge.zip", "wb") as f:
+    for chunk in res.iter_content(chunk_size=8192):
+        f.write(chunk)
+```
+
+## 11. Real-World Usage
+
+| Domain | Real-World Usage |
+|---|---|
+| Data Pipelines | Fetching JSON from third-party APIs (Stripe, GitHub) |
+| Web Scraping | Fetching HTML pages before passing them to BeautifulSoup |
+| Microservices | Sync communication between internal backend services |
+| Testing | Writing end-to-end API tests to verify endpoints |
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Always set a `timeout` | Rely on the default infinite timeout |
+| Use `requests.Session()` for multiple calls | Create a new request object in a loop |
+| Use `.raise_for_status()` to catch errors | Ignore 500 status codes and try to parse JSON |
+| Set a standard `User-Agent` header | Use the default python-requests user agent |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> The `requests` library is fully synchronous. If you are building a FastAPI or Asyncio app and you use `requests.get()`, you will block the entire event loop, destroying your app's performance. In async environments, use `httpx` or `aiohttp` instead.
+
+## 14. Common Mistakes
+
+| Mistake | Why It Hurts |
+|---|---|
+| Forgetting `raise_for_status()` | Your code fails later with a weird `JSONDecodeError` because it tried to parse a 404 HTML page. |
+| Not using Sessions | You waste time doing SSL handshakes over and over for the same host. |
+| Hardcoding URLs | Makes changing environments (dev vs prod) painful. |
+
+## 15. Related Topics
+
+- REST API Basics
+- FastAPI
+- Requests vs HTTPX
+- Asyncio (why requests blocks it)
+- Python Error Handling

@@ -2,6 +2,215 @@
 sidebar_position: 6
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Middleware
 
-Placeholder: introduce Middleware.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | API Middleware |
+| Difficulty | Intermediate |
+| Used For | Running code before and after every single API request |
+| Main Strength | Centralizes logic (logging, CORS, timing) so you don't repeat code |
+| Common Mistake | Doing heavy database queries inside middleware (kills performance) |
+| Performance | Adds overhead to every request; keep it fast |
+
+Bro, middleware is the code that sits *in the middle* between the incoming HTTP request and your actual route function. It's like a toll booth on a highway. Every single car (request) has to pass through it before getting to the city (your API endpoints).
+
+## 2. Real-World Analogy
+
+Think of middleware like the security checkpoint and exit scanners at a museum.
+
+**Inbound Middleware:** When you enter, the guard checks your bag. If you have a weapon, they kick you out instantly (reject request). If you are safe, they let you in and stamp your hand.
+
+**The Endpoint:** You walk around, look at art, and buy a souvenir (your core business logic).
+
+**Outbound Middleware:** When you leave, the scanner checks to make sure you didn't steal anything, and a counter ticks up to track total visitors (modify response, logging).
+
+## 3. Concept Explanation
+
+Middleware intercepts requests and responses globally.
+
+You use it for logic that applies to the entire application, such as:
+- **CORS:** Adding headers to allow browsers to make cross-origin requests.
+- **Logging:** Recording the URL, IP address, and time taken for every request.
+- **Authentication/Session:** Verifying a session cookie exists before letting traffic through.
+- **Metrics:** Sending response times to Prometheus or Datadog.
+
+If you find yourself copy-pasting the exact same code at the top of every single endpoint, bro, you need middleware.
+
+## 4. Syntax Table
+
+| Concept | Example (FastAPI) | Description |
+|---|---|---|
+| Add Middleware | `app.add_middleware(CORSMiddleware, ...)` | Attaches a built-in middleware to the app. |
+| Custom Middleware | `@app.middleware("http")` | Decorator to create custom logic. |
+| The `call_next` func | `response = await call_next(request)` | The trigger that passes the request to the endpoint. |
+| Modify Header | `response.headers["X-Time"] = "1ms"` | Modifying the response before it returns to client. |
+
+## 5. Beginner Example
+
+Let's build a simple middleware in FastAPI that measures how long every request takes.
+
+```python
+from fastapi import FastAPI, Request
+import time
+
+app = FastAPI()
+
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    start_time = time.time()
+
+    # Pass the request to the endpoint
+    response = await call_next(request)
+
+    # The endpoint is done. Now modify the response.
+    process_time = time.time() - start_time
+    response.headers["X-Process-Time"] = str(process_time)
+
+    return response
+
+@app.get("/")
+def read_root():
+    return {"message": "Hello World"}
+```
+
+Every single request to this API will now have an `X-Process-Time` header attached to it automatically.
+
+## 6. Real-World Engineering Example
+
+In production, you often use middleware to log requests in a structured format so your observability tools (like Datadog or ELK) can parse them.
+
+```python
+from fastapi import FastAPI, Request
+import logging
+import uuid
+
+app = FastAPI()
+logger = logging.getLogger("api_logger")
+
+@app.middleware("http")
+async def request_logger_middleware(request: Request, call_next):
+    # 1. Generate a unique ID for trace tracking
+    request_id = str(uuid.uuid4())
+
+    # 2. Log inbound
+    logger.info(f"IN | ID:{request_id} | {request.method} {request.url.path}")
+
+    try:
+        # 3. Process the request
+        response = await call_next(request)
+
+        # 4. Log outbound
+        logger.info(f"OUT | ID:{request_id} | Status: {response.status_code}")
+        return response
+
+    except Exception as e:
+        # Catch unhandled errors globally
+        logger.error(f"FAIL | ID:{request_id} | Error: {str(e)}")
+        raise
+```
+
+## 7. Internal Working
+
+Middleware operates like an onion.
+
+<LearningFlow
+  diagram={{
+    title: 'Middleware Onion Architecture',
+    height: 400,
+    miniMap: true,
+    nodes: [
+      {id: 'client', title: 'Client', detail: 'HTTP Request', x: 20, y: 150, kind: 'core'},
+      {id: 'mw1', title: 'CORS Middleware', detail: 'Checks Origins', x: 250, y: 50, kind: 'process'},
+      {id: 'mw2', title: 'Auth Middleware', detail: 'Checks Token', x: 450, y: 50, kind: 'process'},
+      {id: 'endpoint', title: 'Endpoint Logic', detail: 'Reads DB, creates JSON', x: 650, y: 150, kind: 'tool'},
+      {id: 'mw2_out', title: 'Auth Middleware', detail: 'Passes response back', x: 450, y: 250, kind: 'data'},
+      {id: 'mw1_out', title: 'CORS Middleware', detail: 'Appends CORS headers', x: 250, y: 250, kind: 'data'},
+    ],
+    edges: [
+      {source: 'client', target: 'mw1', label: 'Inbound'},
+      {source: 'mw1', target: 'mw2', label: 'call_next'},
+      {source: 'mw2', target: 'endpoint', label: 'call_next'},
+      {source: 'endpoint', target: 'mw2_out', label: 'Returns'},
+      {source: 'mw2_out', target: 'mw1_out', label: 'Returns'},
+      {source: 'mw1_out', target: 'client', label: 'Final HTTP Response', type: 'smoothstep'},
+    ],
+  }}
+/>
+
+When a request comes in, it passes through Middleware 1, then Middleware 2, then hits the Endpoint.
+When the Endpoint is done, the response passes back through Middleware 2, then Middleware 1, and finally to the client.
+
+## 8. Performance Table
+
+| Action in Middleware | Performance Impact | Recommendation |
+|---|---|---|
+| Adding Headers | O(1) Negligible | Safe. Do it as much as needed. |
+| Logging to Terminal | Very fast | Safe, but async logging is better for high scale. |
+| Hitting the Database | Slow (Blocking) | Avoid. If you DB-query in middleware, EVERY request gets slower. |
+| External API Call | Very Slow | NEVER do this in middleware unless cached heavily. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is Middleware? | Code that executes before the request reaches the endpoint, and after the endpoint returns a response. |
+| What is the "Onion Architecture"? | Requests go through middleware layers inward to the core endpoint, and responses go back outward through the same layers. |
+| What is CORS middleware used for? | Cross-Origin Resource Sharing. It adds headers allowing a frontend on one domain to call an API on a different domain. |
+| Why is `call_next` important? | It pauses the middleware, passes control to the next layer/endpoint, and waits for the response to return. |
+
+## 10. Tricky Questions & Edge Cases
+
+### Reading the Body in Middleware
+
+```python
+# DANGEROUS IN FASTAPI / STARLETTE
+@app.middleware("http")
+async def log_body(request: Request, call_next):
+    body = await request.body()  # Consumes the stream!
+    print(body)
+    return await call_next(request)
+```
+
+Bro, HTTP bodies are streams. If you read the stream in the middleware, the stream is empty when it reaches your endpoint! Your endpoint will hang or crash.
+
+If you must read the body in middleware, you have to read it, save it, and inject a *new* fake stream back into the request. (It's complex—usually better to just read bodies at the endpoint level).
+
+## 11. Real-World Usage
+
+| Domain | Real-World Usage |
+|---|---|
+| Security | Rate limiting. Rejecting IPs that make 10,000 requests a minute before they even touch the app logic. |
+| Multi-tenancy | Reading a `X-Tenant-Id` header and setting up the database context for that specific customer globally. |
+| Error Handling | Catching unhandled 500 exceptions globally and formatting them as standard JSON. |
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use built-in middleware for standard things (CORS, GZip) | Write your own CORS logic from scratch |
+| Keep middleware execution under 5ms | Do heavy computation or slow DB lookups |
+| Use middleware for global cross-cutting concerns | Put business logic (like user creation) in middleware |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Order matters! If you put Authentication middleware *after* CORS middleware, the browser's preflight `OPTIONS` requests (which don't have auth headers) will get rejected, breaking your web app. Always put CORS at the very outer edge of the onion.
+
+## 14. Common Mistakes
+
+| Mistake | Why It Hurts |
+|---|---|
+| Forgetting to `return response` | The client's request hangs forever because the middleware swallowed the response. |
+| Assuming order doesn't matter | Middleware executes in the order it is added. If a logger is added last, it won't catch errors thrown by earlier middleware. |
+
+## 15. Related Topics
+
+- FastAPI
+- Authentication
+- API Versioning
+- Rate Limiting

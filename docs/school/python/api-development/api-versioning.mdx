@@ -2,6 +2,204 @@
 sidebar_position: 7
 ---
 
-# Api Versioning
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Api Versioning.
+# API Versioning
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | API Versioning |
+| Difficulty | Intermediate |
+| Used For | Updating an API without breaking existing clients |
+| Main Strength | Allows backwards compatibility while moving forward |
+| Common Mistake | Introducing breaking changes without bumping the version |
+| Performance | No direct impact, mostly an architectural and routing choice |
+
+Bro, once an API is in production and other teams (or companies) rely on it, you can never just change the data structure. If you change a key from `first_name` to `firstName`, every mobile app relying on `first_name` will instantly crash.
+
+API Versioning solves this by creating parallel realities of your API.
+
+## 2. Real-World Analogy
+
+Think of API Versioning like car models.
+
+Honda sells the 2020 Civic (v1) and the 2024 Civic (v2).
+If Honda invents a new engine design for 2024, they don't recall every 2020 Civic and force them to upgrade their engines (that would break the old cars). They just keep selling parts for the 2020 Civic, while all new buyers get the 2024 Civic. Eventually, they announce they will no longer support the 2020 model (Deprecation), forcing people to eventually buy the new one.
+
+## 3. Concept Explanation
+
+API Versioning is the practice of managing changes to your API endpoints.
+
+You must version your API when you introduce **Breaking Changes**:
+- Removing or renaming fields in a response.
+- Changing the data type of a field (e.g., string to int).
+- Changing endpoint URLs.
+- Changing required authentication types.
+
+You do NOT need to version for **Non-Breaking Changes**:
+- Adding new endpoints.
+- Adding new optional fields to a response.
+
+## 4. Syntax Table
+
+There are three common ways to version an API:
+
+| Method | Example | Pros & Cons |
+|---|---|---|
+| **URI Routing** | `GET /v1/users` | Pro: Easiest to read and cache. Con: Can pollute routing. |
+| **Query Param** | `GET /users?version=1` | Pro: Clean URLs. Con: Harder to manage in frameworks. |
+| **Headers** | `Accept: application/vnd.company.v1+json` | Pro: Most RESTful. Con: Hard to test in browser. |
+
+Bro, in 90% of cases, just use URI Routing (`/v1/`). It's the industry standard (used by Stripe, Twitter, GitHub).
+
+## 5. Beginner Example
+
+Here is how you handle URI versioning using FastAPI routers.
+
+```python
+from fastapi import FastAPI, APIRouter
+
+app = FastAPI()
+
+# V1 Router
+v1_router = APIRouter(prefix="/v1")
+
+@v1_router.get("/users")
+def get_users_v1():
+    # Old structure
+    return [{"user_id": 1, "name": "Asha"}]
+
+# V2 Router
+v2_router = APIRouter(prefix="/v2")
+
+@v2_router.get("/users")
+def get_users_v2():
+    # New structure
+    return [{"id": 1, "first_name": "Asha", "last_name": "Sharma"}]
+
+# Attach routers to the main app
+app.include_router(v1_router)
+app.include_router(v2_router)
+```
+
+Now, old mobile apps calling `/v1/users` keep working perfectly, while the new web app calls `/v2/users`.
+
+## 6. Real-World Engineering Example
+
+If you have a large app, you don't want to copy-paste your database queries for every version. You map the core data differently in the view layer.
+
+```python
+# A single DB function
+def fetch_user_from_db():
+    return {"id": 101, "full_name": "Rahul Das"}
+
+# V1 Endpoint
+@app.get("/v1/user")
+def user_v1():
+    user = fetch_user_from_db()
+    # Translate to V1 contract
+    return {"name": user["full_name"]}
+
+# V2 Endpoint
+@app.get("/v2/user")
+def user_v2():
+    user = fetch_user_from_db()
+    # Translate to V2 contract
+    first, last = user["full_name"].split(" ", 1)
+    return {"first_name": first, "last_name": last}
+```
+
+## 7. Internal Working
+
+How does traffic reach the correct logic?
+
+<LearningFlow
+  diagram={{
+    title: 'API Version Routing',
+    height: 400,
+    miniMap: true,
+    nodes: [
+      {id: 'client_old', title: 'Legacy iOS App', detail: 'GET /v1/users', x: 20, y: 50, kind: 'core'},
+      {id: 'client_new', title: 'New Web App', detail: 'GET /v2/users', x: 20, y: 250, kind: 'core'},
+      {id: 'router', title: 'API Gateway / Router', detail: 'Matches URL prefix', x: 250, y: 150, kind: 'process'},
+      {id: 'v1_logic', title: 'V1 Controller', detail: 'Returns {"name": "Asha"}', x: 550, y: 50, kind: 'data'},
+      {id: 'v2_logic', title: 'V2 Controller', detail: 'Returns {"first": "Asha"}', x: 550, y: 250, kind: 'data'},
+    ],
+    edges: [
+      {source: 'client_old', target: 'router', label: 'HTTP GET'},
+      {source: 'client_new', target: 'router', label: 'HTTP GET'},
+      {source: 'router', target: 'v1_logic', label: 'If /v1/'},
+      {source: 'router', target: 'v2_logic', label: 'If /v2/', type: 'step'},
+    ],
+  }}
+/>
+
+At the framework level, the router looks at the URL path (`/v1` or `/v2`). It treats them as two completely separate endpoints that happen to be running in the same application.
+
+## 8. Performance Table
+
+| Strategy | Dev Overhead | Runtime Overhead |
+|---|---|---|
+| Copying all code for V2 | High (Code Duplication) | None |
+| Adapters / Mappers | Low | Minimal CPU (Dict translation) |
+| API Gateway routing | Medium | Network hop (if routing to a different microservice) |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| When should you bump an API version? | When introducing a breaking change (e.g., deleting a field, renaming a key, changing a type). |
+| Is adding a new field a breaking change? | No. Clients should be programmed to ignore fields they don't understand. |
+| What are the 3 ways to version an API? | URL prefix (`/v1`), Query parameter (`?v=1`), Custom Headers (`Accept: v=1`). |
+| How do you handle API deprecation? | Communicate the sunset date, monitor usage, add sunset HTTP headers, and eventually return 410 Gone. |
+
+## 10. Tricky Questions & Edge Cases
+
+### The "Forever V1" Problem
+
+Bro, companies often put `/v1/` on their API and then never release a V2. They just keep adding optional fields forever. This isn't actually bad! It means they successfully avoided breaking changes. Only create V2 when you absolutely *must* change the core structure.
+
+### Deprecating an Endpoint
+
+If you want to turn off V1, you can't just delete it.
+1. Log all clients still using V1.
+2. Email them with a 6-month deadline.
+3. Start returning `Sunset` and `Deprecation` HTTP headers on V1 endpoints.
+4. On the deadline date, shut it down.
+
+## 11. Real-World Usage
+
+| Domain | Real-World Usage |
+|---|---|
+| Stripe | Uses "Date-Based" versioning in headers (e.g., `Stripe-Version: 2023-10-16`). Very advanced, allowing granular rollbacks. |
+| GitHub | Moved from REST (v3) to GraphQL (v4), showing versions can represent entirely different paradigms. |
+| Mobile Backends | Since you can't force a user to update their phone app, mobile APIs often support V1, V2, and V3 simultaneously for years. |
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Version from Day 1 (`/v1/`) | Release without versions and try to add `/v2/` later |
+| Map old endpoints to new underlying logic to avoid code duplication | Copy-paste the entire database layer for every version |
+| Document which version is current and which is deprecated | Break changes silently |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Supporting multiple versions increases your maintenance burden. If you have a bug in the DB query, you have to make sure the fix doesn't accidentally break the V1 adapter. Always write integration tests for *every active version* of your API.
+
+## 14. Common Mistakes
+
+| Mistake | Why It Hurts |
+|---|---|
+| Using `?v=1` instead of `/v1/` | Many caching proxies (like Varnish or Cloudfront) struggle to cache query parameters effectively compared to hard URL paths. |
+| Changing validation on V1 | If V1 allowed nulls, and you update the DB to `NOT NULL`, V1 will suddenly start crashing for old clients. Breaking changes include DB restrictions! |
+
+## 15. Related Topics
+
+- REST API Basics
+- FastAPI Routers
+- Flask Blueprints
+- Middleware

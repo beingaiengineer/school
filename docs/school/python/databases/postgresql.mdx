@@ -2,6 +2,235 @@
 sidebar_position: 2
 ---
 
-# Postgresql
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Postgresql.
+# PostgreSQL
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | PostgreSQL with Python |
+| Difficulty | Intermediate |
+| Used For | Production-grade relational database systems |
+| Main Strength | Handles massive scale, high concurrency, and advanced data types (JSONB) |
+| Common Mistake | Leaving idle database connections open, exhausting the connection pool |
+| Performance | Enterprise-level. Fast reads and writes under heavy multi-user load |
+
+Bro, PostgreSQL (often just called Postgres) is the gold standard for relational databases. If you are building a real-world web application, microservice, or AI backend, this is usually the default choice.
+
+## 2. Real-World Analogy
+
+Think of Postgres like a massive, high-security corporate warehouse.
+
+SQLite is a filing cabinet in your office (fast, but only you can use it). Postgres is a warehouse with 50 loading docks. Thousands of trucks (users) can drop off and pick up boxes simultaneously. It has strict security guards (roles/permissions), automated inventory systems (triggers/views), and can even store complex packages, not just standard boxes (JSON/Arrays).
+
+Because it's a massive warehouse, you have to establish a connection (drive there) before you can use it, which has overhead.
+
+## 3. Concept Explanation
+
+PostgreSQL is a client-server database. Your Python application (the client) connects over a network (TCP/IP) to the Postgres Server.
+
+In Python, you don't use a built-in library like `sqlite3`. You use a third-party driver. The most famous is `psycopg2` (or the newer `psycopg 3`).
+
+You use Postgres when:
+- You expect multiple users to write to the DB at the same time.
+- You need strict data integrity and ACID transactions.
+- You need advanced features like JSON fields, geospatial data (PostGIS), or full-text search.
+
+## 4. Syntax Table
+
+| Operation | Code (using `psycopg`) | Description |
+|---|---|---|
+| Import | `import psycopg` | Import the driver |
+| Connect | `psycopg.connect("dbname=test user=postgres")` | Connect via DSN string |
+| Create Cursor | `cursor = conn.cursor()` | Object used to execute queries |
+| Execute | `cursor.execute("SELECT * FROM table")` | Run SQL |
+| Fetch | `cursor.fetchall()` | Retrieve rows |
+| JSONB Query | `SELECT data->'name' FROM users;` | Query inside a JSON column natively |
+
+## 5. Beginner Example
+
+Make sure you `pip install psycopg` first.
+
+```python
+import psycopg
+
+# 1. Connect to an existing database
+conn = psycopg.connect(
+    host="localhost",
+    dbname="my_company",
+    user="admin",
+    password="password123"
+)
+
+# 2. Open a cursor to perform database operations
+with conn.cursor() as cur:
+
+    # 3. Execute a command (safe from SQL injection)
+    cur.execute(
+        "INSERT INTO employees (name, role) VALUES (%s, %s)",
+        ("Asha", "Engineer")
+    )
+
+    # 4. Query the database
+    cur.execute("SELECT * FROM employees")
+
+    # Print the first row
+    print(cur.fetchone())
+
+# 5. Make the changes to the database persistent
+conn.commit()
+
+# 6. Close communication
+conn.close()
+```
+
+Output:
+```text
+(1, 'Asha', 'Engineer')
+```
+
+Bro, notice that `psycopg` uses `%s` for parameters, not `?` like SQLite does.
+
+## 6. Real-World Engineering Example
+
+In production, connection drops happen. Databases restart. You must handle exceptions and always rollback on failure.
+
+```python
+import psycopg
+from psycopg.errors import UniqueViolation
+
+def register_user(email: str, password_hash: str):
+    conn = psycopg.connect("dbname=prod user=admin")
+
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO users (email, password) VALUES (%s, %s) RETURNING id",
+                (email, password_hash)
+            )
+            # Fetch the auto-incremented ID that was returned
+            user_id = cur.fetchone()[0]
+            conn.commit()
+            print(f"Created user {user_id}")
+            return user_id
+
+    except UniqueViolation:
+        # User already exists! Rollback the transaction.
+        conn.rollback()
+        print(f"Error: Email {email} is already taken.")
+
+    except Exception as e:
+        conn.rollback()
+        print("Database error occurred.")
+
+    finally:
+        # Always close the connection in a finally block
+        conn.close()
+```
+
+## 7. Internal Working
+
+How does Postgres handle multiple Python apps talking to it?
+
+<LearningFlow
+  diagram={{
+    title: 'Postgres Connection Flow',
+    height: 400,
+    miniMap: true,
+    nodes: [
+      {id: 'py1', title: 'Python App 1', detail: 'Runs INSERT', x: 20, y: 50, kind: 'core'},
+      {id: 'py2', title: 'Python App 2', detail: 'Runs SELECT', x: 20, y: 250, kind: 'core'},
+      {id: 'pg_main', title: 'Postgres Postmaster', detail: 'Listens on port 5432', x: 250, y: 150, kind: 'process'},
+      {id: 'pg_work1', title: 'Worker Process 1', detail: 'Handles App 1', x: 500, y: 50, kind: 'tool'},
+      {id: 'pg_work2', title: 'Worker Process 2', detail: 'Handles App 2', x: 500, y: 250, kind: 'tool'},
+      {id: 'shared_mem', title: 'Shared Memory', detail: 'Handles MVCC & Locks', x: 750, y: 150, kind: 'data'},
+    ],
+    edges: [
+      {source: 'py1', target: 'pg_main', label: 'TCP Connect'},
+      {source: 'py2', target: 'pg_main', label: 'TCP Connect'},
+      {source: 'pg_main', target: 'pg_work1', label: 'Forks'},
+      {source: 'pg_main', target: 'pg_work2', label: 'Forks'},
+      {source: 'pg_work1', target: 'shared_mem', label: 'Writes'},
+      {source: 'pg_work2', target: 'shared_mem', label: 'Reads concurrently', type: 'smoothstep'},
+    ],
+  }}
+/>
+
+When Python connects to Postgres, the main Postgres server (`postmaster`) spawns a dedicated worker process just for that connection.
+Because Postgres uses **MVCC (Multi-Version Concurrency Control)**, App 2 can safely read the database while App 1 is writing to it. App 2 just sees the "old" version of the data until App 1 commits. No "Database is locked" errors here, bro!
+
+## 8. Performance Table
+
+| Feature | Postgres Capability |
+|---|---|
+| Concurrency | Massive. Readers do not block writers. |
+| Connection Overhead | High. Opening a TCP connection and forking a Postgres process is slow. |
+| Complex Queries | Excellent. Highly optimized query planner for JOINs. |
+| Storage Types | Native JSONB support makes it almost act like MongoDB when needed. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Postgres vs SQLite? | Postgres is a client-server model built for heavy concurrency. SQLite is a serverless local file built for simplicity. |
+| What is MVCC? | Multi-Version Concurrency Control. It ensures that read queries are not blocked by write operations happening at the same time. |
+| What is JSONB? | A binary JSON data type in Postgres. It allows you to store JSON documents and index/query them incredibly fast. |
+| Why shouldn't you open a new connection for every request? | Opening a Postgres connection takes time (~20-50ms) and RAM. You should use a **Connection Pool**. |
+
+## 10. Tricky Questions & Edge Cases
+
+### The "Idle in Transaction" Killer
+
+```python
+with conn.cursor() as cur:
+    cur.execute("SELECT * FROM users")
+    # ... do 5 minutes of Python API calls here ...
+```
+
+If you start a transaction (execute a query) and then leave Python hanging doing something else (like calling a slow API), the database transaction stays "open". Postgres has to hold locks in memory. If you do this enough, the entire database runs out of connections and crashes.
+**Rule:** Keep database transactions as fast and short as possible.
+
+### Using %s vs ?
+
+In SQLite, the placeholder is `?`.
+In `psycopg2`, the placeholder is `%s`.
+
+Bro, even if the value is an integer, you STILL use `%s`. Do not use `%d`. `psycopg2` handles the type conversion.
+
+## 11. Real-World Usage
+
+| Domain | Real-World Usage |
+|---|---|
+| Enterprise SaaS | Storing users, billing info, and complex relational data. |
+| Geospatial Apps | Using the `PostGIS` extension to calculate distances between coordinates directly in SQL (Uber, Swiggy use this logic). |
+| AI / RAG Pipelines | Using `pgvector` extension to store LLM embeddings and perform similarity searches. |
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use Connection Pooling (e.g., `psycopg_pool` or `PgBouncer`) | Open and close a TCP connection on every single API request |
+| Put `RETURNING id` at the end of an INSERT query | Run a second `SELECT` query just to get the ID you just created |
+| Catch DB exceptions and explicitly `conn.rollback()` | Let exceptions happen and leave broken transactions hanging |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Never expose your Postgres port (5432) to the public internet. It should sit in a private subnet, and only your Python backend/API servers should be allowed to talk to it.
+
+## 14. Common Mistakes
+
+| Mistake | Why It Hurts |
+|---|---|
+| Fetching 1,000,000 rows at once | `cursor.fetchall()` loads all rows into Python's RAM. Your server will crash with an Out of Memory error. Use `fetchmany()` or server-side cursors for huge queries. |
+| SQL Injection via string formatting | Using `f"SELECT * FROM users WHERE name = '{user}'"` instead of parameterized `%s`. |
+
+## 15. Related Topics
+
+- SQLite
+- Connection Pooling
+- ORM vs Raw SQL
+- SQLAlchemy
+- AI Engineering (Vector Databases with pgvector)
