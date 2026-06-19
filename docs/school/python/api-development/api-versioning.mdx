@@ -2,6 +2,240 @@
 sidebar_position: 7
 ---
 
-# Api Versioning
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Api Versioning.
+# API Versioning
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | API Versioning |
+| Difficulty | Intermediate |
+| Used For | Updating an API without breaking existing client applications |
+| Common Mistake | Making breaking changes (like removing a field) to a live API without bumping the version |
+| Performance | No direct impact, strictly an architectural and routing decision |
+
+---
+
+## 2. Real-World Analogy
+
+Bro, think of API Versioning like releasing a new model of a car part.
+
+If you make a new alternator (v2) that has a completely different plug than the old one (v1), you can't just sneak into people's garages and swap it out. Their cars will stop working.
+Instead, you keep selling the v1 alternator for the old cars, while offering the new v2 alternator for the new cars. Eventually, you tell the old car owners, "Hey, we are going to stop making v1 next year, please upgrade."
+API versioning ensures you don't break the apps (cars) of clients who are currently relying on your data structure.
+
+---
+
+## 3. Concept Explanation
+
+When you build an API, mobile apps, web apps, and other servers rely on the exact JSON structure you return.
+If you decide to rename the field `user_name` to `full_name`, any app looking for `user_name` will crash. This is a **Breaking Change**.
+
+To solve this, we use API Versioning. We leave the old endpoint (`/v1/users`) alone, and create a new endpoint (`/v2/users`) with the new structure. Old clients keep working, new clients get the new features.
+
+---
+
+## 4. Syntax Table
+
+| Versioning Strategy | Example | Explanation |
+|---|---|---|
+| URI Path (Most Common) | `/api/v1/users` | Easy to cache, route, and read in logs. |
+| Query Parameter | `/api/users?version=1` | Simple to implement, but less clean. |
+| Custom Header | `X-API-Version: 1.0` | Keeps URLs clean, but harder to test in a browser. |
+| Accept Header | `Accept: application/vnd.myapi.v1+json` | The most "RESTful" but the hardest for clients to use. |
+
+---
+
+## 5. Beginner Example
+
+Let's look at how to implement basic URL path versioning in FastAPI using API Routers.
+
+```python
+from fastapi import FastAPI, APIRouter
+
+app = FastAPI()
+
+# Create separate routers for each version
+v1_router = APIRouter(prefix="/api/v1")
+v2_router = APIRouter(prefix="/api/v2")
+
+# V1 Endpoint
+@v1_router.get("/users")
+async def get_users_v1():
+    # Returns old structure
+    return {"user_name": "John Doe", "age": 25}
+
+# V2 Endpoint
+@v2_router.get("/users")
+async def get_users_v2():
+    # Returns new structure (breaking change!)
+    return {
+        "full_name": "John Doe",
+        "date_of_birth": "1998-05-15",
+        "email": "john@example.com"
+    }
+
+# Register routers with the main app
+app.include_router(v1_router)
+app.include_router(v2_router)
+```
+
+---
+
+## 6. Real-World Engineering Example
+
+In production, keeping a bunch of `v1` and `v2` files synchronized is a nightmare. Instead of copying all your logic, you extract the business logic into shared services, and only version the *presentation* (routing/serialization) layer.
+
+```python
+# --- Shared Service (The Core Logic) ---
+def get_user_from_db(user_id: int):
+    # Imagine this hits a DB and returns a User ORM object
+    return type('User', (), {"first": "John", "last": "Doe", "age": 30})()
+
+# --- V1 Router ---
+from fastapi import APIRouter
+v1 = APIRouter(prefix="/v1")
+
+@v1.get("/users/{user_id}")
+async def get_v1(user_id: int):
+    user = get_user_from_db(user_id)
+    # Old clients expect "name"
+    return {"name": f"{user.first} {user.last}"}
+
+# --- V2 Router ---
+v2 = APIRouter(prefix="/v2")
+
+@v2.get("/users/{user_id}")
+async def get_v2(user_id: int):
+    user = get_user_from_db(user_id)
+    # New clients expect split fields
+    return {"first_name": user.first, "last_name": user.last, "age": user.age}
+```
+
+---
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    {
+      id: '1',
+      type: 'core',
+      data: { title: 'Old iOS App', label: 'Needs "user_name"' },
+      position: { x: 50, y: 100 },
+    },
+    {
+      id: '2',
+      type: 'core',
+      data: { title: 'New Web App', label: 'Needs "full_name"' },
+      position: { x: 50, y: 250 },
+    },
+    {
+      id: '3',
+      type: 'process',
+      data: { title: 'API Gateway / Router', label: 'Inspects URL /v1 or /v2' },
+      position: { x: 300, y: 175 },
+    },
+    {
+      id: '4',
+      type: 'process',
+      data: { title: 'V1 Controller', label: 'Formats old JSON' },
+      position: { x: 550, y: 100 },
+    },
+    {
+      id: '5',
+      type: 'process',
+      data: { title: 'V2 Controller', label: 'Formats new JSON' },
+      position: { x: 550, y: 250 },
+    },
+    {
+      id: '6',
+      type: 'data',
+      data: { title: 'Shared DB / Logic', label: 'Same backend data' },
+      position: { x: 800, y: 175 },
+    },
+    { id: 'e1', source: '1', target: '3', label: 'GET /v1/users', type: 'smoothstep' },
+    { id: 'e2', source: '2', target: '3', label: 'GET /v2/users', type: 'smoothstep' },
+    { id: 'e3', source: '3', target: '4', type: 'smoothstep' },
+    { id: 'e4', source: '3', target: '5', type: 'smoothstep' },
+    { id: 'e5', source: '4', target: '6', type: 'smoothstep' },
+    { id: 'e6', source: '5', target: '6', type: 'smoothstep' }
+  ]}
+/>
+
+Versioning works by separating the Route layer from the Data layer.
+The database structure might evolve, but your `v1` controller acts as an adapter. It takes the new database format and forcefully maps it back to the old JSON structure so legacy apps don't crash.
+The `v2` controller takes the exact same data but formats it the new way.
+
+---
+
+## 8. Performance Table
+
+| Aspect | Note |
+|---|---|
+| Routing Speed | Negligible difference. A router checking `/v1` vs `/v2` takes microseconds. |
+| Code Maintenance | High cost. You have to maintain two codebases/schemas simultaneously. |
+| Payload Size | Often `v2` removes bloated fields, improving network performance slightly. |
+
+---
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| When should you bump an API version? | Only on **Breaking Changes** (e.g., changing a field type, removing a field, changing URL structure). Adding a *new* field to a JSON response is generally not considered breaking. |
+| Which versioning method is best? | URL Path (`/v1/`) is the industry standard because it's easiest to cache, easiest to log, and easiest for developers to copy-paste into Postman. |
+| How long do you maintain old versions? | Until you can deprecate them. You announce a deprecation timeline (e.g., 6 months), monitor the logs to see who is still using it, warn them, and eventually turn it off. |
+
+---
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, you add a new optional query parameter to your `/v1/search` endpoint. Do you need to create `/v2/search`?
+
+**Answer: NO.**
+Adding *new*, optional functionality does not break old clients. The old client will just keep calling the endpoint without the query parameter, and it will keep working.
+If you make that query parameter *required*, then yes, it's a breaking change, because old clients won't send it and will receive a 400 Error. In that case, you must bump to v2.
+
+---
+
+## 11. Real-World Usage
+
+- **Stripe API:** Stripe is famous for having heavily versioned APIs based on dates (`2020-08-27`). If you wrote code in 2020, Stripe will forever pretend the API is the 2020 version just for you, even though their internal systems have upgraded heavily.
+- **Mobile Apps:** Users hate updating apps. If you release a new backend, you might have users on a 3-year-old version of your iOS app. You MUST maintain `v1` until those users upgrade.
+
+---
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Version from Day 1. Start with `/v1/`. | Wait until you need to make a breaking change to figure out how to add `/v2/` to root URLs. |
+| Deprecate gracefully. Use headers like `Warning: 299 - "API deprecated"` to warn clients. | Turn off `v1` overnight and crash production clients. |
+| Keep the business logic shared behind the scenes. | Copy-paste your entire backend codebase into a new `v2` folder. |
+
+---
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> API Gateways (like AWS API Gateway or Kong) can handle routing versions before the request even hits your Python server. You can have `/v1/` route to a legacy Flask container, and `/v2/` route to a brand new FastAPI container. This allows you to rewrite your backend piece-by-piece without the client ever knowing.
+
+---
+
+## 14. Common Mistakes
+
+- **SemVer in URLs:** Doing `/v1.2.4/users`. Don't do this. Only use major versions (`/v1/`, `/v2/`) in the URL. Minor patches shouldn't break clients anyway.
+- **Changing Data Types:** Changing `id` from an integer (`123`) to a string (`"123"`) in `v1`. This is a classic breaking change that crashes statically typed clients (Java, Swift).
+- **Infinite Maintenance:** Refusing to ever turn off `v1`. The technical debt of maintaining 5 versions of an API will paralyze a development team.
+
+---
+
+## 15. Related Topics
+
+- REST API Basics
+- FastAPI
+- Middleware
+- Production Architecture

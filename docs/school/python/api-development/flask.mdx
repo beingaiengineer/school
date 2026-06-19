@@ -2,6 +2,239 @@
 sidebar_position: 4
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Flask
 
-Placeholder: introduce Flask.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Flask |
+| Difficulty | Beginner / Intermediate |
+| Used For | Building simple to complex web applications and REST APIs |
+| Common Mistake | Cramming all logic into one giant `app.py` file instead of using Blueprints |
+| Performance | Synchronous/blocking by default; highly reliable but lower raw throughput than FastAPI |
+
+---
+
+## 2. Real-World Analogy
+
+Bro, think of Flask like an empty toolbox.
+
+When you buy it, it just comes with a hammer (Routing) and a tape measure (Templates). It doesn't force you to build your house a specific way. If you need a drill (Database ORM) or a saw (Form Validation), you have to go buy them separately (`Flask-SQLAlchemy`, `Flask-WTF`). It is a "Microframework".
+Django, by contrast, is like buying a fully-furnished house. You get everything out of the box, but you have to live with their interior design.
+
+---
+
+## 3. Concept Explanation
+
+Flask is a popular Python microframework for web development. It is designed to be lightweight, easy to understand, and highly extensible.
+
+Unlike modern frameworks like FastAPI, Flask was built in a synchronous era (using WSGI). While it has recently added some async support, its core DNA is synchronous. It relies heavily on third-party extensions to add features like database integration, authentication, and API serialization.
+
+---
+
+## 4. Syntax Table
+
+| Operation | Syntax | Explanation |
+|---|---|---|
+| Start App | `app = Flask(__name__)` | Initializes the Flask application. |
+| Define Route | `@app.route("/")` | Decorator to map a URL to a function. |
+| Specific HTTP Verbs | `@app.route("/submit", methods=["POST"])` | Restrict a route to specific methods. |
+| Path Variables | `@app.route("/user/<username>")` | Capture URL variables. |
+
+---
+
+## 5. Beginner Example
+
+Let's build a classic "Hello World" API in Flask.
+
+```python
+from flask import Flask, jsonify
+
+# Create the app
+app = Flask(__name__)
+
+# Define a simple GET route
+@app.route("/")
+def home():
+    return "Hello, bro!"
+
+# Define a route returning JSON
+@app.route("/api/data", methods=["GET"])
+def get_data():
+    return jsonify({"status": "success", "message": "Flask is easy!"})
+
+# Run the dev server
+if __name__ == "__main__":
+    # debug=True automatically reloads the server when code changes
+    app.run(debug=True, port=5000)
+```
+
+---
+
+## 6. Real-World Engineering Example
+
+In production, you organize your routes using `Blueprints` (like mini-apps) and handle request data securely.
+
+```python
+from flask import Flask, request, jsonify, Blueprint
+
+app = Flask(__name__)
+
+# Create a Blueprint for user-related routes
+users_bp = Blueprint('users', __name__, url_prefix='/api/users')
+
+@users_bp.route('/', methods=['POST'])
+def create_user():
+    # Safely get JSON data
+    data = request.get_json(silent=True)
+
+    if not data or 'username' not in data:
+        # Return 400 Bad Request
+        return jsonify({"error": "Missing username, bro"}), 400
+
+    username = data['username']
+
+    # Fake database save
+    return jsonify({"message": f"User {username} created", "id": 1}), 201
+
+# Register the blueprint to the main app
+app.register_blueprint(users_bp)
+
+if __name__ == "__main__":
+    app.run()
+```
+
+---
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    {
+      id: '1',
+      type: 'core',
+      data: { title: 'WSGI Server (Gunicorn)', label: 'Manages Thread Workers' },
+      position: { x: 50, y: 150 },
+    },
+    {
+      id: '2',
+      type: 'process',
+      data: { title: 'Werkzeug Router', label: 'URL Routing Engine' },
+      position: { x: 300, y: 150 },
+    },
+    {
+      id: '3',
+      type: 'data',
+      data: { title: 'Flask Context', label: 'Sets Global request object' },
+      position: { x: 550, y: 150 },
+    },
+    {
+      id: '4',
+      type: 'process',
+      data: { title: 'View Function', label: 'Your Python Code' },
+      position: { x: 800, y: 150 },
+    },
+    {
+      id: '5',
+      type: 'output',
+      data: { title: 'HTTP Response', label: 'Returned to WSGI Server' },
+      position: { x: 550, y: 300 },
+    },
+    { id: 'e1', source: '1', target: '2', label: 'HTTP Request', type: 'smoothstep' },
+    { id: 'e2', source: '2', target: '3', label: 'Match Route', type: 'smoothstep' },
+    { id: 'e3', source: '3', target: '4', label: 'Inject Context', type: 'smoothstep' },
+    { id: 'e4', source: '4', target: '5', label: 'Return Tuple/Dict', style: { strokeDasharray: '5,5' }, type: 'straight' },
+    { id: 'e5', source: '5', target: '1', label: 'Format Response', animated: true, type: 'smoothstep' }
+  ]}
+/>
+
+Flask relies on **Werkzeug** (a WSGI utility library) for routing and **Jinja2** for templating.
+When a request comes in, Flask pushes a "Request Context". This allows you to import a global `request` object (`from flask import request`) and use it magically inside your function, without passing it as an argument. The WSGI server (like Gunicorn) handles the actual networking, usually spinning up multiple worker processes or threads to handle concurrent requests.
+
+---
+
+## 8. Performance Table
+
+| Aspect | Details |
+|---|---|
+| Concurrency | Poor natively. Rely on Gunicorn workers/threads. |
+| Memory Footprint | Very low. It's incredibly lightweight. |
+| Ease of Scaling | Easy to horizontally scale behind a load balancer since it's stateless. |
+
+---
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Flask vs Django? | Flask is a microframework (do-it-yourself, lightweight). Django is "batteries-included" (has an ORM, admin panel, auth built-in, but is heavy). |
+| What are Flask Blueprints? | A way to organize your Flask application into distinct components (like modules) to prevent a massive `app.py` file. |
+| How does the `request` object work in Flask? | It is a "Thread-Local" global object. It magically represents the current HTTP request being processed by that specific thread. |
+| What is WSGI? | Web Server Gateway Interface. The standard Python specification for web servers to communicate with synchronous web applications like Flask. |
+
+---
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, what is wrong with using a global variable to store state in Flask?
+
+```python
+from flask import Flask
+app = Flask(__name__)
+
+counter = 0
+
+@app.route("/increment")
+def increment():
+    global counter
+    counter += 1
+    return f"Count: {counter}"
+```
+
+**Why it's tricky:** In production, Flask runs behind Gunicorn with multiple *Worker Processes* (e.g., 4 workers). Each worker has its own separate memory space. If User A hits Worker 1, the counter is 1. If User B hits Worker 2, the counter is 1. The state is completely fragmented.
+**Rule:** Never use global variables for state in a web application. Use a database or Redis!
+
+---
+
+## 11. Real-World Usage
+
+- **Simple Microservices:** Small, focused APIs doing one specific task inside a larger system.
+- **Data Science Dashboards:** Integrating Python data scripts with a web frontend.
+- **Legacy Systems:** Thousands of massive production systems were built in Flask before FastAPI existed.
+
+---
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use Blueprints to structure your code logically. | Put all your routes, DB models, and logic into one `app.py`. |
+| Use `request.get_json(silent=True)` to safely parse incoming JSON. | Access `request.json` directly without error handling (it throws a 400 error instantly if parsing fails). |
+| Return a tuple like `return jsonify(data), 201` for proper status codes. | Return only strings and let Flask default to 200 OK for everything. |
+
+---
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Never use `app.run()` in production. The built-in Werkzeug server is designed for local development and will fall over under load. Always deploy Flask using a production-grade WSGI server like Gunicorn (`gunicorn -w 4 'main:app'`) behind a reverse proxy like Nginx.
+
+---
+
+## 14. Common Mistakes
+
+- **Circular Imports:** Because Flask heavily relies on global app instances and decorators, circular imports are the #1 headache for beginners trying to split their code into multiple files. (Use Blueprints or Application Factories to fix this).
+- **Hardcoding Secrets:** Putting `app.secret_key = "my_secret"` in the code instead of using environment variables.
+- **Missing Validation:** Because Flask lacks Pydantic built-in, developers often forget to strictly validate incoming JSON payloads, leading to crashes deeper in the code.
+
+---
+
+## 15. Related Topics
+
+- REST API Basics
+- FastAPI
+- Middleware
+- Authentication

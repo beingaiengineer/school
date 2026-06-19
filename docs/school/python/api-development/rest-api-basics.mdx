@@ -2,6 +2,243 @@
 sidebar_position: 2
 ---
 
-# Rest Api Basics
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Rest Api Basics.
+# REST API Basics
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | REST API Basics |
+| Difficulty | Beginner / Intermediate |
+| Used For | Standardized communication between client and server over HTTP |
+| Common Mistake | Using GET for operations that change data on the server |
+| Performance | Depends on network/server, generally fast and stateless |
+
+---
+
+## 2. Real-World Analogy
+
+Bro, think of a REST API like ordering food at a restaurant.
+
+You (the Client) look at the menu (the API Documentation) and decide you want a burger. You can't just walk into the kitchen and cook it yourself. You give your order (the Request) to the waiter (the REST API). The waiter takes the order to the kitchen (the Server/Database). The kitchen makes the burger, and the waiter brings it back to your table (the Response).
+
+The waiter doesn't care who you are or what you ordered yesterday (stateless). They just take the current request, process it, and return the result.
+
+---
+
+## 3. Concept Explanation
+
+REST (Representational State Transfer) is an architectural style for building web APIs. It relies on standard HTTP methods to interact with resources.
+
+In a REST API, everything is treated as a **Resource** (like a `User`, an `Order`, or a `Post`). These resources are accessed via a URL (an Endpoint). You perform actions on these resources using specific HTTP Verbs.
+
+Key principles of REST:
+- **Stateless:** The server doesn't remember previous requests. Every request must contain all the info needed to understand it.
+- **Client-Server:** The frontend (client) and backend (server) are separate and only communicate via the API.
+- **Standardized:** Uses standard HTTP methods and status codes.
+
+---
+
+## 4. Syntax Table
+
+| HTTP Verb | CRUD Action | Example Endpoint | Meaning |
+|---|---|---|---|
+| GET | **R**ead | `/users/123` | Fetch the user with ID 123. |
+| POST | **C**reate | `/users` | Create a brand new user. |
+| PUT | **U**pdate | `/users/123` | Replace the user with ID 123 entirely. |
+| PATCH | **U**pdate | `/users/123` | Partially update the user with ID 123 (e.g., just change email). |
+| DELETE | **D**elete | `/users/123` | Remove the user with ID 123. |
+
+---
+
+## 5. Beginner Example
+
+Let's look at how we might interact with a simple REST API using the `requests` library.
+
+```python
+import requests
+
+# 1. GET: Fetching data
+response = requests.get('https://jsonplaceholder.typicode.com/posts/1')
+print("GET Status:", response.status_code)
+print("Title:", response.json()['title'])
+
+# 2. POST: Creating data
+new_post = {
+    "title": "Learning REST",
+    "body": "REST is awesome, bro.",
+    "userId": 1
+}
+response = requests.post('https://jsonplaceholder.typicode.com/posts', json=new_post)
+print("\nPOST Status:", response.status_code)
+print("Created Post ID:", response.json()['id'])
+```
+
+---
+
+## 6. Real-World Engineering Example
+
+In production, you don't just throw requests around; you handle authentication, pagination, and robust error checking.
+
+```python
+import requests
+from urllib.parse import urljoin
+
+class APIClient:
+    def __init__(self, base_url, api_key):
+        self.base_url = base_url
+        # Use a Session to reuse connections and default headers
+        self.session = requests.Session()
+        self.session.headers.update({
+            "Authorization": f"Bearer {api_key}",
+            "Accept": "application/json"
+        })
+
+    def get_active_users(self, page=1):
+        url = urljoin(self.base_url, "/v1/users")
+        params = {"status": "active", "page": page}
+
+        try:
+            response = self.session.get(url, params=params, timeout=5)
+            response.raise_for_status() # Fail fast on 4xx/5xx
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"API call failed, bro: {e}")
+            return None
+
+# Usage:
+client = APIClient("https://api.myapp.com", "super_secret_token")
+users = client.get_active_users()
+```
+
+---
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    {
+      id: '1',
+      type: 'core',
+      data: { title: 'Client (Mobile/Web/Script)', label: 'Sends HTTP Request' },
+      position: { x: 50, y: 150 },
+    },
+    {
+      id: '2',
+      type: 'process',
+      data: { title: 'API Gateway / Router', label: 'Routes to Correct Endpoint' },
+      position: { x: 300, y: 150 },
+    },
+    {
+      id: '3',
+      type: 'data',
+      data: { title: 'Backend Server Logic', label: 'Validates Auth, Processes Business Logic' },
+      position: { x: 550, y: 150 },
+    },
+    {
+      id: '4',
+      type: 'output',
+      data: { title: 'Database', label: 'CRUD Operations' },
+      position: { x: 550, y: 300 },
+    },
+    {
+      id: '5',
+      type: 'process',
+      data: { title: 'HTTP Response', label: 'Status Code + JSON Body' },
+      position: { x: 300, y: 300 },
+    },
+    { id: 'e1', source: '1', target: '2', label: 'GET /users/1', type: 'smoothstep' },
+    { id: 'e2', source: '2', target: '3', label: 'Route Handled', type: 'smoothstep' },
+    { id: 'e3', source: '3', target: '4', label: 'SELECT * FROM users', type: 'straight' },
+    { id: 'e4', source: '4', target: '3', label: 'Data Returned', style: { strokeDasharray: '5,5' }, type: 'straight' },
+    { id: 'e5', source: '3', target: '5', label: 'Format as JSON', type: 'smoothstep' },
+    { id: 'e6', source: '5', target: '1', label: '200 OK', animated: true, type: 'smoothstep' }
+  ]}
+/>
+
+When a REST API call is made:
+1. The client packages the Verb, URL, Headers (like Auth), and Body.
+2. It travels over TCP/IP to the server.
+3. The server router looks at the URL (e.g., `/users`) and Verb (e.g., `GET`) to determine which Python function to run.
+4. The server runs the code, talks to the DB, and packages the result into a JSON string.
+5. It attaches an HTTP Status Code (e.g., 200, 404, 500) and sends it back.
+
+---
+
+## 8. Performance Table
+
+| Aspect | Performance Consideration |
+|---|---|
+| Payload Size | Large JSON payloads slow down parsing and network transfer. Pagination is required. |
+| Statelessness | Very scalable. Any server behind a load balancer can handle any request. |
+| N+1 Problem | Making multiple small requests (e.g., fetch user, then fetch their posts 10 times) is slow. Design APIs to bundle related data. |
+
+---
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What makes an API "RESTful"? | It uses standard HTTP verbs correctly, uses resource-based URLs, is stateless, and communicates usually via JSON/XML. |
+| Difference between PUT and PATCH? | PUT replaces the entire resource. PATCH partially updates specific fields in the resource. |
+| What are the common HTTP Status Code ranges? | 2xx: Success. 3xx: Redirect. 4xx: Client Error (You messed up, e.g., 404). 5xx: Server Error (We messed up). |
+| What is Idempotency in REST? | An operation is idempotent if making it multiple times produces the same result as making it once. GET, PUT, DELETE are idempotent. POST is not. |
+
+---
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, look at this endpoint design:
+`POST /updateUserEmail?id=123&email=new@mail.com`
+
+**Why is this a terrible REST API?**
+1. **Verb in URL:** REST URLs should be nouns (resources), not verbs (actions).
+2. **Wrong HTTP Method:** To update, you should use `PUT` or `PATCH`.
+3. **Data in Query Params:** Data for a POST/PUT should go in the JSON Body, not the URL query string (which gets logged in server logs, risking security).
+
+**Proper REST Design:**
+`PATCH /users/123` with Body `{"email": "new@mail.com"}`
+
+---
+
+## 11. Real-World Usage
+
+- **Stripe API:** Processing payments by sending POST requests to `/v1/charges`.
+- **Twitter/X API:** Fetching user timelines with GET requests.
+- **Microservices:** A frontend React app communicating with a Python backend server.
+
+---
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use plural nouns for resources (e.g., `/users` not `/user`). | Put verbs in the URL (e.g., NO `/getUsers`). |
+| Return appropriate status codes (e.g., 201 for Created, 404 for Not Found). | Always return 200 OK with an error message in the body. |
+| Version your APIs (e.g., `/v1/users`). | Change API schemas without warning clients. |
+
+---
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Never trust the client. Even if your REST API is internal, always validate the incoming JSON payloads. A client might send a string where you expect an integer, or inject SQL in a string field. Use tools like `Pydantic` (often used with FastAPI) to strictly enforce data types and schemas before processing the request.
+
+---
+
+## 14. Common Mistakes
+
+- **Not Paginating:** Returning 10,000 records in one GET request will crash the client and burn server memory.
+- **Ignoring Caching:** Using GET for heavy DB operations but not using caching headers (ETag, Cache-Control), causing unnecessary server load.
+- **Stateful Auth:** Trying to use server-side sessions instead of stateless tokens (like JWT) in a REST API, breaking scalability.
+
+---
+
+## 15. Related Topics
+
+- Requests Library
+- FastAPI
+- Flask
+- API Versioning

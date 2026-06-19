@@ -2,6 +2,244 @@
 sidebar_position: 1
 ---
 
-# Sqlite
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Sqlite.
+# SQLite
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | SQLite in Python |
+| Difficulty | Beginner |
+| Used For | Lightweight, file-based relational database |
+| Common Mistake | Trying to use it for high-concurrency web apps (causes database lock errors) |
+| Performance | Incredibly fast for single-user reads; blocks on concurrent writes |
+
+---
+
+## 2. Real-World Analogy
+
+Bro, think of SQLite like an Excel spreadsheet saved on your local laptop.
+
+If you are the only person reading and updating the spreadsheet, it is lightning fast. You don't need a network connection, you don't need a username or password, and the whole thing is just one single file (`.xlsx`).
+But, if you try to share that exact same file with 50 people on your team, and they all try to open it and edit it at the exact same second, Excel is going to scream "File is Locked for Editing!"
+SQLite is exactly the same. It's an amazing, serverless database contained in one file (`.db`), perfect for local apps, but terrible for high-traffic servers.
+
+---
+
+## 3. Concept Explanation
+
+SQLite is a C-language library that implements a small, fast, self-contained, high-reliability SQL database engine.
+Unlike PostgreSQL or MySQL, SQLite **does not have a separate server process**. It reads and writes directly to ordinary disk files.
+
+Python comes with SQLite support built right into the standard library (`sqlite3`), meaning you don't even need to `pip install` anything to start writing SQL queries.
+
+---
+
+## 4. Syntax Table
+
+| Operation | Code Example |
+|---|---|
+| Import & Connect | `import sqlite3; conn = sqlite3.connect('my_data.db')` |
+| Create Cursor | `cursor = conn.cursor()` |
+| Execute SQL | `cursor.execute("SELECT * FROM users")` |
+| Fetch Data | `results = cursor.fetchall()` |
+| Commit Changes | `conn.commit()` |
+| Close Connection| `conn.close()` |
+
+---
+
+## 5. Beginner Example
+
+Let's create a database, make a table, insert a user, and read it back.
+
+```python
+import sqlite3
+
+# Connect to a file-based database (creates it if it doesn't exist)
+conn = sqlite3.connect('tutorial.db')
+cursor = conn.cursor()
+
+# Create a Table
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        age INTEGER
+    )
+''')
+
+# Insert Data
+cursor.execute("INSERT INTO users (name, age) VALUES ('Bro', 25)")
+
+# ALWAYS commit your changes when writing data!
+conn.commit()
+
+# Read Data
+cursor.execute("SELECT * FROM users")
+rows = cursor.fetchall()
+
+print("Database contents:", rows)
+
+# Close connection
+conn.close()
+```
+
+---
+
+## 6. Real-World Engineering Example
+
+In production scripts, you must prevent **SQL Injection** attacks. Never use f-strings or string concatenation to build SQL queries. Always use parameter substitution (`?`).
+Also, use Context Managers (`with`) to automatically handle closing connections.
+
+```python
+import sqlite3
+from contextlib import closing
+
+def get_user_by_name(db_path: str, username: str):
+    # Using 'closing' ensures the connection is closed even if an error occurs
+    with closing(sqlite3.connect(db_path)) as conn:
+        cursor = conn.cursor()
+
+        # SAFE: Using '?' parameters prevents SQL Injection
+        # Notice the comma after username to make it a tuple: (username,)
+        query = "SELECT id, name, age FROM users WHERE name = ?"
+        cursor.execute(query, (username,))
+
+        # Fetch one record
+        user = cursor.fetchone()
+
+        if user:
+            print(f"Found User ID {user[0]}: {user[1]}, Age {user[2]}")
+        else:
+            print("User not found, bro.")
+
+# Usage
+get_user_by_name('tutorial.db', 'Bro')
+```
+
+---
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    {
+      id: '1',
+      type: 'core',
+      data: { title: 'Python App', label: 'Executes SQL via sqlite3' },
+      position: { x: 50, y: 150 },
+    },
+    {
+      id: '2',
+      type: 'process',
+      data: { title: 'SQLite Engine', label: 'Runs inside Python Process' },
+      position: { x: 300, y: 150 },
+    },
+    {
+      id: '3',
+      type: 'data',
+      data: { title: 'Database File', label: 'e.g., app_data.db' },
+      position: { x: 550, y: 150 },
+    },
+    {
+      id: '4',
+      type: 'warning',
+      data: { title: 'File Lock Mechanism', label: 'Blocks concurrent writers' },
+      position: { x: 425, y: 250 },
+    },
+    { id: 'e1', source: '1', target: '2', label: 'SQL Query', type: 'smoothstep' },
+    { id: 'e2', source: '2', target: '3', label: 'File I/O', type: 'smoothstep' },
+    { id: 'e3', source: '3', target: '2', label: 'Data Returned', style: { strokeDasharray: '5,5' }, type: 'straight' },
+    { id: 'e4', source: '4', target: '3', label: 'Protects Writes', type: 'straight' }
+  ]}
+/>
+
+When you connect to SQLite in Python, there is no network call. The Python C-extension loads the SQLite engine directly into your app's memory space.
+When you write data (`INSERT/UPDATE`), SQLite physically locks the `.db` file on your hard drive. If another script tries to write to the database at the exact same millisecond, it will get a `database is locked` error. It supports infinite concurrent *readers*, but only one concurrent *writer*.
+
+---
+
+## 8. Performance Table
+
+| Scenario | Performance | Why |
+|---|---|---|
+| Single Script / Local App | Blazing Fast | No network overhead, direct disk access. |
+| In-Memory DB (`:memory:`) | Insanely Fast | Never touches the disk, lives entirely in RAM. |
+| High-Traffic Web Server | Terrible | The file lock bottleneck will cause write failures. |
+
+---
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between SQLite and PostgreSQL? | SQLite is a serverless, file-based database for local or embedded apps. PostgreSQL is a heavy-duty client-server database designed for high concurrency and massive scale. |
+| What does `sqlite3.connect(':memory:')` do? | It creates a temporary database entirely in RAM. It is extremely fast and perfect for unit testing, but all data is lost the moment the script ends. |
+| How do you prevent SQL Injection in Python? | Never use string formatting (`f"SELECT * FROM users WHERE name='{name}'"`). Always use parameterized queries (`execute("...", (name,))`). |
+| Can SQLite handle multiple concurrent writers? | No. SQLite uses file-level locking. If one process is writing to the database, the entire database file is locked, and other writers must wait. |
+
+---
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, why does this code silently fail to save data to the database?
+
+```python
+import sqlite3
+
+conn = sqlite3.connect('my_db.db')
+cursor = conn.cursor()
+cursor.execute("INSERT INTO users (name) VALUES ('Bro')")
+
+# Script ends here
+conn.close()
+```
+
+**Why it's tricky:** You forgot to call `conn.commit()`!
+By default, SQLite in Python starts a transaction automatically when you execute a data-modifying command (INSERT, UPDATE, DELETE). If you close the connection without calling `commit()`, the transaction rolls back, and nothing is saved to the disk.
+**Fix:** Always `conn.commit()` after writing data.
+
+---
+
+## 11. Real-World Usage
+
+- **Mobile Apps:** Every iOS and Android device has SQLite built-in to store local app data (like your messages or settings).
+- **Desktop Apps:** Browsers like Chrome use SQLite to store your bookmarks, history, and cookies.
+- **Automated Testing:** Developers use in-memory SQLite databases (`:memory:`) to run unit tests blindingly fast without needing a real database server.
+- **Data Science:** Moving data out of large Pandas DataFrames into a `.db` file for easy querying later.
+
+---
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `?` placeholders to prevent SQL Injection. | Use f-strings or string concatenation for queries. |
+| Call `conn.commit()` after making changes. | Forget to commit and wonder where your data went. |
+| Close your connections when done, or use `contextlib.closing`. | Leave connections open indefinitely, risking file locks. |
+
+---
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Do not use SQLite as the primary database for a production web application (like Django or FastAPI) if you expect multiple users to write data simultaneously. You will encounter `sqlite3.OperationalError: database is locked`. Use PostgreSQL or MySQL instead. SQLite is strictly for local tooling, single-tenant apps, or read-heavy edge caching.
+
+---
+
+## 14. Common Mistakes
+
+- **Forgetting the Comma in Tuples:** `cursor.execute(query, (username))` is wrong (it evaluates as a string). You need `(username,)` to make it a one-item tuple.
+- **Using SQLite for Web Apps:** Thinking SQLite is "good enough" for your web startup, and crashing on day 1 when 5 people try to sign up at the same time.
+- **Losing Data:** Deleting the `.db` file by accident because you treated it like a normal throwaway text file.
+
+---
+
+## 15. Related Topics
+
+- PostgreSQL
+- SQLAlchemy
+- ORM vs Raw SQL
+- File Handling

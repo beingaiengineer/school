@@ -2,6 +2,242 @@
 sidebar_position: 8
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Rate Limiting
 
-Placeholder: introduce Rate Limiting.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Rate Limiting |
+| Difficulty | Intermediate / Advanced |
+| Used For | Preventing API abuse, controlling costs, and protecting servers from DDOS attacks |
+| Common Mistake | Implementing rate limiting in-memory on a multi-server setup |
+| Performance | Requires fast data stores (like Redis); if implemented poorly, it can bottleneck the API |
+
+---
+
+## 2. Real-World Analogy
+
+Bro, think of Rate Limiting like a "take a penny, leave a penny" tray, but for server resources. Or better yet, a theme park fast-pass system.
+
+If a ride allows 100 people per minute, and 500 people try to shove their way in at once, the ride breaks down and nobody gets to ride.
+To fix this, the park gives everyone a ticket. You are allowed 5 rides per hour. If you try to go on a 6th ride, the attendant says, "Sorry bro, you hit your limit. Wait until next hour."
+This ensures the park stays operational for everyone, and no single person hogs the rollercoaster.
+
+---
+
+## 3. Concept Explanation
+
+Rate Limiting is the process of restricting the number of requests a client (usually identified by IP address or API Key) can make to your API within a specific time window.
+
+Why do we need it?
+1. **Security:** Prevent brute-force attacks on login endpoints.
+2. **Cost Control:** Prevent a buggy script from hitting an expensive third-party API (like an LLM or SMS service) 10,000 times a second and draining your wallet.
+3. **Stability:** Ensure your database and servers don't crash under massive traffic spikes (DDOS).
+
+When a client exceeds the limit, the server returns an HTTP Status **429 (Too Many Requests)**.
+
+---
+
+## 4. Syntax Table
+
+| Concept | Explanation | Example |
+|---|---|---|
+| 429 Status Code | Too Many Requests. The standard HTTP response when a limit is hit. | `HTTP/1.1 429 Too Many Requests` |
+| Token Bucket | Algorithm where tokens are added at a constant rate; requests consume tokens. | Best for allowing burst traffic. |
+| Fixed Window | Algorithm counting requests from 0:00 to 0:01, resetting at 0:01. | Simple, but vulnerable to spikes at window edges. |
+| Sliding Window | Keeps track of exact timestamps of requests. | Most accurate, but uses more memory. |
+
+---
+
+## 5. Beginner Example
+
+Let's use a popular FastAPI library called `slowapi` (which uses a library called `limits`) to rate-limit an endpoint to 5 requests per minute based on IP address.
+
+```python
+from fastapi import FastAPI, Request
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+# Initialize limiter to track clients by their IP address
+limiter = Limiter(key_func=get_remote_address)
+app = FastAPI()
+
+# Tell FastAPI what to do when the limit is hit (return a nice JSON error)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+@app.get("/data")
+@limiter.limit("5/minute")  # Limit: 5 requests per minute
+async def read_data(request: Request):
+    return {"message": "Here is your data, bro!"}
+```
+
+---
+
+## 6. Real-World Engineering Example
+
+In production, you can't store rate limits in RAM because you have multiple API servers. If Server A says you hit 5 requests, you could just talk to Server B and get 5 more.
+You MUST use a centralized fast cache, almost always **Redis**, to track request counts globally.
+
+```python
+import redis
+import time
+
+# Connect to Redis
+redis_client = redis.Redis(host='localhost', port=6379, db=0)
+
+def is_rate_limited(user_id: str, max_requests: int = 100, window_seconds: int = 60) -> bool:
+    """A simple Fixed Window rate limiter using Redis."""
+
+    current_minute = int(time.time() // window_seconds)
+    # Create a unique key for this user in this specific minute
+    redis_key = f"rate_limit:{user_id}:{current_minute}"
+
+    # INCR increments the value by 1. If it doesn't exist, it sets it to 1.
+    current_count = redis_client.incr(redis_key)
+
+    # If this is the first request in the window, set the key to expire so we don't leak memory
+    if current_count == 1:
+        redis_client.expire(redis_key, window_seconds)
+
+    # Check if they blew past the limit
+    if current_count > max_requests:
+        return True
+
+    return False
+
+# Usage inside an API route
+user = "user_999"
+if is_rate_limited(user):
+    print("Bro, slow down. HTTP 429.")
+else:
+    print("Request processed. HTTP 200.")
+```
+
+---
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    {
+      id: '1',
+      type: 'core',
+      data: { title: 'Client', label: 'Sends HTTP Request' },
+      position: { x: 50, y: 150 },
+    },
+    {
+      id: '2',
+      type: 'process',
+      data: { title: 'API Gateway / Middleware', label: 'Extracts IP / API Key' },
+      position: { x: 300, y: 150 },
+    },
+    {
+      id: '3',
+      type: 'tool',
+      data: { title: 'Redis Cache', label: 'INCR count for Key' },
+      position: { x: 550, y: 50 },
+    },
+    {
+      id: '4',
+      type: 'data',
+      data: { title: 'Route Handler', label: 'Executes if under limit' },
+      position: { x: 550, y: 250 },
+    },
+    {
+      id: '5',
+      type: 'warning',
+      data: { title: '429 Response', label: 'Returned if over limit' },
+      position: { x: 300, y: 300 },
+    },
+    { id: 'e1', source: '1', target: '2', type: 'smoothstep' },
+    { id: 'e2', source: '2', target: '3', label: 'Check Count', type: 'smoothstep' },
+    { id: 'e3', source: '3', target: '2', label: 'Count <= 100', type: 'smoothstep' },
+    { id: 'e4', source: '2', target: '4', label: 'Allow', type: 'smoothstep' },
+    { id: 'e5', source: '3', target: '5', label: 'Count > 100', style: { strokeDasharray: '5,5' }, type: 'smoothstep' },
+    { id: 'e6', source: '5', target: '1', label: 'Reject', animated: true, type: 'smoothstep' }
+  ]}
+/>
+
+When a request arrives, the Rate Limiter (often running in Middleware or at the API Gateway level) extracts a unique identifier (like an IP address or a User ID).
+It immediately asks Redis: "How many times has this ID made a request in the last minute?"
+Redis uses atomic counters (like `INCR`) to bump the number. If the number is below the threshold, the request is passed to the backend code. If it's above the threshold, the middleware intercepts it, stops the execution, and throws a 429 error directly back to the client.
+
+---
+
+## 8. Performance Table
+
+| Strategy | Performance / DB Load | Accuracy |
+|---|---|---|
+| In-Memory (Dict) | Blazing fast. | Terrible in distributed systems. Resets on restart. |
+| Relational DB (SQL) | Very slow. Do not do this. | High, but will crash your DB. |
+| Redis (In-Memory KV) | Extremely fast (Microseconds). | Perfect. The industry standard. |
+| API Gateway (Kong/AWS) | Best. Doesn't even reach your Python code. | Perfect. |
+
+---
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What HTTP status code is used for Rate Limiting? | 429 Too Many Requests. |
+| Why use Redis for rate limiting instead of a Python dictionary? | A Python dictionary is tied to a single server instance. If you have 5 load-balanced servers, a client could bypass the limit by hitting different servers. Redis provides a centralized, shared state that all servers can read/write instantly. |
+| What are `RateLimit-Reset` headers? | Good APIs return headers telling the client exactly when they can try again. e.g., `X-RateLimit-Reset: 1610000000` (Unix timestamp). |
+| What is the Token Bucket algorithm? | An algorithm where a "bucket" holds tokens. Tokens are added at a constant rate. Every request takes a token. If the bucket is empty, the request is denied. This allows for sudden "bursts" of traffic without breaking the long-term average limit. |
+
+---
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, you set up a rate limit: `100 requests / minute per IP address`.
+Suddenly, a legitimate office building with 500 employees complains that they are getting 429 errors, even though each person only made 1 request. Why?
+
+**Why it's tricky:**
+Many offices or corporate networks sit behind a **NAT (Network Address Translation)** or proxy. To the outside world (your API), all 500 employees share the exact same public IP address.
+**Fix:** IP-based rate limiting is dangerous for public APIs for this reason. You should rate-limit based on Authenticated User ID or API Key instead of IP whenever possible. If you must use IP, look for the `X-Forwarded-For` header to try and find the real client IP behind proxies, but know that it can be spoofed.
+
+---
+
+## 11. Real-World Usage
+
+- **Login Endpoints:** Strictly limit `/login` to 5 attempts per minute to prevent brute-force password guessing.
+- **SaaS Pricing Tiers:** Free users get 10 requests/minute. Pro users get 1000 requests/minute.
+- **LLM APIs:** OpenAI strictly limits tokens-per-minute (TPM) because generating AI text is computationally massive.
+
+---
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use Redis or an API Gateway (like Cloudflare/AWS) for rate limiting. | Build a custom SQL table to log every single request. |
+| Send `Retry-After` headers so clients know when to back off. | Just return 500 Server Error when overwhelmed. |
+| Implement different limits for different endpoints (Login should be strict, GET /public very loose). | Apply a blanket limit of 5 req/sec across the entire application. |
+
+---
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> The best code to run is no code at all. If a malicious bot is hitting your server 100,000 times a second, even if your Python rate limiter correctly returns 429, your server is still wasting CPU cycles processing the HTTP request. In massive systems, rate limiting should be pushed to the Edge (Cloudflare, AWS WAF, Nginx) so the bad traffic never even touches your Python servers.
+
+---
+
+## 14. Common Mistakes
+
+- **Locking Out Yourself:** Applying a strict rate limit globally and getting locked out of your own admin dashboard.
+- **Ignoring Headers:** Not returning informative headers (like `X-RateLimit-Remaining`), leaving API consumers guessing why their scripts are failing randomly.
+- **Race Conditions:** Using a simple "read count, then write count" logic in Redis without using atomic operations (`INCR`), leading to inaccurate limits under heavy concurrency.
+
+---
+
+## 15. Related Topics
+
+- Middleware
+- FastAPI
+- REST API Basics
+- System Architecture

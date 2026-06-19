@@ -2,6 +2,252 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Authentication
 
-Placeholder: introduce Authentication.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | API Authentication |
+| Difficulty | Intermediate / Advanced |
+| Used For | Verifying the identity of a client calling your API |
+| Common Mistake | Storing passwords in plaintext or hardcoding API keys in code |
+| Performance | Token validation adds minor overhead; DB hits for session auth add more |
+
+---
+
+## 2. Real-World Analogy
+
+Bro, think of Authentication like getting into an exclusive nightclub.
+
+**Authentication** is the bouncer checking your ID to prove you are who you say you are.
+Once the bouncer verifies you, he stamps your hand (gives you a Token).
+Now, when you want to buy a drink at the bar, you don't show your ID again; you just show the stamp (the Token). The bartender sees the stamp and knows you are authenticated.
+
+*(Note: **Authorization** is whether that stamp gives you VIP access or just general admission. AuthN = Identity. AuthZ = Permissions.)*
+
+---
+
+## 3. Concept Explanation
+
+Authentication is the process of verifying a client's identity before they can access secure API endpoints. In REST APIs, because they are **stateless**, the server shouldn't remember you between requests.
+
+Common API Authentication Methods:
+1. **Basic Auth:** Sending `username:password` encoded in Base64 on every request. (Insecure unless using HTTPS, generally outdated).
+2. **API Keys:** A long, secret string passed in the header. Good for server-to-server communication.
+3. **JWT (JSON Web Tokens):** A cryptographically signed token given after login. The client sends this token in the `Authorization: Bearer <token>` header on subsequent requests. The server verifies the signature mathematically without hitting the DB.
+
+---
+
+## 4. Syntax Table
+
+| Auth Type | HTTP Header Example | Use Case |
+|---|---|---|
+| Basic | `Authorization: Basic dXNlcjpwYXNz` | Legacy systems, quick prototypes |
+| API Key | `X-API-Key: abcdef123456` | B2B integrations, 3rd party API access |
+| Bearer (JWT) | `Authorization: Bearer eyJhbGci...` | Modern Web/Mobile apps, microservices |
+
+---
+
+## 5. Beginner Example
+
+Let's look at how to implement a simple API Key check in FastAPI.
+
+```python
+from fastapi import FastAPI, Depends, HTTPException, Security
+from fastapi.security import APIKeyHeader
+
+app = FastAPI()
+
+# Define the expected header name
+api_key_header = APIKeyHeader(name="X-API-Key")
+
+# Hardcoded for example, use environment variables in real life!
+VALID_API_KEY = "my_super_secret_key"
+
+def verify_api_key(api_key: str = Security(api_key_header)):
+    if api_key != VALID_API_KEY:
+        # Stop the request and return 401 Unauthorized
+        raise HTTPException(status_code=401, detail="Invalid API Key, bro.")
+    return api_key
+
+# Protect this route using Depends()
+@app.get("/secure-data", dependencies=[Depends(verify_api_key)])
+async def get_secure_data():
+    return {"message": "You are authenticated!"}
+```
+
+---
+
+## 6. Real-World Engineering Example
+
+In production, you use JWTs for user login. The user logs in once, gets a token, and uses it for future requests.
+
+```python
+import jwt # PyJWT library
+from datetime import datetime, timedelta, timezone
+
+SECRET_KEY = "your-very-secure-secret-key-from-env-var"
+ALGORITHM = "HS256"
+
+# 1. Generate Token (Done during Login)
+def create_access_token(data: dict):
+    to_encode = data.copy()
+    # Set expiration time (e.g., 15 minutes)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+
+    # Cryptographically sign the payload
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+# 2. Verify Token (Done on every API Request)
+def verify_token(token: str):
+    try:
+        # Decodes and verifies signature AND expiration time automatically
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload.get("sub") # Return the user ID
+    except jwt.ExpiredSignatureError:
+        print("Token expired, bro. Please log in again.")
+        return None
+    except jwt.InvalidTokenError:
+        print("Invalid token, hacker.")
+        return None
+
+# Usage
+token = create_access_token({"sub": "user_123"})
+print(f"Issued Token: {token}")
+
+user_id = verify_token(token)
+print(f"Authenticated User: {user_id}")
+```
+
+---
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    {
+      id: '1',
+      type: 'core',
+      data: { title: 'Client', label: 'Sends POST /login (user, pass)' },
+      position: { x: 50, y: 150 },
+    },
+    {
+      id: '2',
+      type: 'process',
+      data: { title: 'Auth Server', label: 'Verifies Hash in DB' },
+      position: { x: 300, y: 150 },
+    },
+    {
+      id: '3',
+      type: 'data',
+      data: { title: 'JWT Generator', label: 'Signs Token with Secret' },
+      position: { x: 550, y: 150 },
+    },
+    {
+      id: '4',
+      type: 'core',
+      data: { title: 'Client', label: 'Stores JWT, Sends via Header' },
+      position: { x: 50, y: 300 },
+    },
+    {
+      id: '5',
+      type: 'process',
+      data: { title: 'Resource Server', label: 'Validates JWT Signature (No DB!)' },
+      position: { x: 300, y: 300 },
+    },
+    {
+      id: '6',
+      type: 'output',
+      data: { title: 'Response', label: '200 OK or 401 Unauthorized' },
+      position: { x: 550, y: 300 },
+    },
+    { id: 'e1', source: '1', target: '2', label: 'Login', type: 'smoothstep' },
+    { id: 'e2', source: '2', target: '3', label: 'Hash Matches', type: 'smoothstep' },
+    { id: 'e3', source: '3', target: '1', label: 'Returns JWT', animated: true, type: 'straight' },
+    { id: 'e4', source: '4', target: '5', label: 'GET /data + Bearer', type: 'smoothstep' },
+    { id: 'e5', source: '5', target: '6', label: 'Check Signature', type: 'smoothstep' }
+  ]}
+/>
+
+When using JWTs, the server uses a `SECRET_KEY`.
+The server creates a JSON payload `{"user_id": 1, "exp": 12345678}`. It hashes this payload along with the secret key to create a signature. The token is `Base64(Header).Base64(Payload).Signature`.
+When the client sends the token back, the server takes the `Base64(Payload)`, hashes it again with its `SECRET_KEY`, and checks if the result matches the `Signature`. If it matches, the data hasn't been tampered with. It then checks the `exp` date. All of this happens in CPU memory, zero database lookups required!
+
+---
+
+## 8. Performance Table
+
+| Method | DB Hit Required per Request? | Scalability |
+|---|---|---|
+| Sessions / Cookies | Yes (usually checks a session table/Redis) | Moderate. Requires shared state. |
+| Basic Auth | Yes (hashes DB password every time) | Terrible. |
+| JWT | No (mathematical verification) | Massive. Completely stateless. |
+
+---
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Authentication vs Authorization? | Authentication is checking *who* you are (Login). Authorization is checking *what* you can do (Admin vs User). |
+| Why is JWT stateless? | The token itself contains all the information needed to identify the user (like user ID) and verify its own validity (signature). The server doesn't need to look up a session ID in a database. |
+| Can you encrypt a password in a database? | No. You **Hash** it (using algorithms like bcrypt). Encryption is two-way (can be decrypted). Hashing is one-way. You verify by hashing the incoming password and comparing the hashes. |
+| What happens if a JWT is stolen? | The attacker has full access until the token expires. This is why JWTs should have short expiration times (e.g., 15 mins) and use Refresh Tokens to get new ones. |
+
+---
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, can someone read the data inside a JWT without the Secret Key?
+
+**Answer: YES!**
+This is a massive misconception. The Secret Key is used to *Sign* the token (prevent tampering), not *Encrypt* it. The payload is just Base64 encoded.
+If you put `{"user_id": 1, "credit_card": "1234-5678"}` inside a JWT, anyone who intercepts that token can decode the Base64 and read the credit card number.
+**Rule:** Never put sensitive data inside a JWT payload. Only put identifiers (like `user_id`) and roles.
+
+---
+
+## 11. Real-World Usage
+
+- **OAuth2 / OIDC:** Allowing users to "Log in with Google". Google acts as the auth server and hands your app a JWT.
+- **Microservice Security:** Service A talks to Service B, passing an API key or an internal JWT to prove it has permission to make the call.
+- **SPA/Mobile Apps:** React frontend storing a JWT in memory/local storage and sending it with every Axios/Fetch request to the Python backend.
+
+---
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `bcrypt` or `Argon2` to hash passwords before storing them. | Store passwords in plaintext or use weak hashes like MD5. |
+| Always enforce HTTPS/TLS so tokens aren't sent in plaintext. | Send tokens over standard HTTP. |
+| Set short expiration times for JWTs. | Create JWTs that never expire. |
+
+---
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> One major downside to stateless JWTs is that you cannot instantly invalidate them (e.g., if a user clicks "Logout Everywhere" or is banned). Because the server doesn't check a database, the token remains valid until its `exp` time hits. To fix this, production systems implement a "Deny List" (or Blocklist) in Redis containing revoked token IDs, checking it quickly on every request.
+
+---
+
+## 14. Common Mistakes
+
+- **Hardcoding Secrets:** Committing `SECRET_KEY="1234"` to GitHub. Hackers will scrape this and mint their own admin tokens for your app.
+- **Ignoring Expiration:** Failing to check the `exp` claim, allowing old tokens to be used forever.
+- **Trusting the Algorithm Header:** A famous JWT vulnerability allowed attackers to change the header to `{"alg": "none"}` and bypass the signature check if the backend library wasn't configured to force `HS256`. (Modern libraries like PyJWT prevent this, but be aware!).
+
+---
+
+## 15. Related Topics
+
+- FastAPI
+- Middleware
+- Security Best Practices
+- REST API Basics

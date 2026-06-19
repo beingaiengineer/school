@@ -2,6 +2,258 @@
 sidebar_position: 6
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Middleware
 
-Placeholder: introduce Middleware.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Middleware |
+| Difficulty | Intermediate |
+| Used For | Intercepting HTTP requests and responses globally |
+| Common Mistake | Doing heavy DB queries in middleware, slowing down every single request |
+| Performance | Adds overhead to *every* request; must be kept extremely fast |
+
+---
+
+## 2. Real-World Analogy
+
+Bro, think of Middleware like the security checkpoint and exit scanners at a mall.
+
+When you enter the mall (HTTP Request), security checks your bags to make sure you aren't carrying anything dangerous (Request Middleware).
+Then you go into the mall and do your shopping (Your Route Logic).
+When you leave the mall (HTTP Response), the anti-theft scanners check if you stole anything, and maybe a greeter says "Have a nice day" (Response Middleware).
+Every single person entering and leaving the mall MUST go through these checkpoints.
+
+---
+
+## 3. Concept Explanation
+
+Middleware is code that runs **before** a request reaches your specific route handler, and **after** your route handler generates a response, but before that response is sent back to the client.
+
+It acts as a global wrapper around your entire application. It is perfect for operations that apply to *every* route, such as:
+- Logging request times
+- Handling CORS (Cross-Origin Resource Sharing)
+- Global error catching
+- Modifying request headers before the app sees them
+- Adding security headers to responses
+
+---
+
+## 4. Syntax Table
+
+| Framework | Syntax Example | Explanation |
+|---|---|---|
+| FastAPI | `@app.middleware("http")` | Decorator to add HTTP middleware. |
+| Flask | `@app.before_request` | Hook to run code before the route. |
+| Flask | `@app.after_request` | Hook to modify the response object. |
+
+---
+
+## 5. Beginner Example
+
+Let's write a simple FastAPI middleware that calculates how long every request takes to process.
+
+```python
+import time
+from fastapi import FastAPI, Request
+
+app = FastAPI()
+
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    # 1. Code here runs BEFORE the route handler
+    start_time = time.time()
+
+    # 2. Hand the request off to the actual route handler (or the next middleware)
+    response = await call_next(request)
+
+    # 3. Code here runs AFTER the route handler is done
+    process_time = time.time() - start_time
+
+    # Add a custom header to the response
+    response.headers["X-Process-Time"] = str(process_time)
+
+    return response
+
+@app.get("/")
+async def read_root():
+    return {"message": "Look at the response headers, bro!"}
+```
+
+---
+
+## 6. Real-World Engineering Example
+
+In production, you often need CORS (Cross-Origin Resource Sharing) middleware. If your frontend is on `app.com` and your backend is on `api.com`, browsers will block the requests unless the backend explicitly allows it via headers.
+
+```python
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+# Allow requests from these specific origins
+origins = [
+    "http://localhost:3000", # Local React app
+    "https://www.production-frontend.com",
+]
+
+# Add the built-in CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,       # Who can connect
+    allow_credentials=True,      # Allow cookies/auth headers
+    allow_methods=["GET", "POST", "OPTIONS"], # Allowed HTTP verbs
+    allow_headers=["*"],         # Allowed HTTP headers
+)
+
+@app.get("/data")
+async def get_data():
+    return {"status": "success"}
+```
+
+---
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    {
+      id: '1',
+      type: 'core',
+      data: { title: 'Client Request', label: 'HTTP GET /api/data' },
+      position: { x: 50, y: 150 },
+    },
+    {
+      id: '2',
+      type: 'process',
+      data: { title: 'Middleware 1 (CORS)', label: 'Checks Origin Header' },
+      position: { x: 300, y: 50 },
+    },
+    {
+      id: '3',
+      type: 'process',
+      data: { title: 'Middleware 2 (Logger)', label: 'Starts Timer' },
+      position: { x: 550, y: 50 },
+    },
+    {
+      id: '4',
+      type: 'data',
+      data: { title: 'Route Handler', label: 'Executes Business Logic' },
+      position: { x: 800, y: 150 },
+    },
+    {
+      id: '5',
+      type: 'process',
+      data: { title: 'Middleware 2 (Logger)', label: 'Logs Time taken' },
+      position: { x: 550, y: 250 },
+    },
+    {
+      id: '6',
+      type: 'process',
+      data: { title: 'Middleware 1 (CORS)', label: 'Attaches Access-Control Headers' },
+      position: { x: 300, y: 250 },
+    },
+    {
+      id: '7',
+      type: 'output',
+      data: { title: 'Client Response', label: 'JSON + Added Headers' },
+      position: { x: 50, y: 250 },
+    },
+    { id: 'e1', source: '1', target: '2', type: 'smoothstep' },
+    { id: 'e2', source: '2', target: '3', type: 'smoothstep' },
+    { id: 'e3', source: '3', target: '4', label: 'call_next()', type: 'smoothstep' },
+    { id: 'e4', source: '4', target: '5', label: 'Returns Response', type: 'smoothstep' },
+    { id: 'e5', source: '5', target: '6', type: 'smoothstep' },
+    { id: 'e6', source: '6', target: '7', type: 'smoothstep' }
+  ]}
+/>
+
+Middleware operates like an Onion.
+The request enters from the outside, passing through Middleware 1, then 2, until it hits the core (your Route).
+The response is generated at the core, and then passes back out through Middleware 2, then 1, before going to the client.
+If Middleware 1 decides to reject the request (e.g., origin blocked), it can return an error response immediately, and the inner layers (Middleware 2 and the Route) will never execute.
+
+---
+
+## 8. Performance Table
+
+| Action in Middleware | Performance Impact | Recommendation |
+|---|---|---|
+| Adding Headers | O(1) Negligible | Perfectly fine. |
+| Writing to async Logger | Minor | Acceptable, use background tasks if heavy. |
+| Synchronous DB Query | Catastrophic | NEVER do this. It blocks every single request. |
+
+---
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the purpose of Middleware? | To execute code globally across all endpoints before a request is processed and after a response is generated. |
+| How does Middleware differ from a Route Dependency (in FastAPI)? | Middleware applies to *every* request (e.g., CORS). A Dependency applies only to specific routes you attach it to (e.g., Authentication). |
+| What is CORS and why is it handled in Middleware? | Cross-Origin Resource Sharing. Browsers block scripts from hitting different domains for security. The server must append specific headers to the response to allow it. Because this applies to the whole API, middleware is the perfect place. |
+
+---
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, imagine you write a middleware to read the JSON body of every request to log it:
+
+```python
+@app.middleware("http")
+async def log_body(request: Request, call_next):
+    body = await request.body() # Read the stream
+    print("Body:", body)
+    response = await call_next(request)
+    return response
+```
+
+**Why will this break your entire app?**
+Because `request.body()` is a stream. Once you read it in the middleware, the stream is exhausted (empty). When `call_next()` passes the request to your actual Route, the Route will try to read the JSON and get an empty string, causing validation errors!
+**Fix:** If you read the stream in middleware, you must inject it back into the request object, which is messy. It's usually better to do body-level logging at the Route/Dependency level, not globally in middleware.
+
+---
+
+## 11. Real-World Usage
+
+- **Rate Limiting:** Checking a Redis cache to see if an IP address has made too many requests before letting them reach the route.
+- **Request ID Tracking:** Generating a unique UUID (`X-Request-ID`) as the request enters, and attaching it to all logs so you can trace a single request through microservices.
+- **GZip Compression:** A middleware that takes the final JSON response, compresses it, and sends it to the client to save bandwidth.
+
+---
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Keep middleware logic incredibly light and fast. | Do heavy computations or blocking DB calls. |
+| Use built-in middleware (like CORS or GZip) whenever possible. | Try to write your own security/CORS middleware from scratch. |
+| Put global operations here. | Put route-specific business logic here. |
+
+---
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Order matters! The order in which you add middleware to your app dictates the Onion layers. For example, if you have a Rate Limiter middleware and a Logger middleware, put the Logger on the outside. That way, if a request is rate-limited and rejected, the Logger still runs and records the 429 Too Many Requests event.
+
+---
+
+## 14. Common Mistakes
+
+- **Forgetting `await call_next(request)`:** The request gets stuck in the middleware and the route is never executed. The client hangs.
+- **Mutating the Request Dangerously:** Modifying headers or bodies in a way that downstream libraries don't expect.
+- **Catching Everything:** Writing a global `try/except` in middleware that accidentally swallows 500 errors and returns 200 OKs, blinding your monitoring tools.
+
+---
+
+## 15. Related Topics
+
+- FastAPI
+- Flask
+- Authentication
+- Rate Limiting
