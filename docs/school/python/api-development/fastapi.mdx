@@ -2,6 +2,224 @@
 sidebar_position: 3
 ---
 
-# Fastapi
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Fastapi.
+# FastAPI
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | FastAPI |
+| Difficulty | Intermediate |
+| Used For | Building high-performance, async Python web APIs |
+| Main Strength | Automatic swagger docs, type validation (Pydantic), and high speed |
+| Common Mistake | Running synchronous blocking code in async endpoints |
+| Performance | Top tier for Python; comparable to NodeJS and Go in web frameworks |
+
+Bro, FastAPI is the modern rockstar of Python web frameworks. It took the best parts of Flask (simplicity), combined it with Pydantic (data validation), and built it on top of Starlette (async speed).
+
+## 2. Real-World Analogy
+
+Think of FastAPI as a highly efficient airport security checkpoint.
+
+In an old airport (older frameworks), security guards have to manually check every ID against a list, verify your ticket by hand, and figure out what to do with you.
+
+In the FastAPI airport, you scan a barcode (Pydantic validation). If your ticket is fake, the gates instantly reject you without a human ever looking at it (automatic 422 Validation Error). If you pass, the system automatically routes you async so you don't block the line behind you. It even automatically prints a map of the airport for you (auto-generated Swagger docs).
+
+## 3. Concept Explanation
+
+FastAPI is designed to build APIs quickly with fewer bugs.
+
+It heavily relies on Python type hints. By simply declaring the types of your variables (e.g., `item_id: int`), FastAPI automatically:
+1. Validates the incoming request data.
+2. Converts the data to the correct Python type.
+3. Generates interactive API documentation (Swagger UI).
+
+It also natively supports async/await, allowing it to handle thousands of concurrent requests if they involve waiting for I/O (like a database or external API).
+
+## 4. Syntax Table
+
+| Concept | Code Example |
+|---|---|
+| Initialization | `app = FastAPI()` |
+| Simple GET | `@app.get("/hello")` |
+| Path Parameter | `@app.get("/users/{user_id}")` |
+| Query Parameter | `def get_items(limit: int = 10):` |
+| JSON Body (Pydantic) | `def create_user(user: UserSchema):` |
+| Async Endpoint | `async def read_data():` |
+
+## 5. Beginner Example
+
+```python
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+# Pydantic model for JSON validation
+class Item(BaseModel):
+    name: str
+    price: float
+
+@app.get("/")
+def read_root():
+    return {"message": "Hello World"}
+
+@app.post("/items/")
+def create_item(item: Item):
+    return {"message": f"Created {item.name} for ${item.price}"}
+
+# Run with: uvicorn main:app --reload
+```
+
+Bro, try sending a POST request to `/items/` with `{"name": "Laptop", "price": "expensive"}`. FastAPI will automatically return a `422 Unprocessable Entity` because "expensive" is a string, not a float!
+
+## 6. Real-World Engineering Example
+
+In production, you usually use asynchronous endpoints connected to an async database driver.
+
+```python
+from fastapi import FastAPI, HTTPException, Depends
+from pydantic import BaseModel
+import asyncio
+
+app = FastAPI()
+
+class UserCreate(BaseModel):
+    username: str
+    email: str
+
+# Mock async database call
+async def db_save_user(user: UserCreate):
+    await asyncio.sleep(0.5) # Simulating DB latency
+    if user.username == "admin":
+        raise ValueError("Username reserved")
+    return {"id": 101, **user.model_dump()}
+
+@app.post("/users/", status_code=201)
+async def register_user(user: UserCreate):
+    try:
+        new_user = await db_save_user(user)
+        return new_user
+    except ValueError as e:
+        # Proper error handling
+        raise HTTPException(status_code=400, detail=str(e))
+```
+
+## 7. Internal Working
+
+FastAPI does not handle the raw HTTP sockets itself. It runs on an ASGI server (like Uvicorn).
+
+<LearningFlow
+  diagram={{
+    title: 'FastAPI Architecture',
+    height: 400,
+    miniMap: true,
+    nodes: [
+      {id: 'client', title: 'HTTP Client', detail: 'Sends JSON payload.', x: 20, y: 150, kind: 'core'},
+      {id: 'uvicorn', title: 'ASGI Server (Uvicorn)', detail: 'Handles sockets & async event loop.', x: 250, y: 150, kind: 'process'},
+      {id: 'fastapi', title: 'FastAPI Router', detail: 'Routes /users/ POST.', x: 500, y: 150, kind: 'tool'},
+      {id: 'pydantic', title: 'Pydantic', detail: 'Validates JSON -> Python object.', x: 750, y: 60, kind: 'data'},
+      {id: 'endpoint', title: 'Your Function', detail: 'async def create_user(user: UserCreate)', x: 750, y: 250, kind: 'output'},
+    ],
+    edges: [
+      {source: 'client', target: 'uvicorn', label: 'HTTP POST'},
+      {source: 'uvicorn', target: 'fastapi', label: 'Passes dict'},
+      {source: 'fastapi', target: 'pydantic', label: 'Validates'},
+      {source: 'pydantic', target: 'fastapi', label: 'Returns model'},
+      {source: 'fastapi', target: 'endpoint', label: 'Executes', type: 'smoothstep'},
+    ],
+  }}
+/>
+
+1. Uvicorn receives the raw HTTP data and turns it into a Python dictionary.
+2. FastAPI routes it.
+3. Pydantic validates it based on your type hints.
+4. Your function runs.
+
+## 8. Performance Table
+
+| Area | Performance | Why |
+|---|---|---|
+| I/O Bound Tasks (DB, APIs) | Excellent | Async event loop allows handling thousands of connections without blocking. |
+| CPU Bound Tasks (Math, Image) | Poor (if async) | Event loop blocks; use `Depends` or background tasks to push to a thread pool. |
+| Validation Speed | Very High | Pydantic V2 is written in Rust, making it incredibly fast. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What makes FastAPI fast? | It uses ASGI (Starlette) for async I/O and Pydantic (Rust-based) for validation. |
+| How does FastAPI do validation? | By leveraging Python type hints and the Pydantic library. |
+| Should I use `def` or `async def` in FastAPI? | If you use blocking libraries (like `requests` or `psycopg2`), use `def`. If you use async libraries, use `async def`. |
+| What is Uvicorn? | It is an ASGI web server implementation used to run FastAPI applications. |
+| How do you handle Dependency Injection? | Using the `Depends()` function in endpoint parameters (great for DB sessions or Auth). |
+
+## 10. Tricky Questions & Edge Cases
+
+### Blocking the Event Loop
+
+Bro, this is the #1 mistake in FastAPI:
+
+```python
+# VERY BAD
+@app.get("/slow")
+async def slow_endpoint():
+    time.sleep(5) # Blocks the ENTIRE async event loop
+    return {"message": "done"}
+```
+
+If you do this, NO OTHER USER can access your API for 5 seconds.
+If you must use a blocking function, declare it with regular `def` (FastAPI will automatically run it in an external thread pool), OR use `asyncio.sleep(5)`.
+
+### Missing Type Hints
+
+If you forget type hints, FastAPI cannot validate or generate docs.
+
+```python
+# Bad: Missing type hint on user_id
+@app.get("/users/{user_id}")
+def get_user(user_id):
+    pass
+```
+
+FastAPI will treat `user_id` as a string, and it won't be documented properly. Always use `user_id: int`.
+
+## 11. Real-World Usage
+
+| Domain | Real-World Usage |
+|---|---|
+| AI Pipelines | Wrapping ML models as async services (often waiting on GPU/external compute). |
+| Microservices | Building high-throughput backend services that talk to multiple databases. |
+| Data Engineering | Receiving webhooks and pushing them onto a Kafka queue. |
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `pydantic` models for all incoming/outgoing data | Read raw `request.json()` manually |
+| Use `Depends()` for database sessions and auth | Create global variables for DB connections |
+| Use ASGI servers like Uvicorn or Daphne | Try to run FastAPI on Waitress or pure Gunicorn (WSGI) |
+| Return `HTTPException` for errors | Return `{ "error": "msg" }` with a 200 OK status |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Never run just `uvicorn main:app` in production. You should use a process manager to run multiple workers to utilize all CPU cores. E.g.: `fastapi run` or `uvicorn main:app --workers 4`.
+
+## 14. Common Mistakes
+
+| Mistake | Why It Hurts |
+|---|---|
+| Using `requests` library in `async def` | It blocks the event loop. Use `httpx` instead. |
+| Putting business logic in the router | Makes testing hard. Separate your routes from your core logic/services. |
+| Returning DB models directly | Can accidentally expose hashed passwords or internal IDs. Always use response models (`response_model=UserPublic`). |
+
+## 15. Related Topics
+
+- REST API Basics
+- Asyncio
+- Async/Await
+- Authentication
+- Middleware

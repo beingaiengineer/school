@@ -2,6 +2,203 @@
 sidebar_position: 2
 ---
 
-# Rest Api Basics
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Rest Api Basics.
+# REST API Basics
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | REST API Basics |
+| Difficulty | Beginner |
+| Used For | Standardized communication between client and server |
+| Main Strength | Simple, stateless, and relies on standard HTTP methods |
+| Common Mistake | Using POST for everything instead of correct HTTP verbs |
+| Performance | Scalable due to statelessness |
+
+Bro, REST (Representational State Transfer) is not a strict protocol; it's an architectural style for building APIs. If your API is RESTful, it means it follows standard rules that make it predictable and easy to use.
+
+## 2. Real-World Analogy
+
+Think of a REST API like ordering at a fast-food restaurant.
+
+You (the client) look at the menu (API documentation) to see what you can order. You go to the cashier (the API endpoint) and say "I want a burger" (a `GET` request).
+
+The cashier doesn't remember who you are or what you ordered yesterday. Every time you walk up, you have to give them all the information they need right then (statelessness). They take your request, go to the kitchen (database/backend), and hand you your food wrapped in a standard paper bag (JSON response).
+
+## 3. Concept Explanation
+
+A REST API allows systems to exchange data securely and predictably. It uses standard HTTP methods (verbs) to perform operations on resources (nouns).
+
+Key REST principles:
+- **Client-Server Architecture:** Separation of concerns.
+- **Stateless:** The server stores no client context between requests.
+- **Cacheable:** Responses must define themselves as cacheable or not.
+- **Uniform Interface:** Consistent resource naming (`/users`, not `/getTheUser`).
+
+Bro, treating things as "Resources" is the secret to REST. You don't have endpoints like `/createUser` or `/deleteUser`. You just have `/users` and you use different HTTP methods on it.
+
+## 4. Syntax Table
+
+| HTTP Method | Action (CRUD) | Example Endpoint | Meaning |
+|---|---|---|---|
+| GET | Read | `/users` | Get a list of users |
+| GET | Read | `/users/123` | Get details for user 123 |
+| POST | Create | `/users` | Create a new user |
+| PUT | Update | `/users/123` | Replace user 123 entirely |
+| PATCH | Update | `/users/123` | Partially update user 123 |
+| DELETE | Delete | `/users/123` | Delete user 123 |
+
+## 5. Beginner Example
+
+Let's look at how you might define a simple REST API in your mind before coding it.
+
+We want to manage a library of books.
+
+```text
+GET    /books      -> Returns a list of all books
+POST   /books      -> Adds a new book to the library
+GET    /books/42   -> Returns details of book ID 42
+PUT    /books/42   -> Updates all info for book 42
+DELETE /books/42   -> Removes book 42 from the library
+```
+
+Bro, notice how the noun (`/books`) stays the same, but the verb (`GET`, `POST`, etc.) changes the action.
+
+## 6. Real-World Engineering Example
+
+When hitting a real REST API (like GitHub's API) using Python, it looks like this:
+
+```python
+import requests
+
+# GET to read a resource
+response = requests.get("https://api.github.com/users/octocat")
+user = response.json()
+print(f"User: {user['login']}, ID: {user['id']}")
+
+# POST to create a resource (requires auth)
+headers = {"Authorization": "Bearer YOUR_TOKEN"}
+payload = {"name": "My New Repo", "private": True}
+
+response = requests.post(
+    "https://api.github.com/user/repos",
+    json=payload,
+    headers=headers
+)
+
+if response.status_code == 201:
+    print("Repository created successfully!")
+```
+
+## 7. Internal Working
+
+How does a REST API process a request?
+
+<LearningFlow
+  diagram={{
+    title: 'REST API Request Lifecycle',
+    height: 400,
+    miniMap: true,
+    nodes: [
+      {id: 'client', title: 'Client app', detail: 'Sends HTTP GET /users/123', x: 20, y: 150, kind: 'core'},
+      {id: 'router', title: 'API Router', detail: 'Maps /users/{id} to a handler function.', x: 250, y: 150, kind: 'process'},
+      {id: 'controller', title: 'Controller logic', detail: 'Validates auth & request, calls DB.', x: 480, y: 150, kind: 'tool'},
+      {id: 'db', title: 'Database', detail: 'Executes SELECT * FROM users WHERE id=123', x: 480, y: 280, kind: 'data'},
+      {id: 'response', title: 'JSON Response', detail: '200 OK + {"name": "Asha"}', x: 750, y: 150, kind: 'output'},
+    ],
+    edges: [
+      {source: 'client', target: 'router', label: 'HTTP Request'},
+      {source: 'router', target: 'controller', label: 'Routes'},
+      {source: 'controller', target: 'db', label: 'Queries'},
+      {source: 'db', target: 'controller', label: 'Returns Row'},
+      {source: 'controller', target: 'response', label: 'Serializes to JSON', type: 'smoothstep'},
+    ],
+  }}
+/>
+
+When a request arrives, the web framework (like FastAPI or Flask) looks at the verb (`GET`) and the path (`/users/123`), routes it to the correct Python function, fetches data from the database, converts that data to JSON, and sends it back with an HTTP status code.
+
+## 8. Performance Table
+
+| REST Characteristic | Performance Impact | Recommendation |
+|---|---|---|
+| Statelessness | High scalability | Since no session is saved, any server can handle the next request (easy load balancing). |
+| JSON Serialization | Moderate CPU cost | Use fast parsers like `orjson` if dealing with massive payloads. |
+| Over-fetching | Wastes bandwidth | If an endpoint returns 100 fields but the client needs 2, REST wastes data (unlike GraphQL). |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is REST? | REpresentational State Transfer. An architectural style for networked apps using standard HTTP verbs and stateless communication. |
+| What is the difference between PUT and PATCH? | PUT replaces the entire resource. PATCH partially updates the resource. |
+| What does "Stateless" mean? | The server does not store client context between requests. Every request must contain all info needed to understand it. |
+| What HTTP status code is used for successful creation? | 201 Created. |
+| Why use plural nouns for endpoints? | It represents a collection of resources (e.g., `/users` instead of `/user`). |
+
+## 10. Tricky Questions & Edge Cases
+
+### The "Everything is a POST" Anti-Pattern
+
+```text
+# Bad: Ignoring REST conventions
+POST /getUsers
+POST /updateUser?id=123
+POST /deleteUser?id=123
+```
+
+Bro, if you do this, you are building an RPC (Remote Procedure Call) API, not a REST API. In REST, you must use the correct HTTP verbs and nouns:
+```text
+# Good: RESTful
+GET    /users
+PATCH  /users/123
+DELETE /users/123
+```
+
+### Idempotency
+
+An operation is **idempotent** if doing it once has the same effect as doing it 100 times.
+- `GET`, `PUT`, `DELETE` are idempotent. If you delete user 123 ten times, user 123 is still gone.
+- `POST` is NOT idempotent. If you `POST /users` ten times, you might create 10 different users.
+
+## 11. Real-World Usage
+
+| Domain | Real-World Usage |
+|---|---|
+| Mobile Apps | Fetching feed data or submitting forms to a backend. |
+| Microservices | Services communicating with each other internally. |
+| SaaS Platforms | Stripe, Twilio, and GitHub exposing APIs for developers. |
+| Single Page Apps | React or Vue frontends loading data asynchronously. |
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use nouns for endpoints (`/articles`) | Use verbs (`/getArticles`) |
+| Return correct HTTP status codes (200, 404, 500) | Return `200 OK` with an error message inside the JSON |
+| Version your API (`/v1/users`) | Change the response structure of an active API without warning |
+| Use pagination for lists (`/users?limit=50&offset=100`) | Return 10,000 records in a single GET request |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> Never trust the client, bro. Always validate payloads (using tools like Pydantic) before processing them. Also, a real production REST API must have rate limiting and authentication to prevent abuse.
+
+## 14. Common Mistakes
+
+| Mistake | Why It Hurts |
+|---|---|
+| Nesting resources too deeply | `/users/1/posts/5/comments/10` gets hard to parse. Prefer flat endpoints like `/comments/10`. |
+| Sending sensitive data in the URL | Query params (`GET /users?password=123`) are saved in server logs. Always use POST with a JSON body for sensitive data. |
+| Forgetting pagination | Your API works fine in dev with 10 rows, but crashes production when the table has 1 million rows. |
+
+## 15. Related Topics
+
+- Requests Library
+- FastAPI
+- Flask
+- API Versioning
+- Authentication
+- Rate Limiting

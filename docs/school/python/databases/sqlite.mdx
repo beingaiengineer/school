@@ -2,6 +2,231 @@
 sidebar_position: 1
 ---
 
-# Sqlite
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Sqlite.
+# SQLite
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | SQLite in Python |
+| Difficulty | Beginner |
+| Used For | Local, file-based relational databases |
+| Main Strength | Built into Python (`import sqlite3`), requires zero server setup |
+| Common Mistake | Using it for highly concurrent web applications |
+| Performance | Incredible read speeds, but blocks on concurrent writes |
+
+Bro, SQLite is the most widely deployed database in the world. It is a full SQL database that lives entirely inside a single file on your hard drive. Python comes with it built-in, meaning you can start writing SQL instantly without installing a separate database server.
+
+## 2. Real-World Analogy
+
+Think of SQLite like a high-quality ledger book sitting on your desk.
+
+When you want to read or write, you just open the book. It's fast, simple, and right in front of you.
+However, if three of your coworkers (threads/processes) try to write in the exact same book at the exact same time, you'll bump heads. One person has to wait for the other to finish writing.
+
+PostgreSQL, on the other hand, is like a corporate bank with 50 tellers. It takes time to set up the building, but it handles hundreds of people simultaneously.
+
+## 3. Concept Explanation
+
+SQLite is a C-language library that implements a small, fast, self-contained, high-reliability, full-featured, SQL database engine.
+
+Unlike MySQL or PostgreSQL, SQLite does NOT have a server process. There is no `localhost:5432` to connect to. The database engine runs directly inside your Python process and reads/writes directly to a `.db` file.
+
+You should use SQLite for:
+- Desktop applications
+- Mobile apps (iOS/Android use it natively)
+- Automated testing (in-memory databases)
+- Data analysis scripts
+- Prototyping
+
+Bro, you should NOT use SQLite for high-traffic web apps where multiple users write data at the same time.
+
+## 4. Syntax Table
+
+| Operation | Code Example |
+|---|---|
+| Import | `import sqlite3` |
+| Connect to file | `conn = sqlite3.connect('app.db')` |
+| Connect in-memory | `conn = sqlite3.connect(':memory:')` |
+| Create Cursor | `cursor = conn.cursor()` |
+| Execute SQL | `cursor.execute("SELECT * FROM users")` |
+| Fetch Data | `data = cursor.fetchall()` |
+| Commit Transaction | `conn.commit()` |
+| Close Connection | `conn.close()` |
+
+## 5. Beginner Example
+
+Let's create a database file, make a table, insert data, and read it back.
+
+```python
+import sqlite3
+
+# 1. Connect (creates the file if it doesn't exist)
+conn = sqlite3.connect('school.db')
+cursor = conn.cursor()
+
+# 2. Create a table
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS students (
+        id INTEGER PRIMARY KEY,
+        name TEXT,
+        grade INTEGER
+    )
+''')
+
+# 3. Insert data (using parameterized queries to prevent SQL injection)
+cursor.execute('INSERT INTO students (name, grade) VALUES (?, ?)', ('Asha', 95))
+
+# 4. Save (commit) the changes
+conn.commit()
+
+# 5. Read the data back
+cursor.execute('SELECT * FROM students')
+print(cursor.fetchall())
+
+# 6. Close the connection
+conn.close()
+```
+
+Output:
+```text
+[(1, 'Asha', 95)]
+```
+
+Bro, if you look in your folder, you will see a literal file named `school.db`. That is your database.
+
+## 6. Real-World Engineering Example
+
+In the real world, you use `Context Managers` (the `with` statement) to ensure database connections are always closed, even if your code crashes.
+
+```python
+import sqlite3
+import contextlib
+
+@contextlib.contextmanager
+def get_db(db_name="app.db"):
+    conn = sqlite3.connect(db_name)
+    # This row factory makes rows act like dictionaries!
+    conn.row_factory = sqlite3.Row
+    try:
+        yield conn
+    finally:
+        conn.close()
+
+# Real-world usage
+def get_user_by_id(user_id: int):
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+        row = cursor.fetchone()
+
+        if row:
+            # We can access columns by name because of sqlite3.Row
+            return {"id": row["id"], "name": row["name"]}
+        return None
+```
+
+## 7. Internal Working
+
+How does Python talk to a file using SQL?
+
+<LearningFlow
+  diagram={{
+    title: 'SQLite Execution Flow',
+    height: 400,
+    miniMap: true,
+    nodes: [
+      {id: 'python', title: 'Python App', detail: 'cursor.execute()', x: 20, y: 150, kind: 'core'},
+      {id: 'sqlite3', title: 'sqlite3 Library', detail: 'Translates Python to C-API', x: 250, y: 150, kind: 'tool'},
+      {id: 'engine', title: 'SQLite C Engine', detail: 'Parses SQL, locks file', x: 500, y: 150, kind: 'process'},
+      {id: 'file', title: 'app.db (Disk)', detail: 'Reads/Writes raw bytes', x: 750, y: 150, kind: 'data'},
+      {id: 'lock', title: 'Write Lock', detail: 'Blocks other writers', x: 500, y: 280, kind: 'warning'},
+    ],
+    edges: [
+      {source: 'python', target: 'sqlite3', label: 'Call'},
+      {source: 'sqlite3', target: 'engine', label: 'C-API'},
+      {source: 'engine', target: 'file', label: 'I/O'},
+      {source: 'engine', target: 'lock', label: 'During INSERT', type: 'step'},
+    ],
+  }}
+/>
+
+Because there is no server, the SQLite engine runs *inside* your Python memory space. When you execute an `INSERT`, SQLite places a lock on the `app.db` file at the OS level. If another Python script tries to write at that exact moment, it gets a "Database is locked" error.
+
+## 8. Performance Table
+
+| Feature | Performance / Limitation |
+|---|---|
+| Read Speed | Incredibly Fast (direct disk access, no network latency) |
+| Write Speed | Fast, but locks the whole database file |
+| Concurrency | Terrible. Only ONE process can write at a time. |
+| Maximum Size | ~140 Terabytes (Yes, terabytes) |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does it mean that SQLite is serverless? | It means the database engine runs directly inside the host application, reading/writing to a local file. |
+| Why shouldn't you use SQLite for a web application? | SQLite locks the entire database file during a write operation. High concurrent traffic will cause "database is locked" errors. |
+| What is `:memory:` in SQLite? | It creates a database entirely in RAM. It's lightning-fast, perfect for running automated test suites, but disappears when the script ends. |
+| Does SQLite enforce data types? | Historically, no (Flexible Typing). You could put text in an integer column. Newer versions introduced STRICT mode. |
+
+## 10. Tricky Questions & Edge Cases
+
+### SQL Injection with String Formatting
+
+```python
+# VERY BAD: SQL INJECTION
+name = "Drop Table users;--"
+cursor.execute(f"SELECT * FROM users WHERE name = '{name}'")
+```
+
+Bro, never use f-strings or `.format()` for SQL queries. A malicious user can delete your entire database.
+
+**Always use Parameterized Queries:**
+```python
+# GOOD: Safe from injection
+name = "Asha"
+cursor.execute("SELECT * FROM users WHERE name = ?", (name,))
+```
+
+### The Uncommitted Transaction
+
+If you do an `INSERT` or `UPDATE` but forget to call `conn.commit()`, the data will mysteriously disappear when your script ends. Python does not auto-commit by default.
+
+## 11. Real-World Usage
+
+| Domain | Real-World Usage |
+|---|---|
+| Data Pipelines | Scraping data from the web, cleaning it, and dumping it into a local SQLite file before sending it to a data warehouse. |
+| Automated Testing | Overriding the production Postgres connection string to `sqlite:///:memory:` so tests run instantly without needing a DB server. |
+| Edge Devices | IoT devices (like Raspberry Pi) storing sensor data locally when the internet goes down. |
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `?` placeholders for variables | Use f-strings for SQL variables |
+| Set `conn.row_factory = sqlite3.Row` for dictionary-like results | Rely on confusing tuple indices `row[4]` |
+| Close cursors and connections in `finally` blocks or context managers | Leave connections open forever |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> If you MUST use SQLite in a multi-threaded web app (like a small internal dashboard), you can enable Write-Ahead Logging (WAL). Execute `PRAGMA journal_mode=WAL;`. This changes how SQLite locks the file, allowing multiple readers to read *while* someone is writing. It massively improves concurrency.
+
+## 14. Common Mistakes
+
+| Mistake | Why It Hurts |
+|---|---|
+| Passing a single value to execute without a comma | `cursor.execute(..., (user_id))` fails because Python evaluates `(5)` as an int, not a tuple. You must use a trailing comma: `(user_id,)`. |
+| Ignoring backups | Because it's a file, if it gets corrupted or accidentally deleted, it's gone. Always copy the `.db` file elsewhere. |
+
+## 15. Related Topics
+
+- PostgreSQL (The step-up from SQLite)
+- ORM vs Raw SQL
+- SQLAlchemy
+- File Handling (since SQLite is just a file)
