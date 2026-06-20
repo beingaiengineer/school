@@ -2,6 +2,215 @@
 sidebar_position: 3
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Mocking
 
-Placeholder: introduce Mocking.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Mocking in Python |
+| Difficulty | Intermediate |
+| Used For | Faking external dependencies (DBs, APIs) during unit tests |
+| Common Mistake | Mocking the system under test instead of its dependencies |
+| Performance | Keeps tests running in milliseconds by avoiding network I/O |
+
+# 2. Real-World Analogy
+
+Bro, imagine you are a movie director filming a scene where an actor jumps out of a crashing airplane.
+You don't *actually* buy a Boeing 747, fly it up, and crash it just to see if the actor yells his line correctly. That would be insanely expensive and slow!
+Instead, you use a green screen. You put the actor in a fake, controlled environment (a "mock" airplane) and just pretend they are falling. In testing, **Mocking** is the green screen for your code. You fake the database or the external API so you can test your logic instantly without crashing a real plane.
+
+# 3. Concept Explanation
+
+Mocking is a technique used in Unit Testing to isolate the code being tested. If your function fetches data from a third-party API (like Stripe or AWS) and then formats it, you don't want your test to actually call Stripe.
+Why? Because:
+1. It's slow (network latency).
+2. It costs money (API limits).
+3. The API might be down, causing your test to fail randomly.
+
+Instead, you use Python's `unittest.mock` library to replace the API call with a "Mock Object". This object instantly returns whatever fake data you tell it to return.
+
+# 4. Syntax Table
+
+| Operation | Example using `unittest.mock` |
+|---|---|
+| Import Mock | `from unittest.mock import patch, Mock` |
+| Mock a Function | `@patch('module.external_function')` |
+| Set Return Value | `mock_func.return_value = {"status": "ok"}` |
+| Check if Called | `mock_func.assert_called_once_with("args")` |
+
+# 5. Beginner Example
+
+Let's test a function that fetches the weather from a slow API.
+
+**The Code (`weather.py`):**
+```python
+import requests
+
+def is_it_raining(city):
+    # This is an external API call! We don't want to run this in tests.
+    response = requests.get(f"http://api.weather.com/{city}")
+    data = response.json()
+    return data.get("condition") == "Rain"
+```
+
+**The Test (`test_weather.py`):**
+```python
+from unittest.mock import patch
+from weather import is_it_raining
+
+# We use @patch to intercept the 'requests.get' call inside 'weather.py'
+@patch('weather.requests.get')
+def test_is_it_raining(mock_get):
+    # 1. Arrange: Setup the fake response
+    mock_get.return_value.json.return_value = {"condition": "Rain"}
+
+    # 2. Act: Call our function. It uses the mock instead of real internet!
+    result = is_it_raining("London")
+
+    # 3. Assert: Check our logic
+    assert result is True
+    # Verify our code actually tried to call the API with the right URL
+    mock_get.assert_called_once_with("http://api.weather.com/London")
+```
+
+# 6. Real-World Engineering Example
+
+In production, you often mock database interactions or cloud storage. Here is how you mock an AWS S3 upload inside a fast unit test.
+
+```python
+import boto3
+
+class FileUploader:
+    def upload_to_s3(self, filename: str, bucket: str):
+        if not filename.endswith(".pdf"):
+            raise ValueError("Only PDFs allowed")
+
+        s3 = boto3.client('s3')
+        # This costs money and requires AWS credentials!
+        s3.upload_file(filename, bucket, filename)
+        return True
+
+# --- Tests ---
+from unittest.mock import patch
+import pytest
+
+def test_upload_blocks_non_pdf():
+    uploader = FileUploader()
+    with pytest.raises(ValueError):
+        uploader.upload_to_s3("image.png", "my-bucket")
+
+@patch('boto3.client')
+def test_upload_success(mock_boto_client):
+    uploader = FileUploader()
+
+    # Act
+    result = uploader.upload_to_s3("doc.pdf", "my-bucket")
+
+    # Assert logic
+    assert result is True
+
+    # Assert the mock was used correctly
+    mock_s3 = mock_boto_client.return_value
+    mock_s3.upload_file.assert_called_once_with("doc.pdf", "my-bucket", "doc.pdf")
+```
+
+# 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'How @patch Intercepts Execution',
+    height: 400,
+    nodes: [
+      {id: 'test', title: 'Test Function', detail: 'Calls the code', x: 250, y: 50, kind: 'core'},
+      {id: 'func', title: 'Your Function', detail: 'is_it_raining()', x: 250, y: 150, kind: 'process'},
+      {id: 'mock', title: 'Mock Object', detail: 'Fake requests.get', x: 100, y: 250, kind: 'tool'},
+      {id: 'real', title: 'Real requests.get', detail: 'Blocked by @patch', x: 400, y: 250, kind: 'warning'},
+      {id: 'return', title: 'Fake Data returned', detail: 'Instantly', x: 250, y: 350, kind: 'data'}
+    ],
+    edges: [
+      {source: 'test', target: 'func', label: 'Executes'},
+      {source: 'func', target: 'mock', label: 'Uses Mocked reference'},
+      {source: 'func', target: 'real', label: 'X', type: 'straight'},
+      {source: 'mock', target: 'return', label: 'Yields predefined JSON'},
+      {source: 'return', target: 'func', label: 'Completes logic'}
+    ]
+  }}
+/>
+
+When you use `@patch('module.target')`, Python temporarily modifies the module dictionary in memory. Whenever your code tries to access `target`, it encounters the `Mock` object instead of the real function. Once the test finishes, `@patch` cleans up and restores the original function so other tests aren't affected.
+
+# 8. Performance Table
+
+| Action | Execution Time |
+|---|---|
+| Real API Call | 200ms - 2000ms |
+| Real DB Query | 10ms - 100ms |
+| Mocked Function | 0.001ms (Instant) |
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why do we mock? | To isolate code, remove external dependencies, ensure tests run quickly, and avoid side effects (like writing to a real DB). |
+| What is the difference between a Mock and a Stub? | A Stub just returns fake data. A Mock does that *and* remembers how it was called (arguments, count), allowing you to assert its behavior. |
+| Where do you point the `@patch` decorator? | "Mock where it is used, not where it is defined." If `moduleA` imports `func` from `moduleB`, you patch `moduleA.func`. |
+| What happens if you over-mock? | Your test stops testing reality. It just proves that your mocks work with other mocks, giving a false sense of security. |
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, look at this patching error. Why isn't the mock working?
+
+**`my_api.py`**:
+```python
+from time import sleep
+
+def do_work():
+    sleep(5)
+    return "Done"
+```
+
+**`test_my_api.py`**:
+```python
+from unittest.mock import patch
+from my_api import do_work
+
+@patch('time.sleep') # <-- THE BUG IS HERE
+def test_do_work(mock_sleep):
+    do_work()
+```
+
+**Answer:** The test will pause for 5 seconds because the mock failed!
+**Why?** Because `my_api.py` used `from time import sleep`. This imports the `sleep` function directly into the `my_api` namespace. Patching `time.sleep` does nothing to `my_api`'s local copy!
+**The Fix:** You must patch it exactly where it is used: `@patch('my_api.sleep')`.
+
+# 11. Real-World Usage
+
+- **Payment Gateways:** You NEVER hit the real Stripe API in a test suite. You mock it to return `{status: "paid"}` or `{error: "declined"}` to test your app's routing.
+- **Microservices:** If Service A depends on Service B, Service A's unit tests mock Service B's HTTP responses entirely.
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `assert_called_once_with()` to ensure you sent the correct data to the external API. | Mock internal functions of the class you are trying to test. |
+| Use `pytest-mock` (the `mocker` fixture) for cleaner syntax over built-in `patch`. | Over-mock. If it doesn't touch disk/network, let the real code run! |
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Mocking is dangerous if the external API changes its structure. If Stripe changes their JSON response format, your mocked unit tests will still pass perfectly, but your production app will crash! This is why you must combine heavily-mocked unit tests with a few true **Integration Tests** that hit a staging API.
+
+# 14. Common Mistakes
+
+- **Mocking the System Under Test:** If you are testing `calculate_tax()`, and you mock `calculate_tax()` to return `100`, you tested absolutely nothing.
+- **Forgetting `return_value`:** Writing `mock_obj = {"status": "ok"}` instead of `mock_obj.return_value = {"status": "ok"}`.
+- **Patch Path Mistakes:** The number one headache in Python mocking is patching the wrong import path. Always remember: *patch where it is used.*
+
+# 15. Related Topics
+
+- Testing / Unit Testing
+- Testing / Pytest
+- Testing / Integration Testing

@@ -2,6 +2,213 @@
 sidebar_position: 3
 ---
 
-# Sqlalchemy
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Sqlalchemy.
+# SQLAlchemy
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | SQLAlchemy |
+| Difficulty | Intermediate to Advanced |
+| Used For | Interacting with relational databases using Python |
+| Common Mistake | Querying too much data at once (N+1 queries) |
+| Performance | Can be slower than raw SQL if used carelessly, but highly optimizable |
+
+# 2. Real-World Analogy
+
+Bro, think of SQLAlchemy like a high-level translator at the United Nations. You (the Python app) speak Python. The database speaks SQL. Instead of you trying to write raw SQL commands by hand, you just talk to SQLAlchemy in Python, and it translates everything perfectly into the correct SQL dialect (PostgreSQL, MySQL, SQLite, etc.) and handles all the back-and-forth communication.
+
+# 3. Concept Explanation
+
+SQLAlchemy is the most popular Object Relational Mapper (ORM) and SQL Toolkit for Python. It allows developers to map Python classes to database tables and Python objects to rows.
+
+It has two main components:
+1. **Core**: A SQL expression language that lets you build queries using Python constructs.
+2. **ORM (Object Relational Mapper)**: A higher-level abstraction that maps Python classes to tables.
+
+You use it when you want your application code to be database-agnostic, when you prefer working with Python objects instead of raw SQL strings, and when you want to handle complex database relationships cleanly. Avoid it only if you are doing massive bulk data processing where raw SQL performance is absolutely critical and ORM overhead is too high.
+
+# 4. Syntax Table
+
+| Concept | Example |
+|---|---|
+| Define a Model | `class User(Base): __tablename__ = 'users'` |
+| Create Engine | `engine = create_engine("sqlite:///app.db")` |
+| Create Session | `Session = sessionmaker(bind=engine); session = Session()` |
+| Add Record | `session.add(User(name="Alice"))` |
+| Commit | `session.commit()` |
+
+# 5. Beginner Example
+
+Let's see the absolute basics of setting up a table, adding a user, and querying it.
+
+```python
+from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy.orm import declarative_base, sessionmaker
+
+# 1. Setup Connection and Base
+engine = create_engine("sqlite:///:memory:")
+Base = declarative_base()
+
+# 2. Define the Model
+class User(Base):
+    __tablename__ = 'users'
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+
+# 3. Create the table in DB
+Base.metadata.create_all(engine)
+
+# 4. Talk to the DB via Session
+SessionLocal = sessionmaker(bind=engine)
+session = SessionLocal()
+
+# Add a user
+new_user = User(name="BroEngineer")
+session.add(new_user)
+session.commit()
+
+# Query the user
+fetched_user = session.query(User).filter_by(name="BroEngineer").first()
+print(f"Found user: {fetched_user.name}")
+```
+
+# 6. Real-World Engineering Example
+
+In production, you often use an asynchronous setup with modern async frameworks like FastAPI. Here is how a real async SQLAlchemy setup looks.
+
+```python
+import asyncio
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy import Column, Integer, String, select
+
+DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+
+engine = create_async_engine(DATABASE_URL, echo=False)
+AsyncSessionLocal = sessionmaker(
+    bind=engine, class_=AsyncSession, expire_on_commit=False
+)
+
+Base = declarative_base()
+
+class Product(Base):
+    __tablename__ = 'products'
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    price = Column(Integer)
+
+async def main():
+    # Setup tables
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    # Transaction
+    async with AsyncSessionLocal() as session:
+        # Insert
+        session.add(Product(name="Mechanical Keyboard", price=150))
+        await session.commit()
+
+        # Query
+        result = await session.execute(select(Product).where(Product.price > 100))
+        product = result.scalars().first()
+        print(f"Product: {product.name} - ${product.price}")
+
+# Run async code
+asyncio.run(main())
+```
+
+# 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'SQLAlchemy Architecture Flow',
+    height: 400,
+    nodes: [
+      {id: 'python', title: 'Python App', detail: 'session.add(user)', x: 50, y: 150, kind: 'core'},
+      {id: 'orm', title: 'SQLAlchemy ORM', detail: 'Tracks Object State', x: 250, y: 50, kind: 'process'},
+      {id: 'core', title: 'SQLAlchemy Core', detail: 'Builds SQL Expression', x: 250, y: 250, kind: 'process'},
+      {id: 'dialect', title: 'Dialect', detail: 'Formats for Postgres/MySQL', x: 500, y: 150, kind: 'tool'},
+      {id: 'dbapi', title: 'DBAPI (e.g., psycopg2)', detail: 'Executes Query', x: 750, y: 150, kind: 'tool'},
+      {id: 'db', title: 'Database', detail: 'Raw Data', x: 1000, y: 150, kind: 'data'}
+    ],
+    edges: [
+      {source: 'python', target: 'orm', label: 'Object'},
+      {source: 'python', target: 'core', label: 'Expression'},
+      {source: 'orm', target: 'core', label: 'Compiles to'},
+      {source: 'core', target: 'dialect', label: 'Passes Statement'},
+      {source: 'dialect', target: 'dbapi', label: 'Formats'},
+      {source: 'dbapi', target: 'db', label: 'Network/IO'}
+    ]
+  }}
+/>
+
+When you interact with SQLAlchemy, the ORM tracks changes to your objects (Unit of Work pattern). When you call `commit()`, it flushes these changes by translating them down into SQLAlchemy Core expressions. The Core then uses a Dialect to convert those expressions into database-specific SQL strings. Finally, it passes those strings to the DBAPI (like `psycopg2` for Postgres), which actually talks to the database.
+
+# 8. Performance Table
+
+| Operation | Performance Note |
+|---|---|
+| Query.all() | Memory heavy for large tables. Prefer pagination or `yield_per()`. |
+| Bulk Insert | Using `session.add_all()` is slow. Use `session.bulk_save_objects()` or `insert().values()`. |
+| Relationships | N+1 queries are common. Use `joinedload()` or `selectinload()`. |
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the N+1 query problem? | When an ORM fetches a list of objects, then does a separate query for each object's related data. Fix it using eager loading (`joinedload`). |
+| What is the difference between `flush()` and `commit()`? | `flush()` sends SQL to the database but leaves the transaction open. `commit()` saves the changes permanently. |
+| Why use an ORM instead of Raw SQL? | Portability across databases, type safety in Python, easier refactoring, and automatic relationship management. |
+| How do you prevent SQL injection in SQLAlchemy? | SQLAlchemy prevents it automatically by using parameterized queries under the hood, unless you manually execute raw SQL strings unsafely. |
+| What is `expire_on_commit`? | A setting that tells the session to invalidate the Python objects after commit, forcing a new DB query if they are accessed again. |
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, what happens if you modify an object but forget to commit, then query it again?
+
+```python
+user = session.query(User).first()
+user.name = "Hacked!"
+
+# We didn't commit!
+same_user = session.query(User).first()
+print(same_user.name) # What prints?
+```
+
+**Answer:** It prints `"Hacked!"`.
+**Why?** Because the `Session` acts as an identity map. It knows you already loaded that object in memory, so it returns the modified memory object, even though it hasn't been saved to the actual database yet!
+
+# 11. Real-World Usage
+
+- **Reddit:** Heavily used in their backend to interact with Postgres.
+- **Yelp:** Uses SQLAlchemy for data processing and API backends.
+- **FastAPI Apps:** Almost every modern FastAPI application uses SQLAlchemy (specifically the async version) as its default ORM.
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `selectinload` or `joinedload` for relationships. | Let the ORM lazy-load relationships in a loop. |
+| Use async SQLAlchemy for high-concurrency web apps. | Use synchronous DB calls in async frameworks. |
+| Scope your sessions properly (e.g., one session per web request). | Share a single global session across multiple threads. |
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+In production, your SQLAlchemy session lifecycle is critical. If you don't close your sessions, you will exhaust your connection pool and bring the database down. Always use context managers (`with Session() as session:`) or middleware to ensure connections are returned to the pool after every request.
+
+# 14. Common Mistakes
+
+- **N+1 Queries:** Looping over objects and accessing a related field that hasn't been loaded, causing hundreds of hidden database queries.
+- **Detached Instances:** Trying to access attributes of an object after the session has been closed, resulting in a `DetachedInstanceError`.
+- **Global Sessions:** Creating one session at the start of the app and reusing it forever. Sessions are meant to be short-lived.
+
+# 15. Related Topics
+
+- Databases / ORM vs Raw SQL
+- Databases / Connection Pooling
+- Databases / Transactions
+- API Development / FastAPI

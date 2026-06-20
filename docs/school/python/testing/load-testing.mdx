@@ -2,6 +2,180 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Load Testing
 
-Placeholder: introduce Load Testing.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Load Testing |
+| Difficulty | Advanced |
+| Used For | Finding out how many concurrent users your app can handle before crashing |
+| Common Mistake | Load testing against the production database during peak hours |
+| Performance | Critical for scaling and provisioning server infrastructure |
+
+# 2. Real-World Analogy
+
+Bro, imagine you just built a brand new bridge.
+A **Unit Test** is checking if the concrete is strong.
+An **Integration Test** is driving one car across it to make sure it doesn't fall.
+A **Load Test** is parking 500 massive semi-trucks on the bridge all at the exact same time to see at what point the steel beams snap. You want to break it on purpose so you know its absolute maximum capacity before you open it to the public.
+
+# 3. Concept Explanation
+
+Load testing (or Performance Testing) is the process of simulating thousands of concurrent users hitting your application simultaneously.
+
+We do this to:
+1. Find the bottleneck (Is it the CPU? The database? The network?).
+2. Measure response times under stress.
+3. Determine if Auto-Scaling works correctly.
+
+In Python, the most popular tool for this is **Locust**. It allows you to write user behavior scenarios in plain Python and uses asynchronous I/O to generate massive amounts of traffic from a single machine.
+
+# 4. Syntax Table
+
+| Concept | Locust Example |
+|---|---|
+| Define a User | `class WebsiteUser(HttpUser):` |
+| Wait Time | `wait_time = between(1, 5)` (simulates user reading) |
+| Define a Task | `@task def load_home(self): self.client.get("/")` |
+| Run Test | `locust -f load_test.py --host=http://localhost:8000` |
+
+# 5. Beginner Example
+
+Let's write a Locust script to attack a login endpoint.
+
+**`locustfile.py`**
+```python
+from locust import HttpUser, task, between
+
+class APIUser(HttpUser):
+    # Simulates a user waiting 1 to 3 seconds between clicks
+    wait_time = between(1, 3)
+
+    @task(weight=3) # This task runs 3 times more often
+    def view_products(self):
+        self.client.get("/api/products")
+
+    @task(weight=1)
+    def login(self):
+        self.client.post("/api/login", json={"user": "bro", "pass": "123"})
+
+# To run this, you type `locust` in the terminal.
+# It opens a Web UI where you can specify "Spawn 1000 users at 50 users/second".
+```
+
+# 6. Real-World Engineering Example
+
+In production, users don't just hit one endpoint randomly. They follow a flow. Locust lets you simulate complex, stateful user journeys using `SequentialTaskSet`.
+
+```python
+from locust import HttpUser, SequentialTaskSet, task, between
+
+class CheckoutFlow(SequentialTaskSet):
+
+    @task
+    def browse_items(self):
+        self.client.get("/store/items")
+
+    @task
+    def add_to_cart(self):
+        # We catch the response to ensure it didn't fail
+        with self.client.post("/store/cart", json={"item_id": 42}, catch_response=True) as response:
+            if response.status_code == 200:
+                response.success()
+            else:
+                response.failure("Failed to add to cart!")
+
+    @task
+    def checkout(self):
+        self.client.post("/store/checkout")
+
+class Shopper(HttpUser):
+    wait_time = between(2, 5)
+    # The Shopper will execute the CheckoutFlow sequentially
+    tasks = [CheckoutFlow]
+```
+
+# 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'Load Testing Execution',
+    height: 400,
+    nodes: [
+      {id: 'locust', title: 'Locust Master', detail: 'Coordinates Workers', x: 50, y: 150, kind: 'core'},
+      {id: 'worker1', title: 'Worker Node', detail: 'Spawns 500 async users', x: 250, y: 50, kind: 'process'},
+      {id: 'worker2', title: 'Worker Node', detail: 'Spawns 500 async users', x: 250, y: 250, kind: 'process'},
+      {id: 'lb', title: 'Load Balancer', detail: 'Distributes Traffic', x: 500, y: 150, kind: 'tool'},
+      {id: 'app', title: 'Python App', detail: 'FastAPI / Django', x: 750, y: 150, kind: 'data'},
+      {id: 'db', title: 'Database', detail: 'The Bottleneck', x: 1000, y: 150, kind: 'warning'}
+    ],
+    edges: [
+      {source: 'locust', target: 'worker1', label: 'Start'},
+      {source: 'locust', target: 'worker2', label: 'Start'},
+      {source: 'worker1', target: 'lb', label: 'HTTP GET/POST'},
+      {source: 'worker2', target: 'lb', label: 'HTTP GET/POST'},
+      {source: 'lb', target: 'app', label: 'Routes'},
+      {source: 'app', target: 'db', label: 'Queries'}
+    ]
+  }}
+/>
+
+Locust uses `gevent` (asynchronous coroutines) under the hood. Instead of launching heavy OS threads for each simulated user, it uses lightweight greenlets. This allows a single laptop to simulate thousands of concurrent users. For massive tests (e.g., 100,000 users), Locust can be run in Distributed Mode across multiple servers.
+
+# 8. Performance Table
+
+| Metric | Good | Warning | Critical Failure |
+|---|---|---|---|
+| Response Time (p95) | < 200ms | 500ms - 1s | > 2 seconds |
+| Error Rate | 0% | 1% | > 5% |
+| DB CPU Usage | < 50% | 80% | 100% (Database locked) |
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between Load Testing and Stress Testing? | Load Testing tests expected peak traffic. Stress Testing pushes traffic far beyond expected limits until the system completely breaks to see *how* it fails. |
+| What is p95 latency? | The 95th percentile response time. It means 95% of users got a response faster than this time, and 5% experienced slower times. It's much more accurate than "average" time. |
+| Why did the load test crash your database but your CPU is at 10%? | You ran out of database connections! The app thread pool blocked waiting for the database, ignoring the CPU. (You need Connection Pooling). |
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, you run a load test from your laptop against your AWS servers. Locust says it generated 5,000 requests per second, but your server logs only show 500 requests per second. Where did the traffic go?
+
+**Answer:** You bottlenecked your own laptop or network!
+**Why?** Your laptop's WiFi card or your local ISP router cannot handle 5,000 outbound TCP connections per second. Locust thought it sent them, but the OS/router dropped the packets.
+**The Fix:** Run load tests from a cloud server (like an EC2 instance in the same region) that has a massive network bandwidth pipe.
+
+# 11. Real-World Usage
+
+- **E-commerce:** Before Black Friday or Diwali sales, Flipkart and Amazon run massive load tests to ensure their checkout queues won't crash under 100x normal traffic.
+- **Ticketing Platforms:** BookMyShow load tests their seat-locking database transactions to ensure 100,000 users don't accidentally buy the same Taylor Swift ticket.
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use a dedicated "Staging" environment that perfectly mirrors Production. | Run load tests against your local SQLite database and assume it proves anything. |
+| Test complex, realistic user flows (Browse -> Add to Cart -> Checkout). | Just hit the `/healthcheck` endpoint 10,000 times and claim the app scales. |
+| Monitor Database, CPU, and Memory metrics *during* the test. | Only look at the Locust dashboard. |
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+If you must run a load test against Production, do it at 3:00 AM, and let your database administrators know. A severe load test can trigger Auto-Scaling groups to spin up 50 new servers, costing thousands of dollars in an hour. It can also fill up your error logging systems (like Sentry or Datadog) and exhaust your monthly quota instantly.
+
+# 14. Common Mistakes
+
+- **Ignoring Think Time:** Not using `wait_time`. Real users take 5 seconds to read a page before clicking. If you have 0 wait time, 100 users hit the server like a DDoS attack, which isn't realistic.
+- **Caching Illusions:** Hitting a static `/about` page 10,000 times. A CDN or cache will handle it instantly, proving nothing about your backend Python code.
+- **Not Cleaning Up:** Generating 50,000 fake users in the staging database and leaving them there, ruining the data for QA testers later.
+
+# 15. Related Topics
+
+- Databases / Connection Pooling
+- Testing / Integration Testing
+- System Design / Scalable Python

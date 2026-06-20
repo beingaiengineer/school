@@ -2,6 +2,188 @@
 sidebar_position: 1
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Pytest
 
-Placeholder: introduce Pytest.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Pytest |
+| Difficulty | Beginner to Intermediate |
+| Used For | Writing and running automated tests in Python |
+| Common Mistake | Writing tests that depend on each other |
+| Performance | Very fast execution, supports parallel testing |
+
+# 2. Real-World Analogy
+
+Bro, think of `pytest` like a factory quality inspector.
+Imagine you are building cars. You don't just build a car and hand it to a customer hoping the brakes work. You have an inspector who checks the brakes, the engine, and the lights on every single car before it leaves the factory.
+`pytest` is that inspector. You write a list of "checks" (tests), and `pytest` automatically runs through all of them every time you change your code to ensure you didn't break anything.
+
+# 3. Concept Explanation
+
+`pytest` is the industry standard testing framework for Python. While Python has a built-in `unittest` module, `pytest` is vastly preferred by engineers because it requires much less boilerplate code, has incredibly detailed error messages, and supports powerful features like "fixtures" (reusable test setups).
+
+You use it to verify that your functions, classes, and APIs behave exactly as expected under various conditions (good inputs, bad inputs, edge cases).
+
+# 4. Syntax Table
+
+| Concept | Example |
+|---|---|
+| Write a test | `def test_addition(): assert 1 + 1 == 2` |
+| Run all tests | `pytest` (in terminal) |
+| Run specific file | `pytest test_math.py` |
+| Check for Exception | `with pytest.raises(ValueError): do_something()` |
+| Use Fixture | `@pytest.fixture def setup(): return "data"` |
+
+# 5. Beginner Example
+
+Let's test a simple function. Notice how you don't need to create classes. Just write a function starting with `test_` and use the standard Python `assert` keyword.
+
+**`math_ops.py`** (The code you want to test)
+```python
+def divide(a, b):
+    if b == 0:
+        raise ValueError("Cannot divide by zero, bro!")
+    return a / b
+```
+
+**`test_math_ops.py`** (The test file)
+```python
+import pytest
+from math_ops import divide
+
+def test_divide_normal_numbers():
+    result = divide(10, 2)
+    assert result == 5.0  # If this is False, the test fails!
+
+def test_divide_by_zero_raises_error():
+    # We EXPECT a ValueError here. If it DOESN'T happen, the test fails.
+    with pytest.raises(ValueError):
+        divide(10, 0)
+```
+
+# 6. Real-World Engineering Example
+
+In production, you often need to set up databases, mock users, or configure states before running a test. `pytest` uses **Fixtures** for this. Fixtures are dependency injection for tests.
+
+```python
+import pytest
+
+# 1. Define a fixture (setup code)
+@pytest.fixture
+def mock_db_connection():
+    db = {"status": "connected", "users": []}
+    yield db  # Provide the db to the test
+    db["status"] = "disconnected" # Teardown (cleanup) after test finishes
+
+# 2. Inject the fixture into the test by passing its name
+def test_create_user(mock_db_connection):
+    db = mock_db_connection
+
+    # Act
+    db["users"].append("bro_engineer")
+
+    # Assert
+    assert len(db["users"]) == 1
+    assert db["status"] == "connected"
+
+# The fixture automatically disconnects the DB after the test!
+```
+
+# 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'Pytest Execution Flow',
+    height: 400,
+    nodes: [
+      {id: 'cmd', title: 'pytest Command', detail: 'Runs in Terminal', x: 50, y: 150, kind: 'core'},
+      {id: 'discovery', title: 'Test Discovery', detail: 'Finds test_*.py files', x: 250, y: 150, kind: 'process'},
+      {id: 'fixture', title: 'Setup Fixtures', detail: 'Prepares dependencies', x: 500, y: 50, kind: 'tool'},
+      {id: 'run', title: 'Execute Test', detail: 'Runs assert statements', x: 500, y: 150, kind: 'process'},
+      {id: 'teardown', title: 'Teardown', detail: 'Cleans up memory/DB', x: 500, y: 250, kind: 'tool'},
+      {id: 'report', title: 'Generate Report', detail: 'Pass/Fail Output', x: 750, y: 150, kind: 'output'}
+    ],
+    edges: [
+      {source: 'cmd', target: 'discovery', label: 'Starts'},
+      {source: 'discovery', target: 'fixture', label: 'Before Test'},
+      {source: 'fixture', target: 'run', label: 'Injects'},
+      {source: 'run', target: 'teardown', label: 'After Test'},
+      {source: 'teardown', target: 'report', label: 'Logs Result'}
+    ]
+  }}
+/>
+
+When you run `pytest`, it first performs **Discovery**: it searches the directory tree for any files named `test_*.py` or `*_test.py`, and inside them, it looks for functions starting with `test_`.
+During execution, `pytest` rewrites the Python `assert` statements internally so that if an assertion fails, it can print the exact variables and values involved, making debugging incredibly easy.
+
+# 8. Performance Table
+
+| Optimization | Method | Performance Impact |
+|---|---|---|
+| Parallel Execution | `pytest -n 4` (requires `pytest-xdist`) | Speeds up large test suites by running on multiple CPU cores. |
+| Stop on First Failure | `pytest -x` | Saves time by failing fast instead of running 100 broken tests. |
+| Run Specific Tests | `pytest -k "login"` | Only runs tests with "login" in the name, saving massive time. |
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why `pytest` over built-in `unittest`? | Less boilerplate code, better assert introspection (error messages), and powerful fixtures. |
+| What is a `pytest` fixture? | A function decorated with `@pytest.fixture` that provides a fixed baseline (like a DB connection) to tests. |
+| How do you handle teardown in fixtures? | Use the `yield` keyword instead of `return`. Code after the `yield` acts as the teardown/cleanup. |
+| What is Parameterized testing? | Using `@pytest.mark.parametrize` to run the exact same test function multiple times with different inputs. |
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, look at this test using a dictionary. What is the bug?
+
+```python
+test_data = {"count": 0}
+
+def test_first():
+    test_data["count"] += 1
+    assert test_data["count"] == 1
+
+def test_second():
+    test_data["count"] += 1
+    assert test_data["count"] == 1
+```
+
+**Answer:** `test_second` will FAIL!
+**Why?** Because global state (`test_data`) is shared between tests. `test_first` mutates it to 1, so when `test_second` runs, it becomes 2.
+**The Fix:** Never use global state for tests. Use Fixtures to inject a fresh dictionary into every test. Tests must be **isolated**.
+
+# 11. Real-World Usage
+
+- **CI/CD Pipelines:** Companies run `pytest` automatically in GitHub Actions every time a developer opens a Pull Request. If `pytest` fails, the code cannot be merged.
+- **FastAPI:** The official documentation of FastAPI uses `pytest` exclusively for testing API endpoints using `TestClient`.
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Name test functions clearly: `test_user_login_fails_with_bad_password`. | Name tests `test_1`, `test_2`, etc. |
+| Keep tests independent. They should be able to run in any order. | Write tests that depend on the results of a previous test. |
+| Use `conftest.py` to share fixtures across multiple test files. | Copy-paste the same setup code into every test file. |
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+In large codebases, your test suite can grow to take 20+ minutes to run. Engineers will stop running them if they are slow. Always mock out slow network calls and use `pytest-xdist` to run tests in parallel on CI servers.
+
+# 14. Common Mistakes
+
+- **Testing the Framework:** Writing tests to ensure SQLAlchemy saves to the database. You should test *your* logic, not the 3rd party library's logic.
+- **Flaky Tests:** Tests that pass 90% of the time but fail randomly (usually due to timezones, random numbers, or database state leaking).
+- **Ignoring Warnings:** `pytest` warns you about deprecated features. Ignoring them means your tests will randomly break upon upgrading libraries.
+
+# 15. Related Topics
+
+- Testing / Unit Testing
+- Testing / Mocking
+- Testing / Integration Testing
+- Testing / Test Best Practices

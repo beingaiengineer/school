@@ -2,6 +2,188 @@
 sidebar_position: 2
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Unit Testing
 
-Placeholder: introduce Unit Testing.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Unit Testing |
+| Difficulty | Beginner |
+| Used For | Testing individual, isolated pieces of code (functions/classes) |
+| Common Mistake | Connecting to a real database inside a unit test |
+| Performance | Instantaneous. Should run in milliseconds. |
+
+# 2. Real-World Analogy
+
+Bro, think of building a bicycle.
+Before you assemble the whole bike, you take just the bell and ring it. Does it make a sound? Yes. That is a **Unit Test**. You are testing one single, isolated component to ensure it does its specific job perfectly.
+You don't care if the tires are flat or the chain is broken while testing the bell. The bell is isolated.
+
+# 3. Concept Explanation
+
+A **Unit Test** is the smallest type of automated test. It tests a single "unit" of code (usually a function or a method) in complete isolation from the rest of the application.
+
+If your function calculates discounts, the unit test gives it a price and a discount percentage and verifies the math.
+**Crucial Rule:** Unit tests must NOT talk to a real database, call real external APIs, or read real files. If it touches the network or the hard drive, it is an Integration Test, not a Unit Test.
+
+# 4. Syntax Table
+
+| Concept | Pytest Example |
+|---|---|
+| Basic Unit Test | `def test_add(): assert add(2, 3) == 5` |
+| Grouping Tests | `class TestCalculator: def test_add(self): ...` |
+| Setup (unittest) | `def setUp(self): self.calc = Calculator()` |
+
+# 5. Beginner Example
+
+Here is a pure unit test. It relies on zero external dependencies.
+
+**The Code (`pricing.py`):**
+```python
+def calculate_total(price, tax_rate):
+    if price < 0 or tax_rate < 0:
+        raise ValueError("Values cannot be negative")
+    return price + (price * tax_rate)
+```
+
+**The Unit Test (`test_pricing.py`):**
+```python
+import pytest
+from pricing import calculate_total
+
+def test_calculate_total_standard_tax():
+    # Act
+    result = calculate_total(100, 0.10)
+    # Assert
+    assert result == 110.0
+
+def test_calculate_total_negative_price():
+    # Verify the code handles bad input correctly
+    with pytest.raises(ValueError):
+        calculate_total(-50, 0.10)
+```
+
+# 6. Real-World Engineering Example
+
+In production, functions often do complex things like validating user data before saving it. We unit test the validation logic thoroughly.
+
+```python
+import re
+
+class UserValidator:
+    def is_valid_password(self, password: str) -> bool:
+        if len(password) < 8:
+            return False
+        if not re.search(r"[A-Z]", password):
+            return False
+        if not re.search(r"[0-9]", password):
+            return False
+        return True
+
+# --- Tests ---
+def test_password_too_short():
+    validator = UserValidator()
+    assert validator.is_valid_password("A1bcdef") is False
+
+def test_password_missing_number():
+    validator = UserValidator()
+    assert validator.is_valid_password("PasswordText") is False
+
+def test_password_valid():
+    validator = UserValidator()
+    assert validator.is_valid_password("SecurePass123") is True
+```
+
+# 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'Unit Test Anatomy (AAA Pattern)',
+    height: 400,
+    nodes: [
+      {id: 'start', title: 'Start Test', detail: 'Isolate Environment', x: 250, y: 50, kind: 'core'},
+      {id: 'arrange', title: '1. Arrange', detail: 'Set up variables (price=100)', x: 250, y: 150, kind: 'process'},
+      {id: 'act', title: '2. Act', detail: 'Call the function', x: 250, y: 250, kind: 'process'},
+      {id: 'assert', title: '3. Assert', detail: 'Verify output == expected', x: 250, y: 350, kind: 'tool'},
+      {id: 'pass', title: 'Pass/Fail', detail: 'Report Result', x: 250, y: 450, kind: 'output'}
+    ],
+    edges: [
+      {source: 'start', target: 'arrange', label: 'Begin'},
+      {source: 'arrange', target: 'act', label: 'Inputs Ready'},
+      {source: 'act', target: 'assert', label: 'Returns Value'},
+      {source: 'assert', target: 'pass', label: 'Evaluates'}
+    ]
+  }}
+/>
+
+Unit tests follow the **AAA Pattern (Arrange, Act, Assert)**.
+1. **Arrange:** You set up the exact data state needed for the test.
+2. **Act:** You execute the single function you are testing.
+3. **Assert:** You check if the return value or state matches your expectations.
+Because they don't touch disk/network, hundreds of them can execute in a single second.
+
+# 8. Performance Table
+
+| Test Type | Execution Speed | Scope |
+|---|---|---|
+| Unit Test | Milliseconds | Single function / Class |
+| Integration Test | Seconds | DB + API interaction |
+| End-to-End Test | Minutes | Full browser simulation |
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the AAA pattern? | Arrange (setup), Act (execute), Assert (verify). |
+| What is the difference between Unit and Integration tests? | Unit tests isolate one piece of code. Integration tests check if multiple pieces (code + DB) work together. |
+| What do you do if a function needs to query a database in a unit test? | You use **Mocking** to fake the database response so the test remains fast and isolated. |
+| What is Test Coverage? | The percentage of your application's source code lines that are executed during your automated tests. |
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, look at this unit test. Why is it a terrible test?
+
+```python
+import time
+
+def test_data_processor():
+    result = process_large_data()
+    time.sleep(2)  # Wait for it to finish?
+    assert result == "Success"
+```
+
+**Answer:** Unit tests should be completely deterministic and synchronous. Adding `time.sleep()` means you are either testing async behavior incorrectly, or you are testing an external system that is slow.
+**The Fix:** Mock the slow part. A unit test should never sleep. It should finish in milliseconds.
+
+# 11. Real-World Usage
+
+- **Continuous Integration (CI):** Companies block developers from merging code unless unit tests pass. It's the first line of defense against bugs.
+- **TDD (Test-Driven Development):** Senior engineers often write the unit test *before* they write the actual function to force themselves to think about the inputs and outputs first.
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Test edge cases (empty lists, None values, negative numbers). | Only test the "Happy Path" where everything goes perfectly. |
+| Keep assertions strictly focused on one behavior per test. | Put 20 `assert` statements in a single unit test. |
+| Run your unit tests locally before pushing code. | Push code and rely on the CI server to tell you it's broken. |
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Don't chase 100% test coverage blindly. Getting from 0% to 80% coverage catches 95% of bugs. Getting from 80% to 100% coverage often requires writing massive amounts of brittle "mock" code that breaks every time you refactor, slowing down development without adding real value.
+
+# 14. Common Mistakes
+
+- **Testing Built-in Functions:** Writing tests to prove Python's `len()` function works. Only test your custom logic!
+- **Fragile Tests:** Writing tests that break if you change a string from "Error" to "Error Occurred". Test the behavior or error *type*, not the exact string match unless required.
+- **Missing Assertions:** Running the code in a test but forgetting to write an `assert` statement. The test will always pass!
+
+# 15. Related Topics
+
+- Testing / Pytest
+- Testing / Mocking
+- Testing / Integration Testing
