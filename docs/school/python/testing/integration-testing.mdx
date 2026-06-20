@@ -2,6 +2,218 @@
 sidebar_position: 4
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Integration Testing
 
-Placeholder: introduce Integration Testing.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Integration Testing |
+| Difficulty | Intermediate to Advanced |
+| Used For | Proving that different parts of your system work together |
+| Main Strength | Catches bugs that unit tests miss (like bad SQL queries or network timeouts) |
+| Common Mistake | Using production databases for integration tests |
+| Performance | Slower than unit tests (seconds instead of milliseconds) |
+
+Bro, a unit test proves that a single bolt is strong. An integration test proves that when you screw that bolt into the engine block, it actually fits.
+
+Integration tests verify the connections *between* components. They ensure your Python code can successfully talk to your Database, your Redis cache, or your file system. You do not mock these components; you use real, live (but isolated) instances of them.
+
+## 2. Real-World Analogy
+
+Bro, imagine you are building a custom PC.
+
+You bought the CPU, the Motherboard, and the RAM.
+- **Unit Testing** was the manufacturer testing each part in their factory.
+- **Integration Testing** is when you plug the CPU and RAM into the Motherboard and try to turn it on.
+
+Individually, they might work perfectly. But if the RAM is DDR5 and the motherboard only supports DDR4, they will fail to integrate. You can only catch that by plugging them together.
+
+## 3. Concept Explanation
+
+Integration tests are crucial for database interactions.
+
+If you write a complex SQLAlchemy query, a unit test with a mocked database won't tell you if your SQL syntax is valid, or if you forgot a `JOIN`, or if you violated a unique constraint. An integration test spins up a real database (like PostgreSQL in a Docker container, or an in-memory SQLite DB), creates the tables, inserts test data, runs your query, and checks the results.
+
+## 4. Syntax Table
+
+| Concept | Implementation Strategy |
+|---|---|
+| Isolated Database | Pytest fixture that creates an in-memory SQLite DB. |
+| Test Containers | Using Docker to spin up a real Postgres DB just for the test. |
+| HTTP Testing | Using FastAPI `TestClient` or Flask `test_client()` to simulate requests. |
+| Teardown | Dropping all tables or rolling back transactions after every test. |
+
+## 5. Beginner Example
+
+Here is an integration test checking if our code successfully writes and reads from a real (in-memory) database using SQLAlchemy.
+
+```python
+import pytest
+from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy.orm import declarative_base, sessionmaker
+
+Base = declarative_base()
+
+class User(Base):
+    __tablename__ = 'users'
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+
+# 1. Fixture to set up a REAL database
+@pytest.fixture
+def db_session():
+    # Use SQLite in-memory so it's fast and isolated
+    engine = create_engine('sqlite:///:memory:')
+    Base.metadata.create_all(engine)
+
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    yield session  # Hand the real session to the test
+
+    session.close() # Clean up
+
+# 2. The Integration Test
+def test_user_database_integration(db_session):
+    # Act: Write to DB
+    new_user = User(name="Bro")
+    db_session.add(new_user)
+    db_session.commit()
+
+    # Act: Read from DB
+    retrieved = db_session.query(User).filter_by(name="Bro").first()
+
+    # Assert: It actually saved and retrieved successfully
+    assert retrieved is not None
+    assert retrieved.id == 1
+```
+
+## 6. Real-World Engineering Example
+
+In modern web frameworks like FastAPI, integration tests usually involve firing fake HTTP requests at your app, which then talk to a test database.
+
+```python
+import pytest
+from fastapi.testclient import TestClient
+from my_app.main import app
+from my_app.database import get_db
+
+# Assuming we have a fixture `test_db_session` that provides a clean DB
+@pytest.fixture
+def client(test_db_session):
+    # Dependency Override: Tell FastAPI to use our Test DB, not Prod DB
+    app.dependency_overrides[get_db] = lambda: test_db_session
+
+    with TestClient(app) as test_client:
+        yield test_client
+
+    app.dependency_overrides.clear()
+
+def test_register_user_api(client):
+    # This hits the FastAPI router, triggers validation, talks to the DB, and returns JSON
+    response = client.post("/users/register", json={
+        "email": "engineer@bro.com",
+        "password": "StrongPassword123!"
+    })
+
+    assert response.status_code == 201
+    assert response.json()["email"] == "engineer@bro.com"
+    assert "id" in response.json()
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  title="Integration Test Architecture"
+  nodes={[
+    { id: '1', position: { x: 0, y: 100 }, data: { label: 'Pytest\nTest Runner' }, type: 'core' },
+    { id: '2', position: { x: 300, y: 0 }, data: { label: 'HTTP Test Client\n(Simulates Web Req)' }, type: 'process' },
+    { id: '3', position: { x: 600, y: 0 }, data: { label: 'Python Application\n(FastAPI / Django)' }, type: 'process' },
+    { id: '4', position: { x: 900, y: 100 }, data: { label: 'Real Test Database\n(Docker / SQLite)' }, type: 'data' },
+    { id: '5', position: { x: 300, y: 200 }, data: { label: 'Mocked API\n(e.g., Stripe)' }, type: 'warning' }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'Starts Test' },
+    { id: 'e2-3', source: '2', target: '3', label: 'POST /data' },
+    { id: 'e3-4', source: '3', target: '4', label: 'Real SQL Query' },
+    { id: 'e3-5', source: '3', target: '5', label: 'External calls still mocked' }
+  ]}
+/>
+
+Notice in the diagram: Even in an integration test, we still mock *third-party external APIs* (like Stripe or AWS).
+
+Why? Because we don't control them. We only integrate with the infrastructure *we* control (our own database, our own Redis server). If we hit Stripe in an integration test, the test might fail just because Stripe's sandbox is down, which doesn't mean our code is broken.
+
+## 8. Performance Table
+
+| Test Type | Setup Time | Execution Time | Scope |
+|---|---|---|---|
+| Unit Test | None | < 1ms | Python logic only |
+| DB Integration (SQLite) | Fast | ~10ms | Python + DB schema |
+| DB Integration (Docker Postgres) | Slow (Seconds) | ~50ms | True Python + DB dialect |
+| E2E Test | Very Slow | Seconds/Minutes | UI + Network + API + DB |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why not mock the database for everything? | Mocks don't know SQL. A mock will happily accept a query with a typo, or a query that violates a foreign key constraint. Only a real DB can validate database logic. |
+| How do you ensure tests don't corrupt each other's data? | Wrap every test in a database transaction and `rollback()` at the end of the test. Alternatively, truncate (empty) the tables between tests. |
+| What is "Testcontainers"? | A library that allows Python to automatically spin up Docker containers (like a fresh Postgres DB) at the start of your test suite, and tear them down when finished. |
+| Should integration tests run on every file save? | No, they are usually too slow. Run unit tests continuously during development, and run integration tests before committing or in the CI/CD pipeline. |
+
+## 10. Tricky Questions & Edge Cases
+
+Look at this testing setup, bro. What is the dangerous flaw here?
+
+```python
+# test_settings.py
+DATABASE_URL = "postgres://user:pass@localhost/myapp_dev"
+
+# conftest.py
+@pytest.fixture(autouse=True)
+def clean_db():
+    engine.execute("DROP TABLE users CASCADE;")
+    engine.execute("CREATE TABLE users ...")
+```
+
+**Answer:** It is connecting to the `myapp_dev` database and dropping tables!
+
+If a developer runs Pytest on their laptop, it will instantly wipe out all their local development data.
+**Fix:** Integration tests MUST use a completely separate database name (like `myapp_test`) or generate a random database name dynamically to guarantee they never destroy developer or production data.
+
+## 11. Real-World Usage
+
+- **ORM Migrations:** Testing if Alembic/Django migration scripts actually apply successfully to a real Postgres database without throwing errors.
+- **Caching Logic:** Connecting to a real Redis instance to ensure that cache invalidation logic actually removes the correct keys.
+- **File Systems:** Writing a file to a temporary directory on the hard drive, and ensuring another function can read and parse it correctly.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use Dependency Injection so you can easily swap the Prod DB for the Test DB. | Hardcode connection strings to the production database inside your functions. |
+| Use transactions to roll back data after every test. | Let test data build up in the database, causing Test B to fail because Test A left data behind. |
+| Use Pytest fixtures to handle the heavy lifting of DB setup/teardown. | Write manual setup/teardown code inside every single test function. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> **SQLite vs Postgres.** Many teams use in-memory SQLite for integration tests because it is fast. However, SQLite lacks features like JSONB or specific constraints that Postgres has. If your production DB is Postgres, your integration tests *should* ideally run against a Postgres database (via Docker/Testcontainers) to ensure 100% parity, even if it runs a little slower.
+
+## 14. Common Mistakes
+
+- **Testing third-party services:** Trying to hit a real AWS S3 bucket in an integration test. Use local emulators (like LocalStack) or mock them.
+- **Race conditions in parallel testing:** If you run `pytest -n 4` to run tests in parallel, and all 4 processes use the exact same test database, they will overwrite each other's data and fail randomly. You must generate a unique test database per worker process.
+- **Bloated tests:** Testing standard business logic (which could be a unit test) inside an integration test, unnecessarily slowing down the test suite.
+
+## 15. Related Topics
+
+- Unit Testing
+- Mocking
+- Pytest Fixtures
+- Database Transactions
+- CI/CD Pipelines

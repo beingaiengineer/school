@@ -2,6 +2,201 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Load Testing
 
-Placeholder: introduce Load Testing.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Load Testing |
+| Difficulty | Advanced |
+| Used For | Proving your application won't crash when thousands of users hit it at once |
+| Main Strength | Finds bottlenecks in CPU, memory, and database connection pools |
+| Common Mistake | Load testing against a local SQLite database instead of a production replica |
+| Performance | Evaluates the performance of the entire system under stress |
+
+Bro, your unit tests and integration tests proved that your code works for one user. Load testing proves your code works for 10,000 users at the exact same time.
+
+Load testing simulates heavy traffic to see how your system behaves under stress. It answers questions like: "At what point does our API get slow?" and "What is the first thing to break when we get featured on the front page of Reddit?"
+
+## 2. Real-World Analogy
+
+Bro, think of a brand new elevator in a skyscraper.
+
+- **Unit Testing:** You press the "Up" button and verify the door closes.
+- **Integration Testing:** You verify the elevator car successfully connects to the pulley system and goes to floor 5.
+- **Load Testing:** You pack 20 heavy linebackers into the elevator all at once and see if the cables snap.
+
+You don't want to find out the cables snap on opening day. You want to snap them in a controlled test environment.
+
+## 3. Concept Explanation
+
+Load testing tools (like Locust, K6, or JMeter) spin up hundreds or thousands of "virtual users" (VUs). These VUs constantly bombard your API with HTTP requests.
+
+You measure three main things:
+1. **Throughput:** Requests per second (RPS). Higher is better.
+2. **Latency/Response Time:** How long it takes to get a response (e.g., P95 response time is 200ms). Lower is better.
+3. **Error Rate:** Percentage of requests that fail (500 Internal Server Errors or timeouts). Should be 0%.
+
+## 4. Syntax Table
+
+| Tool | Focus | Example Syntax (Locust) |
+|---|---|---|
+| Locust | Python-based, easy to write complex user flows | `self.client.get("/users/1")` |
+| K6 | JavaScript-based, extremely high performance | `http.get('https://api.test/users');` |
+| Apache JMeter | GUI-based, enterprise standard | (XML Configuration) |
+
+## 5. Beginner Example
+
+Here is a simple load test using **Locust**, the most popular load testing framework for Python developers.
+
+Create a file named `locustfile.py`:
+
+```python
+from locust import HttpUser, task, between
+
+class WebsiteUser(HttpUser):
+    # Simulate a user waiting between 1 and 5 seconds before clicking again
+    wait_time = between(1, 5)
+
+    @task(3) # Weight: This task happens 3x more often
+    def view_homepage(self):
+        self.client.get("/")
+
+    @task(1) # Weight: This task happens less often
+    def view_user_profile(self):
+        # We simulate fetching a user profile
+        self.client.get("/users/42")
+```
+
+Run it in your terminal: `locust -f locustfile.py`.
+It opens a web dashboard at `localhost:8089` where you can type in "500 users" and watch the graphs go crazy.
+
+## 6. Real-World Engineering Example
+
+In the real world, you don't just hit `GET /`. You simulate complex user journeys, like logging in, getting a token, and doing an action.
+
+```python
+from locust import HttpUser, task, between
+
+class APIUser(HttpUser):
+    wait_time = between(1, 2)
+    token = None
+
+    def on_start(self):
+        # This runs ONCE when the virtual user spawns.
+        # We simulate a login to get an auth token.
+        response = self.client.post("/login", json={"username": "test", "password": "password"})
+        if response.status_code == 200:
+            self.token = response.json()["access_token"]
+
+    @task
+    def create_order(self):
+        # This runs repeatedly.
+        if not self.token:
+            return
+
+        headers = {"Authorization": f"Bearer {self.token}"}
+        payload = {"product_id": 101, "quantity": 1}
+
+        # We group requests under a specific name in the dashboard
+        with self.client.post("/orders", json=payload, headers=headers, catch_response=True) as response:
+            if response.status_code == 201:
+                response.success()
+            elif response.status_code == 429: # Rate limited
+                response.failure("Hit rate limit!")
+            else:
+                response.failure(f"Failed with status: {response.status_code}")
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  title="Load Testing Architecture"
+  nodes={[
+    { id: '1', position: { x: 0, y: 100 }, data: { label: 'Load Generator\n(Locust / K6)' }, type: 'core' },
+    { id: '2', position: { x: 300, y: 100 }, data: { label: 'Load Balancer\n(Nginx / ALB)' }, type: 'process' },
+    { id: '3', position: { x: 600, y: 0 }, data: { label: 'App Server 1\n(FastAPI)' }, type: 'process' },
+    { id: '4', position: { x: 600, y: 200 }, data: { label: 'App Server 2\n(FastAPI)' }, type: 'process' },
+    { id: '5', position: { x: 900, y: 100 }, data: { label: 'Database\n(Postgres)' }, type: 'data' }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: '10,000 Req/Sec' },
+    { id: 'e2-3', source: '2', target: '3', label: 'Distributes' },
+    { id: 'e2-4', source: '2', target: '4', label: 'Distributes' },
+    { id: 'e3-5', source: '3', target: '5', label: 'Queries' },
+    { id: 'e4-5', source: '4', target: '5', label: 'Queries' }
+  ]}
+/>
+
+When you generate massive load, the failure usually happens at a specific bottleneck.
+
+1. **CPU:** The App Servers hit 100% CPU parsing JSON.
+2. **Network:** The Load Balancer runs out of open ports.
+3. **Database:** (The most common!) The Database hits its max connection limit, or row locks cause queries to queue up and time out.
+
+The goal of load testing is to find which box in the diagram turns red first.
+
+## 8. Performance Table
+
+| Metric | What it means | Good Target |
+|---|---|---|
+| P95 Latency | 95% of requests are faster than this number. | < 200ms |
+| P99 Latency | 99% of requests are faster than this number. (Catches the worst outliers). | < 500ms |
+| Error Rate | Percentage of non-200 responses. | < 0.1% |
+| RPS | Requests per Second. | Depends on business needs. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between Load Testing and Stress Testing? | Load testing simulates *expected* heavy traffic. Stress testing pushes the system far *beyond* expected limits intentionally to see exactly how and when it crashes. |
+| Why is P95 latency more important than Average latency? | Averages hide spikes. If 99 users get a 10ms response, and 1 user gets a 10,000ms response, the average is ~100ms (looks great!), but that 1 user had a terrible experience. P95 reveals the pain points. |
+| If your API is slow during a load test, what is the first thing you check? | The Database. 90% of the time, the app is waiting on unindexed queries or a starved connection pool. Check DB CPU and active connections. |
+| Can you load test from your local laptop? | Yes, but only for small tests. Your laptop's Wi-Fi card or CPU will become the bottleneck before the server does. For real tests, run the load generator from a beefy cloud server. |
+
+## 10. Tricky Questions & Edge Cases
+
+Look at this scenario, bro.
+
+You run a load test. Your application servers are only at 20% CPU. Your database is only at 10% CPU. But your latency is 5 seconds per request and users are getting timeouts. What is happening?
+
+**Answer:** Connection Pooling Exhaustion or Thread Starvation.
+
+Even if the DB has plenty of power, if your Python app is configured to only allow 10 database connections maximum, the 11th user will wait in line. The CPU is low because the server is literally doing nothing—it's just waiting.
+**Fix:** Increase the connection pool size, or use async Python (FastAPI/asyncio) to prevent threads from blocking.
+
+## 11. Real-World Usage
+
+- **E-Commerce:** Running massive load tests 2 weeks before Black Friday to ensure the checkout system won't crash.
+- **Ticketing Systems:** Simulating 50,000 people trying to buy Taylor Swift tickets at the exact same second to test database row locking and queue systems.
+- **Autoscaling:** Using load tests to verify that AWS Auto Scaling Groups actually spin up new servers fast enough when traffic spikes.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Run load tests against a staging environment that matches production hardware. | Run a load test against production during peak business hours. |
+| Parameterize your test data so virtual users aren't all requesting the exact same row. | Use a local SQLite database for a load test. |
+| Monitor the infrastructure (CPU, RAM, DB) *while* the test is running. | Just look at the Locust output and ignore the server metrics. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> **The Caching Illusion.** If your load test requests `GET /item/1` ten thousand times, the database will cache that exact query in RAM after the first request. The test will show incredible performance. But in production, users request items 1 through 10,000 randomly. Your test must use randomized data, or you are only testing your database's RAM cache, not its disk read performance.
+
+## 14. Common Mistakes
+
+- **Testing the Load Balancer:** Running Locust from a single IP address. Many modern Load Balancers (like Cloudflare or AWS WAF) will think you are a DDoS attack and block you. Your test will fail, but the servers are fine.
+- **Ignoring Teardown:** A load test creates 50,000 fake users in the staging database. If you don't delete them afterward, the staging database fills up and ruins the environment for the QA team.
+- **"It works on my machine":** Generating load from the same physical machine that is hosting the server. They fight for the same CPU, totally skewing the results.
+
+## 15. Related Topics
+
+- Connection Pooling
+- Profiling
+- Caching
+- Scalable Python Architecture
+- Concurrency (Asyncio)

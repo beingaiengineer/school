@@ -2,6 +2,202 @@
 sidebar_position: 2
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Unit Testing
 
-Placeholder: introduce Unit Testing.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Unit Testing |
+| Difficulty | Beginner |
+| Used For | Proving that a single, small piece of code (a "unit") works perfectly in isolation |
+| Main Strength | Runs extremely fast and pinpoints exactly which function is broken |
+| Common Mistake | Connecting to a real database during a unit test |
+| Performance | Instantaneous (Milliseconds) |
+
+Bro, a unit test is the smallest possible test in software engineering.
+
+You take one function, you give it specific inputs, and you check if it returns the exact output you expect. You completely isolate it from the rest of the world—no databases, no networks, no external APIs.
+
+## 2. Real-World Analogy
+
+Bro, imagine you are building an airplane.
+
+**Unit Testing** is taking a single bolt, putting it in a vice, and pulling it to make sure it doesn't break under 500 lbs of pressure. You aren't flying the plane, you aren't turning on the engines. You are just verifying that *one specific bolt* does exactly what its blueprint says it should do.
+
+If the bolt fails the test, you throw it away before you ever put it in the airplane.
+
+## 3. Concept Explanation
+
+A "Unit" is usually a single function or a single class method.
+
+Unit tests must follow the **FIRST** principles:
+- **Fast:** They should run in milliseconds. You should be able to run 1,000 unit tests in 3 seconds.
+- **Independent:** Test A should not depend on Test B. They can run in any order.
+- **Repeatable:** They must yield the exact same result every time, whether you run them on your laptop or on a CI server.
+- **Self-Validating:** They pass or fail automatically (no human needs to read a log file to check).
+- **Timely:** They should be written alongside (or before) the production code.
+
+If your test connects to an API, reads a file from disk, or touches a database... **it is not a unit test.** It is an integration test.
+
+## 4. Syntax Table
+
+| Phase | Description | Code Example |
+|---|---|---|
+| 1. Arrange | Set up the data | `price = 100 ; discount = 0.2` |
+| 2. Act | Call the function | `result = calculate_final_price(price, discount)` |
+| 3. Assert | Verify the outcome | `assert result == 80.0` |
+
+*This is known as the Arrange-Act-Assert (AAA) pattern.*
+
+## 5. Beginner Example
+
+Here is a pure function. It relies on nothing but its inputs.
+
+```python
+# business_logic.py
+def calculate_tax(amount: float, tax_rate: float) -> float:
+    if amount < 0 or tax_rate < 0:
+        raise ValueError("Cannot be negative")
+    return round(amount * tax_rate, 2)
+```
+
+Here are the unit tests for it using `pytest`.
+
+```python
+# test_business_logic.py
+import pytest
+from business_logic import calculate_tax
+
+def test_calculate_tax_standard():
+    # Arrange, Act, Assert in one line
+    assert calculate_tax(100.0, 0.05) == 5.0
+
+def test_calculate_tax_rounding():
+    # Checks if the rounding logic works
+    assert calculate_tax(10.55, 0.03) == 0.32
+
+def test_calculate_tax_negative_values():
+    # Asserts that the function raises the correct error
+    with pytest.raises(ValueError):
+        calculate_tax(-100.0, 0.05)
+```
+
+## 6. Real-World Engineering Example
+
+In the real world, functions often do complex things. A good unit test checks the edge cases.
+
+```python
+def validate_password_strength(password: str) -> bool:
+    if len(password) < 8:
+        return False
+    if not any(char.isdigit() for char in password):
+        return False
+    if not any(char.isupper() for char in password):
+        return False
+    return True
+
+# Pytest parametrize is perfect for unit testing many edge cases fast
+import pytest
+
+@pytest.mark.parametrize("password, expected", [
+    ("Weakpass", False),       # No numbers
+    ("weakpass123", False),    # No uppercase
+    ("Short1!", False),        # Too short
+    ("StrongPass123!", True),  # Valid
+])
+def test_validate_password_strength(password, expected):
+    assert validate_password_strength(password) == expected
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  title="Unit Testing Isolation"
+  nodes={[
+    { id: '1', position: { x: 0, y: 100 }, data: { label: 'Input Data\n(Mocked / Hardcoded)' }, type: 'data' },
+    { id: '2', position: { x: 300, y: 100 }, data: { label: 'Target Function\n(The "Unit")' }, type: 'core' },
+    { id: '3', position: { x: 600, y: 100 }, data: { label: 'Assert Statement\n(Pass / Fail)' }, type: 'process' },
+    { id: '4', position: { x: 300, y: 0 }, data: { label: 'Database' }, type: 'warning' },
+    { id: '5', position: { x: 300, y: 200 }, data: { label: 'External API' }, type: 'warning' }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'Passed into' },
+    { id: 'e2-3', source: '2', target: '3', label: 'Returns Output' },
+    { id: 'e2-4', source: '2', target: '4', label: 'CUT OFF', style: { strokeDasharray: '5,5', stroke: 'red' } },
+    { id: 'e2-5', source: '2', target: '5', label: 'CUT OFF', style: { strokeDasharray: '5,5', stroke: 'red' } }
+  ]}
+/>
+
+A proper unit test creates a strict boundary around the target function.
+
+If the function tries to talk to a database, you must **Mock** that database call (intercept it and return fake data instantly) so the test remains a pure Unit Test. If you don't mock it, your test speed will drop from 1ms to 50ms, and it will fail if the Wi-Fi goes down.
+
+## 8. Performance Table
+
+| Test Type | Speed | Confidence Level | Scope |
+|---|---|---|---|
+| Unit Test | Ultra Fast (1ms) | Low (Only proves the bolt works) | Single Function |
+| Integration Test | Medium (100ms) | Medium (Proves bolt fits the engine) | Multiple Components |
+| E2E (End-to-End) Test | Very Slow (10s) | High (Proves the plane flies) | Entire System |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between a Unit Test and an Integration Test? | A unit test tests a single function in total isolation. An integration test tests how multiple components (like a function and a real database) work together. |
+| What does TDD stand for? | Test-Driven Development. You write the failing unit test *first*, and then write the production code to make the test pass. |
+| What is Code Coverage? | The percentage of lines of production code that are executed while your automated tests are running. |
+| If a unit test fails, what does it mean? | It means the specific logic inside that exact function is broken, or the requirements of that function changed but the test wasn't updated. |
+
+## 10. Tricky Questions & Edge Cases
+
+Look at this function, bro. How do you unit test it?
+
+```python
+import datetime
+
+def is_weekend() -> bool:
+    today = datetime.datetime.now().weekday()
+    return today >= 5
+```
+
+**Answer:** You can't unit test this reliably as it is written!
+
+If you run the test on Tuesday, it returns `False`. If you run the exact same test on Saturday, it returns `True`. This violates the "Repeatable" principle.
+
+**Fix:** You must either refactor the function to accept the date as an input argument (making it a pure function), or you must use a mocking library like `freezegun` to fake the system clock during the test.
+
+## 11. Real-World Usage
+
+- **Financial Systems:** Every calculation for taxes, interest rates, and currency conversions is heavily unit tested to ensure zero mathematical errors.
+- **Data Pipelines:** Functions that parse, clean, or format strings (like converting raw text to standard dates) are unit tested to handle all weird edge cases.
+- **Open Source:** Libraries like React or Pandas have thousands of unit tests to ensure community contributions don't break existing features.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use the Arrange-Act-Assert structure to keep tests readable. | Put `if/else` logic or loops inside your test code. Tests should be dead simple. |
+| Test edge cases (Nulls, empty strings, negative numbers, giant numbers). | Just test the "happy path" where everything goes right. |
+| Give tests extremely descriptive names like `test_tax_calc_returns_zero_on_negative_input`. | Name tests `test_function_1`. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+> **The Test Pyramid.** In a healthy production codebase, you should have thousands of Unit Tests, hundreds of Integration Tests, and only a few dozen End-to-End tests. Unit tests form the wide, fast, stable base of your quality assurance.
+
+## 14. Common Mistakes
+
+- **Testing the Framework:** Writing a unit test to verify that SQLAlchemy saves a string to the database. SQLAlchemy already wrote that test. You should only test *your* business logic.
+- **Brittle Tests:** Testing the exact internal implementation rather than the output. If you refactor the inside of the function but the output remains correct, the unit test should still pass.
+- **Ignoring pure functions:** Leaving the easiest functions untested, and then being surprised when a simple typo in a helper function brings down the whole system.
+
+## 15. Related Topics
+
+- Pytest
+- Mocking
+- Integration Testing
+- Test Driven Development (TDD)
