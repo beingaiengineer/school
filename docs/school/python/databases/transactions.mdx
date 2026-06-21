@@ -4,4 +4,223 @@ sidebar_position: 5
 
 # Transactions
 
-Placeholder: introduce Transactions.
+import LearningFlow from '@site/src/components/LearningFlow';
+
+## 1. Quick Summary
+
+Bro, a database transaction ensures that a group of database operations either completely succeeds or completely fails. You never want to deduct money from one account without successfully adding it to another.
+
+| Area | Details |
+|---|---|
+| Topic | Database Transactions |
+| Difficulty | Advanced |
+| Used For | Data integrity during multi-step operations |
+| Common Mistake | Leaving transactions open too long, locking up the database |
+| Performance | Adds overhead due to locking and logging |
+
+---
+
+## 2. Real-World Analogy
+
+Think of a transaction like paying for a coffee with UPI (Unified Payments Interface) or a credit card.
+
+Two things must happen:
+1. The money leaves your bank account.
+2. The money arrives in the cafe's bank account.
+
+If step 1 succeeds but the system crashes before step 2, you lose money and the cafe gets nothing. A **transaction** wraps both steps into a single unit. If the network drops at step 2, the system completely reverses (Rollbacks) step 1, so your money is safe. Either *both* happen, or *neither* happens.
+
+---
+
+## 3. Concept Explanation
+
+Transactions follow the **ACID** properties:
+- **Atomicity:** All or nothing. (No partial saves).
+- **Consistency:** The database rules (like unique constraints) are never violated during the save.
+- **Isolation:** Two simultaneous transactions don't interfere with each other.
+- **Durability:** Once saved (committed), a power outage won't delete the data.
+
+When you start a transaction, you lock the rows you are touching. If another process tries to touch them, it waits. Once you `COMMIT`, the locks release. If something breaks, you `ROLLBACK` to the starting state.
+
+---
+
+## 4. Syntax Table
+
+| Operation | SQL Example | SQLAlchemy Example |
+|---|---|---|
+| Start | `BEGIN;` | Handled automatically on first query |
+| Save Changes | `COMMIT;` | `session.commit()` |
+| Undo Changes | `ROLLBACK;` | `session.rollback()` |
+
+---
+
+## 5. Beginner Example
+
+Here is how you handle a basic transaction using Python's `sqlite3` library.
+
+```python
+import sqlite3
+
+conn = sqlite3.connect('bank.db')
+cursor = conn.cursor()
+
+try:
+    # A transaction begins automatically with sqlite3 when you execute DML
+    cursor.execute("UPDATE accounts SET balance = balance - 100 WHERE id = 1")
+
+    # Simulate an error (e.g., account 2 doesn't exist or network fails)
+    raise ValueError("System crash!")
+
+    cursor.execute("UPDATE accounts SET balance = balance + 100 WHERE id = 2")
+
+    conn.commit() # Save it! (This won't be reached)
+
+except Exception as e:
+    print(f"Error: {e}. Rolling back changes.")
+    conn.rollback() # Undo the first deduction!
+
+finally:
+    conn.close()
+```
+
+---
+
+## 6. Real-World Engineering Example
+
+In modern Python apps (FastAPI/Django), we use Context Managers or Decorators to handle transactions so we never forget to rollback.
+
+```python
+from sqlalchemy.orm import Session
+from fastapi import HTTPException
+
+def transfer_funds(db: Session, sender_id: int, receiver_id: int, amount: float):
+    try:
+        # 1. Lock the rows using "FOR UPDATE" so no one else changes the balance
+        # while we are calculating the new balance.
+        sender = db.query(Account).with_for_update().get(sender_id)
+        receiver = db.query(Account).with_for_update().get(receiver_id)
+
+        if sender.balance < amount:
+            raise ValueError("Insufficient funds")
+
+        # 2. Apply logic
+        sender.balance -= amount
+        receiver.balance += amount
+
+        # 3. Commit saves the transaction and releases the row locks
+        db.commit()
+        return {"status": "success"}
+
+    except Exception as e:
+        # 4. If ANYTHING fails, undo everything.
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+```
+
+---
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'BEGIN Transaction' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Write changes to WAL (Write-Ahead Log)' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'tool', data: { label: 'Apply Row Locks in Memory' }, position: { x: 250, y: 200 } },
+    { id: '4', type: 'warning', data: { label: 'Error Occurs!' }, position: { x: 100, y: 300 } },
+    { id: '5', type: 'output', data: { label: 'ROLLBACK (Undo via WAL)' }, position: { x: 100, y: 400 } },
+    { id: '6', type: 'output', data: { label: 'COMMIT (Save to Disk)' }, position: { x: 400, y: 300 } },
+    { id: 'e1-2', source: '1', target: '2', type: 'step' },
+    { id: 'e2-3', source: '2', target: '3', type: 'step' },
+    { id: 'e3-4', source: '3', target: '4', type: 'step', label: 'Fail' },
+    { id: 'e4-5', source: '4', target: '5', type: 'step' },
+    { id: 'e3-6', source: '3', target: '6', type: 'step', label: 'Success' }
+  ]}
+/>
+
+Under the hood, databases like Postgres use a **Write-Ahead Log (WAL)**.
+When you make a change during a transaction, it isn't written directly to the actual database files immediately. It is written to a temporary log.
+If you `COMMIT`, the log is marked as permanent and applied to the main data files. If you `ROLLBACK`, the log is simply discarded.
+
+---
+
+## 8. Performance Table
+
+| Transaction State | Impact |
+|---|---|
+| Open (Idle) | Blocks other connections trying to read/write locked rows. |
+| Large Batch Commit | High memory usage; large WAL file size. |
+| Small, Fast Commits | Safest and fastest for system throughput. |
+
+---
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does ACID stand for? | Atomicity, Consistency, Isolation, Durability. |
+| What is a Deadlock? | When Transaction A locks Row 1 and waits for Row 2, while Transaction B locks Row 2 and waits for Row 1. Neither can finish. |
+| What is `SELECT ... FOR UPDATE`? | A query that reads a row but simultaneously locks it so no other transaction can modify it until the current transaction commits. |
+| What happens if you don't commit or rollback? | The transaction stays open ("idle in transaction"), holding locks, eventually crashing the database or timing out. |
+
+---
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, watch out for "Race Conditions" where two people try to buy the last concert ticket at the exact same millisecond.
+
+```python
+# BAD: Race Condition!
+# Two users check at the exact same time. Both see tickets > 0. Both buy. You oversell by 1.
+ticket = db.query(Ticket).get(1)
+if ticket.available > 0:
+    ticket.available -= 1
+    db.commit()
+
+# GOOD: Let the database handle the race condition safely
+# The database processes this atomically. If available is 0, the WHERE clause fails.
+db.execute(
+    "UPDATE tickets SET available = available - 1 WHERE id = 1 AND available > 0"
+)
+db.commit()
+```
+
+---
+
+## 11. Real-World Usage
+
+- **E-Commerce (Amazon/Swiggy):** Deducting inventory and charging the payment gateway must happen atomically.
+- **Banking:** Any fund transfer between accounts.
+- **SaaS Registration:** Creating a User, an Organization, and assigning default Permissions must all succeed together.
+
+---
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Keep transactions as short and fast as possible | Do not make slow API calls to 3rd parties (like Stripe) *while* a database transaction is open. |
+| Always use `try/except/finally` or context managers for rollbacks | Don't rely on the garbage collector to close transactions |
+| Use row-level locking (`FOR UPDATE`) for critical financial calculations | Don't trust Python-level checks for concurrent inventory |
+
+---
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+The silent killer of Postgres databases is the "Idle in Transaction" state. This happens when a developer opens a transaction, queries data, and then executes a very slow Python operation (like uploading an image to S3) before committing. Meanwhile, the row locks are held, completely freezing out other users trying to update that data. Always do your slow network operations *before* or *after* the transaction block.
+
+---
+
+## 14. Common Mistakes
+
+- **Swallowing Errors:** Catching an exception, logging it, but forgetting to actually call `.rollback()`. The next query on that connection will fail with "current transaction is aborted".
+- **Nested Transactions:** Trying to open a transaction inside a transaction. Usually, you need to use "Savepoints" instead, which get complicated.
+- **Forgetting Autocommit:** Assuming a query is saved when you never actually called `.commit()`.
+
+---
+
+## 15. Related Topics
+
+- Databases: Connection Pooling
+- Concurrency: Locks & Semaphores
+- Concurrency: Race Conditions

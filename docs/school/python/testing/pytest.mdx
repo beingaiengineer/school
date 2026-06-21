@@ -4,4 +4,212 @@ sidebar_position: 1
 
 # Pytest
 
-Placeholder: introduce Pytest.
+import LearningFlow from '@site/src/components/LearningFlow';
+
+## 1. Quick Summary
+
+Bro, `pytest` is the undisputed king of testing in Python. It is much easier to write than Python's built-in `unittest` module, and its "fixtures" system makes setting up complex test environments incredibly clean.
+
+| Area | Details |
+|---|---|
+| Topic | Pytest |
+| Difficulty | Beginner to Advanced |
+| Used For | Writing and executing unit, integration, and functional tests |
+| Common Mistake | Using complex `setUp` and `tearDown` methods instead of fixtures |
+| Performance | Fast test discovery, parallel execution available via plugins |
+
+---
+
+## 2. Real-World Analogy
+
+Think of `pytest` like a health inspector at a restaurant.
+
+The inspector (pytest) automatically walks through your kitchen (your codebase) looking for any dishes (functions starting with `test_`) to evaluate. Instead of the chef having to manually prepare a massive kitchen setup every time the inspector checks a dish, the inspector uses a magical prep-station (Fixtures) that instantly provides the exact ingredients needed for that specific test, and cleans it up immediately after.
+
+---
+
+## 3. Concept Explanation
+
+Pytest is a testing framework.
+Instead of inheriting from classes and using verbose methods like `self.assertEqual(a, b)` (which is what `unittest` requires), Pytest lets you write plain Python functions and use the standard `assert` keyword. Pytest magically inspects the `assert` statement and provides incredibly detailed error messages if it fails.
+
+It also introduces **Fixtures**, which are reusable functions that provide data, database connections, or mock objects to your tests.
+
+---
+
+## 4. Syntax Table
+
+| Feature | Pytest Syntax |
+|---|---|
+| Basic Test | `def test_addition(): assert 1 + 1 == 2` |
+| Exception Testing | `with pytest.raises(ZeroDivisionError): 1 / 0` |
+| Fixture Creation | `@pytest.fixture` |
+| Parameterization | `@pytest.mark.parametrize("input,expected", [(1, 2)])` |
+
+---
+
+## 5. Beginner Example
+
+Look at how simple it is to test a basic function.
+
+```python
+# math_funcs.py
+def is_even(num):
+    return num % 2 == 0
+
+# test_math.py
+# You don't need to import pytest for basic asserts!
+from math_funcs import is_even
+
+def test_is_even_true():
+    # Just use standard Python assert
+    assert is_even(4) == True
+
+def test_is_even_false():
+    assert is_even(5) == False
+```
+
+To run this, you literally just type `pytest` in your terminal. It finds files starting with `test_` and runs functions starting with `test_`.
+
+---
+
+## 6. Real-World Engineering Example
+
+In production, tests need database connections. We use **Fixtures** with the `yield` keyword to handle setup and teardown cleanly.
+
+```python
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+# 1. Define a fixture that yields a database session
+@pytest.fixture
+def db_session():
+    # --- SETUP ---
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    # Pause here, inject the 'session' into the test
+    yield session
+
+    # --- TEARDOWN (runs after the test finishes) ---
+    session.rollback()
+    session.close()
+
+# 2. Use the fixture just by naming it in the test arguments!
+def test_create_user(db_session):
+    new_user = User(name="Bro")
+    db_session.add(new_user)
+    db_session.commit()
+
+    assert db_session.query(User).count() == 1
+```
+
+---
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'pytest command runs' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Discovery: Scans files matching test_*.py' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'process', data: { label: 'Collects functions matching test_*()' }, position: { x: 250, y: 200 } },
+    { id: '4', type: 'tool', data: { label: 'Resolves & Injects Fixtures' }, position: { x: 250, y: 300 } },
+    { id: '5', type: 'data', data: { label: 'Executes Test Code' }, position: { x: 100, y: 400 } },
+    { id: '6', type: 'warning', data: { label: 'Assert Rewriting (Detailed Errors)' }, position: { x: 400, y: 400 } },
+    { id: 'e1-2', source: '1', target: '2', type: 'smoothstep' },
+    { id: 'e2-3', source: '2', target: '3', type: 'smoothstep' },
+    { id: 'e3-4', source: '3', target: '4', type: 'smoothstep' },
+    { id: 'e4-5', source: '4', target: '5', type: 'smoothstep' },
+    { id: 'e5-6', source: '5', target: '6', type: 'smoothstep', label: 'If assert fails' }
+  ]}
+/>
+
+Pytest uses something called **Assertion Rewriting**. Before your test runs, pytest intercepts the `assert a == b` statement and rewrites the underlying Python bytecode. That is how it is able to show you exactly what `a` was and what `b` was when an assertion fails, without you having to write `self.assertEqual()`.
+
+---
+
+## 8. Performance Table
+
+| Feature | Impact on Test Speed |
+|---|---|
+| Plain Asserts | Extremely Fast |
+| Database Fixtures | Slow (Disk I/O) |
+| `pytest-xdist` | Massive speedup (runs tests in parallel on multiple CPU cores) |
+
+---
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is a pytest fixture? | A function decorated with `@pytest.fixture` that provides setup code and data to tests. It is injected into tests via dependency injection. |
+| How do you test if an exception is raised? | Using the context manager: `with pytest.raises(ValueError): my_function()` |
+| What is `conftest.py`? | A special pytest file where you place fixtures that you want to be shared across multiple different test files automatically. |
+| What is Parameterization? | Using `@pytest.mark.parametrize` to run the exact same test function multiple times with different inputs, rather than writing a `for` loop inside the test. |
+
+---
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, a huge trap is fixture scoping. If you create a database connection fixture but don't scope it correctly, your tests will take 20 minutes to run.
+
+```python
+# BAD: Rebuilds the massive database schema for EVERY SINGLE TEST
+@pytest.fixture(scope="function") # default
+def heavy_db():
+    build_massive_schema()
+    yield db
+
+# GOOD: Builds the schema ONCE per testing session, sharing it.
+@pytest.fixture(scope="session")
+def heavy_db():
+    build_massive_schema()
+    yield db
+```
+
+You must understand scopes: `function`, `class`, `module`, `package`, and `session`.
+
+---
+
+## 11. Real-World Usage
+
+Every major modern Python project uses Pytest.
+- **FastAPI** documentation exclusively uses pytest for its testing tutorials.
+- **Pandas** and **NumPy** test suites run on pytest.
+- Most CI/CD pipelines (GitHub Actions, GitLab) run `pytest --cov` to enforce code coverage before allowing a merge.
+
+---
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Put shared fixtures in a `conftest.py` file | Don't import fixtures manually from other files |
+| Use `pytest.mark.parametrize` for data-driven testing | Don't put logic or `if/else` conditions inside your tests |
+| Name tests descriptively: `test_user_signup_fails_with_bad_email` | Don't name tests `test_1`, `test_case_A` |
+
+---
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+In a large monolith, your test suite will eventually take 30+ minutes to run. To solve this, you must use the `pytest-xdist` plugin to run tests in parallel (`pytest -n auto`). However, this means your tests CANNOT share the same database state, or they will cause race conditions with each other. You must design your fixtures to create isolated database transactions for parallel testing.
+
+---
+
+## 14. Common Mistakes
+
+- **Forgetting the `test_` prefix:** If your file is named `check_math.py`, pytest will ignore it completely. It must be `test_*.py` or `*_test.py`.
+- **Global State in Tests:** Modifying a global variable or environment variable in Test A, and forgetting to reset it, causing Test B to fail randomly. Use the `monkeypatch` fixture provided by pytest to safely mock environment variables.
+- **Testing implementation, not behavior:** Writing tests that assert exact internal dictionary structures rather than verifying the function returns the correct final output.
+
+---
+
+## 15. Related Topics
+
+- Testing: Unit Testing
+- Testing: Mocking
+- Testing: Integration Testing

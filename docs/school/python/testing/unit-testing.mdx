@@ -4,4 +4,217 @@ sidebar_position: 2
 
 # Unit Testing
 
-Placeholder: introduce Unit Testing.
+import LearningFlow from '@site/src/components/LearningFlow';
+
+## 1. Quick Summary
+
+Bro, a Unit Test verifies that a single, tiny piece of your code (usually one function or method) works correctly in total isolation. If it talks to a database, the network, or the file system, it is NOT a unit test.
+
+| Area | Details |
+|---|---|
+| Topic | Unit Testing |
+| Difficulty | Beginner |
+| Used For | Verifying pure logic and catching regressions early |
+| Common Mistake | Connecting to a real database inside a unit test |
+| Performance | Blazing fast (should run in milliseconds) |
+
+---
+
+## 2. Real-World Analogy
+
+Think of building a car on an assembly line.
+
+**Unit Testing** is taking a single spark plug, plugging it into a testing machine on a workbench, and verifying it sparks correctly. You don't put it in the engine, you don't add fuel, and you don't drive the car. You test *only* the spark plug in isolation.
+
+If you put the spark plug in the engine, turn the key, and see if the car drives, that is an **Integration Test**.
+
+---
+
+## 3. Concept Explanation
+
+Unit tests are the foundation of a stable codebase. Because they are completely isolated, they are incredibly fast. You should have hundreds or thousands of them, and they should run in seconds.
+
+A proper unit test follows the **AAA Pattern**:
+1. **Arrange:** Set up the exact input data or state needed.
+2. **Act:** Call the function you are testing.
+3. **Assert:** Verify the result matches what you expected.
+
+If the function relies on an external API (like Stripe) or a Database, you must use **Mocks** to fake those dependencies so the unit test remains isolated.
+
+---
+
+## 4. Syntax Table
+
+| Concept | Code Example |
+|---|---|
+| Arrange | `input_data = [1, 2, 3]` |
+| Act | `result = calculate_sum(input_data)` |
+| Assert | `assert result == 6` |
+
+---
+
+## 5. Beginner Example
+
+Here is a perfect, pure unit test using pytest.
+
+```python
+# The function being tested (pure logic, no external dependencies)
+def calculate_discount(price, discount_percent):
+    if discount_percent < 0 or discount_percent > 100:
+        raise ValueError("Invalid discount")
+    return price - (price * (discount_percent / 100))
+
+# The Unit Test
+def test_calculate_discount_valid():
+    # Arrange
+    price = 100
+    discount = 20
+
+    # Act
+    result = calculate_discount(price, discount)
+
+    # Assert
+    assert result == 80.0
+
+def test_calculate_discount_invalid():
+    # Testing the edge case / error handling
+    import pytest
+    with pytest.raises(ValueError):
+        calculate_discount(100, 105)
+```
+
+---
+
+## 6. Real-World Engineering Example
+
+In production, you often test classes and methods. Notice how we do not connect to a real database here; we pass in fake data.
+
+```python
+class Cart:
+    def __init__(self):
+        self.items = []
+
+    def add_item(self, item_name, price):
+        self.items.append({"name": item_name, "price": price})
+
+    def get_total(self):
+        return sum(item["price"] for item in self.items)
+
+# Pytest Unit Test
+def test_cart_calculates_total_correctly():
+    # Arrange
+    cart = Cart()
+    cart.add_item("Laptop", 1000)
+    cart.add_item("Mouse", 50)
+
+    # Act
+    total = cart.get_total()
+
+    # Assert
+    assert total == 1050
+    assert len(cart.items) == 2
+```
+
+---
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'Arrange (Setup)' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Act (Call Function)' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'tool', data: { label: 'Assert (Verify Output)' }, position: { x: 250, y: 200 } },
+    { id: '4', type: 'warning', data: { label: 'Isolated Memory Boundary' }, position: { x: 450, y: 100 } },
+    { id: 'e1-2', source: '1', target: '2', type: 'straight' },
+    { id: 'e2-3', source: '2', target: '3', type: 'straight' },
+    { id: 'e2-4', source: '2', target: '4', type: 'straight', animated: true, label: 'No DB/Network' }
+  ]}
+/>
+
+Unit tests operate entirely in RAM. There is no disk I/O, no network latency, and no context switching. The Python interpreter allocates memory for the test variables, executes the CPU instructions for the function, compares the output, and immediately garbage collects the memory when the test finishes.
+
+---
+
+## 8. Performance Table
+
+| Metric | Target Goal | Reason |
+|---|---|---|
+| Speed per test | < 5 milliseconds | Developers need to run thousands of tests constantly while coding. |
+| Determinism | 100% | The same code must ALWAYS yield the exact same test result. No flakiness. |
+| Test Coverage | 80%+ | Covering pure logic paths (if/else branches). |
+
+---
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What makes a test a "Unit Test"? | It tests one logical unit of code in complete isolation, without hitting a database, file system, or network. |
+| What is the AAA pattern? | Arrange (setup data), Act (call function), Assert (check result). |
+| What is Test Driven Development (TDD)? | Writing the failing unit test FIRST, before writing the actual code to make it pass. |
+| How do you unit test a function that connects to AWS S3? | You don't. You "mock" or "patch" the S3 client so the function receives fake data instantly without making a real network request. |
+
+---
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, watch out for testing **hidden state** or **side effects**.
+
+```python
+# Function with a hidden side effect
+global_counter = 0
+
+def increment_and_multiply(val):
+    global global_counter
+    global_counter += 1
+    return val * global_counter
+
+# BAD UNIT TEST: It depends on the order the tests are run!
+def test_one():
+    assert increment_and_multiply(5) == 5 # Fails if test_two ran first!
+
+def test_two():
+    assert increment_and_multiply(2) == 4 # Fails if test_one ran first!
+```
+
+A good unit test must be **Idempotent** and order-independent. It should not rely on global variables.
+
+---
+
+## 11. Real-World Usage
+
+- **Open Source Libraries:** Tools like `requests` or `Django` have massive unit test suites that run on GitHub Actions for every single Pull Request to ensure nobody broke core logic.
+- **Financial Logic:** Tax calculation algorithms, salary computation, and currency conversion logic are strictly unit tested because mistakes cost real money.
+
+---
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Test edge cases (None, empty lists, negative numbers) | Don't just test the "Happy Path" where everything works |
+| Keep tests small, focusing on one assertion concept | Don't write 50 assertions in a single unit test |
+| Use clear, descriptive names for your test functions | Don't print output in tests (pytest captures it anyway) |
+
+---
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+In production pipelines, unit tests are the first gatekeeper. If your unit tests take longer than 2-3 minutes to run, developers will stop running them locally before committing. If you find your unit tests are slow, it usually means someone snuck an Integration Test in there (hitting a real database or making an HTTP request).
+
+---
+
+## 14. Common Mistakes
+
+- **Testing the Framework:** Writing a test to verify that `user.save()` saves a user to the database. Django/SQLAlchemy already tested their own code. You should test *your* custom business logic, not the framework.
+- **Tautological Tests:** Writing a test that basically says `assert True == True` without actually executing meaningful code.
+- **Ignoring Code Coverage:** Not using tools like `pytest-cov` to see which `if/else` branches your unit tests missed.
+
+---
+
+## 15. Related Topics
+
+- Testing: Pytest
+- Testing: Mocking
+- Testing: Integration Testing

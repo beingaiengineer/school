@@ -4,4 +4,226 @@ sidebar_position: 3
 
 # Mocking
 
-Placeholder: introduce Mocking.
+import LearningFlow from '@site/src/components/LearningFlow';
+
+## 1. Quick Summary
+
+Bro, Mocking is how you write Unit Tests for code that talks to the outside world. Instead of letting your code actually hit a real database or a real API (like Stripe or AWS), you temporarily replace those external dependencies with fake "Mock" objects that instantly return hardcoded data.
+
+| Area | Details |
+|---|---|
+| Topic | Mocking (`unittest.mock`) |
+| Difficulty | Intermediate |
+| Used For | Isolating unit tests from network, file system, and databases |
+| Common Mistake | Mocking the wrong import path (where it's used, not where it's defined) |
+| Performance | Makes tests extremely fast by removing I/O bottlenecks |
+
+---
+
+## 2. Real-World Analogy
+
+Think of a pilot using a flight simulator.
+
+If you want to test how a pilot reacts to an engine failure, you don't put them in a real Boeing 747, fly to 30,000 feet, and turn off the engine. That is expensive, slow, and dangerous.
+
+Instead, you put them in a **Simulator** (a Mock). The simulator looks and feels exactly like the real plane, and when they pull a lever, the simulator "fakes" the response. Mocking is building a simulator for your Python functions.
+
+---
+
+## 3. Concept Explanation
+
+In Python, the `unittest.mock` library provides the `patch` decorator and the `MagicMock` object.
+
+When you "patch" a function or class, Python temporarily replaces it with a `MagicMock` during the test.
+You can tell this mock object to:
+1. `return_value`: Return a specific piece of fake data.
+2. `side_effect`: Raise an Exception (to test error handling).
+3. Record history: You can assert that your code called the mocked function with the correct arguments (e.g., did we pass the right email address to the fake email sender?).
+
+---
+
+## 4. Syntax Table
+
+| Operation | Syntax Example |
+|---|---|
+| Patch a function | `@patch('my_module.requests.get')` |
+| Set a fake return | `mock_get.return_value.status_code = 200` |
+| Trigger an error | `mock_get.side_effect = ConnectionError("Timeout")` |
+| Verify it was called | `mock_get.assert_called_once_with('https://api.com')` |
+
+---
+
+## 5. Beginner Example
+
+Let's test a function that fetches a user's GitHub profile. We DO NOT want our test to actually hit GitHub's API.
+
+```python
+# --- github_service.py ---
+import requests
+
+def get_github_user(username):
+    response = requests.get(f"https://api.github.com/users/{username}")
+    if response.status_code == 200:
+        return response.json()['name']
+    return None
+
+# --- test_github.py ---
+from unittest.mock import patch
+from github_service import get_github_user
+
+# We patch 'requests.get' exactly where it is used inside 'github_service'
+@patch('github_service.requests.get')
+def test_get_github_user_success(mock_get):
+    # 1. Arrange: Setup the fake response
+    mock_get.return_value.status_code = 200
+    mock_get.return_value.json.return_value = {"name": "Bro Code"}
+
+    # 2. Act: Call our function
+    result = get_github_user("bro")
+
+    # 3. Assert: Check the result AND verify the mock was called correctly
+    assert result == "Bro Code"
+    mock_get.assert_called_once_with("https://api.github.com/users/bro")
+```
+
+---
+
+## 6. Real-World Engineering Example
+
+In production, you often need to mock database clients, AWS Boto3 clients, or payment gateways. Here is how you mock a Stripe charge and test the error handling.
+
+```python
+import stripe
+from unittest.mock import patch
+
+def charge_customer(amount, token):
+    try:
+        charge = stripe.Charge.create(amount=amount, source=token)
+        return charge.id
+    except stripe.error.CardError:
+        return "DECLINED"
+
+@patch('stripe.Charge.create')
+def test_charge_customer_declined(mock_stripe_create):
+    # Arrange: Force the mock to raise an exception when called
+    mock_stripe_create.side_effect = stripe.error.CardError(
+        message="Card declined", param="invalid", code="card_declined"
+    )
+
+    # Act
+    result = charge_customer(5000, "tok_invalid")
+
+    # Assert
+    assert result == "DECLINED"
+    mock_stripe_create.assert_called_once_with(amount=5000, source="tok_invalid")
+```
+
+---
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'Test Function Executes' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'tool', data: { label: '@patch intercepts import' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'process', data: { label: 'Original function replaced by MagicMock' }, position: { x: 250, y: 200 } },
+    { id: '4', type: 'data', data: { label: 'Function calls Mock instead of Network' }, position: { x: 250, y: 300 } },
+    { id: '5', type: 'output', data: { label: 'Mock returns preset fake data' }, position: { x: 250, y: 400 } },
+    { id: 'e1-2', source: '1', target: '2', type: 'step' },
+    { id: 'e2-3', source: '2', target: '3', type: 'step' },
+    { id: 'e3-4', source: '3', target: '4', type: 'step' },
+    { id: 'e4-5', source: '4', target: '5', type: 'step' }
+  ]}
+/>
+
+Under the hood, `@patch` uses Python's dynamic nature (Monkey Patching) to reach into the `sys.modules` dictionary during runtime. It finds the module where your code is running, looks up the name of the function you want to mock, and temporarily swaps the pointer to a `MagicMock` object. When the test finishes, `@patch` automatically restores the original pointer.
+
+---
+
+## 8. Performance Table
+
+| Scenario | Network Call | Mocked Call |
+|---|---|---|
+| Latency | ~200ms - 2 seconds | < 1 millisecond |
+| Reliability | Flaky (API might be down) | 100% Deterministic |
+| Setup Complexity | Hard (Needs API keys) | Moderate (Requires writing Mock config) |
+
+---
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Where do you patch a function: where it's defined, or where it's used? | You must patch it exactly where it is USED. If `file_a` imports `get` from `requests`, you patch `file_a.get`, not `requests.get`. |
+| What is the difference between `return_value` and `side_effect`? | `return_value` returns a static value. `side_effect` is used to raise Exceptions or return an iterable of different values on consecutive calls. |
+| What is a `MagicMock`? | A subclass of `Mock` that automatically implements Python's magic methods (like `__len__`, `__str__`), making it act more like a real Python object. |
+
+---
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, the absolute biggest trap in mocking is the **"Where to Patch" rule**.
+
+If you have:
+```python
+# my_app/utils.py
+from os import getcwd
+
+def get_current_dir():
+    return getcwd()
+```
+
+If you try to mock `os.getcwd`, the test will FAIL:
+```python
+# BAD! my_app.utils already imported the real getcwd.
+# Patching 'os.getcwd' now does nothing to my_app.utils.
+@patch('os.getcwd')
+def test_dir(mock_getcwd): ...
+```
+
+You must patch it inside the module that is actually using it:
+```python
+# GOOD! Patch the reference that lives inside utils.py
+@patch('my_app.utils.getcwd')
+def test_dir(mock_getcwd): ...
+```
+
+---
+
+## 11. Real-World Usage
+
+- **Cloud Infrastructure:** Testing Boto3 (AWS) logic. You don't want your unit tests creating real EC2 instances and costing you money, so you mock Boto3 using tools like `moto` or `@patch`.
+- **Microservices:** If your User Service needs to call the Order Service to get data, you mock the HTTP request to the Order Service.
+- **Time/Dates:** Using libraries like `freezegun` to mock `datetime.now()` so you can test code that behaves differently on weekends vs weekdays.
+
+---
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `assert_called_once_with` to verify your code passes the correct args to the mock | Don't mock the system under test (the function you are actually testing) |
+| Patch where the object is imported into, not where it is defined | Don't overuse mocks. If a test has 10 mocks, it's testing the mocks, not your code. |
+| Let Integration Tests handle the real DB/Network | Don't hit external APIs in unit tests |
+
+---
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+Over-mocking is a massive danger. If you mock the database, the network, and the file system in a single test, your test might pass perfectly, but the code will immediately crash in production because the real database schema changed. Mocking verifies *your logic* works, but it does NOT verify that your system is wired together correctly. You still need Integration Tests.
+
+---
+
+## 14. Common Mistakes
+
+- **Mocking `datetime` directly:** Python's built-in `datetime` is written in C and cannot be patched easily. You have to patch the module importing it, or use a library like `freezegun`.
+- **Misspelling Assertions:** Writing `mock_obj.assert_called_once()` (correct) vs `mock_obj.assert_callled_once()` (incorrect spelling). Because it is a `MagicMock`, it will accept the misspelled method call without throwing an error, and your test will pass silently! Always double-check assertion spelling.
+
+---
+
+## 15. Related Topics
+
+- Testing: Unit Testing
+- Testing: Pytest
+- Testing: Integration Testing
