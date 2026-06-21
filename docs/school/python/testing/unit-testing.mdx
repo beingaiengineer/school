@@ -2,6 +2,236 @@
 sidebar_position: 2
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Unit Testing
 
-Placeholder: introduce Unit Testing.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Unit Testing |
+| Difficulty | Beginner |
+| Used For | Verifying that individual, isolated pieces of code (functions/classes) work correctly |
+| Common Mistake | Connecting to a real database inside a unit test |
+| Performance | Extremely fast (should run in milliseconds) |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, think of a car manufacturing plant.
+
+Before you put the entire car together and drive it on the highway (Integration Testing), you test the individual parts.
+You take one specific gear, put it on a desk, and check if the teeth are exactly 5mm wide. You don't need the engine, the wheels, or the steering wheel to test the gear. You isolate it.
+
+Unit testing is taking one function (the gear), passing it inputs, and checking the output, completely ignoring the rest of the application.
+
+---
+
+# 3. Concept Explanation
+
+A Unit Test verifies the behavior of the smallest testable part of an application, usually a single function or method.
+
+The core principle of unit testing is **Isolation**.
+A true unit test must not:
+- Talk to a real database.
+- Make real network requests (HTTP).
+- Read or write real files to the disk.
+- Depend on the system clock or random numbers.
+
+If your test does any of those things, it is an Integration Test, not a Unit Test.
+
+**When to use it:**
+- To test complex business logic, mathematical calculations, string parsing, and state changes.
+
+---
+
+# 4. Syntax Table
+
+| Concept | Action / Pattern |
+|---|---|
+| AAA Pattern | Arrange (Setup data) -> Act (Call function) -> Assert (Verify result) |
+| System Under Test (SUT) | The specific function or class you are currently testing. |
+| Test Double (Mock) | A fake version of a dependency used to maintain isolation. |
+
+---
+
+# 5. Beginner Example
+
+Let's test a simple discount calculator function using the AAA pattern.
+
+**`billing.py` (Code)**
+```python
+def apply_discount(price: float, discount_percent: float) -> float:
+    if discount_percent < 0 or discount_percent > 100:
+        raise ValueError("Invalid discount")
+    return price - (price * (discount_percent / 100))
+```
+
+**`test_billing.py` (Tests)**
+```python
+import pytest
+from billing import apply_discount
+
+def test_apply_discount_valid():
+    # Arrange
+    price = 1000.0
+    discount = 10.0
+
+    # Act
+    final_price = apply_discount(price, discount)
+
+    # Assert
+    assert final_price == 900.0
+
+def test_apply_discount_invalid_percent():
+    # Act & Assert
+    with pytest.raises(ValueError):
+        apply_discount(1000.0, 150.0)
+```
+
+---
+
+# 6. Real-World Engineering Example
+
+In the real world, your functions usually depend on other things (like an email service). To keep it a *Unit Test*, we must isolate the function by passing in a fake (Mock) email service.
+
+```python
+# The System Under Test
+def process_refund(amount: float, user_email: str, email_service) -> bool:
+    if amount <= 0:
+        return False
+
+    # We don't want to actually send an email during a unit test!
+    email_service.send(user_email, f"Refunded ${amount}")
+    return True
+
+# The Test
+class FakeEmailService:
+    def __init__(self):
+        self.sent_emails = []
+
+    def send(self, to, message):
+        self.sent_emails.append((to, message))
+
+def test_process_refund_sends_email():
+    # Arrange
+    fake_service = FakeEmailService()
+
+    # Act
+    result = process_refund(50.0, "bro@test.com", fake_service)
+
+    # Assert
+    assert result is True
+    assert len(fake_service.sent_emails) == 1
+    assert fake_service.sent_emails[0][0] == "bro@test.com"
+```
+
+---
+
+# 7. Internal Working
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'data', data: { label: 'Input Data (Arrange)' }, position: { x: 50, y: 150 } },
+    { id: '2', type: 'core', data: { label: 'Function Under Test (Act)' }, position: { x: 250, y: 150 } },
+    { id: '3', type: 'tool', data: { label: 'Fake Dependencies (Mocks)' }, position: { x: 250, y: 0 } },
+    { id: '4', type: 'output', data: { label: 'Verify Output (Assert)' }, position: { x: 450, y: 150 } },
+    { id: 'e1-2', source: '1', target: '2', label: 'Pass arguments', type: 'smoothstep' },
+    { id: 'e3-2', source: '3', target: '2', label: 'Inject fakes', type: 'smoothstep' },
+    { id: 'e2-4', source: '2', target: '4', label: 'Returns result', type: 'smoothstep' }
+  ]}
+/>
+
+Bro, the internal flow of a unit test is completely contained within the CPU and memory.
+Because we inject fake dependencies (Mocks) and do not touch the network or hard drive, a single unit test executes in microseconds. You can run 10,000 unit tests in just a few seconds.
+
+---
+
+# 8. Performance Table
+
+| Test Type | Execution Time | Scope |
+|---|---|---|
+| Unit Test | ~1 millisecond | Single Function / Class |
+| Integration Test | ~100-500 milliseconds | Multiple connected components + DB |
+| End-to-End (E2E) Test | ~5-10 seconds | Full system via browser/API |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the AAA pattern? | Arrange (setup inputs), Act (execute function), Assert (verify results). |
+| What makes a test a Unit Test instead of an Integration test? | Isolation. A unit test does not rely on external systems like databases, file systems, or network calls. |
+| What is Test Driven Development (TDD)? | A methodology where you write the failing unit test *first*, then write the minimum code required to make the test pass, and finally refactor. |
+| What is Code Coverage? | A metric showing the percentage of your application's source code that is executed during the test suite. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Look at this test:
+
+```python
+import datetime
+
+def is_weekend():
+    return datetime.datetime.now().weekday() >= 5
+
+def test_is_weekend():
+    # Will this pass?
+    assert is_weekend() == False
+```
+
+**Will it pass?**
+Bro, this is a flaky test! If you run this test on a Tuesday, it passes. If the CI server runs it on a Saturday, it fails!
+
+**The Fix:**
+You must isolate the function from the system clock. You have to mock `datetime.datetime.now()` to return a fixed, predictable date inside the test.
+
+---
+
+# 11. Real-World Usage
+
+In production engineering, Unit Tests form the massive base of the **Testing Pyramid**.
+- You might have 5,000 Unit tests.
+- 500 Integration tests.
+- 50 End-to-End tests.
+
+Because unit tests are so fast, developers run them locally on their laptops every time they save a file to get instant feedback if they broke something.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Test edge cases (empty lists, negative numbers, None) | Don't just test the "Happy Path" |
+| Keep assertions focused. 1-2 asserts per test is ideal | Don't write 50-line tests with 20 assertions |
+| Use clear names: `test_calculator_adds_negative_numbers` | Don't test third-party libraries (e.g., testing if SQLAlchemy works) |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note: High Coverage vs Meaningful Tests.
+Having 100% Code Coverage does NOT mean your app is bug-free. It just means every line of code was executed. Engineers sometimes write "Assertion-free" tests just to increase coverage metrics to satisfy management. Always prioritize *meaningful assertions* over a 100% coverage badge.
+
+---
+
+# 14. Common Mistakes
+
+- **Testing Private Methods**: You should generally only test the public API of a class or module. If you test private `_helper()` methods directly, your tests become brittle and break every time you refactor internals.
+- **The God Test**: Writing one massive test function that tests 15 different scenarios. If it fails, it's very hard to know *which* scenario failed.
+- **Not testing Exceptions**: Forgetting to write tests that deliberately pass bad data to ensure the function raises the correct `ValueError` or `TypeError`.
+
+---
+
+# 15. Related Topics
+
+- Pytest
+- Mocking (`unittest.mock`)
+- Integration Testing
+- Clean Code (Dependency Inversion)

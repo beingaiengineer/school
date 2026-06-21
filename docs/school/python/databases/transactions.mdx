@@ -2,6 +2,243 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Transactions
 
-Placeholder: introduce Transactions.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Database Transactions |
+| Difficulty | Intermediate |
+| Used For | Ensuring a group of database operations succeed or fail together safely |
+| Common Mistake | Forgetting to `rollback()` on exceptions, leaving locks hanging |
+| Performance | Holds database locks; keep transactions as short as possible |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, think of a database transaction like a bank transfer.
+
+If you want to transfer ₹10,000 from your account to your friend's account, two things must happen:
+1. Deduct ₹10,000 from your account.
+2. Add ₹10,000 to your friend's account.
+
+Imagine if step 1 succeeds, but the bank's system crashes before step 2. You lost money, and your friend got nothing!
+
+A transaction ensures that both steps are treated as a single, indivisible unit. Either *both* steps succeed (Commit), or *neither* happens, and your money is restored (Rollback).
+
+---
+
+# 3. Concept Explanation
+
+A transaction is a sequence of operations performed as a single logical unit of work.
+
+Transactions follow the **ACID** properties:
+- **A**tomicity: All or nothing.
+- **C**onsistency: Moves DB from one valid state to another.
+- **I**solation: Concurrent transactions don't interfere with each other.
+- **D**urability: Once committed, the changes are permanent (saved to disk).
+
+**When to use it:**
+- When updating multiple related tables (e.g., creating an Order and deducting Inventory).
+- Financial operations.
+- Batch data processing where partial failure corrupts the system.
+
+**When NOT to use it:**
+- Simple read-only `SELECT` queries (though some frameworks wrap them anyway).
+- When you are deliberately inserting logs where missing a few isn't fatal.
+
+---
+
+# 4. Syntax Table
+
+| Concept | Python (psycopg2 / SQLAlchemy) Example |
+|---|---|
+| Start Transaction | Usually automatic on first query, or `BEGIN;` |
+| Commit | `connection.commit()` |
+| Rollback | `connection.rollback()` |
+| Context Manager | `with engine.begin() as conn:` (Auto commits/rolls back) |
+
+---
+
+# 5. Beginner Example
+
+Let's do the classic bank transfer using raw `sqlite3`.
+
+```python
+import sqlite3
+
+conn = sqlite3.connect(':memory:')
+cursor = conn.cursor()
+
+# Setup
+cursor.execute("CREATE TABLE accounts (name TEXT, balance INT)")
+cursor.execute("INSERT INTO accounts VALUES ('Alice', 5000), ('Bob', 1000)")
+conn.commit()
+
+try:
+    # 1. Deduct from Alice
+    cursor.execute("UPDATE accounts SET balance = balance - 1000 WHERE name = 'Alice'")
+
+    # Simulating a sudden crash or bug!
+    raise Exception("Bank server crashed!")
+
+    # 2. Add to Bob (This won't run)
+    cursor.execute("UPDATE accounts SET balance = balance + 1000 WHERE name = 'Bob'")
+
+    # Save it all
+    conn.commit()
+    print("Transfer successful")
+
+except Exception as e:
+    # Undo the deduction from Alice!
+    conn.rollback()
+    print(f"Transaction failed, rolled back! Reason: {e}")
+```
+
+Because we hit `rollback()`, Alice's balance stays at 5000 safely.
+
+---
+
+# 6. Real-World Engineering Example
+
+In production, you usually use a Context Manager (like SQLAlchemy's `Session` or `engine.begin()`) so you don't have to manually write `try/except/rollback`.
+
+```python
+from sqlalchemy import create_engine, text
+
+engine = create_engine("postgresql://user:pass@localhost/db")
+
+def create_order_and_charge(user_id: int, item_id: int, amount: float):
+    """
+    Bro, the context manager automatically runs BEGIN,
+    and then either COMMIT on success, or ROLLBACK on exception!
+    """
+    with engine.begin() as conn:
+        # Step 1: Insert Order
+        conn.execute(
+            text("INSERT INTO orders (user_id, item_id) VALUES (:u, :i)"),
+            {"u": user_id, "i": item_id}
+        )
+
+        # Step 2: Charge User
+        conn.execute(
+            text("UPDATE users SET balance = balance - :amt WHERE id = :u"),
+            {"amt": amount, "u": user_id}
+        )
+    # Automatically committed here!
+```
+
+---
+
+# 7. Internal Working
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'Application Code' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'BEGIN Transaction' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'data', data: { label: 'Query 1 (Update A)' }, position: { x: 100, y: 200 } },
+    { id: '4', type: 'data', data: { label: 'Query 2 (Update B)' }, position: { x: 400, y: 200 } },
+    { id: '5', type: 'output', data: { label: 'COMMIT (Save to Disk)' }, position: { x: 100, y: 350 } },
+    { id: '6', type: 'warning', data: { label: 'ROLLBACK (Undo Changes)' }, position: { x: 400, y: 350 } },
+    { id: 'e1-2', source: '1', target: '2', type: 'smoothstep' },
+    { id: 'e2-3', source: '2', target: '3', type: 'smoothstep' },
+    { id: 'e3-4', source: '3', target: '4', type: 'smoothstep' },
+    { id: 'e4-5', source: '4', target: '5', label: 'Success', type: 'smoothstep' },
+    { id: 'e4-6', source: '4', target: '6', label: 'Exception!', type: 'smoothstep', animated: true }
+  ]}
+/>
+
+Bro, when you start a transaction, the database writes changes to a temporary transaction log (WAL - Write-Ahead Log in Postgres) and holds memory locks on the rows you touched. Other connections cannot see these changes yet.
+
+Only when you send `COMMIT` does the DB make the changes visible to everyone and ensure they are durable on disk. If you send `ROLLBACK`, the DB simply throws away the temporary log.
+
+---
+
+# 8. Performance Table
+
+| Phase | Performance Impact | Note |
+|---|---|---|
+| Active Transaction | Blocks other writers | Holds row locks. Keep it short! |
+| Commit | Disk I/O | Flushes WAL to disk. Can be slow if disk is slow. |
+| Rollback | Fast | DB just discards the temporary state. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does ACID stand for? | Atomicity, Consistency, Isolation, Durability. |
+| What happens if you forget to commit or rollback? | The connection holds row locks forever, potentially causing a deadlock or bringing down the whole database. |
+| What is a "Deadlock"? | When Transaction A is waiting for a lock held by Transaction B, and Transaction B is waiting for a lock held by Transaction A. |
+| What are Transaction Isolation Levels? | Settings (like Read Committed or Serializable) that determine how much "dirty" or uncommitted data transactions can see from each other. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Look at this API endpoint code:
+
+```python
+@app.post("/checkout")
+def checkout():
+    with engine.begin() as conn:
+        conn.execute("UPDATE inventory ...")
+
+        # Third-party API call inside a transaction!
+        response = requests.post("https://stripe.com/charge", timeout=10)
+
+        conn.execute("INSERT INTO orders ...")
+```
+
+**What's the trap?**
+Bro, never put slow network calls (`requests.post`) inside a database transaction!
+If Stripe takes 10 seconds to reply, your transaction stays open for 10 seconds, locking the inventory table and blocking all other users trying to checkout.
+
+**Fix:** Do DB prep work, commit, make the API call, then do the final DB insert in a new transaction.
+
+---
+
+# 11. Real-World Usage
+
+- **E-Commerce (Amazon, Flipkart)**: Deducting inventory and confirming payment.
+- **Banking systems**: Transferring funds.
+- **Social Media**: Deleting a user profile (requires deleting comments, posts, and the user row atomically).
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Keep transactions as short as possible | Put slow API calls or heavy CPU work inside a transaction |
+| Use context managers (`with`) to handle rollbacks automatically | Manually call `begin()` and forget to put `commit()` in a `try/finally` block |
+| Be aware of default isolation levels (Postgres uses Read Committed) | Assume all transactions are perfectly serialized automatically |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note: Connection Pooling + Unclosed Transactions = Disaster.
+If your app uses a connection pool and you leave a transaction dangling (no commit/rollback), that connection goes back to the pool *still in a transaction*. The next user to get that connection will experience weird errors or deadlocks. Always use `try/finally` or Context Managers!
+
+---
+
+# 14. Common Mistakes
+
+- **Catching an exception but forgetting to rollback**: This leaves the transaction open and locks active.
+- **Nested transactions confusion**: Trying to `commit()` inside a function when the caller function already opened a transaction.
+- **Long-running transactions**: Running a massive `UPDATE` script during peak hours that locks the main user table for 5 minutes.
+
+---
+
+# 15. Related Topics
+
+- PostgreSQL / SQLite
+- Connection Pooling
+- SQLAlchemy
+- Concurrency (Race Conditions)

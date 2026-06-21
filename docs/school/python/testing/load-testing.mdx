@@ -2,6 +2,214 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Load Testing
 
-Placeholder: introduce Load Testing.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Load Testing |
+| Difficulty | Advanced |
+| Used For | Verifying how a system behaves under heavy concurrent user traffic |
+| Common Mistake | Running load tests from your local laptop on a weak WiFi connection |
+| Performance | Identifies exactly where your application will crash in production |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, think of opening a new restaurant.
+
+**Unit Testing:** You ask the chef to cook one pizza. It tastes great.
+**Integration Testing:** You have a waiter take the order, give it to the chef, and serve it to you. It works perfectly.
+
+But what happens on Opening Night when 500 people walk through the door at the exact same time? The kitchen catches fire, the waiters cry, and the system crashes.
+
+**Load Testing** is simulating those 500 people *before* opening night. You hire 500 fake customers to sit down and order at once, so you can find the bottlenecks (e.g., "We need a bigger oven") before the real customers arrive.
+
+---
+
+# 3. Concept Explanation
+
+Load Testing evaluates the performance of your application by simulating a high volume of concurrent users making requests to your servers.
+
+It answers critical engineering questions:
+- "How many requests per second (RPS) can our API handle?"
+- "Does the database crash when 10,000 users log in simultaneously?"
+- "Where is the bottleneck? (CPU, Memory, Database Locks, Network?)"
+
+In the Python ecosystem, **Locust** is the most popular tool for load testing because you can write user behavior scenarios in pure Python code.
+
+**When to use it:**
+- Before launching a major marketing campaign (like a Super Bowl ad or a Big Billion Days sale).
+- To verify that new infrastructure scaling rules work properly.
+
+**When NOT to use it:**
+- In your daily CI/CD pipeline (it takes too long and costs too much money).
+
+---
+
+# 4. Syntax Table
+
+| Concept | Locust Example |
+|---|---|
+| Define a Task | `@task def view_item(self): self.client.get("/item")` |
+| Define User Wait Time | `wait_time = between(1, 5)` (Waits 1-5s between requests) |
+| Run Test | `locust -f locustfile.py --users 1000 --spawn-rate 10` |
+
+---
+
+# 5. Beginner Example
+
+Let's write a simple Locust file to hammer a login endpoint.
+
+**`locustfile.py`**
+```python
+from locust import HttpUser, task, between
+
+class WebsiteUser(HttpUser):
+    # Simulate human behavior: wait 1 to 3 seconds between clicks
+    wait_time = between(1, 3)
+
+    # @task defines an action the simulated user will take
+    @task
+    def load_homepage(self):
+        self.client.get("/")
+
+    # You can weigh tasks. This task runs 3x more often than the homepage!
+    @task(3)
+    def login_user(self):
+        self.client.post("/login", json={"username": "test", "password": "password"})
+```
+
+If you run this in your terminal: `locust -f locustfile.py`, Locust opens a web UI where you can say "Spawn 5,000 users at 100 users per second" and watch the graphs!
+
+---
+
+# 6. Real-World Engineering Example
+
+In the real world, APIs require authentication tokens. You must simulate the full user journey: Login -> Get Token -> Hit protected endpoints.
+
+```python
+from locust import HttpUser, task, between
+
+class APIUser(HttpUser):
+    wait_time = between(1, 2)
+    token = None
+
+    def on_start(self):
+        """Runs ONCE when a simulated user is spawned."""
+        response = self.client.post("/auth", json={"user": "admin", "pass": "secret"})
+        if response.status_code == 200:
+            self.token = response.json().get("access_token")
+
+    @task
+    def fetch_dashboard(self):
+        """Hits the protected endpoint using the stored token."""
+        if self.token:
+            headers = {"Authorization": f"Bearer {self.token}"}
+            self.client.get("/api/v1/dashboard", headers=headers)
+```
+
+---
+
+# 7. Internal Working
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'tool', data: { label: 'Locust Master Node' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Worker Node 1 (1000 Users)' }, position: { x: 50, y: 100 } },
+    { id: '3', type: 'process', data: { label: 'Worker Node 2 (1000 Users)' }, position: { x: 450, y: 100 } },
+    { id: '4', type: 'output', data: { label: 'Target API Server (Load Balancer)' }, position: { x: 250, y: 250 } },
+    { id: '5', type: 'data', data: { label: 'Database (The Bottleneck)' }, position: { x: 250, y: 350 } },
+    { id: 'e1-2', source: '1', target: '2', label: 'Distributes tasks', type: 'smoothstep' },
+    { id: 'e1-3', source: '1', target: '3', label: 'Distributes tasks', type: 'smoothstep' },
+    { id: 'e2-4', source: '2', target: '4', label: 'HTTP GET/POST', type: 'straight' },
+    { id: 'e3-4', source: '3', target: '4', label: 'HTTP GET/POST', type: 'straight' },
+    { id: 'e4-5', source: '4', target: '5', label: 'Heavy SQL Queries', type: 'step', style: { stroke: 'red' } }
+  ]}
+/>
+
+Bro, when you simulate massive load, a single laptop cannot generate enough network traffic. Locust uses a distributed architecture. A "Master" node tells multiple "Worker" nodes (often running in AWS/GCP) to attack the target server simultaneously.
+
+The API Server usually handles the HTTP requests fine, but the Load Test reveals that the Database CPU hits 100% and crashes under the weight of the concurrent connections.
+
+---
+
+# 8. Performance Table
+
+| Metric | Good Sign | Warning Sign |
+|---|---|---|
+| Response Time (p95) | < 200ms | > 1000ms (Users are waiting) |
+| Error Rate | 0.0% | > 1.0% (502 Bad Gateway / 504 Timeout errors) |
+| Throughput (RPS) | Scales linearly as users increase | Flattens out early (Bottleneck hit) |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between Load Testing and Stress Testing? | Load Testing verifies behavior under *expected* peak traffic. Stress Testing pushes the system *beyond* expected traffic until it breaks to find the absolute breaking point. |
+| Why use Locust instead of JMeter? | Locust allows you to write test scenarios in pure Python code, making it developer-friendly, version-controllable, and highly customizable compared to JMeter's XML GUI approach. |
+| What is a "p95" response time? | The 95th percentile. It means 95% of the requests were faster than this time, and the slowest 5% were worse. It is a much better metric than the "Average" response time. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Look at this testing scenario:
+
+```bash
+# Running this from your MacBook on Starbucks WiFi
+locust -f load_test.py --users 50000 --host https://prod-api.com
+```
+
+**What happens?**
+Bro, you think your API is failing because requests are timing out, but actually, **your laptop's WiFi router just crashed!**
+
+**The Fix:**
+You can never run serious load tests from a local machine. You must deploy Locust (or your load testing tool) into the cloud on large EC2 instances to ensure you have the network bandwidth to actually stress the target server.
+
+---
+
+# 11. Real-World Usage
+
+- **E-Commerce (Flash Sales)**: Running a 100,000-user load test to ensure the "Add to Cart" database locks don't bring down the site during a Black Friday sale.
+- **DDoS Simulation**: Security teams use load testing techniques to see if Rate Limiting (WAF) correctly blocks malicious bot traffic without blocking real users.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Test on a Staging environment that perfectly mirrors Production | Don't run a load test against Production unless you are prepared for it to crash |
+| Include realistic "think time" (delays) between user actions | Don't hammer the API with zero delays—real humans take 3 seconds to read a page |
+| Monitor Database CPU and Connection Pools during the test | Don't just look at the Locust HTTP dashboard |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note: The Cache Trap.
+If your Locust test hits `GET /items/1` 50,000 times, the API's caching layer (Redis or CDN) will cache the response after the first request. The remaining 49,999 requests won't even hit your database! Your load test will report "Massive Success," but on Launch Day, when users request items 1 to 50,000, your database will crash. Always parameterize your test URLs with random IDs to bypass caches!
+
+---
+
+# 14. Common Mistakes
+
+- **Testing the Load Balancer, not the app**: Spawning 100,000 connections from a single IP address will often just trigger AWS Shield or Cloudflare to block your IP, thinking it's a DDoS attack. Your app never even gets tested.
+- **Ignoring Database Write Load**: Writing tests that only do `GET` requests. In reality, a database handles `SELECT` easily but locks up during massive concurrent `INSERT`/`UPDATE` requests.
+- **Failing to setup test data**: Simulating 10,000 users trying to login when you only created 5 users in the test database.
+
+---
+
+# 15. Related Topics
+
+- Caching
+- Connection Pooling
+- Scalable Python
+- Race Conditions

@@ -2,6 +2,227 @@
 sidebar_position: 3
 ---
 
-# Sqlalchemy
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Sqlalchemy.
+# SQLAlchemy
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | SQLAlchemy |
+| Difficulty | Intermediate |
+| Used For | Connecting Python to SQL databases (ORM + Core) |
+| Common Mistake | Querying large datasets without limiting or paginating |
+| Performance | Slight overhead compared to raw SQL, but much safer and cleaner |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, think of SQLAlchemy like a high-end restaurant's ordering system.
+
+Instead of you (the developer) going straight into the kitchen and yelling instructions in "Kitchen Language" (Raw SQL) directly to the chef (the Database), you hand your request to the professional Waiter (SQLAlchemy).
+
+The Waiter translates your simple Python request ("I want an order of Users where age is > 18") into perfectly formatted Kitchen Language, ensuring no one poisons the food (SQL injection), and brings you back a nice plate of objects you can easily consume.
+
+---
+
+# 3. Concept Explanation
+
+SQLAlchemy is the most popular SQL toolkit and Object-Relational Mapper (ORM) for Python.
+
+It exists to map Python classes to database tables. This means you can interact with your database using normal Python objects instead of writing raw string queries. It has two main parts:
+1. **Core**: A SQL abstraction toolkit (writing SQL with Python methods).
+2. **ORM**: The Object-Relational Mapper (mapping tables to Python classes).
+
+**When to use it:**
+- Almost any serious Python backend project connecting to SQL (PostgreSQL, MySQL, SQLite).
+- When you want code maintainability over writing raw SQL strings everywhere.
+
+**When NOT to use it:**
+- If you are doing extremely heavy data engineering/analytics where Pandas + raw SQL is faster.
+- For simple one-off scripts where a quick `sqlite3` raw query is enough.
+
+---
+
+# 4. Syntax Table
+
+| Concept | SQLAlchemy 2.0 Syntax |
+|---|---|
+| Define Table | `class User(Base): __tablename__ = 'users'` |
+| Create Session | `with Session(engine) as session:` |
+| Insert | `session.add(User(name="Rahul"))` |
+| Select | `session.scalars(select(User).where(User.name == "Rahul")).all()` |
+
+---
+
+# 5. Beginner Example
+
+Let's look at how clean it is to create a user and fetch them.
+
+```python
+from sqlalchemy import create_engine, String, select
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
+
+# 1. Setup Engine (SQLite in memory for this example)
+engine = create_engine("sqlite:///:memory:")
+
+class Base(DeclarativeBase):
+    pass
+
+# 2. Define the Model
+class User(Base):
+    __tablename__ = "users"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(50))
+
+# Create tables
+Base.metadata.create_all(engine)
+
+# 3. Use it!
+with Session(engine) as session:
+    # Insert
+    new_user = User(name="Amit")
+    session.add(new_user)
+    session.commit()
+
+    # Query
+    stmt = select(User).where(User.name == "Amit")
+    user = session.scalars(stmt).first()
+
+    print(f"Found user: {user.name} with ID: {user.id}")
+```
+
+---
+
+# 6. Real-World Engineering Example
+
+In a production app (like FastAPI or Flask), you manage database sessions carefully, often per request, and handle updates and relationships.
+
+```python
+from sqlalchemy import select, update
+from sqlalchemy.orm import Session
+
+def deactivate_inactive_users(session: Session, days_inactive: int):
+    """
+    Production-style function to bulk update users.
+    Notice we use the Core update() for performance instead of loading ORM objects!
+    """
+    # Find inactive users
+    stmt = (
+        update(User)
+        .where(User.last_login_days_ago > days_inactive)
+        .values(is_active=False)
+    )
+
+    result = session.execute(stmt)
+    session.commit()
+
+    print(f"Bro, deactivated {result.rowcount} users.")
+```
+
+---
+
+# 7. Internal Working
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'Python Application' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'SQLAlchemy ORM (Classes to SQL)' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'tool', data: { label: 'SQLAlchemy Core (SQL Expression Language)' }, position: { x: 250, y: 200 } },
+    { id: '4', type: 'tool', data: { label: 'Engine / Dialect (psycopg2, asyncpg, etc)' }, position: { x: 250, y: 300 } },
+    { id: '5', type: 'data', data: { label: 'Relational Database (PostgreSQL/MySQL)' }, position: { x: 250, y: 400 } },
+    { id: 'e1-2', source: '1', target: '2', label: 'session.add(user)', type: 'smoothstep' },
+    { id: 'e2-3', source: '2', target: '3', label: 'Translates to statements', type: 'smoothstep' },
+    { id: 'e3-4', source: '3', target: '4', label: 'Compiles Dialect SQL', type: 'smoothstep' },
+    { id: 'e4-5', source: '4', target: '5', label: 'Executes Query', type: 'smoothstep' }
+  ]}
+/>
+
+Bro, SQLAlchemy works in layers.
+Your Python app talks to the ORM (Objects). The ORM translates that into the Core (Expressions). The Core passes it to the Engine. The Engine uses a Dialect (like `psycopg2` for Postgres) to talk raw SQL to the actual Database.
+
+---
+
+# 8. Performance Table
+
+| Operation | Complexity/Speed | Note |
+|---|---|---|
+| Primary Key Lookup | Fast (O(log n) mostly) | `session.get(User, 1)` is heavily optimized. |
+| ORM Bulk Insert | Slower | Creating thousands of Python objects takes memory. |
+| Core Bulk Insert | Very Fast | Bypasses ORM objects, acts almost like raw SQL. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between SQLAlchemy Core and ORM? | Core is the SQL abstraction toolkit (writing SQL statements). ORM maps those tables to Python classes. |
+| What is the N+1 problem in SQLAlchemy? | When you loop through a list of objects and access a related child object, triggering a new DB query for every single child. |
+| How do you fix the N+1 problem? | By using Eager Loading strategies like `joinedload` or `selectinload` during the initial query. |
+| What does `session.commit()` actually do? | It flushes all pending changes to the database and issues a COMMIT command to conclude the transaction. |
+| Should you pass `Session` objects between threads? | No, SQLAlchemy Sessions are not thread-safe. Create a new session per thread/request. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Look at this tricky situation:
+
+```python
+user = session.scalars(select(User).where(User.id == 1)).first()
+user.name = "New Name"
+
+# Wait, I didn't call session.add(user). Will it save?
+session.commit()
+```
+
+**Will it save?**
+Yes, bro! SQLAlchemy tracks changes to objects attached to the session via the "Identity Map". When you call `commit()`, it sees the object changed and automatically generates the `UPDATE` statement.
+
+---
+
+# 11. Real-World Usage
+
+Companies like Reddit, Yelp, and Dropbox have used SQLAlchemy heavily.
+
+In real teams:
+- **FastAPI Apps**: Heavily use SQLAlchemy (especially Async SQLAlchemy 2.0).
+- **Alembic**: You will almost always pair SQLAlchemy with Alembic for handling database migrations (tracking schema changes over time).
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `selectinload` for 1-to-Many relationships to avoid N+1 | Don't default to lazy loading if you know you need the related data |
+| Close sessions in a `finally` block or context manager | Don't leave sessions open indefinitely |
+| Use async SQLAlchemy if using an async framework (FastAPI) | Don't use blocking sync calls in an async web worker |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note: Avoid `session.query()` in modern codebases.
+SQLAlchemy 2.0 changed the standard syntax. The old `session.query(User)` is legacy. You should always use the new `select()` construct: `session.execute(select(User)).scalars().all()`. This prepares you for Asyncio compatibility and makes type checking work perfectly.
+
+---
+
+# 14. Common Mistakes
+
+- **Memory Leaks**: Keeping references to ORM objects for a long time without expiring or closing the session.
+- **The N+1 Query**: This is the #1 killer of application performance. Always check your SQL query logs to see if your ORM is firing 100 small queries instead of 1 big JOIN.
+- **Putting Business Logic in Models**: Keep your models clean. Put complex logic in service layers, not directly inside the SQLAlchemy class methods.
+
+---
+
+# 15. Related Topics
+
+- PostgreSQL / SQLite
+- Connection Pooling
+- Transactions
+- Alembic (Migrations)
+- Asyncio (Async SQLAlchemy)

@@ -2,6 +2,224 @@
 sidebar_position: 3
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Mocking
 
-Placeholder: introduce Mocking.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Mocking in Python (`unittest.mock`) |
+| Difficulty | Intermediate |
+| Used For | Replacing real dependencies (APIs, Databases, Clocks) with fake objects during tests |
+| Common Mistake | Mocking the System Under Test instead of its dependencies |
+| Performance | High (prevents slow network/disk I/O during tests) |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, think of a movie set where an actor needs to jump out of a burning helicopter.
+
+You don't actually put the actor in a real burning helicopter 10,000 feet in the air! That is dangerous, expensive, and unpredictable.
+
+Instead, you put the actor in a fake, wooden helicopter in a studio against a green screen. The actor *thinks* they are jumping out of a helicopter, and they perform the exact same actions, but the environment is entirely controlled and fake.
+
+Mocking is creating that wooden helicopter for your functions so they can run safely in a test environment without hitting real APIs.
+
+---
+
+# 3. Concept Explanation
+
+Mocking is the process of replacing parts of your system with fake objects (Mocks) during a unit test.
+
+Python provides the `unittest.mock` library built-in. The most important tool is the `@patch` decorator (or context manager), which dynamically replaces a target function or class with a `MagicMock` object for the duration of the test.
+
+**When to use it:**
+- When your code calls a third-party API (like Stripe or AWS).
+- When your code interacts with the file system or a database.
+- When your code relies on time (`datetime.now()`).
+
+**When NOT to use it:**
+- If the dependency is just a simple data class or pure mathematical function (just use the real one!).
+- During true Integration or End-to-End tests where you *want* to verify the real systems work together.
+
+---
+
+# 4. Syntax Table
+
+| Concept | Python Syntax (`unittest.mock`) |
+|---|---|
+| The Patch Decorator | `@patch("module.target_function")` |
+| Setting a Fake Return Value | `mock_function.return_value = {"status": "ok"}` |
+| Simulating an Exception | `mock_function.side_effect = ConnectionError("API Down")` |
+| Asserting it was called | `mock_function.assert_called_once_with("user_id_1")` |
+
+---
+
+# 5. Beginner Example
+
+Let's test a function that fetches a user profile from an external HTTP API.
+
+**`user_service.py` (Code)**
+```python
+import requests
+
+def get_user_name(user_id: int) -> str:
+    # Real network call! We don't want this running in tests.
+    response = requests.get(f"https://api.example.com/users/{user_id}")
+    if response.status_code == 200:
+        return response.json()["name"]
+    return "Unknown"
+```
+
+**`test_user_service.py` (Tests)**
+```python
+from unittest.mock import patch
+from user_service import get_user_name
+
+# Patch targets the exact place where 'requests' is USED in the module
+@patch("user_service.requests.get")
+def test_get_user_name_success(mock_get):
+    # 1. Arrange: Configure the mock to return a fake Response object
+    mock_get.return_value.status_code = 200
+    mock_get.return_value.json.return_value = {"name": "Amit"}
+
+    # 2. Act: Call our function
+    name = get_user_name(5)
+
+    # 3. Assert: Verify the result and that the mock was used correctly
+    assert name == "Amit"
+    mock_get.assert_called_once_with("https://api.example.com/users/5")
+```
+
+---
+
+# 6. Real-World Engineering Example
+
+In production, we use `side_effect` to test how our code handles catastrophic failures from external APIs.
+
+```python
+import pytest
+from unittest.mock import patch
+from user_service import get_user_name
+import requests
+
+@patch("user_service.requests.get")
+def test_get_user_name_api_down(mock_get):
+    # Arrange: Force the mock to raise a Timeout exception!
+    mock_get.side_effect = requests.exceptions.Timeout("API is dead")
+
+    # Act & Assert: Verify our code doesn't crash the whole app,
+    # but handles it gracefully (or raises the expected error).
+    with pytest.raises(requests.exceptions.Timeout):
+        get_user_name(99)
+```
+
+---
+
+# 7. Internal Working
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'get_user_name(5)' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'tool', data: { label: '@patch intercepts call' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'warning', data: { label: 'Real External API (Blocked)' }, position: { x: 450, y: 200 } },
+    { id: '4', type: 'process', data: { label: 'MagicMock Object' }, position: { x: 50, y: 200 } },
+    { id: '5', type: 'output', data: { label: 'Returns fake JSON' }, position: { x: 50, y: 300 } },
+    { id: 'e1-2', source: '1', target: '2', type: 'smoothstep' },
+    { id: 'e2-3', source: '2', target: '3', label: 'Prevents real HTTP', type: 'straight', style: { stroke: 'red' } },
+    { id: 'e2-4', source: '2', target: '4', label: 'Redirects to', type: 'smoothstep', style: { stroke: 'green' } },
+    { id: 'e4-5', source: '4', target: '5', type: 'smoothstep' }
+  ]}
+/>
+
+Bro, under the hood, `@patch` uses Python's dynamic nature to look up the module dictionary and temporarily swap out the real function pointer with a pointer to a `MagicMock` class. When the test function ends, `@patch` restores the original function pointer so other tests aren't affected.
+
+---
+
+# 8. Performance Table
+
+| Scenario | Performance without Mock | Performance with Mock |
+|---|---|---|
+| Function calling Stripe API | 500ms (Network Latency) | 1ms (Memory operation) |
+| Reading a 10MB file | 50ms (Disk I/O) | 1ms (Memory string) |
+| Querying Database | 100ms | 1ms |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between a Stub and a Mock? | A Stub just returns hardcoded fake data. A Mock is smarter; it records how it was called (arguments, call count) so you can assert against those interactions. |
+| Where do you point the `@patch` target string? | You must patch the object *where it is used*, not where it is defined. If `file_a.py` imports `sleep` from `time`, you patch `"file_a.sleep"`. |
+| What is `side_effect` used for? | It is used to either raise an Exception when the mock is called, or to return different values on consecutive calls by passing a list. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Look at this common beginner mistake with the patch path:
+
+**`worker.py`**
+```python
+from external_lib import send_email
+
+def notify_user():
+    send_email("hello@user.com")
+```
+
+**`test_worker.py`**
+```python
+@patch("external_lib.send_email") # WRONG!
+def test_notify():
+    notify_user()
+```
+
+**Why is it wrong?**
+Bro, `worker.py` already imported `send_email` into its own namespace! Patching `external_lib.send_email` does nothing to the reference `worker.py` is holding.
+
+**The Fix:**
+You must patch where it is *used/imported*: `@patch("worker.send_email")`.
+
+---
+
+# 11. Real-World Usage
+
+- **Payment Gateways**: You absolutely must mock Stripe or PayPal API calls in your CI/CD pipeline, otherwise you'd be generating thousands of real financial transactions during automated testing.
+- **AWS Services**: Using libraries like `moto` to mock AWS S3 or DynamoDB so developers can run tests locally without needing AWS credentials.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `assert_called_once_with` to verify the correct data was sent to the mocked service | Don't mock everything! If you mock your own internal logic, the test becomes useless |
+| Prefer Dependency Injection over `patch` when possible for cleaner architecture | Don't patch standard library built-ins (like `open()` or `datetime`) carelessly |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note: Mock drift is dangerous.
+If the real external API changes its response format (e.g., renames the `name` field to `first_name`), your unit tests will still pass because your Mock is still returning the old, fake JSON. This is why you must also have **Integration Tests** that talk to real sandbox APIs to catch contract changes!
+
+---
+
+# 14. Common Mistakes
+
+- **Mocking the System Under Test**: Accidentally mocking the function you are supposed to be testing. The test will always pass, but tests nothing!
+- **Over-mocking**: Patching 10 different things in a single test. If your test setup is 50 lines of `@patch` decorators, your function is doing too much and needs to be refactored.
+- **Ignoring `autospec=True`**: By default, Mocks accept *any* arguments. If you misspell an argument, the test passes. Using `@patch(..., autospec=True)` forces the mock to have the exact same signature as the real function.
+
+---
+
+# 15. Related Topics
+
+- Unit Testing
+- Pytest Fixtures
+- Dependency Injection
+- Integration Testing

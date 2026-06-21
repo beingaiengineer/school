@@ -2,6 +2,211 @@
 sidebar_position: 6
 ---
 
-# Indexing
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Indexing.
+# Database Indexing
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Database Indexing |
+| Difficulty | Intermediate |
+| Used For | Speeding up `SELECT` queries significantly |
+| Common Mistake | Indexing every column or indexing columns with low cardinality (like booleans) |
+| Performance | Massive read speedup (O(log n)), but slight write slowdown (O(log n) to update index) |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, think of a database index exactly like the Index section at the back of a 1,000-page textbook.
+
+If I ask you to find every mention of the word "Polymorphism" in the book, and there is no Index, what do you do? You have to read every single page from 1 to 1000. That's a **Full Table Scan**, and it's extremely slow.
+
+But if the book has an Index, you flip to the back, look up "P", find "Polymorphism", and it tells you: "Pages 42, 89". You jump straight there. That's a **Database Index**, and it's lightning fast!
+
+---
+
+# 3. Concept Explanation
+
+An Index is a separate data structure (usually a B-Tree) created by the database engine that holds a sorted copy of a specific column, along with pointers back to the original rows in the main table.
+
+**When to use it:**
+- Columns heavily used in `WHERE`, `JOIN`, or `ORDER BY` clauses.
+- Columns where you need to enforce `UNIQUE` constraints (creating a unique constraint automatically creates an index).
+- Foreign Key columns.
+
+**When NOT to use it:**
+- Tables that are very small (a full scan is faster than checking an index and jumping).
+- Columns that are frequently updated (the index must be updated on every write, slowing down `INSERT/UPDATE`).
+- Columns with low cardinality (e.g., a boolean `is_active` column where 50% of users are active. The index won't help much).
+
+---
+
+# 4. Syntax Table
+
+| Operation | SQL / SQLAlchemy Example |
+|---|---|
+| SQL: Create Index | `CREATE INDEX idx_user_email ON users(email);` |
+| SQL: Unique Index | `CREATE UNIQUE INDEX idx_user_email ON users(email);` |
+| SQLAlchemy Core | `Index('idx_user_email', users_table.c.email)` |
+| SQLAlchemy ORM | `email: Mapped[str] = mapped_column(String, index=True)` |
+
+---
+
+# 5. Beginner Example
+
+Here is how you define an index using SQLAlchemy ORM so that searching for a user by email is fast.
+
+```python
+from sqlalchemy import String
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+class Base(DeclarativeBase):
+    pass
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    # Setting index=True tells the DB to create a B-Tree index on this column
+    email: Mapped[str] = mapped_column(String(100), index=True, unique=True)
+
+    # We don't index this because we rarely search users by their exact bio
+    bio: Mapped[str] = mapped_column(String(500), nullable=True)
+```
+
+---
+
+# 6. Real-World Engineering Example
+
+In production, you often need **Composite Indexes** (indexing multiple columns together).
+
+Imagine a query you run 1000 times a second: "Find all active logs for a specific tenant ordered by date."
+
+```sql
+-- The slow query:
+SELECT * FROM logs WHERE tenant_id = 5 AND status = 'active' ORDER BY created_at DESC;
+
+-- Bro, a single index on tenant_id helps, but a Composite Index makes this instant:
+CREATE INDEX idx_tenant_status_date ON logs(tenant_id, status, created_at DESC);
+```
+
+In SQLAlchemy:
+```python
+from sqlalchemy import Index
+
+class Log(Base):
+    __tablename__ = 'logs'
+    # ... columns ...
+
+    __table_args__ = (
+        Index('idx_tenant_status_date', 'tenant_id', 'status', 'created_at'),
+    )
+```
+
+---
+
+# 7. Internal Working
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'Query: WHERE email = "a@a.com"' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'B-Tree Index (Sorted Emails)' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'data', data: { label: 'Root Node (A-M | N-Z)' }, position: { x: 250, y: 200 } },
+    { id: '4', type: 'data', data: { label: 'Leaf Node ("a@a.com" -> Row 45)' }, position: { x: 100, y: 300 } },
+    { id: '5', type: 'output', data: { label: 'Main Table (Heap): Fetch Row 45' }, position: { x: 250, y: 400 } },
+    { id: 'e1-2', source: '1', target: '2', type: 'straight' },
+    { id: 'e2-3', source: '2', target: '3', type: 'straight' },
+    { id: 'e3-4', source: '3', target: '4', label: 'Traverse Left', type: 'step' },
+    { id: 'e4-5', source: '4', target: '5', label: 'Pointer Jump', type: 'smoothstep' }
+  ]}
+/>
+
+Bro, standard indexes use a **B-Tree** (Balanced Tree) data structure.
+Instead of scanning 1,000,000 rows, the DB engine traverses the tree. Because it's a balanced tree, finding a specific value in a million rows takes only about 20 operations (O(log n)). Once it finds the value in the "Leaf Node", it uses the pointer to jump directly to the physical hard drive location of that row in the Main Table.
+
+---
+
+# 8. Performance Table
+
+| Scenario | Time Complexity | Real-world feel |
+|---|---|---|
+| Querying without Index (Full Table Scan) | O(n) | UI hangs for 5 seconds. Users leave. |
+| Querying with B-Tree Index | O(log n) | Instant (milliseconds). |
+| Inserting a row with 10 Indexes | O(1) + 10 * O(log n) | Noticeably slower writes. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| How does an Index speed up reads? | It creates a sorted B-Tree data structure, changing a linear O(n) scan into an O(log n) tree traversal. |
+| Why not index every column? | Indexes take up physical disk space and memory. More importantly, they slow down `INSERT`, `UPDATE`, and `DELETE` operations because the B-Tree must be rebalanced. |
+| What is a Composite Index? | An index on two or more columns. The order of columns matters (Left-most prefix rule). |
+| What is an `EXPLAIN` plan? | A SQL command (`EXPLAIN SELECT ...`) that tells you if the DB engine is actually using your index or doing a full table scan. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Look at this query and index:
+
+```sql
+CREATE INDEX idx_user_name ON users(name);
+
+-- Will this use the index?
+SELECT * FROM users WHERE LOWER(name) = 'rahul';
+```
+
+**Will it use the index?**
+No! Bro, wrapping the column in a function (`LOWER(name)`) prevents the database from using the standard index. It falls back to a Full Table Scan.
+
+**The Fix:**
+You must create a "Function-Based Index":
+`CREATE INDEX idx_lower_name ON users(LOWER(name));`
+
+---
+
+# 11. Real-World Usage
+
+- **E-Commerce**: You have 10 million products. Searching by `category_id` is instant because of an index.
+- **Analytics Dashboards**: Heavily rely on composite indexes based on date ranges and tenant IDs.
+- **Search**: For full-text search (like searching an article body), standard B-Trees fail. You use special GIN/GiST indexes in Postgres, or ElasticSearch.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Run `EXPLAIN ANALYZE` to prove your index is being used | Don't create indexes blindly without measuring query performance first |
+| Index Foreign Keys to speed up `JOIN` operations | Don't index boolean flags (`is_deleted`) unless combined with other columns |
+| Use the leftmost prefix rule for composite indexes | Don't wrap indexed columns in functions in your `WHERE` clause |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note: Creating indexes locks tables!
+If you run `CREATE INDEX` on a 50GB table in production, the table might lock for 10 minutes, bringing your app down. In PostgreSQL, ALWAYS use `CREATE INDEX CONCURRENTLY`. This builds the index in the background without locking writes to the table.
+
+---
+
+# 14. Common Mistakes
+
+- **Index order matters**: In a composite index `(A, B)`, a query `WHERE B = 5` **cannot** use the index. It only works for `WHERE A = 1` or `WHERE A = 1 AND B = 5`.
+- **Too many indexes**: A table with 5 columns and 5 indexes will make `INSERT` operations painfully slow.
+- **Ignoring unused indexes**: Over time, query patterns change. Leaving old, unused indexes wastes RAM and slows down writes. Use DB tools to find and drop unused indexes.
+
+---
+
+# 15. Related Topics
+
+- PostgreSQL / SQLite
+- SQLAlchemy
+- System Design (Database Scaling)
+- Transactions
