@@ -2,6 +2,198 @@
 sidebar_position: 6
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Indexing
 
-Placeholder: introduce Indexing.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Database Indexing |
+| Difficulty | Intermediate |
+| Used For | Speeding up database read operations (SELECTs) |
+| Common Mistake | Indexing every single column |
+| Performance | Dramatically faster reads; slightly slower writes |
+
+---
+
+## 2. Real-World Analogy
+
+Bro, imagine you are looking for the word "Python" in a 1,000-page dictionary.
+
+If there was no index (no alphabetical order), you would have to read page 1, page 2, page 3... until you found it. That's a **Full Table Scan**, and it's extremely slow.
+
+But because the dictionary is organized alphabetically (it has an **Index**), you instantly flip to 'P', then 'Py', and find it in seconds. Database indexes do exactly the same thing for your tables!
+
+---
+
+## 3. Concept Explanation
+
+An index is a separate data structure (usually a B-Tree) created by the database engine. It stores a sorted copy of a specific column, along with a pointer to the actual row on the hard drive.
+
+- When you query `WHERE email = 'test@test.com'`, the database searches the fast, sorted B-Tree index instead of scanning every row in the table.
+- **The Catch:** Every time you `INSERT`, `UPDATE`, or `DELETE` a row, the database must also update the index. This makes writes slower.
+
+---
+
+## 4. Syntax Table
+
+| Operation | SQL Command |
+|---|---|
+| Create Index | `CREATE INDEX idx_user_email ON users(email);` |
+| Unique Index | `CREATE UNIQUE INDEX idx_user_email ON users(email);` |
+| Drop Index | `DROP INDEX idx_user_email;` |
+
+---
+
+## 5. Beginner Example
+
+Let's look at how to create an index in Python using SQLAlchemy.
+
+```python
+from sqlalchemy import create_engine, Column, Integer, String, Index
+from sqlalchemy.orm import declarative_base
+
+Base = declarative_base()
+
+class User(Base):
+    __tablename__ = 'users'
+
+    id = Column(Integer, primary_key=True) # Primary Keys are auto-indexed!
+
+    # Adding index=True makes queries filtering by email incredibly fast
+    email = Column(String, index=True)
+
+    name = Column(String)
+
+# In raw SQL, this executes:
+# CREATE INDEX ix_users_email ON users (email);
+```
+
+---
+
+## 6. Real-World Engineering Example
+
+Bro, in a real app, you often need to search by multiple columns at once. You use a **Composite Index**.
+
+```python
+from sqlalchemy import Column, Integer, String, Index
+from sqlalchemy.orm import declarative_base
+
+Base = declarative_base()
+
+class Order(Base):
+    __tablename__ = 'orders'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer)
+    status = Column(String)
+
+    # Composite Index: Fast for queries like:
+    # WHERE user_id = 5 AND status = 'SHIPPED'
+    __table_args__ = (
+        Index('idx_user_status', 'user_id', 'status'),
+    )
+```
+
+---
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'Query: WHERE email="z@z.com"' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'warning', data: { label: 'Without Index\n(Full Table Scan: Reads all 1M rows)' }, position: { x: 100, y: 150 } },
+    { id: '3', type: 'process', data: { label: 'With Index (B-Tree)\n(O(log n) search)' }, position: { x: 400, y: 150 } },
+    { id: '4', type: 'data', data: { label: 'Table Data on Disk\n(Returns Row)' }, position: { x: 250, y: 300 } },
+    { id: 'e1-2', source: '1', target: '2' },
+    { id: 'e1-3', source: '1', target: '3' },
+    { id: 'e2-4', source: '2', target: '4', label: 'Very Slow' },
+    { id: 'e3-4', source: '3', target: '4', label: 'Instant Pointer' }
+  ]}
+/>
+
+Under the hood, a B-Tree (Balanced Tree) keeps data sorted hierarchically. Instead of scanning 1,000,000 rows, the database traverses the tree, halving the search space at each step. It finds the data in about 20 steps (O(log n)).
+
+---
+
+## 8. Performance Table
+
+| Scenario | Performance Impact |
+|---|---|
+| Read (`SELECT`) with Index | **O(log N)** (Blazing fast) |
+| Read without Index | **O(N)** (Very slow on large tables) |
+| Write (`INSERT`/`UPDATE`) | **Slower** (Must rewrite the B-Tree) |
+
+---
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is a database index? | A data structure (like a B-Tree) that speeds up data retrieval. |
+| Why not index every column? | Indexes consume disk space and slow down INSERT/UPDATE operations. |
+| What is a Composite Index? | An index on multiple columns used together (e.g., `user_id` and `status`). |
+| What is the difference between Clustered and Non-Clustered index? | Clustered dictates physical row order (Primary Key). Non-Clustered points to rows. |
+
+---
+
+## 10. Tricky Questions & Edge Cases
+
+**The Order of Composite Indexes:**
+Bro, this is a classic interview trap. If you have a composite index on `(user_id, status)`:
+
+```sql
+-- Fast: Uses the index perfectly!
+SELECT * FROM orders WHERE user_id = 5 AND status = 'shipped';
+
+-- Fast: Uses the first part of the index!
+SELECT * FROM orders WHERE user_id = 5;
+
+-- SLOW (Full Table Scan!): Cannot use the index because it's missing the first part!
+SELECT * FROM orders WHERE status = 'shipped';
+```
+
+Think of a phonebook sorted by `(Last Name, First Name)`. You can easily find all "Smiths". But you cannot easily find all people named "John" without scanning the whole book!
+
+---
+
+## 11. Real-World Usage
+
+- **User Authentication:** Email columns are ALWAYS indexed to make login fast.
+- **E-Commerce:** Products are indexed by `category_id` so filtering items is instantaneous.
+- **Log Monitoring:** Log tables are often indexed by `timestamp` so you can quickly search recent logs.
+
+---
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Index columns used in `WHERE`, `JOIN`, and `ORDER BY` clauses. | Don't index columns with low cardinality (like a boolean `is_active`). |
+| Analyze your queries using `EXPLAIN`. | Don't create duplicate indexes. |
+| Create indexes concurrently in production to avoid table locks. | Don't ignore the order of columns in composite indexes. |
+
+---
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+Bro, never run `CREATE INDEX` on a massive production table during peak hours without using `CONCURRENTLY` (in PostgreSQL). A standard `CREATE INDEX` locks the table for writes until the index is built! This means your entire app will go down while the index generates. Always use `CREATE INDEX CONCURRENTLY` for live migrations.
+
+---
+
+## 14. Common Mistakes
+
+1. **Indexing Low Cardinality Columns:** Indexing a `gender` or `is_active` column (where there are only 2 possible values) is useless. The database optimizer will just ignore the index and do a full table scan anyway.
+2. **Over-indexing:** Adding an index to solve a slow query, without realizing you already have 15 indexes on that table slowing down all your database writes.
+3. **Functions on Indexed Columns:** Doing `WHERE LOWER(email) = 'test'` breaks the index! You have to use a Function-Based Index for that to work.
+
+---
+
+## 15. Related Topics
+
+- PostgreSQL `EXPLAIN ANALYZE`
+- Database Transactions
+- SQL vs NoSQL
+- B-Trees

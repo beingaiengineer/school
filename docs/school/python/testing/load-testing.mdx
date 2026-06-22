@@ -2,6 +2,198 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Load Testing
 
-Placeholder: introduce Load Testing.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Load Testing |
+| Difficulty | Advanced |
+| Used For | Finding out how many users your app can handle before crashing |
+| Common Mistake | Load testing against the production database during peak hours |
+| Performance | Tools like Locust simulate thousands of concurrent users |
+
+---
+
+## 2. Real-World Analogy
+
+Bro, imagine you open a new coffee shop.
+You invite your mom, make her a coffee, and she says it's great. (This is a Unit Test).
+But what happens on opening day when a bus of 50 angry, tired commuters walks in at the exact same time demanding coffee? Does your espresso machine explode? Do you run out of cups? Do your baristas start crying?
+
+**Load Testing** is purposefully sending 50 "fake commuters" to your app before opening day to see exactly where your system breaks.
+
+---
+
+## 3. Concept Explanation
+
+Load testing (or Performance Testing) measures system behavior under expected and peak load conditions.
+
+It helps you answer:
+- How many requests per second (RPS) can my API handle?
+- At what point does the database connection pool run out?
+- Does the response time spike from 100ms to 5 seconds under heavy load?
+
+In Python, the most popular tool for this is **Locust**. You write Python scripts to define user behavior, and Locust creates thousands of concurrent "users" to hammer your system.
+
+---
+
+## 4. Syntax Table
+
+| Concept | Explanation |
+|---|---|
+| `HttpUser` | A simulated user that makes HTTP requests |
+| `@task` | The action the simulated user will repeatedly perform |
+| `wait_time` | The delay between the user's actions (simulating thinking) |
+| RPS | Requests Per Second |
+
+---
+
+## 5. Beginner Example
+
+Let's write a simple Locust script (`locustfile.py`) to test our API.
+
+```python
+from locust import HttpUser, task, between
+
+class WebsiteUser(HttpUser):
+    # Simulate a user waiting between 1 and 3 seconds between clicks
+    wait_time = between(1, 3)
+
+    @task
+    def load_homepage(self):
+        # The user hits the homepage
+        self.client.get("/")
+
+    @task(3) # The '3' weight means this task runs 3x more often
+    def view_product(self):
+        # The user views a product
+        self.client.get("/products/123")
+```
+
+Run it in your terminal:
+`locust -f locustfile.py`
+
+Then open `http://localhost:8089` in your browser. You can tell Locust to simulate 1,000 users spawning at a rate of 10 per second, and watch the real-time charts!
+
+---
+
+## 6. Real-World Engineering Example
+
+Bro, in a real application, users log in first, get a token, and then perform actions. Locust can simulate this stateful behavior!
+
+```python
+from locust import HttpUser, task, between
+
+class AuthenticatedUser(HttpUser):
+    wait_time = between(2, 5)
+    token = None
+
+    def on_start(self):
+        """This runs ONCE when the virtual user is spawned."""
+        response = self.client.post("/login", json={"user": "test", "pass": "test"})
+        if response.status_code == 200:
+            self.token = response.json().get("token")
+
+    @task
+    def fetch_dashboard(self):
+        if self.token:
+            # Pass the token in the headers for all subsequent requests
+            self.client.get("/dashboard", headers={"Authorization": f"Bearer {self.token}"})
+```
+
+---
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'Locust Master Node' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Worker Process 1\n(500 Users)' }, position: { x: 100, y: 150 } },
+    { id: '3', type: 'process', data: { label: 'Worker Process 2\n(500 Users)' }, position: { x: 400, y: 150 } },
+    { id: '4', type: 'tool', data: { label: 'Target Web API\n(Handles 1000 RPS)' }, position: { x: 250, y: 300 } },
+    { id: '5', type: 'output', data: { label: 'Response Time & Error Stats' }, position: { x: 250, y: 450 } },
+    { id: 'e1-2', source: '1', target: '2', label: 'Spawns' },
+    { id: 'e1-3', source: '1', target: '3', label: 'Spawns' },
+    { id: 'e2-4', source: '2', target: '4', label: 'HTTP Requests' },
+    { id: 'e3-4', source: '3', target: '4', label: 'HTTP Requests' },
+    { id: 'e4-5', source: '4', target: '5', label: 'Metrics' }
+  ]}
+/>
+
+Locust uses `gevent` (asynchronous coroutines) under the hood. Instead of creating a heavy OS thread for every simulated user, it creates lightweight "greenlets". This allows a single Python process to simulate thousands of concurrent network connections without crashing your laptop!
+
+---
+
+## 8. Performance Table
+
+| Metric | Meaning | Target Goal |
+|---|---|---|
+| Latency / Response Time | How long the server takes to reply | < 200ms |
+| Throughput (RPS) | How many requests handled per second | As high as possible |
+| Error Rate | % of requests that return 500 errors | < 1% |
+
+---
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between Load Testing and Stress Testing? | Load tests normal peak traffic. Stress tests push past the limit until the system breaks. |
+| What is Locust? | A Python-based load testing tool that lets you write user behavior in Python. |
+| Why load test? | To find bottlenecks (e.g., slow database queries, lack of CPU) before customers do. |
+| What is the 99th Percentile (p99)? | The response time that 99% of requests are faster than. It shows how bad the worst-case experience is. |
+
+---
+
+## 10. Tricky Questions & Edge Cases
+
+**The Coordinated Omission Problem:**
+Bro, if your load testing tool waits for a response before sending the next request, and your server slows down, the tool sends *fewer* requests! This makes your server look like it's handling the load perfectly when it's actually failing.
+
+Locust mitigates this somewhat, but for ultra-high performance testing (100k+ RPS), engineers often switch to tools like `wrk` or `k6` that hit the server relentlessly regardless of response times.
+
+---
+
+## 11. Real-World Usage
+
+- **E-Commerce:** Running massive load tests 2 weeks before Black Friday to ensure the site won't crash when traffic spikes 10x.
+- **Streaming Platforms:** Simulating millions of users hitting the API exactly when a popular show (like Game of Thrones) releases.
+- **Autoscaling:** Using load tests to verify that AWS EC2 instances auto-scale correctly when CPU usage hits 80%.
+
+---
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Test on a staging environment that mirrors production. | Don't load test Production during peak business hours! |
+| Write realistic user journeys (Login -> Browse -> Cart -> Checkout). | Don't just hammer a single `/health` endpoint. It proves nothing. |
+| Monitor the Database CPU and Web Server RAM during the test. | Don't ignore the p99 metrics. Average (mean) response time lies! |
+
+---
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+Bro, the first thing that breaks during a load test is almost never the web server (FastAPI/Django). It is almost always the Database! Usually, you run out of Database Connections, or a slow SQL query causes table locks that queue up all other requests. If you want a fast API, load test it, find the slow query, and add an Index!
+
+---
+
+## 14. Common Mistakes
+
+1. **Testing from Localhost:** Running a load test from your laptop against your local API. Your laptop's network card and CPU will bottleneck before the API does! Always run load tests from a dedicated cloud server.
+2. **Ignoring 3rd Party APIs:** If your app sends an email via SendGrid on signup, and you load test the signup endpoint with 10,000 users, you just spammed SendGrid and might get your account banned! Mock external services during load tests, or use sandbox keys.
+3. **Caching Trickery:** Requesting the exact same URL `/product/1` 10,000 times. The database caches the result, making the app look blazing fast. Real users request different products!
+
+---
+
+## 15. Related Topics
+
+- Profiling
+- Caching
+- Database Connection Pooling
+- FastAPI Concurrency

@@ -2,6 +2,223 @@
 sidebar_position: 3
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Mocking
 
-Placeholder: introduce Mocking.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Mocking |
+| Difficulty | Intermediate |
+| Used For | Faking external dependencies during unit tests |
+| Common Mistake | Mocking the wrong path (mocking where it's defined, not where it's used) |
+| Performance | Fast (prevents slow network/disk operations) |
+
+---
+
+## 2. Real-World Analogy
+
+Bro, imagine you are an actor practicing a scene for a movie.
+In the actual movie, you have to talk to Brad Pitt. But Brad Pitt is expensive and busy.
+
+So during practice, the director brings in a stand-in (a "Mock")—some random guy holding a script. The Mock just reads Brad Pitt's lines exactly when he's supposed to, so you can practice YOUR lines.
+
+In Python, when your function needs to talk to a slow Database or a paid API (like Stripe), we don't use the real thing in tests. We use a **Mock** to fake the response so we can test OUR logic in isolation!
+
+---
+
+## 3. Concept Explanation
+
+Mocking is the process of replacing a real object (like an API client, database connection, or complex class) with a fake object that mimics its behavior.
+
+We use the `unittest.mock` library in Python.
+
+**Why mock?**
+1. **Speed:** Real APIs take 500ms. Mocks take 0.1ms.
+2. **Cost:** You don't want your automated tests charging your actual Stripe credit card.
+3. **Isolation:** If the GitHub API is down, your tests shouldn't fail. Your code didn't break; their API broke.
+4. **Predictability:** You can force a Mock to throw an error (like a "Timeout") to test how your code handles failures.
+
+---
+
+## 4. Syntax Table
+
+| Concept | Example |
+|---|---|
+| Import | `from unittest.mock import patch, MagicMock` |
+| Decorator Setup | `@patch('my_module.my_function')` |
+| Set Return Value | `mock_obj.return_value = {"status": "ok"}` |
+| Check if Called | `mock_obj.assert_called_once_with(arg)` |
+
+---
+
+## 5. Beginner Example
+
+Let's test a function that fetches data from an external weather API.
+
+```python
+# weather.py
+import requests
+
+def get_temperature(city):
+    # This takes 2 seconds and needs the internet!
+    response = requests.get(f"https://api.weather.com/{city}")
+    data = response.json()
+    return data["temp"]
+
+# test_weather.py
+from unittest.mock import patch
+from weather import get_temperature
+
+# @patch replaces 'requests.get' inside 'weather.py' with a Mock!
+@patch('weather.requests.get')
+def test_get_temperature(mock_get):
+
+    # 1. Arrange: Tell the mock what to return when called
+    # We setup a fake response object
+    mock_get.return_value.json.return_value = {"temp": 25}
+
+    # 2. Act: Call our function
+    temp = get_temperature("Mumbai")
+
+    # 3. Assert
+    assert temp == 25
+    # Ensure our code actually called the API with the right URL
+    mock_get.assert_called_once_with("https://api.weather.com/Mumbai")
+```
+
+---
+
+## 6. Real-World Engineering Example
+
+Bro, in production, we often need to test what happens when an API *fails*. Mocks let us simulate network crashes easily!
+
+```python
+# payment.py
+import stripe
+
+def process_refund(user_id, amount):
+    try:
+        stripe.Refund.create(amount=amount, user=user_id)
+        return True
+    except stripe.error.CardError:
+        return False
+
+# test_payment.py
+from unittest.mock import patch
+from payment import process_refund
+import stripe
+
+@patch('payment.stripe.Refund.create')
+def test_refund_fails_gracefully(mock_refund):
+    # Simulate Stripe throwing a CardError
+    mock_refund.side_effect = stripe.error.CardError("Card declined", "param", "code")
+
+    # Call our code
+    result = process_refund(user_id=123, amount=500)
+
+    # Verify our code handled the crash and returned False
+    assert result is False
+```
+
+---
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'Target Function' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'warning', data: { label: 'Real API\n(Slow, Network Req)' }, position: { x: 100, y: 150 } },
+    { id: '3', type: 'process', data: { label: 'Mock Object\n(Intercepts Call)' }, position: { x: 400, y: 150 } },
+    { id: '4', type: 'output', data: { label: 'Returns Fake Data Instantly' }, position: { x: 400, y: 300 } },
+    { id: 'e1-2', source: '1', target: '2', label: 'Production Flow', style: { strokeDasharray: '5,5' } },
+    { id: 'e1-3', source: '1', target: '3', label: 'Test Flow (Patched)' },
+    { id: 'e3-4', source: '3', target: '4' }
+  ]}
+/>
+
+When you use `@patch('module.function')`, Python dynamically modifies the module at runtime. It temporarily replaces the target function with a `MagicMock` object. This object records how it was called (arguments, count) and returns whatever you configured it to return (`return_value` or `side_effect`). When the test ends, Python restores the original function.
+
+---
+
+## 8. Performance Table
+
+| Scenario | Speed | Reliability |
+|---|---|---|
+| Testing with Real API | Slow (Seconds) | Flaky (Network drops) |
+| Testing with Mocks | Blazing Fast (ms) | 100% Reliable |
+
+---
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between `return_value` and `side_effect`? | `return_value` returns a static value. `side_effect` raises an exception or calls a dynamic function. |
+| Why shouldn't you mock everything? | If you mock too much, your tests become useless because they no longer reflect reality. |
+| Where should you patch a module? | You patch it WHERE IT IS USED, not where it is defined! |
+
+---
+
+## 10. Tricky Questions & Edge Cases
+
+**The "Where to Patch" Trap:**
+Bro, this is the #1 reason mocks fail.
+
+Suppose you have `src/my_logic.py`:
+```python
+from time import sleep # Imported here!
+
+def do_work():
+    sleep(5)
+    return "Done"
+```
+
+**WRONG:** `@patch('time.sleep')`
+Why? Because `my_logic.py` already imported `sleep` into its own namespace!
+
+**RIGHT:** `@patch('src.my_logic.sleep')`
+You must patch the reference inside the file you are testing!
+
+---
+
+## 11. Real-World Usage
+
+- **AWS / Cloud Services:** Using libraries like `moto` to mock AWS S3 so you don't actually upload files during tests.
+- **Email Sending:** Mocking `smtplib` or SendGrid so you don't spam real users when the test suite runs.
+- **Database Calls:** Mocking the SQLAlchemy `session` to return fake rows instead of hitting a real Postgres database.
+
+---
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Mock network calls, file I/O, and external APIs. | Don't mock standard library data structures (like lists/dicts). |
+| Assert that your mock was called with the correct arguments. | Don't test the mock itself (e.g., asserting the mock returns what you told it to return). |
+
+---
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+Bro, while unit tests heavily rely on mocks, relying *only* on mocks is dangerous. An API provider might change their JSON response format in production. Your unit tests will still pass because your Mock is returning the old fake data! Always pair heavily-mocked unit tests with a few un-mocked Integration Tests.
+
+---
+
+## 14. Common Mistakes
+
+1. **Mocking the Wrong Path:** As explained above, patching `requests.get` instead of `my_app.api_client.requests.get`.
+2. **Over-mocking:** Mocking a simple internal function just to save 1ms. If the function is fast and has no external dependencies, just run the real function!
+3. **Forgetting to check assertions:** Creating a mock but forgetting to call `mock.assert_called_once()`. Your code might not even be calling the mocked function!
+
+---
+
+## 15. Related Topics
+
+- Unit Testing
+- Pytest
+- Integration Testing
+- Test Boundaries

@@ -2,6 +2,219 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Transactions
 
-Placeholder: introduce Transactions.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Database Transactions |
+| Difficulty | Advanced |
+| Used For | Ensuring data integrity during multiple operations |
+| Common Mistake | Forgetting to rollback on failure |
+| Performance | Holds locks, can slow down concurrent access |
+
+---
+
+## 2. Real-World Analogy
+
+Bro, imagine you are transferring ₹10,000 from your bank account to your friend's account.
+Two things MUST happen:
+1. Deduct ₹10,000 from your account.
+2. Add ₹10,000 to your friend's account.
+
+If the system crashes after step 1, you lose money, and your friend gets nothing!
+A database transaction guarantees that either **both** steps succeed, or **neither** step happens. It's an "all or nothing" deal.
+
+---
+
+## 3. Concept Explanation
+
+A Transaction is a single unit of work consisting of one or more database operations.
+
+Transactions follow the **ACID** properties:
+- **Atomicity:** All or nothing. If one query fails, the entire transaction rolls back.
+- **Consistency:** The database rules (like unique constraints) are never violated.
+- **Isolation:** Concurrent transactions don't interfere with each other.
+- **Durability:** Once committed, the changes are saved permanently, even if the power goes out.
+
+In Python, you start a transaction, perform SQL commands, and then either `commit()` (save) or `rollback()` (abort).
+
+---
+
+## 4. Syntax Table
+
+| Operation | Concept |
+|---|---|
+| Start | `BEGIN` (Handled automatically by most drivers) |
+| Save Changes | `connection.commit()` |
+| Undo Changes | `connection.rollback()` |
+
+---
+
+## 5. Beginner Example
+
+Here is how you handle a transaction manually using standard Python exception handling.
+
+```python
+import psycopg2
+
+conn = psycopg2.connect("dbname=bank user=postgres")
+cursor = conn.cursor()
+
+try:
+    # 1. Deduct from Sender
+    cursor.execute("UPDATE accounts SET balance = balance - 1000 WHERE name = 'Rahul'")
+
+    # Simulate a crash!
+    # raise Exception("Server crashed!")
+
+    # 2. Add to Receiver
+    cursor.execute("UPDATE accounts SET balance = balance + 1000 WHERE name = 'Amit'")
+
+    # If we reach here, both succeeded. SAVE!
+    conn.commit()
+    print("Transfer Successful!")
+
+except Exception as e:
+    # If ANYTHING fails, UNDO everything!
+    conn.rollback()
+    print("Transfer Failed! Money is safe.", e)
+
+finally:
+    cursor.close()
+    conn.close()
+```
+
+---
+
+## 6. Real-World Engineering Example
+
+Bro, writing `try/except/rollback` everywhere is tedious. In production frameworks like Django or SQLAlchemy, we use context managers or decorators.
+
+```python
+from sqlalchemy.orm import sessionmaker
+
+# Assuming SQLAlchemy setup
+Session = sessionmaker(bind=engine)
+
+def checkout_cart(user_id, cart_items):
+    with Session() as session:
+        try:
+            # Inside this block is ONE transaction
+            order = create_order(session, user_id)
+
+            for item in cart_items:
+                deduct_inventory(session, item.id) # Might raise OutOfStockError
+                add_order_item(session, order.id, item.id)
+
+            # Context manager automatically calls session.commit() if no exception
+        except OutOfStockError:
+            # Context manager automatically calls session.rollback()
+            print("Checkout failed, inventory restored.")
+            raise
+```
+
+---
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'Start Transaction\n(BEGIN)' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Execute Query 1\n(State: Uncommitted)' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'process', data: { label: 'Execute Query 2\n(State: Uncommitted)' }, position: { x: 250, y: 200 } },
+    { id: '4', type: 'data', data: { label: 'COMMIT\n(Changes saved to Disk)' }, position: { x: 100, y: 350 } },
+    { id: '5', type: 'warning', data: { label: 'ROLLBACK\n(Changes discarded)' }, position: { x: 400, y: 350 } },
+    { id: 'e1-2', source: '1', target: '2' },
+    { id: 'e2-3', source: '2', target: '3' },
+    { id: 'e3-4', source: '3', target: '4', label: 'Success' },
+    { id: 'e2-5', source: '2', target: '5', label: 'Error!' },
+    { id: 'e3-5', source: '3', target: '5', label: 'Error!' }
+  ]}
+/>
+
+When you write to a database inside a transaction, the database locks the rows you are modifying. Other connections cannot see your changes until you `COMMIT`. If you crash and the connection drops, the database automatically triggers a `ROLLBACK` and frees the locks.
+
+---
+
+## 8. Performance Table
+
+| Action | Performance Impact |
+|---|---|
+| Long Transactions | Bad (Blocks other queries, causes lock contention) |
+| Short Transactions | Good (Releases locks quickly) |
+| Read-Only Transactions | Fast (No locking required usually) |
+
+---
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is ACID? | Atomicity, Consistency, Isolation, Durability. |
+| What happens if you forget to commit? | Changes remain in memory and are discarded when the connection closes. |
+| What is a Deadlock? | Two transactions waiting for each other to release locks. Both are stuck forever. |
+| What are Isolation Levels? | Settings that define how strictly transactions are isolated from each other (e.g., Read Committed vs Serializable). |
+
+---
+
+## 10. Tricky Questions & Edge Cases
+
+**The Deadlock Trap:**
+Bro, imagine Transaction A locks row 1 and wants row 2. Transaction B locks row 2 and wants row 1. They wait forever.
+
+```python
+# Transaction A:
+session.execute("UPDATE inventory SET qty = qty - 1 WHERE item_id = 1")
+# Transaction B runs right now:
+# session.execute("UPDATE inventory SET qty = qty - 1 WHERE item_id = 2")
+
+# Transaction A tries to get item 2:
+session.execute("UPDATE inventory SET qty = qty - 1 WHERE item_id = 2") # BLOCKED!
+```
+
+**The Fix:** Always update tables/rows in the exact same order across your entire application to prevent deadlocks.
+
+---
+
+## 11. Real-World Usage
+
+- **E-Commerce:** Deducting inventory and confirming payment must be in one transaction.
+- **Banking:** Transferring money between ledgers.
+- **User Signup:** Creating a User record and sending a welcome email (if the email fails, maybe you rollback the user creation so they can try again).
+
+---
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Keep transactions as short as possible. | Don't put slow API calls (like sending an email) inside a database transaction. |
+| Use Context Managers to guarantee rollbacks on failure. | Don't manually `try/except` if your framework handles it safely. |
+
+---
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+Bro, holding a transaction open while making a 3rd party API call (like Stripe or AWS) is a massive production anti-pattern! If the API takes 5 seconds to respond, your database row is locked for 5 seconds. In a high-traffic app, this will queue up database connections until your entire backend crashes. Only put fast database queries inside transactions!
+
+---
+
+## 14. Common Mistakes
+
+1. **Auto-commit Confusion:** Some drivers (like SQLite CLI) auto-commit every statement by default. Some Python drivers (like Psycopg2) require manual commits. Know your driver!
+2. **Swallowing Exceptions:** Catching an exception, doing a rollback, but then NOT re-raising the exception. The user thinks the action succeeded, but nothing was saved!
+3. **Dirty Reads:** Reading data that another transaction hasn't committed yet (depends on isolation level).
+
+---
+
+## 15. Related Topics
+
+- PostgreSQL Isolation Levels
+- Deadlocks
+- Connection Pooling
+- ORM Context Managers

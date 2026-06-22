@@ -2,6 +2,234 @@
 sidebar_position: 3
 ---
 
-# Sqlalchemy
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Sqlalchemy.
+# SQLAlchemy
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | SQLAlchemy |
+| Difficulty | Intermediate |
+| Used For | Connecting Python objects to relational databases |
+| Common Mistake | Querying too much data at once |
+| Performance | Depends on query efficiency, slower than raw SQL |
+
+---
+
+## 2. Real-World Analogy
+
+Bro, imagine you're opening an Indian restaurant.
+When a customer orders a "Butter Chicken", the waiter takes the order (a Python object) and gives it to the kitchen. The kitchen translates "Butter Chicken" into specific instructions for the chef: "Get chicken, get butter, cook at 400 degrees" (SQL query).
+
+SQLAlchemy is like that kitchen process. It takes your Python objects (like a `User` or `Order`) and translates them into raw SQL queries that the database understands, so you don't have to write SQL manually!
+
+---
+
+## 3. Concept Explanation
+
+SQLAlchemy is an Object-Relational Mapper (ORM) for Python.
+
+It lets you interact with your database using Python classes and objects instead of writing raw SQL queries.
+- A database **table** becomes a Python **class**.
+- A database **row** becomes a Python **object**.
+- A database **column** becomes a Python **attribute**.
+
+**Why use it?**
+- You write Python, not SQL.
+- It prevents SQL injection attacks automatically.
+- You can switch databases (e.g., from SQLite to PostgreSQL) without rewriting all your queries.
+
+---
+
+## 4. Syntax Table
+
+| Operation | Example |
+|---|---|
+| Define a Model | `class User(Base): ...` |
+| Create Session | `session = Session()` |
+| Add a row | `session.add(new_user)` |
+| Commit changes | `session.commit()` |
+| Query all | `session.query(User).all()` |
+
+---
+
+## 5. Beginner Example
+
+Let's create a simple SQLite database and add a user.
+
+```python
+from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy.orm import declarative_base, sessionmaker
+
+# 1. Setup the database connection
+engine = create_engine('sqlite:///my_database.db')
+Base = declarative_base()
+
+# 2. Define the Table as a Python Class
+class User(Base):
+    __tablename__ = 'users'
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+
+# 3. Create the table in the database
+Base.metadata.create_all(engine)
+
+# 4. Create a session to interact with the database
+Session = sessionmaker(bind=engine)
+session = Session()
+
+# 5. Add a new user
+new_user = User(name="Rahul")
+session.add(new_user)
+session.commit()
+
+# 6. Query the user
+user = session.query(User).filter_by(name="Rahul").first()
+print(f"User added: {user.name}")
+```
+
+---
+
+## 6. Real-World Engineering Example
+
+Bro, in a real API, you wouldn't keep creating the engine and session. You'd use a session context manager to handle database transactions cleanly.
+
+```python
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from contextlib import contextmanager
+
+engine = create_engine('postgresql://user:pass@localhost/db')
+SessionLocal = sessionmaker(bind=engine)
+
+@contextmanager
+def get_db_session():
+    """Provides a transactional scope around a series of operations."""
+    session = SessionLocal()
+    try:
+        yield session
+        session.commit() # Save changes if successful
+    except Exception as e:
+        session.rollback() # Rollback if something crashed
+        print(f"Transaction failed: {e}")
+        raise
+    finally:
+        session.close() # Always close the connection
+
+# Usage:
+def create_order(user_id, item_name):
+    with get_db_session() as db:
+        new_order = Order(user_id=user_id, item_name=item_name)
+        db.add(new_order)
+        # It automatically commits or rolls back when the block ends!
+```
+
+---
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'Python Application\n(Object: user.name = "Rahul")' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'SQLAlchemy ORM\n(Translates Object -> SQL)' }, position: { x: 250, y: 120 } },
+    { id: '3', type: 'tool', data: { label: 'SQLAlchemy Core\n(Connection Pool & Dialect)' }, position: { x: 250, y: 240 } },
+    { id: '4', type: 'data', data: { label: 'Database\n(INSERT INTO users...)' }, position: { x: 250, y: 360 } },
+    { id: 'e1-2', source: '1', target: '2', label: 'session.add()' },
+    { id: 'e2-3', source: '2', target: '3', label: 'session.commit()' },
+    { id: 'e3-4', source: '3', target: '4', label: 'Executes Query' }
+  ]}
+/>
+
+When you call `session.commit()`, SQLAlchemy's ORM looks at the objects you modified. It generates an AST (Abstract Syntax Tree) representing the SQL query. Then, the `Dialect` translates this AST into the exact SQL string required by your specific database engine (PostgreSQL, MySQL, etc.).
+
+---
+
+## 8. Performance Table
+
+| Operation | Performance Impact |
+|---|---|
+| Single INSERT via ORM | Slower than raw SQL (overhead) |
+| `bulk_insert_mappings` | Fast (skips object creation) |
+| `query.all()` on 1M rows | Very Slow (high memory usage) |
+| `query.yield_per()` | Fast (streams results, low memory) |
+
+---
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is SQLAlchemy? | An ORM that maps Python classes to database tables. |
+| Difference between `engine` and `session`? | `engine` manages connections, `session` manages transactions/queries. |
+| How do you prevent N+1 query problems? | Use `joinedload` or `selectinload` to fetch related data eagerly. |
+| What does `session.rollback()` do? | Reverts all uncommitted changes in the current transaction. |
+| How do you bulk insert data? | Avoid `session.add()` in a loop. Use `session.bulk_insert_mappings()`. |
+
+---
+
+## 10. Tricky Questions & Edge Cases
+
+**The N+1 Query Problem:**
+Bro, this is the most common SQLAlchemy mistake.
+
+```python
+# BAD: This causes 1 query for users, and N queries for their orders!
+users = session.query(User).all()
+for user in users:
+    print(user.orders) # Triggers a NEW database query for every user!
+```
+
+**The Fix:**
+Eager load the relationship!
+
+```python
+from sqlalchemy.orm import joinedload
+
+# GOOD: Fetches users AND their orders in 1 big query!
+users = session.query(User).options(joinedload(User.orders)).all()
+```
+
+---
+
+## 11. Real-World Usage
+
+Companies use SQLAlchemy extensively in Python backend systems.
+- **FastAPI/Flask APIs:** Nearly every traditional Python API uses SQLAlchemy to manage database state.
+- **Data Pipelines:** ETL scripts use it to read from an operational database and write to a data warehouse.
+- **Microservices:** Different services use SQLAlchemy to connect to their isolated PostgreSQL databases.
+
+---
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use connection pooling for scaling. | Don't create a new `engine` for every request. |
+| Use `session.commit()` only when necessary. | Don't forget to call `session.close()`. |
+| Use Context Managers (`with session:`) | Don't leak open database connections. |
+
+---
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+In a high-traffic production system (like Swiggy on New Year's Eve), if you forget to `session.close()`, you will quickly run out of database connections. The database will start rejecting new requests, and your entire API will go down! Always use a middleware or context manager to ensure sessions are closed.
+
+---
+
+## 14. Common Mistakes
+
+1. **Forgetting to Commit:** Calling `session.add()` but forgetting `session.commit()`. The data won't save!
+2. **Querying Everything:** Using `.all()` on a table with 10 million rows will crash your server due to Out Of Memory (OOM) errors. Use `.limit()` or `.yield_per()`.
+3. **Leaving Sessions Open:** Failing to handle exceptions properly, leaving the transaction hanging.
+
+---
+
+## 15. Related Topics
+
+- PostgreSQL
+- ORM vs Raw SQL
+- Connection Pooling
+- Transactions

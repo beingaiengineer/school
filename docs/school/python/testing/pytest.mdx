@@ -2,6 +2,210 @@
 sidebar_position: 1
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Pytest
 
-Placeholder: introduce Pytest.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Pytest |
+| Difficulty | Beginner |
+| Used For | Writing and running tests in Python |
+| Common Mistake | Complex test logic instead of simple assertions |
+| Performance | Fast, supports parallel execution with `pytest-xdist` |
+
+---
+
+## 2. Real-World Analogy
+
+Bro, imagine you are building a car on an assembly line.
+Before selling it, you need to test the brakes, the lights, and the engine.
+
+Doing it manually means someone has to sit in every car, turn the key, press the brakes, and check the lights.
+`pytest` is like a robot inspector. You give the robot a checklist ("Test Brakes", "Test Lights"), and it runs through every car automatically in seconds, giving you a Pass/Fail report!
+
+---
+
+## 3. Concept Explanation
+
+`pytest` is the most popular testing framework for Python.
+It allows you to write tests using simple python `assert` statements.
+
+You write functions that start with `test_`, and `pytest` automatically finds them, runs them, and gives you a beautiful colored terminal output showing exactly what failed and why.
+
+**Why use it over the built-in `unittest`?**
+- Less boilerplate (no need for `class Test(unittest.TestCase)`).
+- Much better error messages on failure.
+- Powerful feature called "Fixtures" for setting up test data.
+
+---
+
+## 4. Syntax Table
+
+| Command/Syntax | Explanation |
+|---|---|
+| `def test_something():` | Define a test (must start with `test_`) |
+| `assert x == y` | Check if something is true |
+| `pytest` | Run all tests in the current directory |
+| `pytest -v` | Run tests with verbose output |
+| `pytest test_file.py` | Run a specific file |
+
+---
+
+## 5. Beginner Example
+
+Create a file named `test_math.py`:
+
+```python
+# The code we want to test
+def add(a, b):
+    return a + b
+
+# Our Pytest function
+def test_add():
+    result = add(2, 3)
+
+    # If this is False, pytest will fail the test!
+    assert result == 5
+
+def test_add_negative():
+    assert add(-1, -1) == -2
+```
+
+In your terminal, just run `pytest`. It will find `test_math.py`, run both functions, and print `.` for pass or `F` for fail.
+
+---
+
+## 6. Real-World Engineering Example
+
+Bro, in production, we use **Fixtures**. Fixtures are functions that run *before* your tests to set up data (like a database connection or a fake user).
+
+```python
+import pytest
+
+# 1. Define a Fixture
+@pytest.fixture
+def fake_user():
+    """This sets up a user object for our tests to use."""
+    return {"id": 1, "name": "Rahul", "role": "admin"}
+
+# 2. Request the fixture in the test by name
+def test_admin_access(fake_user):
+    # Pytest automatically passes the dictionary here!
+    assert fake_user["role"] == "admin"
+    assert "name" in fake_user
+
+def test_user_has_id(fake_user):
+    assert fake_user["id"] == 1
+```
+Now you don't have to recreate the `fake_user` in every single test!
+
+---
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'Command: `pytest`' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Test Discovery\n(Finds files starting with test_)' }, position: { x: 250, y: 120 } },
+    { id: '3', type: 'process', data: { label: 'Execute Setup\n(Run Fixtures)' }, position: { x: 250, y: 240 } },
+    { id: '4', type: 'data', data: { label: 'Run Tests\n(Evaluate Asserts)' }, position: { x: 250, y: 360 } },
+    { id: '5', type: 'output', data: { label: 'Report Results\n(Terminal Output)' }, position: { x: 250, y: 480 } },
+    { id: 'e1-2', source: '1', target: '2' },
+    { id: 'e2-3', source: '2', target: '3' },
+    { id: 'e3-4', source: '3', target: '4' },
+    { id: 'e4-5', source: '4', target: '5' }
+  ]}
+/>
+
+When you type `pytest`, it recursively searches your folders for files matching `test_*.py` or `*_test.py`. Inside those files, it looks for functions named `test_*`. It then dynamically injects any requested fixtures, runs the functions, and intercepts the Python `assert` keyword to provide detailed inspection if the assert fails.
+
+---
+
+## 8. Performance Table
+
+| Feature | Impact |
+|---|---|
+| Large Test Suites | Slow (Runs sequentially by default) |
+| `pytest -n 4` (xdist) | Fast (Runs tests in parallel across 4 CPU cores) |
+| Database Fixtures | Slow (Creating/dropping DBs takes time) |
+
+---
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between `pytest` and `unittest`? | Pytest uses plain `assert`, functions instead of classes, and has powerful fixtures. |
+| What is a Pytest Fixture? | A function that provides data/state setup and teardown for tests. |
+| How do you test for exceptions? | Use `with pytest.raises(ValueError):` block. |
+| How do you skip a test? | Decorate the test with `@pytest.mark.skip()`. |
+
+---
+
+## 10. Tricky Questions & Edge Cases
+
+**Testing Exceptions:**
+Bro, how do you test that your code correctly crashes when it's supposed to?
+
+```python
+import pytest
+
+def divide(a, b):
+    if b == 0:
+        raise ValueError("Cannot divide by zero bro!")
+    return a / b
+
+def test_divide_by_zero():
+    # Pytest catches the error. If the error is NOT raised, the test FAILS!
+    with pytest.raises(ValueError) as exc_info:
+        divide(10, 0)
+
+    # You can even check the error message
+    assert "Cannot divide by zero" in str(exc_info.value)
+```
+
+---
+
+## 11. Real-World Usage
+
+Every major Python project uses `pytest`.
+- **FastAPI/Django:** Used to spin up a test database, make HTTP requests to the API, and verify the JSON responses.
+- **Data Engineering:** Used to verify that ETL pipelines output the correct dataframe shapes.
+- **CI/CD:** GitHub Actions automatically runs `pytest` on every Pull Request. If tests fail, the code cannot be merged!
+
+---
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Keep tests independent. Test A should not rely on Test B. | Don't put complex `if/else` logic inside your tests. |
+| Use descriptive names: `test_user_cannot_login_with_bad_password`. | Don't write one massive test that checks 50 different things. |
+| Use Fixtures for repetitive setup. | Don't connect to production databases in your tests! |
+
+---
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+Bro, in enterprise apps, test suites can take 30+ minutes to run if you have thousands of tests hitting a database. To speed this up in CI/CD pipelines, engineers use the `pytest-xdist` plugin to run tests in parallel (`pytest -n auto`), and they extensively use mocking to skip actual database/network calls where possible.
+
+---
+
+## 14. Common Mistakes
+
+1. **Naming Mistakes:** Naming your file `math_test_file.py` instead of `test_math.py`. Pytest will silently ignore it and won't run your tests!
+2. **State Leakage:** Modifying a global variable in Test A, which causes Test B to randomly fail because the variable wasn't reset.
+3. **Flaky Tests:** Writing tests that rely on `time.sleep()` or external APIs. They will randomly fail when the network is slow.
+
+---
+
+## 15. Related Topics
+
+- Unit Testing
+- Mocking
+- Integration Testing
+- CI/CD Pipelines

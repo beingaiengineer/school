@@ -2,6 +2,213 @@
 sidebar_position: 2
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Unit Testing
 
-Placeholder: introduce Unit Testing.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Unit Testing |
+| Difficulty | Beginner |
+| Used For | Verifying that individual, isolated pieces of code work correctly |
+| Common Mistake | Connecting to a database in a unit test |
+| Performance | Extremely fast (milliseconds per test) |
+
+---
+
+## 2. Real-World Analogy
+
+Bro, imagine you are building a smartphone.
+Before you assemble the whole phone, you take the camera module, plug it into a specialized testing machine, and check if it takes a photo. You aren't checking if the screen works or if the battery charges. You are ONLY testing the camera in complete isolation.
+
+That is a **Unit Test**. You take one tiny piece of your code (usually a single function), isolate it from everything else, and prove it works.
+
+---
+
+## 3. Concept Explanation
+
+Unit testing is the foundation of software quality. It involves writing automated tests for the smallest testable parts of an application (units), independently and in isolation from the rest of the application.
+
+**Key Rules of a Unit Test:**
+1. It tests only ONE thing.
+2. It does NOT talk to the database.
+3. It does NOT talk to the network (APIs).
+4. It does NOT touch the file system.
+
+If your test does any of the above, it's an *Integration Test*, not a Unit Test!
+
+---
+
+## 4. Syntax Table
+
+| Concept | Explanation |
+|---|---|
+| The "Unit" | Usually a Python function or class method |
+| The Test | A separate function that calls the unit and asserts the result |
+| AAA Pattern | Arrange, Act, Assert (Standard way to write tests) |
+
+---
+
+## 5. Beginner Example
+
+Let's use the AAA (Arrange, Act, Assert) pattern.
+
+```python
+# The Unit (our code)
+def calculate_discount(price, discount_percent):
+    if discount_percent < 0 or discount_percent > 100:
+        raise ValueError("Invalid discount")
+    return price - (price * (discount_percent / 100))
+
+# The Test
+def test_calculate_discount():
+    # 1. Arrange (Set up the data)
+    original_price = 100
+    discount = 20
+
+    # 2. Act (Call the unit)
+    final_price = calculate_discount(original_price, discount)
+
+    # 3. Assert (Check the result)
+    assert final_price == 80.0
+```
+
+---
+
+## 6. Real-World Engineering Example
+
+Bro, in real code, units often do things like format strings or calculate complex business logic based on data passed into them.
+
+```python
+class ShoppingCart:
+    def __init__(self):
+        self.items = []
+
+    def add_item(self, item, price):
+        self.items.append({"item": item, "price": price})
+
+    def get_total(self):
+        return sum(item["price"] for item in self.items)
+
+# Real Unit Tests
+def test_cart_starts_empty():
+    cart = ShoppingCart()
+    assert len(cart.items) == 0
+    assert cart.get_total() == 0
+
+def test_add_item_increases_total():
+    cart = ShoppingCart()
+    cart.add_item("Laptop", 1000)
+    cart.add_item("Mouse", 50)
+
+    assert len(cart.items) == 2
+    assert cart.get_total() == 1050
+```
+
+---
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'Test Function' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'data', data: { label: 'Arrange\n(Setup Dummy Inputs)' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'process', data: { label: 'Act\n(Call Target Function)' }, position: { x: 250, y: 200 } },
+    { id: '4', type: 'output', data: { label: 'Assert\n(Verify Output == Expected)' }, position: { x: 250, y: 300 } },
+    { id: 'e1-2', source: '1', target: '2' },
+    { id: 'e2-3', source: '2', target: '3' },
+    { id: 'e3-4', source: '3', target: '4' }
+  ]}
+/>
+
+A unit test is essentially a script that treats your function like a black box (or clear box). It feeds specific inputs into the function, captures the return value, and compares it against a hardcoded expected value. Because it doesn't leave the CPU/RAM (no disk/network access), it executes in microseconds.
+
+---
+
+## 8. Performance Table
+
+| Test Type | Speed | Feedback Loop |
+|---|---|---|
+| Unit Test | Microseconds | Instant (Run on every file save) |
+| Integration Test | Seconds | Fast (Run on git commit) |
+| End-to-End Test | Minutes | Slow (Run in CI/CD pipeline) |
+
+---
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is Unit Testing? | Testing the smallest testable parts of code in isolation. |
+| What is the AAA pattern? | Arrange (setup), Act (execute), Assert (verify). |
+| Why should unit tests be isolated? | So failures pinpoint the exact function that broke, not a network error. |
+| What is Test-Driven Development (TDD)? | Writing the failing unit test FIRST, then writing the code to make it pass. |
+
+---
+
+## 10. Tricky Questions & Edge Cases
+
+**Testing Edge Cases:**
+Bro, testing the "happy path" is easy. Interviewers want to see you test the edge cases!
+
+```python
+def get_first_item(my_list):
+    if not my_list:
+        return None
+    return my_list[0]
+
+# Good: Testing happy path
+def test_normal_list():
+    assert get_first_item([1, 2, 3]) == 1
+
+# Great: Testing edge cases
+def test_empty_list():
+    assert get_first_item([]) is None
+
+def test_single_item_list():
+    assert get_first_item(["Apple"]) == "Apple"
+```
+
+---
+
+## 11. Real-World Usage
+
+- **Financial Algorithms:** Banks write thousands of unit tests to ensure interest rate calculation functions are accurate to the decimal.
+- **Data Validation:** Testing that a regex function correctly rejects bad email addresses.
+- **Open Source Libraries:** Projects like Pandas have massive unit test suites to ensure new PRs don't break existing math functions.
+
+---
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Test one logical concept per test. | Don't write tests with `if/else` logic. |
+| Give tests long, descriptive names. | Don't connect to databases. |
+| Test edge cases (nulls, empty strings, zeros). | Don't test built-in Python behavior (e.g., testing if `len()` works). |
+
+---
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+Bro, code coverage (e.g., "we have 90% test coverage") is a useful metric, but it can be a trap. Having 100% test coverage doesn't mean your app is bug-free if your tests don't assert the right things or check edge cases. Focus on testing critical business logic first, rather than trying to write unit tests for simple getter/setter methods just to boost a metric.
+
+---
+
+## 14. Common Mistakes
+
+1. **Testing Multiple Things:** Writing a 50-line test that asserts 10 different variables. When it fails on line 40, you don't know what actually went wrong.
+2. **Fragile Tests:** Writing tests that break every time you change a private variable name, even if the overall output is still correct.
+3. **No Asserts:** Writing a test that calls the function but forgets to write an `assert` statement! The test will always "pass" as long as the code doesn't crash.
+
+---
+
+## 15. Related Topics
+
+- Pytest
+- Mocking
+- Integration Testing
+- Test Best Practices
