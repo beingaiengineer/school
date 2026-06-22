@@ -2,6 +2,232 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Load Testing
 
-Placeholder: introduce Load Testing.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Load Testing |
+| Difficulty | Advanced |
+| Used For | Verifying how a system behaves under massive concurrent traffic |
+| Common Mistake | Load testing an external API you don't own (and getting banned) |
+| Performance | Identifies exactly where your system bottlenecks (CPU, RAM, DB connections) |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, imagine you open a brand new restaurant.
+
+You tested the kitchen by cooking for 5 friends (Unit Testing). You tested the waiters carrying food from the kitchen to the table (Integration Testing). Everything works perfectly.
+
+But what happens when 500 people walk in the door at the exact same time?
+Do the waiters crash into each other? Does the kitchen run out of pans? Does the restaurant catch fire?
+
+**Load Testing** is simulating those 500 people walking in, so you can find and fix the chaos *before* opening day.
+
+---
+
+# 3. Concept Explanation
+
+Unit and Integration tests verify that your code works logically. **Load Tests** verify that your architecture scales physically.
+
+A Load Test simulates thousands of concurrent users hitting your APIs simultaneously.
+It helps you discover:
+- **Throughput:** How many Requests Per Second (RPS) can you handle?
+- **Latency:** Does the API response time jump from 50ms to 5 seconds under load?
+- **Bottlenecks:** Does the database crash first, or does the web server run out of CPU?
+
+In Python, the most popular tool for this is **Locust**.
+
+---
+
+# 4. Syntax Table
+
+| Concept | Locust Example | Description |
+|---|---|---|
+| User Class | `class ApiUser(HttpUser):` | Represents a simulated user |
+| Wait Time | `wait_time = between(1, 5)` | Simulates realistic human wait times between clicks |
+| Task | `@task def my_task(self):` | The specific action (HTTP request) the user performs |
+| Run Command | `locust -f locustfile.py` | Starts the Locust web UI |
+
+---
+
+# 5. Beginner Example
+
+Let's write a simple Locust script to hammer our FastAPI server.
+
+```python
+# locustfile.py
+from locust import HttpUser, task, between
+
+class FastApiUser(HttpUser):
+    # Simulate a user clicking around, waiting 1 to 3 seconds between clicks
+    wait_time = between(1, 3)
+
+    @task
+    def view_homepage(self):
+        # The user makes a GET request to the root URL
+        self.client.get("/")
+
+    @task(3) # The (3) means this task is 3 times more likely to run!
+    def view_users(self):
+        # The user fetches the user list
+        self.client.get("/users")
+```
+
+If you run `locust -f locustfile.py`, it opens a web UI. You tell it: "Spawn 1,000 users at a rate of 10 users per second." Then you watch the graphs to see if your server survives!
+
+---
+
+# 6. Real-World Engineering Example
+
+In production, you want to test write operations and authenticated endpoints, not just simple GET requests.
+
+```python
+from locust import HttpUser, task, between
+import random
+
+class AuthenticatedUser(HttpUser):
+    wait_time = between(1, 2)
+
+    def on_start(self):
+        """This runs ONCE when the simulated user "logs in"."""
+        response = self.client.post("/login", json={
+            "username": "testuser",
+            "password": "password123"
+        })
+        self.token = response.json()["access_token"]
+        # Set the header for all future requests for this specific user
+        self.client.headers.update({"Authorization": f"Bearer {self.token}"})
+
+    @task
+    def create_order(self):
+        """Simulate creating an order under load."""
+        item_id = random.randint(1, 100)
+
+        # We can use 'catch_response' to validate custom success logic
+        with self.client.post("/orders", json={"item_id": item_id}, catch_response=True) as response:
+            if response.status_code == 201:
+                response.success()
+            else:
+                response.failure(f"Failed to create order: {response.status_code}")
+```
+
+Bro, running this script will quickly reveal if your database suffers from row-locking issues when 500 people try to create orders simultaneously!
+
+---
+
+# 7. Internal Working
+
+<LearningFlow
+  title="Load Testing Architecture"
+  nodes={[
+    { id: '1', kind: 'tool', label: 'Locust Master Node', position: { x: 250, y: 50 } },
+    { id: '2', kind: 'process', label: 'Worker 1 (Spawns 500 Users)', position: { x: 100, y: 150 } },
+    { id: '3', kind: 'process', label: 'Worker 2 (Spawns 500 Users)', position: { x: 400, y: 150 } },
+    { id: '4', kind: 'data', label: 'Massive HTTP Traffic', position: { x: 250, y: 250 } },
+    { id: '5', kind: 'output', label: 'Target Web Server (FastAPI)', position: { x: 250, y: 350 } },
+    { id: '6', kind: 'warning', label: 'Database Connection Pool Exhausted!', position: { x: 250, y: 450 } }
+  ]}
+  edges={[
+    { id: 'e1', source: '1', target: '2', label: 'Coordinates' },
+    { id: 'e2', source: '1', target: '3', label: 'Coordinates' },
+    { id: 'e3', source: '2', target: '4', label: 'GET / HTTP/1.1' },
+    { id: 'e4', source: '3', target: '4', label: 'POST / HTTP/1.1' },
+    { id: 'e5', source: '4', target: '5', label: 'Hits App' },
+    { id: 'e6', source: '5', target: '6', label: 'Overwhelms DB' }
+  ]}
+/>
+
+Locust works by spawning Python greenlets (lightweight asynchronous threads). It is highly efficient because it uses asynchronous I/O to make network requests.
+
+If you need to simulate millions of users, Locust can run in distributed mode: one Master node coordinates dozens of Worker nodes spread across multiple servers, all blasting traffic at your application at the exact same time.
+
+---
+
+# 8. Performance Table
+
+| Metric | Good | Warning | Critical |
+|---|---|---|---|
+| Response Time (Latency) | < 200ms | 500ms - 1s | > 2 seconds |
+| Error Rate | 0% | > 1% | > 5% (System is failing) |
+| CPU Usage (Server) | ~60% | 85% | 100% (Bottlenecked) |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between Load Testing and Stress Testing? | Load testing verifies performance under *expected* high traffic. Stress testing pushes the system *beyond* normal limits until it completely breaks, to see how it fails. |
+| Why is my Load Test failing, but the web server CPU is at 10%? | The bottleneck is elsewhere! Usually, it's the database connection pool running out, or the database CPU hitting 100%. |
+| What is a DDoS attack? | Distributed Denial of Service. It's basically a malicious, unauthorized load test designed to crash your servers by exhausting resources. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, watch out for this amateur load testing mistake: **The Caching Illusion**.
+
+```python
+@task
+def view_product(self):
+    # This queries exactly the SAME URL every single time
+    self.client.get("/product/123")
+```
+
+**Why it's terrible:** If you have Redis caching or a CDN, the first request hits the database, and the next 99,999 requests hit the cache instantly. Your load test will report "10,000 requests per second! Our database is amazing!" But the database did absolutely nothing.
+
+**The Fix:** Use dynamic, randomized data to bypass the cache and test the real backend.
+```python
+@task
+def view_random_product(self):
+    product_id = random.randint(1, 100000)
+    self.client.get(f"/product/{product_id}")
+```
+
+---
+
+# 11. Real-World Usage
+
+- **E-commerce (Black Friday):** Running load tests a month before a massive sale to ensure the checkout servers don't crash when traffic spikes 10x.
+- **Ticketing Systems:** Testing the queueing system to see how it handles 50,000 people trying to buy Taylor Swift tickets at exactly 10:00:00 AM.
+- **Infrastructure Sizing:** Using load tests to determine exactly how many servers you need to provision for a launch day.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Load test in a staging environment that mirrors production | Load test your actual production database and ruin customer data |
+| Randomize user input to prevent cache hits | Use the exact same login credentials for 10,000 simulated users |
+| Monitor Database CPU, Web CPU, and Memory during the test | Only look at the Locust response time graphs |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+> Never load test a 3rd-party API without permission! If your app calls Stripe, Twilio, or Google Maps, and you run a load test that hits their APIs 5,000 times a second, their security systems will instantly classify you as a DDoS attack and permanently ban your company's IP addresses. Always mock external APIs during internal load tests.
+
+---
+
+# 14. Common Mistakes
+
+- **Testing from a laptop on Wi-Fi:** Your Wi-Fi router will crash long before your server does. Always run the Locust master from a cloud server (like an EC2 instance) with a massive network pipe.
+- **Ignoring database locks:** The web server might handle 10,000 requests fine, but if all 10,000 users try to update the exact same row in a database table, the database will freeze due to row-level locking.
+- **Not ramping up:** Instantly blasting the server with 10,000 users. Real traffic usually ramps up. Use a "Step Load" to gradually add users to see exactly at what point the system begins to degrade.
+
+---
+
+# 15. Related Topics
+
+- Integration Testing
+- Connection Pooling
+- Concurrency (Asyncio / Threading)
+- Caching

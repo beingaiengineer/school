@@ -2,6 +2,242 @@
 sidebar_position: 3
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Mocking
 
-Placeholder: introduce Mocking.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Mocking (`unittest.mock`) |
+| Difficulty | Intermediate |
+| Used For | Replacing real objects with fake ones during testing to ensure isolation |
+| Common Mistake | Mocking the wrong import path (mocking where it's defined, not where it's used) |
+| Performance | Makes tests extremely fast by avoiding network/disk I/O |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, imagine you are an actor practicing a fight scene for a movie.
+
+If you practice with a real sword, somebody is going to get hurt (like accidentally deleting real database records). Instead, the props department gives you a **rubber sword**. It looks like a sword, it swings like a sword, but it's totally safe.
+
+Mocking in Python is replacing a dangerous or slow function (like a database call or an API request) with a "rubber sword" function that just pretends to do the work.
+
+---
+
+# 3. Concept Explanation
+
+To keep Unit Tests fast and isolated, we cannot let our code talk to real external systems.
+
+If your function sends an email, your test should NOT actually send an email. You use a **Mock** to intercept the call to the email library. The Mock records that it was called, and you can assert: "Did my function *try* to send an email with the right subject?"
+
+In Python, the standard tool for this is `unittest.mock.patch`.
+
+---
+
+# 4. Syntax Table
+
+| Operation | Syntax | Description |
+|---|---|---|
+| Patch a function | `@patch('module.function')` | Replaces the target with a MagicMock |
+| Set return value | `mock_obj.return_value = 5` | Forces the mock to return a specific value |
+| Set side effect | `mock_obj.side_effect = Exception()` | Forces the mock to throw an error |
+| Assert called | `mock_obj.assert_called_once_with(x)` | Verifies the mock was called correctly |
+
+---
+
+# 5. Beginner Example
+
+Let's test a function that fetches data from an external API.
+
+```python
+# weather.py
+import requests
+
+def get_temperature(city: str) -> int:
+    response = requests.get(f"http://api.weather.com/{city}")
+    data = response.json()
+    return data["temp"]
+```
+
+If we run this test normally, it will make a real HTTP request! Let's mock it.
+
+```python
+# test_weather.py
+from unittest.mock import patch
+from weather import get_temperature
+
+# The string inside patch must be the EXACT path to where requests is USED.
+@patch('weather.requests.get')
+def test_get_temperature(mock_get):
+    # 1. Arrange: Tell the mock what to return when it is called
+    # We mock the json() method of the response object
+    mock_get.return_value.json.return_value = {"temp": 25}
+
+    # 2. Act: Call our function
+    temp = get_temperature("Mumbai")
+
+    # 3. Assert: Check the result AND verify the mock was called correctly
+    assert temp == 25
+    mock_get.assert_called_once_with("http://api.weather.com/Mumbai")
+```
+
+Bro, the test passes instantly, without needing Wi-Fi!
+
+---
+
+# 6. Real-World Engineering Example
+
+In production, you often need to test how your system handles failures. Mocks make it incredibly easy to simulate an external system crashing.
+
+```python
+# payment.py
+import stripe
+
+def charge_customer(user_id: int, amount: float):
+    try:
+        stripe.Charge.create(amount=amount, customer=user_id)
+        return "Success"
+    except stripe.error.CardError:
+        return "Declined"
+```
+
+Let's test the failure path using `side_effect`.
+
+```python
+# test_payment.py
+from unittest.mock import patch
+from payment import charge_customer
+import stripe
+
+@patch('payment.stripe.Charge.create')
+def test_charge_customer_declined(mock_charge):
+    # Simulate the Stripe API throwing a CardError
+    mock_charge.side_effect = stripe.error.CardError("Card declined", "param", "code")
+
+    result = charge_customer(user_id=123, amount=50.0)
+
+    assert result == "Declined"
+```
+
+---
+
+# 7. Internal Working
+
+<LearningFlow
+  title="Mock Patching Flow"
+  nodes={[
+    { id: '1', kind: 'process', label: 'Test calls function', position: { x: 250, y: 50 } },
+    { id: '2', kind: 'tool', label: 'Your Function', position: { x: 250, y: 150 } },
+    { id: '3', kind: 'data', label: '@patch intercepts call', position: { x: 250, y: 250 } },
+    { id: '4', kind: 'warning', label: 'Real API (Blocked)', position: { x: 500, y: 250 } },
+    { id: '5', kind: 'core', label: 'MagicMock Object', position: { x: 250, y: 350 } },
+    { id: '6', kind: 'output', label: 'Returns Fake Data instantly', position: { x: 250, y: 450 } }
+  ]}
+  edges={[
+    { id: 'e1', source: '1', target: '2' },
+    { id: 'e2', source: '2', target: '3', label: 'Tries to call external' },
+    { id: 'e3', source: '3', target: '4', label: 'Intercepts', style: { strokeDasharray: '5, 5' } },
+    { id: 'e4', source: '3', target: '5', label: 'Redirects to' },
+    { id: 'e5', source: '5', target: '6' }
+  ]}
+/>
+
+When you use `@patch('module.target')`, Python temporarily replaces the `target` inside `module` with a `MagicMock` object for the duration of the test.
+
+A `MagicMock` is a special object that absorbs all method calls and attribute accesses without crashing. It records everything that happens to it, allowing you to `assert` on its history later.
+
+---
+
+# 8. Performance Table
+
+| Scenario | Execution Speed | Reliability |
+|---|---|---|
+| Hitting Real API | ~300ms | Flaky (API might be down) |
+| Using Mock | ~1ms | 100% Reliable |
+| Hitting Real DB | ~50ms | Requires complex setup/teardown |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between `return_value` and `side_effect`? | `return_value` returns a static value. `side_effect` is used to raise an Exception, or return different values on consecutive calls by passing an iterable. |
+| Where should you patch an object? | You must patch the object where it is *used*, not where it is *defined*. If `a.py` imports `func` from `b.py`, you patch `a.func`, not `b.func`. |
+| What is a MagicMock? | A flexible mock object that automatically creates new mock objects when you access its attributes or call its methods. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, the most common mistake in Python testing is **Patching the wrong location**.
+
+```python
+# src/email_service.py
+from smtplib import SMTP # imported directly!
+
+def send_email():
+    server = SMTP('localhost')
+    server.sendmail(...)
+```
+
+**The Wrong Way:**
+```python
+@patch('smtplib.SMTP') # WRONG!
+def test_send_email(mock_smtp):
+    send_email()
+```
+*Why it fails:* `email_service.py` already imported the *real* `SMTP` class into its own namespace before the test started. Patching the original `smtplib` does nothing.
+
+**The Fix:**
+```python
+@patch('src.email_service.SMTP') # CORRECT!
+def test_send_email(mock_smtp):
+    send_email()
+```
+Always patch the reference in the module you are testing!
+
+---
+
+# 11. Real-World Usage
+
+- **Cloud APIs:** Mocking `boto3` when writing tests for AWS S3 uploads to avoid getting charged for test runs.
+- **Time dependencies:** Mocking `datetime.now()` to test logic that depends on specific dates (like "does a subscription expire today?").
+- **External Services:** Mocking SendGrid, Twilio, or Stripe so you don't actually send SMS messages or charge credit cards during a test suite.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Mock external dependencies (DBs, APIs, File Systems) | Mock the actual function you are trying to test |
+| Verify mock arguments using `assert_called_with` | Over-mock everything until the test doesn't prove anything |
+| Use `patch` as a context manager (`with patch...`) for granular control | Leave mocks open to leak into other tests |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+> While mocking is essential for Unit Tests, a system that passes 100% of its mocked unit tests can still completely fail in production if the external API changes its response format. Always back up your heavily-mocked unit tests with a few real Integration Tests!
+
+---
+
+# 14. Common Mistakes
+
+- **Testing the mock:** Writing a test that just verifies that the mock returns what you told it to return, without testing your actual business logic.
+- **Silent Mock failures:** If you misspell an assertion like `mock_obj.assert_called_once_wth(x)` (typo in 'with'), `MagicMock` will just create a new mock method called `assert_called_once_wth` and the test will pass! Use `autospec=True` to prevent this.
+
+---
+
+# 15. Related Topics
+
+- Unit Testing
+- Pytest
+- Integration Testing
+- Error Handling

@@ -2,6 +2,229 @@
 sidebar_position: 3
 ---
 
-# Sqlalchemy
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Sqlalchemy.
+# SQLAlchemy
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | SQLAlchemy |
+| Difficulty | Intermediate |
+| Used For | Interacting with relational databases using Python objects or SQL expressions |
+| Common Mistake | Leaking database connections by not closing the session |
+| Performance | Slightly slower than raw SQL due to Python object overhead |
+
+---
+
+# 2. Real-World Analogy
+
+Think of SQLAlchemy like a high-end restaurant with both a self-service buffet and a dedicated waiter.
+
+- The **Core** is the buffet: you go and grab exactly what you want (raw SQL logic), piece by piece.
+- The **ORM (Object Relational Mapper)** is the waiter: you just tell the waiter "I want a steak" (Python object), and the waiter goes to the kitchen, gets the chef to make it, and brings it to you. The waiter handles all the translation between your request and the kitchen's language.
+
+Bro, SQLAlchemy gives you both the waiter and the buffet in one toolkit!
+
+---
+
+# 3. Concept Explanation
+
+SQLAlchemy is the most popular database toolkit for Python. It provides two main ways to interact with databases:
+
+1. **SQLAlchemy Core:** A SQL expression language that lets you build queries using Python functions instead of strings. It's close to raw SQL but safer and more programmatic.
+2. **SQLAlchemy ORM:** Maps Python classes to database tables and Python objects to database rows.
+
+You use it when you want to avoid writing messy raw SQL strings, prevent SQL injection, and keep your database logic clean and pythonic.
+
+---
+
+# 4. Syntax Table
+
+| Operation | Example |
+|---|---|
+| Create Engine | `engine = create_engine("sqlite:///app.db")` |
+| Create Base Class | `Base = declarative_base()` |
+| Define Model | `class User(Base): __tablename__ = 'users'` |
+| Create Session | `SessionLocal = sessionmaker(bind=engine)` |
+
+---
+
+# 5. Beginner Example
+
+Let's see how simple it is to insert a user using the ORM.
+
+```python
+from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy.orm import declarative_base, sessionmaker
+
+# 1. Set up engine and session
+engine = create_engine("sqlite:///:memory:")
+Base = declarative_base()
+Session = sessionmaker(bind=engine)
+
+# 2. Define our model
+class User(Base):
+    __tablename__ = 'users'
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+
+# 3. Create the table in the database
+Base.metadata.create_all(engine)
+
+# 4. Use the session to add a user
+session = Session()
+new_user = User(name="Rahul")
+
+session.add(new_user)
+session.commit()
+
+print(f"User added with ID: {new_user.id}")
+session.close()
+```
+
+Bro, notice how we didn't write a single `INSERT INTO` statement. The ORM handled it!
+
+---
+
+# 6. Real-World Engineering Example
+
+In a production app, you often need to query and filter data cleanly. Here's how you might fetch active premium users for a billing service.
+
+```python
+from sqlalchemy.orm import Session
+from datetime import datetime
+
+def get_active_premium_users(db: Session):
+    """
+    Fetch all users who are on the premium plan and currently active.
+    """
+    # Look how clean this query is, bro!
+    premium_users = db.query(User).filter(
+        User.is_active == True,
+        User.plan_type == 'premium',
+        User.subscription_end > datetime.utcnow()
+    ).all()
+
+    return premium_users
+```
+
+This is much easier to read and maintain than concatenating raw SQL strings.
+
+---
+
+# 7. Internal Working
+
+<LearningFlow
+  title="SQLAlchemy Architecture Flow"
+  nodes={[
+    { id: '1', kind: 'process', label: 'Python Code (User.name = "Rahul")', position: { x: 250, y: 50 } },
+    { id: '2', kind: 'core', label: 'SQLAlchemy ORM', position: { x: 100, y: 150 } },
+    { id: '3', kind: 'core', label: 'SQLAlchemy Core', position: { x: 400, y: 150 } },
+    { id: '4', kind: 'process', label: 'Engine (Dialect / Connection Pool)', position: { x: 250, y: 250 } },
+    { id: '5', kind: 'data', label: 'Database Driver (psycopg2, sqlite3)', position: { x: 250, y: 350 } },
+    { id: '6', kind: 'output', label: 'Actual Database', position: { x: 250, y: 450 } }
+  ]}
+  edges={[
+    { id: 'e1', source: '1', target: '2', label: 'Object Query' },
+    { id: 'e2', source: '1', target: '3', label: 'Expression Query' },
+    { id: 'e3', source: '2', target: '4', label: 'Generates SQL' },
+    { id: 'e4', source: '3', target: '4', label: 'Generates SQL' },
+    { id: 'e5', source: '4', target: '5', label: 'Executes via' },
+    { id: 'e6', source: '5', target: '6', label: 'Network/Disk IO' }
+  ]}
+/>
+
+When you use the ORM:
+1. You interact with **Python objects**.
+2. The **Session** tracks changes to these objects (Unit of Work pattern).
+3. The ORM translates these changes into **SQLAlchemy Core** expressions.
+4. The Core passes the expressions to the **Engine**.
+5. The Engine uses a **Dialect** to format the exact SQL for your specific database (Postgres, MySQL, etc.).
+6. The exact SQL is sent through the **DBAPI (Driver)** to the database.
+
+---
+
+# 8. Performance Table
+
+| Operation | Complexity/Speed |
+|---|---|
+| ORM Insert | Moderate (Overhead of creating objects) |
+| Core Insert | Fast (Closer to raw SQL) |
+| Bulk Insert (ORM) | Can be very slow if done one-by-one |
+| Bulk Insert (Core) | Very Fast |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between SQLAlchemy Core and ORM? | Core uses SQL expressions mapped to tables. ORM maps Python classes to tables and manages object state via a Session. |
+| What is an Engine in SQLAlchemy? | The Engine is the starting point. It manages the connection pool and the dialect used to talk to the database. |
+| What is a Session? | The Session is the "workspace" for your objects. It tracks changes and handles transactions (commit/rollback). |
+| Why use `yield` when managing database sessions in FastAPI? | To ensure the session is always closed after the request finishes, even if an error occurs. |
+| How do you prevent SQL injection in SQLAlchemy? | By using parameterized queries. SQLAlchemy does this automatically when using its query builder or ORM. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, understanding how the Session tracks objects is a common trap!
+
+**The Detached Object Trap:**
+```python
+user = session.query(User).first()
+session.close()
+
+# What happens if we try to access a relationship here?
+print(user.addresses) # BOOM! Error!
+```
+
+**Why it happens:** When `session.close()` is called, the `user` object becomes "detached". If the `addresses` relationship was configured to load lazily, SQLAlchemy needs to run a new query to get them. But it can't, because the session is closed!
+
+**The Fix:** Use eager loading (like `joinedload`) before closing the session, or keep the session open while accessing lazy attributes.
+
+---
+
+# 11. Real-World Usage
+
+Companies use SQLAlchemy extensively:
+- **FastAPI / Flask backends:** It's the standard way to connect to databases in microservices.
+- **Data Engineering:** ETL pipelines use SQLAlchemy Core to efficiently bulk insert processed data into data warehouses.
+- **Multi-tenant SaaS apps:** SQLAlchemy's dynamic query generation makes it easy to switch between schemas or filter by tenant IDs automatically.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use connection pooling for performance | Open a new database connection for every single query |
+| Use `SessionLocal()` per web request | Share a single global Session across threads |
+| Use Core for massive bulk inserts | Use ORM `add()` inside a loop for 100,000 records |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+> Always manage your sessions with a Context Manager (`with` statement) or dependency injection to guarantee they are closed. A leaked session will hold a database connection open. If you leak enough of them, your connection pool will exhaust, and your entire application will freeze waiting for a connection!
+
+---
+
+# 14. Common Mistakes
+
+- **N+1 Query Problem:** Looping over objects and accessing a relationship inside the loop, causing hundreds of separate SQL queries instead of one joined query.
+- **Forgetting to Commit:** Doing `session.add(obj)` and wondering why the database is empty because you forgot `session.commit()`.
+- **Mixing Core and ORM confusingly:** Pick the right tool for the job. Use ORM for complex business logic, use Core for raw speed.
+
+---
+
+# 15. Related Topics
+
+- PostgreSQL / SQLite
+- ORM vs Raw SQL
+- Transactions
+- Connection Pooling

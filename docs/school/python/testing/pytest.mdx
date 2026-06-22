@@ -2,6 +2,239 @@
 sidebar_position: 1
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Pytest
 
-Placeholder: introduce Pytest.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Pytest |
+| Difficulty | Beginner |
+| Used For | Writing and running tests in Python |
+| Common Mistake | Using complex object-oriented test classes instead of simple functions |
+| Performance | Fast test discovery; can be parallelized with `pytest-xdist` |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, think of Pytest like a strict factory Quality Assurance (QA) inspector.
+
+You build a bunch of toys (your functions). You tell the QA inspector the rules: "If I press this button, the toy should light up."
+The inspector runs around the factory, finds every single toy, presses the button, and gives you a report of exactly which toys lit up and which ones are broken.
+
+Pytest automatically finds your tests, runs them, and gives you a beautiful failure report.
+
+---
+
+# 3. Concept Explanation
+
+Pytest is the industry-standard testing framework for Python.
+
+While Python comes with `unittest` built-in, engineers prefer Pytest because it requires much less boilerplate code. You don't need to create classes or remember methods like `self.assertEqual()`. You just write standard Python functions and use the standard Python `assert` keyword.
+
+Pytest also has an incredible ecosystem of plugins and handles setup/teardown logic cleanly using "Fixtures".
+
+---
+
+# 4. Syntax Table
+
+| Operation | Pytest Syntax |
+|---|---|
+| Test File Name | Must start with `test_` or end with `_test.py` |
+| Test Function | `def test_calculate_total():` |
+| Assertion | `assert result == expected_value` |
+| Run all tests | `pytest` |
+| Run specific file | `pytest test_math.py` |
+
+---
+
+# 5. Beginner Example
+
+Let's say we have a simple math function.
+
+```python
+# math_utils.py
+def add(a, b):
+    return a + b
+```
+
+Here is how you write a test for it using Pytest.
+
+```python
+# test_math.py
+from math_utils import add
+
+def test_add_positive_numbers():
+    # Arrange
+    a = 5
+    b = 10
+
+    # Act
+    result = add(a, b)
+
+    # Assert
+    assert result == 15  # Pytest will pass if this is True!
+
+def test_add_negative_numbers():
+    assert add(-5, -5) == -10
+```
+
+To run it, just type `pytest` in your terminal. Pytest will automatically find `test_math.py` and run the two functions inside it!
+
+---
+
+# 6. Real-World Engineering Example
+
+In production, you often need to test functions that expect certain data to exist. Pytest uses **Fixtures** to provide this data cleanly.
+
+```python
+import pytest
+
+# 1. This is a Fixture. It provides setup data.
+@pytest.fixture
+def mock_user_data():
+    return {
+        "id": 1,
+        "name": "Rahul",
+        "role": "admin"
+    }
+
+# 2. The test asks for the fixture by using its name as a parameter!
+def test_user_is_admin(mock_user_data):
+    # Pytest automatically injects the dictionary here
+    assert mock_user_data["role"] == "admin"
+    assert mock_user_data["name"] == "Rahul"
+
+# 3. Another test can reuse the exact same fixture
+def test_user_has_valid_id(mock_user_data):
+    assert type(mock_user_data["id"]) is int
+```
+
+Bro, fixtures replace messy `setUp()` and `tearDown()` methods. They make your test files incredibly clean.
+
+---
+
+# 7. Internal Working
+
+<LearningFlow
+  title="Pytest Discovery and Execution"
+  nodes={[
+    { id: '1', kind: 'process', label: 'Run command: `pytest`', position: { x: 250, y: 50 } },
+    { id: '2', kind: 'core', label: 'Discovery Phase', position: { x: 250, y: 150 } },
+    { id: '3', kind: 'data', label: 'Finds files: test_*.py', position: { x: 100, y: 250 } },
+    { id: '4', kind: 'data', label: 'Finds funcs: test_*()', position: { x: 400, y: 250 } },
+    { id: '5', kind: 'tool', label: 'Execution Phase (Injects Fixtures)', position: { x: 250, y: 350 } },
+    { id: '6', kind: 'output', label: 'Generates Terminal Report (Pass/Fail)', position: { x: 250, y: 450 } }
+  ]}
+  edges={[
+    { id: 'e1', source: '1', target: '2' },
+    { id: 'e2', source: '2', target: '3' },
+    { id: 'e3', source: '2', target: '4' },
+    { id: 'e4', source: '3', target: '5' },
+    { id: 'e5', source: '4', target: '5' },
+    { id: 'e6', source: '5', target: '6' }
+  ]}
+/>
+
+When you run `pytest`:
+1. **Discovery:** It recursively searches your directories for files matching `test_*.py` or `*_test.py`.
+2. **Collection:** Inside those files, it looks for functions prefixed with `test_`.
+3. **Execution:** It runs each function. If an `assert` statement evaluates to `False`, or an unhandled exception is thrown, the test is marked as Failed.
+4. **Reporting:** It prints a summary to the console, showing green dots `.` for passes and red `F`s for failures.
+
+---
+
+# 8. Performance Table
+
+| Strategy | Speed Impact |
+|---|---|
+| Standard run | Fast (runs sequentially) |
+| Running with `-s` flag | Slower (prints output to console) |
+| `pytest-xdist` plugin | Extremely Fast (runs tests in parallel across CPU cores) |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why prefer Pytest over `unittest`? | Less boilerplate, no need for classes, uses standard Python `assert`, and has a powerful fixture system. |
+| What is a Pytest Fixture? | A function decorated with `@pytest.fixture` that provides setup code or data for tests. |
+| How do you assert that an exception is raised? | Use the `with pytest.raises(ExpectedException):` context manager. |
+| How do you skip a test? | Decorate the test function with `@pytest.mark.skip(reason="not implemented yet")`. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, how do you test the same function with 10 different inputs without writing 10 different test functions?
+
+**The Repetition Trap:**
+```python
+def test_is_even():
+    assert is_even(2) == True
+    assert is_even(4) == True
+    assert is_even(3) == False
+    # If the first assert fails, the rest are never executed!
+```
+
+**The Fix (Parametrization):**
+Use `@pytest.mark.parametrize`. It runs the test completely independently for each set of inputs!
+
+```python
+import pytest
+
+@pytest.mark.parametrize("number, expected", [
+    (2, True),
+    (4, True),
+    (3, False),
+    (7, False)
+])
+def test_is_even(number, expected):
+    assert is_even(number) == expected
+```
+
+---
+
+# 11. Real-World Usage
+
+- **CI/CD Pipelines:** GitHub Actions or Jenkins will run `pytest` on every pull request. If Pytest fails, the code cannot be merged.
+- **Microservices:** Testing API endpoints using Pytest combined with the `FastAPI TestClient`.
+- **Data Engineering:** Using Pytest to validate that a data transformation pipeline outputs the correct Pandas DataFrame.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Name test files and functions clearly (`test_user_login_fails_with_bad_password`) | Name tests `test_1()`, `test_2()` |
+| Use Fixtures in a `conftest.py` file to share them across multiple test files | Copy-paste setup logic into every single test file |
+| Test one logical concept per test function | Write a 100-line test function that tests 5 different things |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+> By default, Pytest captures all `print()` statements and hides them unless the test fails. If you are debugging a test and want to see your print statements in the console in real-time, run Pytest with the flag: `pytest -s`.
+
+---
+
+# 14. Common Mistakes
+
+- **Forgetting the `test_` prefix:** If you name your file `my_tests.py` or your function `def check_addition():`, Pytest will silently ignore them!
+- **Modifying global state:** If Test A modifies a global variable, and Test B relies on that variable, Test B might randomly fail depending on which order Pytest decides to run them.
+- **Over-mocking:** Writing tests that mock so much of the system that the test becomes useless.
+
+---
+
+# 15. Related Topics
+
+- Unit Testing
+- Mocking
+- Integration Testing
+- Error Handling

@@ -2,6 +2,234 @@
 sidebar_position: 2
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Unit Testing
 
-Placeholder: introduce Unit Testing.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Unit Testing |
+| Difficulty | Beginner |
+| Used For | Verifying the smallest pieces of code (functions/methods) in isolation |
+| Common Mistake | Connecting to a real database in a unit test (that's an integration test) |
+| Performance | Should run in milliseconds. A suite of 1000 unit tests should finish in seconds. |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, imagine you are building a car.
+
+Before you assemble the whole car, you take a single spark plug, connect it to a battery on your workbench, and see if it sparks. You are testing *one specific unit* in complete isolation. You aren't checking if the car drives; you are just checking if the spark plug sparks.
+
+Unit Testing in Python is exactly that: testing a single function or class method without running the rest of the application.
+
+---
+
+# 3. Concept Explanation
+
+A **Unit Test** isolates a specific section of code and verifies its correctness.
+
+The core philosophy of a unit test is **Isolation**:
+- It should NOT talk to the real database.
+- It should NOT make real network/API calls.
+- It should NOT read/write real files to the disk.
+
+If a test fails, you should immediately know exactly which 10 lines of code are broken, because the test scope is incredibly small.
+
+---
+
+# 4. Syntax Table
+
+Unit tests usually follow the standard **AAA Pattern**.
+
+| Phase | Description |
+|---|---|
+| **A**rrange | Set up the inputs and initial state |
+| **A**ct | Call the specific function being tested |
+| **A**ssert | Verify the output matches expectations |
+
+---
+
+# 5. Beginner Example
+
+Let's test a simple password validator.
+
+```python
+# auth.py
+def is_valid_password(password: str) -> bool:
+    if len(password) < 8:
+        return False
+    if not any(char.isdigit() for char in password):
+        return False
+    return True
+```
+
+Here is the unit test using the AAA pattern.
+
+```python
+# test_auth.py
+from auth import is_valid_password
+
+def test_is_valid_password_success():
+    # 1. Arrange
+    test_pass = "SecurePass123"
+
+    # 2. Act
+    result = is_valid_password(test_pass)
+
+    # 3. Assert
+    assert result == True
+
+def test_is_valid_password_too_short():
+    assert is_valid_password("Short1") == False
+
+def test_is_valid_password_no_numbers():
+    assert is_valid_password("NoNumbersHere") == False
+```
+
+Bro, notice how we test all the edge cases! That's the power of unit testing.
+
+---
+
+# 6. Real-World Engineering Example
+
+In the real world, functions often depend on external data. Since unit tests must be isolated, we pass fake data directly into the function.
+
+```python
+# pricing.py
+def calculate_discount(user_tier: str, cart_total: float) -> float:
+    if user_tier == "gold":
+        return cart_total * 0.80  # 20% off
+    elif user_tier == "silver":
+        return cart_total * 0.90  # 10% off
+    return cart_total
+
+# test_pricing.py
+def test_calculate_discount_gold_tier():
+    # We don't query the DB to find a gold user!
+    # We just pass the string "gold" directly.
+    total = calculate_discount(user_tier="gold", cart_total=100.0)
+    assert total == 80.0
+
+def test_calculate_discount_unknown_tier():
+    total = calculate_discount(user_tier="bronze", cart_total=100.0)
+    assert total == 100.0
+```
+
+---
+
+# 7. Internal Working
+
+<LearningFlow
+  title="Arrange-Act-Assert Isolation Pattern"
+  nodes={[
+    { id: '1', kind: 'process', label: '1. Arrange (Setup fake data)', position: { x: 250, y: 50 } },
+    { id: '2', kind: 'tool', label: 'Isolated Function', position: { x: 250, y: 150 } },
+    { id: '3', kind: 'warning', label: 'Real DB (Blocked!)', position: { x: 500, y: 150 } },
+    { id: '4', kind: 'process', label: '2. Act (Call function)', position: { x: 250, y: 250 } },
+    { id: '5', kind: 'data', label: 'Output / Return Value', position: { x: 250, y: 350 } },
+    { id: '6', kind: 'output', label: '3. Assert (Check Output)', position: { x: 250, y: 450 } }
+  ]}
+  edges={[
+    { id: 'e1', source: '1', target: '2', label: 'Provides Input' },
+    { id: 'e2', source: '2', target: '3', label: 'NO ACCESS', style: { strokeDasharray: '5, 5' } },
+    { id: 'e3', source: '2', target: '4', label: 'Executes' },
+    { id: 'e4', source: '4', target: '5', label: 'Returns' },
+    { id: 'e5', source: '5', target: '6', label: 'Validates' }
+  ]}
+/>
+
+A proper unit test completely cuts off the code from the outside world. If the code tries to talk to a database, you must use techniques like **Mocking** to intercept that call and return a fake response instantly.
+
+---
+
+# 8. Performance Table
+
+| Test Type | Execution Time | Reliability |
+|---|---|---|
+| Unit Test | ~1 millisecond | Very High (Never fails due to network issues) |
+| Integration Test | ~500 milliseconds | Moderate (DB might be down) |
+| End-to-End Test | Seconds/Minutes | Low (Browser crashes, UI changes) |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the AAA pattern? | Arrange (setup), Act (execute), Assert (verify). It keeps tests clean and readable. |
+| What makes a test a "Unit" test? | It tests a single component in complete isolation without relying on external systems like databases or networks. |
+| What is Test-Driven Development (TDD)? | Writing the failing unit test *before* you write the actual application code, then writing the code to make the test pass. |
+| What is Code Coverage? | A metric (usually a percentage) showing how many lines of your application code were executed during your test suite. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, what happens if the function you are testing doesn't return anything?
+
+**Testing side effects:**
+```python
+def add_to_cart(cart_list: list, item: str):
+    # This function returns nothing (None)
+    cart_list.append(item)
+```
+
+**How to test it:** You assert on the state of the input object after the function runs!
+```python
+def test_add_to_cart():
+    # Arrange
+    my_cart = []
+
+    # Act
+    add_to_cart(my_cart, "Apple")
+
+    # Assert
+    assert len(my_cart) == 1
+    assert my_cart[0] == "Apple"
+```
+
+---
+
+# 11. Real-World Usage
+
+Unit tests are the foundation of stable software engineering.
+- In CI/CD pipelines, unit tests run automatically every time a developer pushes code.
+- They act as live documentation. If you don't know how a complex billing function works, you can read its unit tests to see exactly what inputs it expects and what it outputs.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Isolate tests completely | Write tests that depend on other tests passing first |
+| Test boundary cases (empty lists, negative numbers) | Only test the "happy path" where everything works |
+| Use descriptive test names | Use assertions without clear failure messages |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+> Don't obsess over 100% Code Coverage. Chasing the last 5% of coverage often leads to writing brittle, useless tests just to satisfy a metric. Focus on testing critical business logic (like payments, auth, and state changes) rigorously.
+
+---
+
+# 14. Common Mistakes
+
+- **Testing the framework:** Writing a test to verify that `len([1,2,3]) == 3`. You are testing Python itself, not your code.
+- **Flaky Tests:** Writing tests that rely on the current time (e.g., `datetime.now()`). The test passes today but fails tomorrow. Always mock time!
+- **Testing private methods:** Generally, you should only unit test the public API of a module or class. The private methods will be tested implicitly when the public methods call them.
+
+---
+
+# 15. Related Topics
+
+- Pytest
+- Mocking
+- Integration Testing
+- Error Handling

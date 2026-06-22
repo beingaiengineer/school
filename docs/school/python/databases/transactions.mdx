@@ -2,6 +2,243 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Transactions
 
-Placeholder: introduce Transactions.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Database Transactions |
+| Difficulty | Intermediate |
+| Used For | Ensuring a group of database operations succeed or fail together |
+| Common Mistake | Forgetting to rollback on error, leaving locks open |
+| Performance | Holding transactions open too long blocks other users |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, think about buying a house.
+
+1. You sign the papers.
+2. The bank transfers your money to the seller.
+3. The government registers the house in your name.
+
+Imagine if step 2 succeeds (your money is gone), but step 3 fails (you don't get the house). That's a disaster!
+
+A **Transaction** ensures that either *all* steps succeed (Commit), or if any step fails, *everything* is undone (Rollback) as if nothing ever happened. It's an all-or-nothing wrapper.
+
+---
+
+# 3. Concept Explanation
+
+A database transaction is a sequence of operations performed as a single logical unit of work.
+
+Transactions follow the **ACID** properties:
+- **Atomicity:** All operations succeed, or none do.
+- **Consistency:** The database moves from one valid state to another.
+- **Isolation:** Concurrent transactions don't interfere with each other.
+- **Durability:** Once committed, the changes are permanent, even if the power goes out.
+
+In Python, we manage transactions using database connections or ORM sessions, primarily utilizing `BEGIN`, `COMMIT`, and `ROLLBACK`.
+
+---
+
+# 4. Syntax Table
+
+| Concept | SQLAlchemy Syntax | Raw SQL Equivalent |
+|---|---|---|
+| Start | Automatic on first query | `BEGIN;` |
+| Save Changes | `session.commit()` | `COMMIT;` |
+| Undo Changes | `session.rollback()` | `ROLLBACK;` |
+| Error Handling | `try...except...rollback` | N/A |
+
+---
+
+# 5. Beginner Example
+
+Let's look at transferring money between two accounts. This is the classic transaction example.
+
+```python
+from sqlalchemy.orm import Session
+
+def transfer_money(session: Session, sender_id: int, receiver_id: int, amount: float):
+    try:
+        sender = session.query(Account).get(sender_id)
+        receiver = session.query(Account).get(receiver_id)
+
+        # Step 1: Deduct from sender
+        sender.balance -= amount
+
+        # Simulate a crash here!
+        # If this crashes, we don't want the sender to lose money
+        # without the receiver getting it.
+
+        # Step 2: Add to receiver
+        receiver.balance += amount
+
+        # If both steps succeed, we save it permanently!
+        session.commit()
+        print("Transfer successful!")
+
+    except Exception as e:
+        # If ANYTHING goes wrong, we undo all changes!
+        session.rollback()
+        print("Transfer failed. No money was moved.")
+        raise e
+```
+
+Bro, the `try...except...rollback` pattern is fundamental for backend engineering.
+
+---
+
+# 6. Real-World Engineering Example
+
+In production, you don't write `try...except` in every single function. Instead, you use a Context Manager (a `with` block) to handle transactions automatically.
+
+```python
+from contextlib import contextmanager
+from sqlalchemy.orm import sessionmaker
+
+SessionLocal = sessionmaker(bind=engine)
+
+@contextmanager
+def transaction():
+    """Provides a transactional scope around a series of operations."""
+    session = SessionLocal()
+    try:
+        yield session
+        session.commit() # Automatically commit if no errors
+    except Exception:
+        session.rollback() # Automatically rollback on crash
+        raise
+    finally:
+        session.close() # Always clean up the connection
+
+# Usage is extremely clean:
+def create_user_and_profile():
+    with transaction() as db:
+        new_user = User(name="Rahul")
+        db.add(new_user)
+        db.flush() # Get the new_user ID without committing
+
+        new_profile = Profile(user_id=new_user.id, bio="Engineer")
+        db.add(new_profile)
+        # It automatically commits here!
+```
+
+---
+
+# 7. Internal Working
+
+<LearningFlow
+  title="Transaction Lifecycle Flow"
+  nodes={[
+    { id: '1', kind: 'process', label: 'BEGIN Transaction', position: { x: 250, y: 50 } },
+    { id: '2', kind: 'process', label: 'Query 1 (Update A)', position: { x: 250, y: 150 } },
+    { id: '3', kind: 'process', label: 'Query 2 (Update B)', position: { x: 250, y: 250 } },
+    { id: '4', kind: 'warning', label: 'Error Occurs?', position: { x: 250, y: 350 } },
+    { id: '5', kind: 'output', label: 'COMMIT (Save to Disk)', position: { x: 100, y: 450 } },
+    { id: '6', kind: 'error', label: 'ROLLBACK (Undo Changes)', position: { x: 400, y: 450 } }
+  ]}
+  edges={[
+    { id: 'e1', source: '1', target: '2', label: 'Locks acquired' },
+    { id: 'e2', source: '2', target: '3', label: 'Held in memory' },
+    { id: 'e3', source: '3', target: '4' },
+    { id: 'e4', source: '4', target: '5', label: 'No Error' },
+    { id: 'e5', source: '4', target: '6', label: 'Yes Error' }
+  ]}
+/>
+
+When a transaction begins, the database starts tracking your changes in memory/temporary storage.
+It also places **locks** on the rows you are modifying so other users can't change them at the same time.
+- If you **COMMIT**, the changes are flushed to the permanent disk, and locks are released.
+- If you **ROLLBACK**, the temporary changes are discarded, and locks are released.
+
+---
+
+# 8. Performance Table
+
+| Operation | Impact |
+|---|---|
+| Long-running transaction | Bad. Holds locks, blocking other users from reading/writing. |
+| Small, fast transactions | Excellent. Releases locks quickly. |
+| Too many small transactions | Slower due to disk I/O overhead. Batching is better. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does ACID stand for? | Atomicity, Consistency, Isolation, Durability. |
+| What happens if you forget to commit? | The changes stay in memory but are never saved to the database. They will disappear when the connection closes. |
+| What is a Database Lock? | A mechanism to prevent multiple transactions from modifying the same data simultaneously to prevent data corruption. |
+| What is a Deadlock? | When Transaction A is waiting for a lock held by Transaction B, and Transaction B is waiting for a lock held by Transaction A. Both are stuck forever. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, watch out for this subtle bug: **Swallowing the exception.**
+
+```python
+try:
+    user = User(name="Rahul")
+    db.add(user)
+    db.commit()
+except IntegrityError:
+    print("User already exists!")
+    # WE FORGOT TO ROLLBACK!
+
+# The transaction is now in an invalid, aborted state!
+# Any future queries on this 'db' session will crash.
+db.query(Product).all() # This will throw a PendingRollbackError!
+```
+
+**The Fix:** Always explicitly call `db.rollback()` in your except block, even if you are just logging the error and moving on!
+
+---
+
+# 11. Real-World Usage
+
+Transactions are mandatory in:
+- **Banking / Payments:** Moving money, processing Stripe webhook events.
+- **E-commerce:** Deducting inventory and creating an order record simultaneously.
+- **User Registration:** Creating a User record, sending a welcome email (via outbox pattern), and creating a default billing profile.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Keep transactions as short as possible | Do external network calls (APIs) inside a transaction |
+| Use Context Managers to guarantee rollback | Manually call commit/rollback everywhere |
+| Group related database writes together | Wrap entire web requests in a single massive transaction |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+> Never do HTTP API calls (like calling Stripe or sending emails) *inside* an open database transaction! If the API takes 5 seconds to respond, your database row is locked for 5 seconds. If you get 100 requests, your entire database will gridlock. Commit the database transaction *first*, then make the external API call (or use an asynchronous task queue like Celery).
+
+---
+
+# 14. Common Mistakes
+
+- **Transaction holding:** Running heavy processing loops while a transaction is open.
+- **Nested Transactions confusion:** Attempting to commit a sub-transaction while a parent transaction fails, leading to partial data writes (use Savepoints instead).
+- **Auto-commit unawareness:** Some database drivers default to auto-commit mode, where every single query is its own transaction, which can be dangerous for multi-step operations.
+
+---
+
+# 15. Related Topics
+
+- SQLAlchemy
+- Connection Pooling
+- PostgreSQL
+- Concurrency (Race Conditions)
