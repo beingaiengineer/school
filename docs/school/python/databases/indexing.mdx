@@ -2,6 +2,165 @@
 sidebar_position: 6
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Indexing
 
-Placeholder: introduce Indexing.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Database Indexing |
+| Difficulty | Intermediate |
+| Used For | Speeding up database read queries |
+| Common Mistake | Indexing every column, which destroys write performance |
+| Performance | O(log N) lookup instead of O(N) full table scan |
+
+## 2. Real-World Analogy
+
+Bro, imagine a massive 1,000-page textbook about Python.
+
+If I ask you to find the chapter on "Decorators", and there is **no index**, you have to read the book page by page from the beginning until you find it. This is called a "Full Table Scan."
+
+If the book has an **Index** at the back, you look up "Decorators", see it's on page 450, and instantly jump there. That's exactly what a database index does.
+
+## 3. Concept Explanation
+
+An index is a separate data structure (usually a B-Tree) created by the database engine to speed up data retrieval.
+
+When you run `SELECT * FROM users WHERE email = 'bro@example.com'`, the database uses the index on the `email` column to find the exact disk location of that row instantly.
+
+**Why not index everything?**
+Because every time you `INSERT`, `UPDATE`, or `DELETE` a row, the database must also update the index structure. If you have 10 indexes on a table, 1 write operation becomes 11 write operations.
+
+## 4. Syntax Table
+
+| Operation | SQLAlchemy Example | Raw SQL Example |
+|---|---|---|
+| Single Column Index | `Column('email', String, index=True)` | `CREATE INDEX idx_email ON users(email);` |
+| Unique Index | `Column('username', String, unique=True)` | `CREATE UNIQUE INDEX idx_user ON users(username);` |
+| Multi-column Index | `Index('idx_name_age', 'name', 'age')` | `CREATE INDEX idx_name_age ON users(name, age);` |
+
+## 5. Beginner Example
+
+Defining an index in SQLAlchemy is just a keyword argument.
+
+```python
+from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import declarative_base
+
+Base = declarative_base()
+
+class User(Base):
+    __tablename__ = 'users'
+    id = Column(Integer, primary_key=True) # Primary keys are automatically indexed!
+
+    # Adding index=True makes lookups by email blazing fast
+    email = Column(String, index=True)
+
+    # Not indexed. Querying by bio will be slow.
+    bio = Column(String)
+```
+
+## 6. Real-World Engineering Example
+
+In production, you often need to index combinations of columns that are queried together. This is called a **Composite Index**.
+
+```python
+from sqlalchemy import Index, Column, Integer, String
+from sqlalchemy.orm import declarative_base
+
+Base = declarative_base()
+
+class Order(Base):
+    __tablename__ = 'orders'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer)
+    status = Column(String)
+
+    # If we constantly query: "Show me PENDING orders for USER 5"
+    # We create a composite index.
+    __table_args__ = (
+        Index('idx_user_status', 'user_id', 'status'),
+    )
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Query: WHERE email = "a@b.com"' }, position: { x: 250, y: 50 } },
+    { id: '2', type: 'process', data: { label: 'B-Tree Index Structure' }, position: { x: 250, y: 150 } },
+    { id: '3', type: 'data', data: { label: 'Root Node\n(a-m) (n-z)' }, position: { x: 250, y: 250 } },
+    { id: '4', type: 'data', data: { label: 'Leaf Node\na@b.com -> Row 402' }, position: { x: 100, y: 350 } },
+    { id: '5', type: 'output', data: { label: 'Main Table Data\n(Disk Block)' }, position: { x: 400, y: 350 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2' },
+    { id: 'e2-3', source: '2', target: '3' },
+    { id: 'e3-4', source: '3', target: '4', label: 'Traverse left branch' },
+    { id: 'e4-5', source: '4', target: '5', label: 'Direct pointer to disk' }
+  ]}
+/>
+
+Most relational databases (like PostgreSQL) use B-Trees (Balanced Trees) for indexes. The B-Tree keeps data sorted. When searching, the engine traverses the tree logarithmically (O(log N)) to find a "Leaf Node". This leaf node contains a direct pointer (like a memory address) to the actual row data on the hard drive.
+
+## 8. Performance Table
+
+| Operation | Unindexed (Sequential Scan) | Indexed (Index Scan) |
+|---|---|---|
+| Search (`SELECT`) | O(N) - Very Slow | O(log N) - Lightning Fast |
+| Insert (`INSERT`) | O(1) - Fast | Slower (Must update tree) |
+| Update (`UPDATE`) | Fast | Slower (If indexed col changes) |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is a Primary Key? | A unique identifier for a row. It automatically creates a Unique Index. |
+| What is a Full Table Scan? | When the DB must check every single row because no index exists. Terrible for performance. |
+| Does an index always speed up a query? | No. If a column has low "cardinality" (like a boolean column with only True/False), the DB planner will ignore the index and just do a table scan anyway. |
+| Left-to-right rule in Composite Indexes? | An index on `(A, B)` helps queries filtering on `A`, or `A and B`, but it does NOT help queries filtering only on `B`. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, look at this query. Why is it still slow even if `username` is indexed?
+
+```sql
+SELECT * FROM users WHERE LOWER(username) = 'bro';
+```
+
+**Why it fails:** Standard indexes only index the exact raw value. When you wrap the column in a function like `LOWER()`, the database cannot use the standard B-Tree. It must evaluate `LOWER()` on every row (Full Table Scan).
+**Fix:** You must create a **Functional Index** (e.g., `CREATE INDEX idx_lower_name ON users(LOWER(username));`).
+
+## 11. Real-World Usage
+
+- **User Logins:** Indexing the `email` column is mandatory so users log in instantly.
+- **E-Commerce Sorts:** If users always sort by `price DESC`, you index the price column.
+- **Soft Deletes:** If you use `deleted_at`, you might create a "Partial Index" to only index rows where `deleted_at IS NULL` to save space.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Index columns used frequently in `WHERE`, `JOIN`, and `ORDER BY` | Index columns that have very few unique values (like `gender`) |
+| Use EXPLAIN ANALYZE to verify your index is actually being used | Create 20 indexes on a table just to be safe |
+| Drop unused indexes | Index large text fields directly (use Full-Text Search instead) |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+Creating an index on a massive production table locks the table for writes during creation. This can take down your API. In PostgreSQL, always use `CREATE INDEX CONCURRENTLY` to build the index in the background without blocking writes!
+
+## 14. Common Mistakes
+
+- **Over-indexing:** Creating an index on every column. Your read speeds are great, but your disk space will explode and insert speeds will crawl.
+- **Ignoring Join Columns:** Forgetting to index Foreign Key columns. If you join `orders` to `users` on `user_id`, `user_id` needs an index.
+- **Missing the Order:** Creating a composite index on `(status, created_at)` but querying `WHERE created_at = X AND status = Y`. (Order matters depending on the DB engine).
+
+## 15. Related Topics
+
+- PostgreSQL Performance
+- SQLAlchemy
+- Database Transactions
+- Query Profiling

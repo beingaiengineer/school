@@ -2,6 +2,184 @@
 sidebar_position: 4
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Integration Testing
 
-Placeholder: introduce Integration Testing.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Integration Testing |
+| Difficulty | Intermediate to Advanced |
+| Used For | Verifying that multiple components work together correctly |
+| Common Mistake | Using the production database for tests |
+| Performance | Slower than Unit Tests, requires real I/O |
+
+## 2. Real-World Analogy
+
+Bro, remember the bicycle analogy?
+
+Unit testing is checking if the brakes work while holding them in your hand.
+**Integration Testing** is attaching the brakes to the wheels, spinning the wheel, and pressing the brake to see if the wheel actually stops.
+
+The individual pieces might work perfectly in isolation, but if the brake cable is too short to reach the wheel, the bike still crashes. Integration tests find the bugs where two systems connect.
+
+## 3. Concept Explanation
+
+Integration testing verifies the interfaces and interactions between different parts of your application (e.g., your Python code talking to a PostgreSQL database, or your FastAPI app talking to Redis).
+
+Unlike Unit Tests, Integration Tests:
+- Do NOT mock the database (they use a real test database).
+- Do NOT mock the file system.
+- Are allowed to take longer to run (seconds instead of milliseconds).
+
+You write them to ensure that your SQL queries are actually valid, your ORM models map correctly, and your system can handle real-world data flow.
+
+## 4. Syntax Table
+
+| Concept | Approach |
+|---|---|
+| Database Setup | Spin up a temporary Docker container or use SQLite in-memory |
+| HTTP Client | Use `TestClient` (FastAPI) or `FlaskClient` to simulate API requests |
+| Teardown | Truncate tables or rollback transactions after every test |
+
+## 5. Beginner Example
+
+Let's test an API endpoint that creates a user in a real database.
+
+```python
+from fastapi.testclient import TestClient
+from myapp.main import app
+from myapp.database import get_db, Base, engine
+
+# 1. Create real database tables in our test engine
+Base.metadata.create_all(bind=engine)
+
+# 2. Use a TestClient to simulate HTTP requests
+client = TestClient(app)
+
+def test_create_user_integration():
+    # Act: Hit the real API, which hits the real test DB
+    response = client.post("/users/", json={"email": "bro@example.com"})
+
+    # Assert: HTTP layer works
+    assert response.status_code == 201
+
+    # Assert: Database layer works
+    data = response.json()
+    assert data["email"] == "bro@example.com"
+    assert "id" in data
+```
+
+## 6. Real-World Engineering Example
+
+In production, managing the test database is hard. You use Pytest Fixtures to automatically start a clean transaction before the test, and rollback after the test, ensuring the DB is clean for the next test.
+
+```python
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+@pytest.fixture(scope="function")
+def db_session():
+    # Connect to a TEST database
+    engine = create_engine("postgresql://user:pass@localhost/test_db")
+    SessionLocal = sessionmaker(bind=engine)
+    session = SessionLocal()
+
+    # Begin a transaction
+    session.begin_nested()
+
+    yield session # The test runs here
+
+    # Rollback everything! Clean slate for next test.
+    session.rollback()
+    session.close()
+
+def test_user_creation(db_session):
+    # This data won't persist after the test finishes
+    user = User(name="Bro")
+    db_session.add(user)
+    db_session.commit()
+    assert db_session.query(User).count() == 1
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Test Runner (Pytest)' }, position: { x: 50, y: 150 } },
+    { id: '2', type: 'process', data: { label: 'HTTP Test Client' }, position: { x: 300, y: 150 } },
+    { id: '3', type: 'process', data: { label: 'Python App Logic' }, position: { x: 550, y: 150 } },
+    { id: '4', type: 'data', data: { label: 'Test Database\n(Real Docker Container)' }, position: { x: 800, y: 150 } },
+    { id: '5', type: 'warning', data: { label: 'Rollback Transaction' }, position: { x: 550, y: 250 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'Trigger Request' },
+    { id: 'e2-3', source: '2', target: '3', label: 'JSON Payload' },
+    { id: 'e3-4', source: '3', target: '4', label: 'SQL INSERT', animated: true },
+    { id: 'e4-3', source: '4', target: '3', label: 'DB Response' },
+    { id: 'e3-5', source: '3', target: '5', label: 'Cleanup Phase' }
+  ]}
+/>
+
+Integration tests spin up the entire application stack in memory (or via Docker). They execute code from the outer boundary (HTTP layer) all the way down to the inner boundary (Database/Cache layer) and back up. Because they cross network/socket boundaries, they take orders of magnitude longer than unit tests.
+
+## 8. Performance Table
+
+| Test Type | Execution Time | Scope |
+|---|---|---|
+| Unit Test | ~0.001s | Single Function |
+| Integration Test | ~0.1s - 1.0s | API + DB |
+| End-to-End (E2E) | ~5.0s - 30s | Browser + API + DB |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why do we need Integration Tests if we have 100% Unit Test coverage? | Mocks can be wrong. An integration test proves that your code communicates correctly with the actual real-world database or service. |
+| How do you prevent integration tests from corrupting each other? | Isolate data using transactional rollbacks, or truncate/wipe tables between tests. |
+| Should integration tests hit third-party APIs (like Stripe)? | Usually no. You mock external APIs you don't control, but you integrate with internal services (like your own DB/Redis) that you do control. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, what happens when you use SQLite in memory (`sqlite:///:memory:`) for integration testing, but your production database is PostgreSQL?
+
+**The Trap:**
+Your tests pass locally because SQLite ignores strict typing (e.g., allowing strings in integer columns) or doesn't support advanced JSONB queries. You deploy to production, and PostgreSQL crashes instantly.
+
+**Fix:**
+Never use SQLite for integration tests if your production DB is Postgres. Use **Testcontainers** (spinning up a real Postgres Docker container dynamically for your tests) so your test environment exactly matches production.
+
+## 11. Real-World Usage
+
+- **ORM Validation:** Making sure your SQLAlchemy `joinedload` query actually prevents the N+1 problem by checking the real query execution count.
+- **Cache Invalidation:** Writing a test that updates a user, and asserts that the Redis cache for that user was properly cleared.
+- **Microservices:** Testing that Service A can successfully send and consume a RabbitMQ message from Service B.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use a dedicated `_test` database | Run integration tests against your production or staging database! |
+| Use Docker/Testcontainers for exact environment replication | Hardcode `id=1` in tests, because auto-incrementing IDs change |
+| Tag tests (`@pytest.mark.integration`) so you can skip them locally if needed | Run 5,000 integration tests on every single tiny commit |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+In a CI/CD pipeline (like GitHub Actions), integration tests are notorious for "Flakiness". A test might fail 1 out of 10 times because of a database connection timeout or a race condition. Treat flaky tests like high-priority bugs. A CI pipeline you cannot trust is worse than having no tests at all.
+
+## 14. Common Mistakes
+
+- **Shared State:** Test A creates a user. Test B expects 0 users in the DB and fails. Always clean the database between tests.
+- **Testing the Internet:** Making integration tests that hit public APIs. If the hotel Wi-Fi goes down, you can't run your tests.
+- **Too Many Integrations:** Writing thousands of integration tests instead of unit tests, resulting in a test suite that takes 45 minutes to run, killing developer productivity.
+
+## 15. Related Topics
+
+- Unit Testing
+- Pytest Fixtures
+- Docker & Testcontainers
+- CI/CD Pipelines

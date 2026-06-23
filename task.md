@@ -140,18 +140,18 @@ This checklist tracks the implementation of Python School playbook topics. Compl
 ## 14. Databases
 - [x] SQLite (`databases/sqlite.mdx`)
 - [x] PostgreSQL (`databases/postgresql.mdx`)
-- [ ] SQLAlchemy (`databases/sqlalchemy.mdx`)
-- [ ] ORM vs Raw SQL (`databases/orm-vs-raw-sql.mdx`)
-- [ ] Transactions (`databases/transactions.mdx`)
-- [ ] Indexing (`databases/indexing.mdx`)
-- [ ] Connection Pooling (`databases/connection-pooling.mdx`)
+- [x] SQLAlchemy (`databases/sqlalchemy.mdx`)
+- [x] ORM vs Raw SQL (`databases/orm-vs-raw-sql.mdx`)
+- [x] Transactions (`databases/transactions.mdx`)
+- [x] Indexing (`databases/indexing.mdx`)
+- [x] Connection Pooling (`databases/connection-pooling.mdx`)
 
 ## 15. Testing
-- [ ] Pytest (`testing/pytest.mdx`)
-- [ ] Unit Testing (`testing/unit-testing.mdx`)
-- [ ] Mocking (`testing/mocking.mdx`)
-- [ ] Integration Testing (`testing/integration-testing.mdx`)
-- [ ] Load Testing (`testing/load-testing.mdx`)
+- [x] Pytest (`testing/pytest.mdx`)
+- [x] Unit Testing (`testing/unit-testing.mdx`)
+- [x] Mocking (`testing/mocking.mdx`)
+- [x] Integration Testing (`testing/integration-testing.mdx`)
+- [x] Load Testing (`testing/load-testing.mdx`)
 - [ ] Test Best Practices (`testing/test-best-practices.mdx`)
 
 ## 16. Performance

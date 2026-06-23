@@ -2,6 +2,176 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Transactions
 
-Placeholder: introduce Transactions.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Database Transactions |
+| Difficulty | Intermediate |
+| Used For | Ensuring data integrity across multiple operations |
+| Common Mistake | Forgetting to rollback on failure, leaving locks open |
+| Performance | Holds locks; keep transactions as short as possible |
+
+## 2. Real-World Analogy
+
+Bro, think of a database transaction like a bank wire transfer.
+
+If you are sending $100 to a friend, two things must happen:
+1. $100 is deducted from your account.
+2. $100 is added to your friend's account.
+
+If the system crashes after step 1, your money is gone, but your friend didn't get it. A transaction guarantees that **both** steps happen, or **neither** step happens. It's an all-or-nothing deal.
+
+## 3. Concept Explanation
+
+A database transaction is a unit of work consisting of one or more SQL statements. It follows the **ACID** properties:
+- **Atomicity:** All or nothing.
+- **Consistency:** Leaves DB in a valid state.
+- **Isolation:** Concurrent transactions don't interfere.
+- **Durability:** Once committed, data is safe even if power goes out.
+
+In Python, transactions are usually managed via your ORM (like SQLAlchemy) or database driver (like `psycopg2`). You begin a transaction, execute queries, and then either `commit()` (save) or `rollback()` (undo).
+
+## 4. Syntax Table
+
+| Operation | Example |
+|---|---|
+| Begin | (Implicit usually, or `session.begin()`) |
+| Commit | `session.commit()` |
+| Rollback | `session.rollback()` |
+
+## 5. Beginner Example
+
+Here's a simple safe transfer using SQLAlchemy.
+
+```python
+def transfer_funds(session, sender_id, receiver_id, amount):
+    try:
+        sender = session.query(Account).get(sender_id)
+        receiver = session.query(Account).get(receiver_id)
+
+        sender.balance -= amount
+        receiver.balance += amount
+
+        # If we reach here, we save permanently
+        session.commit()
+    except Exception as e:
+        # If ANYTHING fails, undo the whole thing
+        session.rollback()
+        raise e
+```
+
+## 6. Real-World Engineering Example
+
+In modern backend apps (like FastAPI or Django), you rarely manage transactions manually. Instead, you use Context Managers or Dependency Injection to handle it cleanly.
+
+```python
+from contextlib import contextmanager
+
+@contextmanager
+def transaction_scope(session_factory):
+    """Provide a transactional scope around a series of operations."""
+    session = session_factory()
+    try:
+        yield session
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+# Usage:
+# with transaction_scope(Session) as session:
+#     do_complex_stuff(session)
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Start Transaction' }, position: { x: 250, y: 50 } },
+    { id: '2', type: 'process', data: { label: 'Execute Query 1\n(Locks Rows)' }, position: { x: 250, y: 150 } },
+    { id: '3', type: 'process', data: { label: 'Execute Query 2\n(Modifies Memory)' }, position: { x: 250, y: 250 } },
+    { id: '4', type: 'output', data: { label: 'COMMIT\n(Write to Disk)' }, position: { x: 100, y: 350 } },
+    { id: '5', type: 'warning', data: { label: 'ROLLBACK\n(Discard Memory)' }, position: { x: 400, y: 350 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2' },
+    { id: 'e2-3', source: '2', target: '3' },
+    { id: 'e3-4', source: '3', target: '4', label: 'Success', animated: true },
+    { id: 'e3-5', source: '3', target: '5', label: 'Error', style: { stroke: 'red' } }
+  ]}
+/>
+
+When a transaction begins, the database doesn't write changes directly to the main disk files immediately. It holds the changes in memory/logs and places **locks** on the affected rows so other connections can't modify them. Upon `commit()`, changes are flushed to disk. Upon `rollback()`, the memory/logs are discarded and locks are released.
+
+## 8. Performance Table
+
+| Action | Performance Impact |
+|---|---|
+| Open Transaction | Negligible |
+| Holding Transaction open | **DANGEROUS** - Holds row/table locks, blocks other users |
+| Commit | Requires disk I/O sync |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does ACID stand for? | Atomicity, Consistency, Isolation, Durability. |
+| What is a deadlock? | When Transaction A waits for locks held by Transaction B, and B waits for locks held by A. Neither can proceed. |
+| What are transaction isolation levels? | Settings that control how visible uncommitted data is to other transactions (e.g., Read Committed, Serializable). |
+| Why should transactions be kept short? | Long transactions hold locks, which stalls concurrent queries and degrades database performance. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, what happens if you call a slow external API inside a database transaction?
+
+```python
+with transaction_scope(session):
+    user = session.query(User).get(1)
+    user.status = "active"
+
+    # ❌ BAD: Network call inside transaction!
+    response = requests.post("https://slow-api.com/notify")
+
+    user.notified = response.ok
+```
+
+**Why it fails:** If the API takes 10 seconds to respond, your database transaction stays open for 10 seconds, locking the `User` row. If 100 users do this, your DB connection pool will exhaust.
+**Fix:** Commit the DB change first, then make the API call, or use a background task worker (like Celery).
+
+## 11. Real-World Usage
+
+- **E-commerce:** Deducting inventory and charging a credit card.
+- **Gaming:** Trading items between two players safely.
+- **Booking Systems:** Reserving a seat on an airplane.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Keep transactions as short and fast as possible | Do external network/API calls inside a transaction |
+| Always use `try/except/rollback` blocks | Leave transactions hanging uncommitted |
+| Let the framework (like Django/FastAPI) manage transactions via middleware if possible | Manually `commit()` inside loops |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+In microservices architecture, standard ACID transactions don't work across different databases. You cannot naturally wrap a Postgres query and a MongoDB query in the same transaction. For distributed systems, you must use patterns like the **Saga Pattern** or **Two-Phase Commit (2PC)**.
+
+## 14. Common Mistakes
+
+- **Swallowing Exceptions:** Catching an error but forgetting to call `session.rollback()`, which leaves the session in an invalid state for subsequent queries.
+- **Nested Transactions Confusion:** Trying to start a transaction inside a transaction. Databases support this via "Savepoints", but ORMs can get confused if you don't handle them correctly.
+
+## 15. Related Topics
+
+- SQLAlchemy
+- ORM vs Raw SQL
+- Connection Pooling
+- Concurrency and Locks

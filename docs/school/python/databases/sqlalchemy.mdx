@@ -2,6 +2,179 @@
 sidebar_position: 3
 ---
 
-# Sqlalchemy
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Sqlalchemy.
+# SQLAlchemy
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | SQLAlchemy |
+| Difficulty | Intermediate |
+| Used For | Connecting Python objects to relational databases |
+| Common Mistake | Querying inside a loop leading to N+1 problems |
+| Performance | Fast, but overhead compared to raw SQL if misused |
+
+## 2. Real-World Analogy
+
+Bro, think of SQLAlchemy like an awesome restaurant manager.
+You are the chef (Python code), and the manager takes your abstract ideas ("I need a list of all active users") and perfectly translates it to the kitchen staff (the Database) in a language they understand perfectly (SQL). You don't need to know the specific kitchen lingo; the manager handles that translation seamlessly.
+
+## 3. Concept Explanation
+
+SQLAlchemy is the most popular Object Relational Mapper (ORM) for Python.
+It allows you to interact with SQL databases using Python classes and objects instead of writing raw SQL strings.
+
+It gives you two paradigms:
+1. **Core:** A SQL expression language (closer to raw SQL but Pythonic).
+2. **ORM:** Maps database tables to Python classes.
+
+You use it when you want your application code to remain database-agnostic (switching from SQLite to Postgres is easy) and when you want to avoid writing repetitive SQL queries by hand.
+
+## 4. Syntax Table
+
+| Operation | Example |
+|---|---|
+| Define Model | `class User(Base): __tablename__ = 'users'` |
+| Create Session | `session = Session()` |
+| Insert | `session.add(User(name="Bob"))` |
+| Query All | `session.query(User).all()` |
+| Query Filter | `session.query(User).filter_by(name="Bob").first()` |
+
+## 5. Beginner Example
+
+Let's see how simple it is to save a user.
+
+```python
+from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy.orm import declarative_base, sessionmaker
+
+# 1. Setup DB
+engine = create_engine('sqlite:///:memory:')
+Base = declarative_base()
+
+# 2. Define Model
+class User(Base):
+    __tablename__ = 'users'
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+
+# 3. Create Tables
+Base.metadata.create_all(engine)
+
+# 4. Insert Data
+Session = sessionmaker(bind=engine)
+session = Session()
+
+new_user = User(name="Bro")
+session.add(new_user)
+session.commit()
+
+# 5. Query Data
+user = session.query(User).first()
+print(user.name)  # Output: Bro
+```
+
+## 6. Real-World Engineering Example
+
+In production, you often need to query relationships efficiently. Let's say you have an API fetching a user and all their orders.
+
+```python
+from sqlalchemy.orm import joinedload
+
+# Fetch user AND their orders in a single SQL query
+# using joinedload to prevent N+1 query problem
+def get_user_with_orders(session, user_id: int):
+    return session.query(User)\
+        .options(joinedload(User.orders))\
+        .filter(User.id == user_id)\
+        .first()
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Python Application\n(session.query(User))' }, position: { x: 50, y: 50 } },
+    { id: '2', type: 'process', data: { label: 'SQLAlchemy ORM\n(Translates to AST)' }, position: { x: 300, y: 50 } },
+    { id: '3', type: 'process', data: { label: 'SQLAlchemy Core\n(Generates SQL String)' }, position: { x: 550, y: 50 } },
+    { id: '4', type: 'data', data: { label: 'Database Driver\n(psycopg2, sqlite3)' }, position: { x: 550, y: 150 } },
+    { id: '5', type: 'output', data: { label: 'Relational DB\n(PostgreSQL, MySQL)' }, position: { x: 300, y: 150 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'Python Objects', animated: true },
+    { id: 'e2-3', source: '2', target: '3', label: 'AST representation' },
+    { id: 'e3-4', source: '3', target: '4', label: 'Raw SQL' },
+    { id: 'e4-5', source: '4', target: '5', label: 'Execute via TCP/Socket' },
+    { id: 'e5-1', source: '5', target: '1', label: 'Returns rows mapped to Python', type: 'smoothstep' }
+  ]}
+/>
+
+When you execute `session.query(User)`, SQLAlchemy's ORM converts your request into an Abstract Syntax Tree (AST). The SQLAlchemy Core then compiles this AST into a specific SQL string matching your database dialect (e.g., PostgreSQL). Finally, it uses the DB driver to execute the string over the network and maps the returned rows back into Python `User` objects.
+
+## 8. Performance Table
+
+| Operation | Complexity / Note |
+|---|---|
+| `session.add()` | O(1) in memory, bulk insert needed for high scale |
+| `query.get(id)` | O(1) if in session identity map, else O(log N) DB lookup |
+| `query.all()` | O(N) memory allocation based on row count |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the Identity Map in SQLAlchemy? | It's a cache within a Session. If you query the same object ID twice, it returns the same Python object without hitting the DB again. |
+| What is the N+1 query problem? | When you query 1 parent row, and then loop through its children causing N additional queries. Fix with `joinedload()`. |
+| Session vs Engine? | Engine manages connection pools to the DB. Session is a workspace for your current transaction. |
+| `flush()` vs `commit()`? | `flush()` sends SQL to the DB but doesn't finalize the transaction. `commit()` permanently saves the changes. |
+| Core vs ORM? | Core writes SQL via Python expressions. ORM maps tables to Python classes. ORM is built on top of Core. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, watch out for the dreaded detached object.
+
+```python
+user = session.query(User).first()
+session.close()
+
+# Trying to access a lazy-loaded relationship AFTER closing session
+# print(user.orders) # ❌ Raises DetachedInstanceError!
+```
+
+**Why it fails:** The object is no longer attached to a database session, so it cannot fire a lazy SQL query to fetch the orders.
+**Fix:** Eager load the relationship before closing, or keep the session open.
+
+## 11. Real-World Usage
+
+Companies use SQLAlchemy extensively:
+- **FastAPI / Flask backends:** It is the standard ORM for non-Django Python web frameworks.
+- **ETL Pipelines:** Used to manage massive data migrations safely using transactions.
+- **Microservices:** Used to manage isolated database schemas securely.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `session.bulk_save_objects()` for massive inserts | Loop and `session.add()` 10,000 items |
+| Use Context Managers (`with Session() as session:`) | Manually open/close sessions randomly |
+| Eager load relationships (`joinedload`) when serializing APIs | Rely on lazy-loading inside Jinja templates or API schemas |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+Always configure a Connection Pool on your `create_engine`. In a high-traffic API, creating a new TCP connection for every request will kill your database. Use `pool_size` and `max_overflow` to reuse connections.
+
+## 14. Common Mistakes
+
+- **Forgetting to Commit:** Calling `session.add()` but forgetting `session.commit()`. The data vanishes.
+- **Ignoring Indexes:** Querying by a non-indexed column using the ORM. The ORM doesn't magically make the database faster.
+- **Leaking Sessions:** Not calling `session.close()` or `session.rollback()` in exception blocks, leading to locked tables.
+
+## 15. Related Topics
+
+- ORM vs Raw SQL
+- Connection Pooling
+- Transactions
+- Database Indexing

@@ -2,6 +2,176 @@
 sidebar_position: 2
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Unit Testing
 
-Placeholder: introduce Unit Testing.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Unit Testing |
+| Difficulty | Beginner |
+| Used For | Verifying the smallest pieces of code (functions/classes) in isolation |
+| Common Mistake | Testing too much at once (hitting a real DB inside a unit test) |
+| Performance | Blazing fast (milliseconds per test) |
+
+## 2. Real-World Analogy
+
+Bro, think of building a bicycle.
+
+A **Unit Test** is picking up the bicycle chain, pulling it, and making sure it doesn't snap. You are testing ONE component (a "unit") completely isolated from the rest of the bike.
+
+If you put the whole bike together and ride it down a hill to see if it works, that's an *Integration Test*. Unit tests are about verifying the individual gears, screws, and brakes before assembly.
+
+## 3. Concept Explanation
+
+A Unit Test verifies that a specific function or method behaves exactly as expected given a specific set of inputs.
+
+The golden rule of Unit Testing: **It must run in isolation.**
+A true unit test NEVER:
+- Connects to a real database
+- Makes a real network request to an API
+- Reads/writes to a real file system
+
+If your test does those things, it is an Integration Test. Unit tests must be fast, deterministic (never fail randomly), and pinpoint exact logic errors.
+
+## 4. Syntax Table
+
+| Concept | Example (using Pytest) |
+|---|---|
+| Arrange | `input_data = [1, 2, 3]` |
+| Act | `result = calculate_sum(input_data)` |
+| Assert | `assert result == 6` |
+
+## 5. Beginner Example
+
+Let's test a simple discount calculator.
+
+```python
+# The code we are testing (usually in a separate file)
+def calculate_discount(price, discount_percent):
+    if price < 0 or discount_percent < 0:
+        raise ValueError("Cannot be negative")
+    return price - (price * (discount_percent / 100))
+
+# The Unit Tests
+import pytest
+
+def test_calculate_discount_normal():
+    assert calculate_discount(100, 20) == 80.0
+
+def test_calculate_discount_free():
+    assert calculate_discount(50, 100) == 0.0
+
+def test_calculate_discount_negative_raises_error():
+    with pytest.raises(ValueError):
+        calculate_discount(-10, 10)
+```
+
+## 6. Real-World Engineering Example
+
+In production, you use the "Arrange-Act-Assert" (AAA) pattern to keep tests readable.
+
+```python
+def extract_domain(email: str) -> str:
+    """Extracts the domain from an email address."""
+    if "@" not in email:
+        return ""
+    return email.split("@")[1].lower()
+
+def test_extract_domain():
+    # 1. Arrange (Setup the data)
+    email = "BroEngineer@COMPANY.com"
+
+    # 2. Act (Call the function)
+    domain = extract_domain(email)
+
+    # 3. Assert (Verify the result)
+    assert domain == "company.com"
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Test Execution' }, position: { x: 50, y: 150 } },
+    { id: '2', type: 'process', data: { label: 'Arrange\n(Setup Fake Data)' }, position: { x: 250, y: 50 } },
+    { id: '3', type: 'process', data: { label: 'Act\n(Call Function)' }, position: { x: 450, y: 150 } },
+    { id: '4', type: 'warning', data: { label: 'Assert\n(Verify Output)' }, position: { x: 250, y: 250 } },
+    { id: '5', type: 'output', data: { label: 'Pass / Fail' }, position: { x: 650, y: 150 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2' },
+    { id: 'e2-3', source: '2', target: '3' },
+    { id: 'e3-4', source: '3', target: '4' },
+    { id: 'e4-5', source: '4', target: '5' }
+  ]}
+/>
+
+When a unit test runs, it stays entirely within CPU memory. Because it doesn't wait for network I/O or disk reads, the execution flow is instantaneous. The Python interpreter evaluates the logic block, hits the `assert`, evaluates if `True == True`, and returns the result.
+
+## 8. Performance Table
+
+| Operation | Time per test | Note |
+|---|---|---|
+| Pure Math Unit Test | ~0.001ms | Ideal |
+| String Parsing Test | ~0.01ms | Ideal |
+| Test hitting a real DB | ~50.0ms | **NOT a unit test!** |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the Arrange-Act-Assert pattern? | A standard way to structure tests. Setup data (Arrange), execute function (Act), verify result (Assert). |
+| What is the difference between Unit and Integration tests? | Unit tests verify a single function in memory. Integration tests verify how multiple systems (DB, API) work together. |
+| What does deterministic mean in testing? | A test should always pass or always fail given the same code. It should never randomly fail due to network timeouts. |
+| Why is 100% test coverage a bad metric? | Reaching 100% often forces you to write useless tests for basic getters/setters, wasting time without finding bugs. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, how do you unit test a function that relies on the current time?
+
+```python
+from datetime import datetime
+
+# The Bad Function
+def is_it_morning():
+    # Hard to test because datetime.now() constantly changes!
+    return datetime.now().hour < 12
+```
+
+**Why it fails:** If you run the test at 10 AM, it passes. If you run it at 2 PM, it fails. The test is non-deterministic.
+**Fix:** Pass the time as an argument (Dependency Injection), or use a mocking library (like `freezegun`) to freeze time during the test.
+
+## 11. Real-World Usage
+
+- **Financial Systems:** Every single tax calculation function has 50+ unit tests covering edge cases.
+- **Data Pipelines:** Unit testing regex patterns and data parsers to ensure bad data doesn't crash the ETL.
+- **Open Source Libraries:** Libraries like `requests` or `numpy` rely almost entirely on unit tests to ensure they work on all operating systems.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Test edge cases (Empty strings, None, negative numbers) | Write a test just to hit 100% coverage |
+| Keep tests small and focused on one behavior | Combine 15 `asserts` into one giant test |
+| Mock external dependencies | Hit the production AWS API in a unit test |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+A healthy engineering team follows the "Test Pyramid." You should have 1000s of blazing-fast Unit Tests at the bottom, 100s of Integration Tests in the middle, and maybe 10 slow UI/End-to-End tests at the top. If your unit tests take more than 2 minutes to run locally, developers will stop running them.
+
+## 14. Common Mistakes
+
+- **Testing the Framework:** Writing a test to see if standard Python works (e.g., testing that `len([1,2]) == 2`). Test *your* logic, not Python's.
+- **Brittle Tests:** Writing tests that break every time you slightly refactor internal private variables, even if the public output is exactly the same.
+- **No Failure Path Testing:** Only testing the "Happy Path" (valid inputs) and never testing what happens when the user sends garbage data.
+
+## 15. Related Topics
+
+- Pytest
+- Mocking
+- Integration Testing
+- Test Best Practices
