@@ -2,6 +2,217 @@
 sidebar_position: 2
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Unit Testing
 
-Placeholder: introduce Unit Testing.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Unit Testing |
+| Difficulty | Beginner |
+| Used For | Verifying that individual functions or classes work perfectly in isolation |
+| Main Strength | Catches bugs immediately during development before they reach production |
+| Common Mistake | Connecting to a real database during a unit test |
+
+Bro, unit testing is the foundation of reliable software. It is the practice of taking the smallest piece of testable code (usually a function or a method) and writing code to verify that it behaves exactly as expected. If you want to sleep well at night after deploying code, you write unit tests.
+
+## 2. Real-World Analogy
+
+Think of building a smartphone.
+
+Before the factory assembles the entire phone, they test every single component individually. They test the battery to see if it holds a charge. They test the screen to see if pixels light up. They test the camera lens for scratches.
+
+This is **Unit Testing**. You are not testing if the phone can make a call (that's an Integration Test). You are just testing if the isolated, individual piece (the "unit") works flawlessly.
+
+## 3. Concept Explanation
+
+A Unit Test follows a strict pattern called **AAA (Arrange, Act, Assert)**:
+1. **Arrange:** Set up the initial conditions and inputs.
+2. **Act:** Call the function you want to test.
+3. **Assert:** Check that the return value matches your expectations.
+
+Crucially, unit tests must be **isolated**. A true unit test does NOT talk to a real database, does NOT make network requests to an API, and does NOT read physical files from the hard drive. It tests logic in memory.
+
+<LearningFlow
+  diagram={{
+    title: 'Unit Test Structure',
+    height: 400,
+    miniMap: true,
+    nodes: [
+      {id: 'arrange', title: 'Arrange', detail: 'x = 5, y = 10', x: 250, y: 50, kind: 'core'},
+      {id: 'act', title: 'Act', detail: 'result = add(x, y)', x: 250, y: 150, kind: 'process'},
+      {id: 'assert', title: 'Assert', detail: 'assert result == 15', x: 250, y: 250, kind: 'tool'},
+      {id: 'pass', title: 'Pass', detail: 'Test Successful', x: 100, y: 350, kind: 'output'},
+      {id: 'fail', title: 'Fail', detail: 'Test Failed', x: 400, y: 350, kind: 'warning'},
+    ],
+    edges: [
+      {source: 'arrange', target: 'act', label: 'Setup done'},
+      {source: 'act', target: 'assert', label: 'Returns value'},
+      {source: 'assert', target: 'pass', label: 'Condition met'},
+      {source: 'assert', target: 'fail', label: 'Condition missed'},
+    ],
+  }}
+/>
+
+## 4. Syntax Table
+
+| Concept | Code Example (Pytest) |
+|---|---|
+| Arrange | `user = User(age=20)` |
+| Act | `is_adult = check_adult_status(user)` |
+| Assert | `assert is_adult == True` |
+
+## 5. Beginner Example
+
+Let's test a simple business logic function.
+
+**`billing.py`**
+```python
+def calculate_tax(amount: float, tax_rate: float) -> float:
+    if amount < 0 or tax_rate < 0:
+        raise ValueError("Cannot be negative")
+    return round(amount * tax_rate, 2)
+```
+
+**`test_billing.py`**
+```python
+import pytest
+from billing import calculate_tax
+
+def test_calculate_tax_standard():
+    # Arrange
+    amount = 100.0
+    rate = 0.05
+
+    # Act
+    tax = calculate_tax(amount, rate)
+
+    # Assert
+    assert tax == 5.0
+
+def test_calculate_tax_rounding():
+    # Assert that 10.555 rounds to 10.56
+    assert calculate_tax(105.55, 0.1) == 10.56
+
+def test_calculate_tax_negative_error():
+    # Assert that passing a negative raises an error
+    with pytest.raises(ValueError):
+        calculate_tax(-50, 0.1)
+```
+
+## 6. Real-World Engineering Example
+
+In production, you often need to test classes and their internal state.
+
+```python
+class ShoppingCart:
+    def __init__(self):
+        self.items = []
+
+    def add_item(self, price: float):
+        self.items.append(price)
+
+    def get_total(self) -> float:
+        return sum(self.items)
+
+    def apply_discount(self, discount: float):
+        if discount > self.get_total():
+            raise ValueError("Discount exceeds total")
+        # In real life, this logic might be more complex
+        self.items = [self.get_total() - discount]
+
+
+# --- Unit Tests ---
+def test_cart_initial_total_is_zero():
+    cart = ShoppingCart()
+    assert cart.get_total() == 0
+
+def test_cart_adds_items_correctly():
+    cart = ShoppingCart()
+    cart.add_item(10)
+    cart.add_item(20)
+    assert cart.get_total() == 30
+
+def test_cart_rejects_excessive_discount():
+    cart = ShoppingCart()
+    cart.add_item(50)
+
+    with pytest.raises(ValueError):
+        cart.apply_discount(100)
+```
+
+Bro, notice how each test is small, focused, and only tests ONE specific behavior?
+
+## 7. Internal Working
+
+Unit tests run entirely in the Python runtime memory.
+Because they don't do any File I/O or Network I/O, they execute at lightning speed. A standard engineering laptop can run thousands of unit tests per second.
+
+This speed is crucial. It creates a **fast feedback loop**. Developers run the unit tests every time they save a file. If they break something, they know within milliseconds.
+
+## 8. Performance Table
+
+| Test Type | Speed | Scope |
+|---|---|---|
+| Unit Test | ~0.001 seconds | Single function/class |
+| Integration Test | ~0.5 seconds | Multiple components + Database |
+| End-to-End (E2E) Test | ~5.0 seconds | Full browser automation / API call |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the AAA pattern? | Arrange (setup), Act (execute), Assert (verify). |
+| What makes a good unit test? | It should be fast, isolated, deterministic (doesn't fail randomly), and readable. |
+| What is TDD? | Test-Driven Development. You write the failing unit test FIRST, and then write the actual code to make it pass. |
+| Why shouldn't a unit test connect to a database? | Because it makes the test slow, fragile, and reliant on external state, turning it into an Integration Test. |
+
+## 10. Tricky Questions & Edge Cases
+
+What happens if a function relies on the current time?
+
+```python
+from datetime import datetime
+
+def is_weekend():
+    # If today is Saturday (5) or Sunday (6)
+    return datetime.now().weekday() >= 5
+```
+
+If you write a unit test for this, it will pass on Saturday and fail on Monday!
+Unit tests must be **Deterministic** (always yield the same result).
+To fix this, you either pass the date as an argument (`def is_weekend(date_obj):`), or you use Mocking to freeze the time during the test.
+
+## 11. Real-World Usage
+
+- **Algorithm Verification:** Ensuring complex sorting, filtering, or AI preprocessing logic is flawless.
+- **Financial Calculations:** Unit testing tax calculators or compounding interest functions with every possible edge case.
+- **Open Source:** Large libraries like Pandas or Django have tens of thousands of unit tests to ensure they don't break backwards compatibility.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Give your test functions long, descriptive names (`test_user_cannot_withdraw_more_than_balance`). | Name your tests `test_1` or `test_math`. |
+| Aim for high Code Coverage (testing all branches of `if/else` statements). | Obsess over 100% coverage if it means writing useless tests just to hit the metric. |
+| Keep tests independent. | Let test B rely on state created by test A. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+Bro, the biggest trap junior developers fall into is "Mocking Everything." If your unit test spends 50 lines setting up mocks just to test 2 lines of logic, you have a bad architecture. Extract the core business logic into pure functions (functions that just take inputs and return outputs) so they can be unit tested easily without mocks.
+
+## 14. Common Mistakes
+
+- **Testing Built-in Functions:** Writing a unit test to verify that `len([1,2,3]) == 3`. You don't need to test Python's standard library.
+- **Testing Implementation, Not Behavior:** Writing tests that break if you rename an internal variable. Tests should verify the *output*, not exactly how the code arrived at the output.
+- **No Assertions:** Writing a test that just calls the function and assumes it passes if no error is thrown. Always assert the expected outcome.
+
+## 15. Related Topics
+
+- Pytest
+- Mocking
+- Integration Testing
+- CI/CD Pipelines

@@ -2,6 +2,225 @@
 sidebar_position: 4
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Integration Testing
 
-Placeholder: introduce Integration Testing.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Integration Testing |
+| Difficulty | Intermediate to Advanced |
+| Used For | Verifying that different parts of a system work together correctly |
+| Main Strength | Catches bugs that unit tests miss (e.g., bad SQL queries, mismatched API contracts) |
+| Common Mistake | Running integration tests against the live production database |
+
+Bro, unit tests are great for testing pure logic, but they are blind to the outside world. If your function works perfectly, but the database schema changed, your unit test will still pass (because you mocked the DB), but your production app will crash. Integration tests solve this by actually connecting the pieces together.
+
+## 2. Real-World Analogy
+
+Think of building a car.
+
+**Unit Testing** is checking if the engine turns on while it's sitting on a workbench.
+**Integration Testing** is putting the engine into the car, connecting it to the transmission, and seeing if the wheels actually spin when you hit the gas.
+
+The engine might work perfectly on the bench, but if the bolts don't align with the transmission, the car won't move. Integration tests find the "bolt alignment" issues.
+
+## 3. Concept Explanation
+
+Integration testing verifies the interfaces and data flow between different modules or external systems.
+
+In Python web development, an Integration Test typically involves:
+1. Spinning up a temporary test database (like SQLite or a Postgres Docker container).
+2. Using a Test Client to simulate an HTTP request to your API.
+3. Your API routing the request, hitting the real (test) database, and returning a response.
+4. Asserting that the HTTP status code and JSON response are correct.
+
+You use Integration Tests when:
+- You want to verify SQL queries and database constraints.
+- You want to verify API endpoints end-to-end.
+- You are testing how your app interacts with a local cache (like Redis).
+
+<LearningFlow
+  diagram={{
+    title: 'Integration Test Flow',
+    height: 400,
+    miniMap: true,
+    nodes: [
+      {id: 'test', title: 'Test Runner (Pytest)', detail: 'Simulates HTTP Request', x: 250, y: 50, kind: 'core'},
+      {id: 'api', title: 'API Endpoint', detail: '/users/create', x: 250, y: 150, kind: 'process'},
+      {id: 'db', title: 'Test Database', detail: 'Real SQL Execution', x: 250, y: 250, kind: 'data'},
+      {id: 'response', title: 'HTTP Response', detail: '201 Created', x: 250, y: 350, kind: 'output'},
+      {id: 'assert', title: 'Assertion', detail: 'assert status == 201', x: 450, y: 350, kind: 'tool'},
+    ],
+    edges: [
+      {source: 'test', target: 'api', label: 'POST request'},
+      {source: 'api', target: 'db', label: 'INSERT INTO'},
+      {source: 'db', target: 'api', label: 'Row saved'},
+      {source: 'api', target: 'response', label: 'Returns JSON'},
+      {source: 'response', target: 'assert', label: 'Validates'},
+    ],
+  }}
+/>
+
+## 4. Syntax Table
+
+| Tool | Example Usage |
+|---|---|
+| FastAPI TestClient | `client = TestClient(app); response = client.get("/")` |
+| Pytest Fixtures | `@pytest.fixture def db_session(): ...` |
+| Database Setup | `Base.metadata.create_all(bind=engine)` |
+
+## 5. Beginner Example
+
+Let's look at an integration test for a FastAPI application. Notice how we actually make an HTTP request and talk to a test database.
+
+```python
+from fastapi.testclient import TestClient
+from myapp.main import app
+from myapp.database import SessionLocal, Base, engine
+import pytest
+
+# Create a test client
+client = TestClient(app)
+
+# A Pytest fixture to setup a clean database before each test
+@pytest.fixture(autouse=True)
+def setup_db():
+    # Create tables
+    Base.metadata.create_all(bind=engine)
+    yield
+    # Drop tables after test completes
+    Base.metadata.drop_all(bind=engine)
+
+def test_create_user_endpoint():
+    # 1. Act: Make a real HTTP POST request to our app
+    response = client.post(
+        "/users/",
+        json={"name": "Bro", "email": "bro@example.com"}
+    )
+
+    # 2. Assert: Check the HTTP response
+    assert response.status_code == 201
+    data = response.json()
+    assert data["name"] == "Bro"
+    assert "id" in data
+
+    # 3. Assert: Check the ACTUAL database
+    db = SessionLocal()
+    # If the SQL failed, this would crash
+    user_in_db = db.execute("SELECT * FROM users WHERE name='Bro'").fetchone()
+    assert user_in_db is not None
+```
+
+## 6. Real-World Engineering Example
+
+In a production environment, you don't use SQLite for integration tests if your production DB is Postgres, because they have different SQL dialects and features. You use **Testcontainers** to spin up a real Postgres database in Docker just for the tests.
+
+```python
+import pytest
+from testcontainers.postgres import PostgresContainer
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+# Spin up a real Postgres DB in a Docker container before the test suite runs
+@pytest.fixture(scope="session")
+def postgres_db():
+    with PostgresContainer("postgres:15") as postgres:
+        # Get the dynamic connection URL
+        db_url = postgres.get_connection_url()
+        engine = create_engine(db_url)
+
+        # Run migrations (create tables)
+        Base.metadata.create_all(engine)
+
+        Session = sessionmaker(bind=engine)
+        yield Session()
+        # Container is automatically destroyed here
+
+def test_complex_database_logic(postgres_db):
+    # This test hits a REAL postgres database, testing actual Postgres
+    # specific features like JSONB or specialized indexes.
+    postgres_db.add(User(name="Bro", config={"theme": "dark"}))
+    postgres_db.commit()
+
+    user = postgres_db.query(User).filter_by(name="Bro").first()
+    assert user.config["theme"] == "dark"
+```
+
+Bro, this is how senior engineers ensure their database logic is bulletproof before deploying.
+
+## 7. Internal Working
+
+Integration tests are slower than unit tests because they involve **I/O (Input/Output)**.
+
+When your test client makes a request, the framework must serialize the JSON, route the HTTP request, hit the database (which writes to a disk or a memory buffer), read it back, deserialize it, and return the response. All of this takes time.
+While a unit test might take 1 millisecond, an integration test might take 50 to 500 milliseconds.
+
+## 8. Performance Table
+
+| Component | Speed | Why? |
+|---|---|---|
+| In-Memory SQLite | Fast | Avoids disk writing, but lacks advanced Postgres/MySQL features. |
+| Testcontainers (Docker) | Slow Startup | Has to pull and boot an entire database server. |
+| Dropping/Creating Tables | Moderate | Rebuilding the schema for every single test takes time. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Unit Test vs Integration Test? | Unit tests mock external dependencies; Integration tests connect to them to test the communication boundaries. |
+| Should you mock external third-party APIs (like Stripe) in Integration Tests? | Yes! You integrate with YOUR database and YOUR cache, but you usually mock external vendor APIs to avoid paying money or hitting rate limits. |
+| What is a flaky test? | A test that sometimes passes and sometimes fails, often caused by integration tests sharing a database state and colliding with each other. |
+
+## 10. Tricky Questions & Edge Cases
+
+What happens if you run your integration tests in parallel (e.g., using `pytest-xdist`) using the same database?
+
+```python
+# Test 1
+def test_user_count():
+    db.add(User("Alice"))
+    assert db.query(User).count() == 1
+
+# Test 2 (Running at the exact same millisecond)
+def test_another_user():
+    db.add(User("Bob"))
+    assert db.query(User).count() == 1
+```
+
+**Result: Flaky Failures!**
+Test 1 might insert Alice, then Test 2 inserts Bob. When Test 1 checks the count, it sees 2 users and fails!
+**Fix:** When running parallel integration tests, you must either use separate database schemas per worker, or wrap each test in an SQL Transaction that is forcefully rolled back at the end of the test.
+
+## 11. Real-World Usage
+
+- **API Development:** Testing every endpoint (`/login`, `/checkout`) to ensure the routing, validation, and database saving all work together.
+- **ORM Verification:** Making sure your SQLAlchemy relationships and `joinedload()` statements generate the correct SQL and don't cause N+1 query problems.
+- **Queue Workers:** Testing that putting a message into a Redis queue correctly triggers a Celery worker to process it.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use a separate, dedicated database for testing. | Ever run tests against your production or staging database! |
+| Reset the database state between tests (or use transactional rollbacks). | Let data from Test A bleed into Test B. |
+| Use Docker/Testcontainers to match your production DB engine perfectly. | Use SQLite for tests if production is Postgres, unless you only do basic CRUD. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+Bro, balancing the "Testing Pyramid" is crucial. You should have 1000 Unit Tests, 100 Integration Tests, and maybe 10 End-to-End tests. Because Integration tests are slower and harder to maintain, don't use them to test every single edge case of a math function. Use Unit tests for the edge cases, and Integration tests to ensure the "happy path" data flows correctly through the system.
+
+## 14. Common Mistakes
+
+- **Hardcoding IDs:** Writing `assert user.id == 1`. IDs are often autoincremented and unpredictable in test databases. Assert the data (`user.name == "Bro"`), not the ID, or assert that `user.id is not None`.
+- **Not Cleaning Up:** Creating temporary files or DB rows during a test and forgetting to delete them, causing your hard drive to fill up or subsequent tests to fail.
+
+## 15. Related Topics
+
+- Unit Testing
+- Mocking
+- Testcontainers
+- Pytest Fixtures

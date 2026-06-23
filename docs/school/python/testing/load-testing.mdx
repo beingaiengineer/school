@@ -2,6 +2,202 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Load Testing
 
-Placeholder: introduce Load Testing.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Load Testing |
+| Difficulty | Advanced |
+| Used For | Proving your application won't crash when thousands of users visit at once |
+| Main Strength | Identifies database bottlenecks and memory leaks before production |
+| Common Mistake | Running load tests from your local laptop over a slow Wi-Fi connection |
+
+Bro, your code might pass every unit test, and your API might respond in 10 milliseconds when you test it locally. But what happens when 5,000 users all click "Checkout" at the exact same second during a Black Friday sale?
+If you haven't done Load Testing, your servers will melt, your database will lock up, and your company will lose money. Load testing simulates massive traffic to see where your system breaks.
+
+## 2. Real-World Analogy
+
+Think of building a new bridge.
+
+**Unit Testing:** Testing the strength of a single steel cable.
+**Integration Testing:** Driving one car across the bridge to make sure it gets to the other side.
+**Load Testing:** Parking 500 massive 18-wheeler trucks on the bridge at the exact same time, during a hurricane, to see if the concrete cracks.
+
+You must find the breaking point of the bridge *before* you open it to the public.
+
+## 3. Concept Explanation
+
+Load testing involves writing scripts that spawn thousands of "Virtual Users" (VUs). These virtual users rapidly send HTTP requests to your API, simulating real-world traffic patterns.
+
+The key metrics you look for are:
+- **Throughput (RPS/TPS):** Requests/Transactions per second. How many users can you serve simultaneously?
+- **Latency (Response Time):** Does the API go from taking 50ms to 5000ms when under heavy load?
+- **Error Rate:** Do you start getting `502 Bad Gateway` or `504 Gateway Timeout` errors?
+
+In Python, the most popular tool for this is **Locust**.
+
+<LearningFlow
+  diagram={{
+    title: 'Load Testing Architecture',
+    height: 400,
+    miniMap: true,
+    nodes: [
+      {id: 'locust', title: 'Locust Master', detail: 'Coordinates Attack', x: 250, y: 50, kind: 'tool'},
+      {id: 'worker1', title: 'Worker Node 1', detail: '1000 Virtual Users', x: 100, y: 150, kind: 'process'},
+      {id: 'worker2', title: 'Worker Node 2', detail: '1000 Virtual Users', x: 400, y: 150, kind: 'process'},
+      {id: 'lb', title: 'Load Balancer', detail: 'Distributes Traffic', x: 250, y: 250, kind: 'core'},
+      {id: 'app', title: 'Your App Servers', detail: 'Struggling to keep up!', x: 250, y: 350, kind: 'warning'},
+    ],
+    edges: [
+      {source: 'locust', target: 'worker1', label: 'Commands'},
+      {source: 'locust', target: 'worker2', label: 'Commands'},
+      {source: 'worker1', target: 'lb', label: 'HTTP GET/POST'},
+      {source: 'worker2', target: 'lb', label: 'HTTP GET/POST'},
+      {source: 'lb', target: 'app', label: 'Routes'},
+    ],
+  }}
+/>
+
+## 4. Syntax Table
+
+| Concept | Locust Example | Purpose |
+|---|---|---|
+| Define a Task | `@task def load_homepage(self):` | What the virtual user should do |
+| Make a Request | `self.client.get("/api/products")` | Simulated HTTP call |
+| Wait Time | `wait_time = between(1, 5)` | Simulates user reading the page before clicking again |
+| Run Test | `locust -f load_test.py --users 100 --spawn-rate 10` | CLI command to start the attack |
+
+## 5. Beginner Example
+
+Here is a simple Locust script to test an e-commerce API.
+
+**`locustfile.py`**
+```python
+from locust import HttpUser, task, between
+
+class WebsiteUser(HttpUser):
+    # Simulate a user waiting 1 to 3 seconds between clicks
+    wait_time = between(1, 3)
+
+    # The @task decorator tells Locust to run this function repeatedly
+    @task(weight=3) # Runs 3 times more often than checkout
+    def view_products(self):
+        self.client.get("/api/products")
+
+    @task(weight=1)
+    def view_checkout(self):
+        self.client.get("/api/checkout")
+
+# To run this:
+# locust -f locustfile.py --host=http://localhost:8000
+```
+When you run this command, Locust opens a beautiful Web UI on `localhost:8089` where you can type in "Spawn 1000 users" and watch real-time graphs of your server's response times.
+
+## 6. Real-World Engineering Example
+
+In production, you often need to simulate authenticated users doing complex workflows (like logging in, getting a token, and posting data).
+
+```python
+from locust import HttpUser, task, between
+import random
+
+class AuthenticatedUser(HttpUser):
+    wait_time = between(2, 5)
+    token = None
+
+    def on_start(self):
+        """This runs ONCE when a virtual user is spawned."""
+        # Simulate logging in
+        response = self.client.post("/api/login", json={
+            "username": f"user_{random.randint(1, 10000)}",
+            "password": "password123"
+        })
+        if response.status_code == 200:
+            self.token = response.json().get("access_token")
+
+    @task
+    def create_order(self):
+        """This runs repeatedly using the token."""
+        if not self.token:
+            return
+
+        headers = {"Authorization": f"Bearer {self.token}"}
+        payload = {"product_id": random.randint(1, 100), "quantity": 1}
+
+        # We group requests so dynamic URLs don't flood the stats table
+        with self.client.post("/api/orders", json=payload, headers=headers, catch_response=True) as response:
+            if response.status_code == 201:
+                response.success()
+            else:
+                response.failure(f"Failed with status: {response.status_code}")
+```
+
+Bro, notice `on_start()`? That is crucial. You don't want your users logging in on every single request, you want them to log in once, and then hammer the `create_order` endpoint.
+
+## 7. Internal Working
+
+How does Locust generate massive load using Python (which is normally single-threaded due to the GIL)?
+
+Locust uses **gevent** (greenlets). Instead of spawning real OS threads (which consume lots of RAM and CPU context switching), it uses highly efficient asynchronous coroutines. A single Locust worker process can simulate thousands of concurrent users making non-blocking HTTP requests.
+
+If you need more than ~5,000 users, you run Locust in **Distributed Mode**, where one Master node coordinates dozens of Worker nodes across multiple servers to generate hundreds of thousands of requests per second.
+
+## 8. Performance Table
+
+| Load Type | System Behavior | Fixes Required |
+|---|---|---|
+| Normal Load (100 RPS) | Response time flat (50ms). | None. |
+| Stress Load (1000 RPS) | Response time spikes to 2000ms. DB CPU hits 100%. | Add Database Indexes. Increase Connection Pool. |
+| Breakpoint Load (5000+ RPS) | Server returns 502 Bad Gateway. | Horizontal scaling (add more servers), add Caching (Redis). |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Load Testing vs Stress Testing? | Load testing verifies performance at expected traffic levels. Stress testing pushes the system until it breaks to find the absolute limit. |
+| Why shouldn't you load test from your local Wi-Fi? | Your home router/ISP will become the bottleneck, not your server. You must run load tests from Cloud VMs (like EC2). |
+| What is the 99th Percentile (p99) latency? | The maximum time it took for the fastest 99% of requests. It reveals worst-case scenarios that averages (means) hide. |
+
+## 10. Tricky Questions & Edge Cases
+
+If your API responds perfectly during a load test, but your database crashes 10 minutes *after* the test ends, what happened?
+
+**Answer:** You likely have a **Connection Leak** or **Memory Leak**.
+The virtual users opened thousands of database connections or allocated objects, but your Python code failed to properly close the connections or garbage collect the memory. The server survived the initial wave, but slowly bled to death afterward.
+This is why you must run **Soak Tests** (moderate load sustained over 12-24 hours) to catch memory leaks.
+
+## 11. Real-World Usage
+
+- **Event Launches:** Ticketmaster load testing their queue system before Taylor Swift tickets go on sale.
+- **Microservices:** Load testing a single internal Go/Python service to ensure it doesn't become the bottleneck for the whole company.
+- **Cloud Auto-Scaling Verification:** Spiking traffic intentionally to prove that AWS/Kubernetes automatically spins up new servers fast enough to handle the load.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Isolate test data. Use test accounts and a cloned database. | Run a load test against your live production database (you will take down the company). |
+| Look at p95 and p99 latency metrics, not just the Average. | Assume the test is successful just because the average response time is low. |
+| Use randomized data (`random.randint()`) in requests. | Send the exact same request payload 10,000 times (it will just hit the cache and prove nothing). |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+Bro, when you run a serious load test, you aren't just testing your code. You are testing your Load Balancer (AWS ALB), your Web Gateway (Gunicorn/Uvicorn), your Connection Pooler (PgBouncer), and your Database (Postgres).
+Before you start the test, open your monitoring dashboards (Datadog/Grafana) for EVERY layer. When the system breaks, the dashboard will tell you exactly which layer failed first.
+
+## 14. Common Mistakes
+
+- **Caching Trap:** Writing a load test that queries `GET /api/users/1` exactly 50,000 times. The database caches that specific row in RAM immediately. The test shows 1ms response times, making you think your system is infinitely scalable. In reality, real users query 50,000 *different* IDs, which bypasses the cache and crashes the DB.
+- **DDoS-ing Yourself:** Running a massive load test without notifying your DevOps team or Cloud Provider. AWS might think you are under a real DDoS attack and blackhole your servers.
+
+## 15. Related Topics
+
+- Caching
+- Profiling
+- Connection Pooling
+- Scalable Python Architecture

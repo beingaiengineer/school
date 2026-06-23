@@ -2,6 +2,205 @@
 sidebar_position: 4
 ---
 
-# Orm Vs Raw Sql
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Orm Vs Raw Sql.
+# ORM vs Raw SQL
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | ORM vs Raw SQL |
+| Difficulty | Intermediate |
+| Used For | Deciding how your app talks to the database |
+| Main Strength (ORM) | Developer speed, maintainability, database independence |
+| Main Strength (Raw SQL) | Ultimate performance, complex analytics |
+
+Bro, the debate between using an ORM (Object Relational Mapper like SQLAlchemy) and writing Raw SQL (using `psycopg2` or `sqlite3`) is one of the oldest fights in software engineering. The short answer? You need both. ORMs are for your standard CRUD app logic, Raw SQL is for your heavy-duty data crunching.
+
+## 2. Real-World Analogy
+
+Think of getting food at a restaurant.
+
+**Using an ORM** is like ordering from a menu via a waiter. You say "I'll have the burger" (Python code). The waiter (ORM) translates that to the kitchen staff, handles the plating, and brings you a nice, clean burger on a plate (Python object). It's easy, clean, and standard.
+
+**Using Raw SQL** is like walking into the kitchen, pushing the chef aside, grabbing the raw beef, and cooking the burger exactly the way you want it. It requires more skill, it's messier, but if you need a highly specific, custom meal cooked in 30 seconds flat, it's the only way to do it.
+
+## 3. Concept Explanation
+
+**ORM (Object Relational Mapper):**
+An ORM translates Python classes and objects into database tables and rows. You write Python, it writes SQL.
+
+**Raw SQL:**
+You write literal SQL strings (`SELECT * FROM users WHERE age > 20`) in your Python code and pass them to a driver to execute.
+
+You use an ORM when:
+- You are building standard web features (Create User, Update Post).
+- You want to change databases easily (e.g., SQLite for testing, Postgres for production).
+- You want security features like automatic SQL Injection prevention.
+
+You use Raw SQL when:
+- You are writing massive reporting queries that join 10 tables.
+- You need to use database-specific features (like Postgres specialized JSONB operators).
+- The ORM is generating inefficient SQL and you need manual optimization.
+
+<LearningFlow
+  diagram={{
+    title: 'ORM vs Raw SQL Flow',
+    height: 400,
+    miniMap: true,
+    nodes: [
+      {id: 'dev', title: 'Developer', detail: 'Needs Data', x: 250, y: 50, kind: 'core'},
+      {id: 'orm_path', title: 'ORM Path', detail: 'session.query(User)', x: 100, y: 150, kind: 'tool'},
+      {id: 'sql_path', title: 'Raw SQL Path', detail: 'SELECT * FROM users', x: 400, y: 150, kind: 'warning'},
+      {id: 'translation', title: 'Translation Layer', detail: 'Generates SQL string', x: 100, y: 250, kind: 'process'},
+      {id: 'db', title: 'Database', detail: 'Executes Query', x: 250, y: 350, kind: 'data'},
+    ],
+    edges: [
+      {source: 'dev', target: 'orm_path', label: 'Writes Python'},
+      {source: 'dev', target: 'sql_path', label: 'Writes SQL string'},
+      {source: 'orm_path', target: 'translation', label: 'Abstracts'},
+      {source: 'translation', target: 'db', label: 'Sends SQL'},
+      {source: 'sql_path', target: 'db', label: 'Directly sends SQL'},
+    ],
+  }}
+/>
+
+## 4. Syntax Table
+
+| Method | Example |
+|---|---|
+| ORM | `session.query(User).filter_by(name="Bro").first()` |
+| Raw SQL | `cursor.execute("SELECT * FROM users WHERE name='Bro'")` |
+
+## 5. Beginner Example
+
+Let's look at the same task done both ways: Getting an active user's email.
+
+**The ORM Way:**
+```python
+# Clean, readable, Pythonic
+user = session.query(User).filter(
+    User.name == "Bro",
+    User.is_active == True
+).first()
+
+print(user.email)
+```
+
+**The Raw SQL Way:**
+```python
+# String based, prone to typos, returning tuples not objects
+cursor.execute("""
+    SELECT email
+    FROM users
+    WHERE name = %s AND is_active = %s
+""", ("Bro", True))
+
+row = cursor.fetchone()
+print(row[0]) # Have to access by index or key, not object attribute
+```
+
+## 6. Real-World Engineering Example
+
+Bro, here is where Raw SQL beats the ORM. Imagine we need a complex report calculating the monthly revenue, grouped by user, but only for users who have purchased more than 5 items, joined with their shipping address.
+
+Writing this in ORM syntax becomes a nightmare of `func.sum`, `.group_by`, `.join`, and aliases that takes an hour to write and is impossible to read.
+
+Instead, senior engineers just write the SQL:
+
+```python
+from sqlalchemy import text
+
+# In production, we often use SQLAlchemy's text() to run raw SQL securely
+complex_query = text("""
+    SELECT u.name, SUM(o.total) as total_spent, a.city
+    FROM users u
+    JOIN orders o ON u.id = o.user_id
+    JOIN addresses a ON u.id = a.user_id
+    WHERE o.created_at >= :start_date
+    GROUP BY u.name, a.city
+    HAVING COUNT(o.id) > 5
+""")
+
+results = session.execute(complex_query, {"start_date": "2023-01-01"})
+for row in results:
+    print(f"{row.name} from {row.city} spent {row.total_spent}")
+```
+
+## 7. Internal Working
+
+ORMs internally maintain an **Identity Map**. If you query `User(id=1)` twice, the ORM realizes it already has that object in memory and just returns the reference, saving a database trip.
+
+Raw SQL drivers don't do this. If you run `SELECT * FROM users WHERE id=1` twice, it hits the database twice, and creates two separate tuples in memory.
+
+Furthermore, ORMs have to parse your Python code, construct an Abstract Syntax Tree (AST), compile that into a SQL string, and then parse the database return rows into Python objects. This translation costs CPU cycles.
+
+## 8. Performance Table
+
+| Operation | ORM Speed | Raw SQL Speed |
+|---|---|---|
+| Single row fetch | Fast | Very Fast |
+| Inserting 100k rows | Slow (Object overhead) | Lightning Fast (Bulk copy) |
+| Complex Joins | Variable (can generate bad SQL) | Optimized (you control the execution plan) |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why use an ORM? | Developer productivity, maintainable code, and avoiding SQL injection. |
+| When should you NOT use an ORM? | Massive bulk inserts, complex analytical reporting, or strict performance bottlenecks. |
+| Does Raw SQL guarantee better performance? | Not always. A poorly written raw SQL query is worse than a properly indexed ORM query. |
+| How do ORMs prevent SQL Injection? | They automatically use parameterized queries (bind variables) behind the scenes. |
+| What is the N+1 problem in ORMs? | The ORM lazily fetching related data in a loop, causing hundreds of queries instead of one join. |
+
+## 10. Tricky Questions & Edge Cases
+
+Look at this Python code:
+
+```python
+# User inputs their name in a web form
+user_input = "Bro' OR '1'='1"
+
+# BAD: Raw SQL String Concatenation
+cursor.execute(f"SELECT * FROM users WHERE name = '{user_input}'")
+```
+
+**What happens?**
+Bro, you just got hacked. This is a classic SQL Injection. The query becomes `SELECT * FROM users WHERE name = 'Bro' OR '1'='1'`. It returns every user in the database.
+
+ORMs prevent this automatically. If you must use Raw SQL, ALWAYS use parameters:
+`cursor.execute("SELECT * FROM users WHERE name = %s", (user_input,))`
+
+## 11. Real-World Usage
+
+- **Django / FastAPI Apps:** 95% of the codebase uses the ORM.
+- **Data Engineering / ETL:** 95% of the codebase uses Raw SQL (or tools like PySpark).
+- **Fintech / Trading:** Highly optimized Raw SQL stored procedures for millisecond execution.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use the ORM for 80% of standard application logic. | Try to force complex analytical reports into the ORM. |
+| Drop down to Raw SQL when performance demands it. | Concatenate strings into Raw SQL queries. |
+| Use an ORM's migration tool (like Alembic). | Manually track schema changes in a text file. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+Bro, the biggest mistake juniors make is being religious about one side. "We must use the ORM for everything!" or "ORMs are slow, we must write pure SQL!".
+A senior engineer uses the ORM for the standard CRUD operations to move fast, and surgically uses Raw SQL (often via `SQLAlchemy text()`) for the 5% of queries that are complex bottlenecks.
+
+## 14. Common Mistakes
+
+- **Reinventing the ORM:** Starting with Raw SQL, then writing helper functions to build SQL strings dynamically, until you've accidentally built a terrible, buggy custom ORM.
+- **ORM Abuse:** Using the ORM to download 50,000 rows into Python objects just to calculate a sum, instead of running a `SUM()` query in the database.
+- **Ignoring Indexes:** Thinking that Raw SQL makes things fast automatically. If you don't have indexes on your tables, both the ORM and Raw SQL will be agonizingly slow.
+
+## 15. Related Topics
+
+- SQLAlchemy
+- PostgreSQL
+- Indexing
+- Connection Pooling

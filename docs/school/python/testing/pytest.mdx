@@ -2,6 +2,200 @@
 sidebar_position: 1
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Pytest
 
-Placeholder: introduce Pytest.
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Pytest |
+| Difficulty | Beginner to Intermediate |
+| Used For | Writing and running tests in Python |
+| Main Strength | No boilerplate code, powerful fixtures, and detailed failure output |
+| Common Mistake | Using the old `unittest` library instead of Pytest for new projects |
+
+Bro, Pytest is the undisputed champion of testing in Python. If you are writing tests, you should be using Pytest. It takes the pain out of testing by removing the need for clunky class-based structures and letting you write simple, readable Python functions to verify your code.
+
+## 2. Real-World Analogy
+
+Think of Pytest like a strict, but incredibly helpful, Quality Assurance (QA) inspector at a car factory.
+
+If you (the developer) build a car engine, you don't just ship it. You hand it to the QA inspector. The inspector hooks it up to diagnostic machines, runs it at 10,000 RPM, checks the temperature, and sees if it explodes.
+If it passes, great. If it fails, the inspector doesn't just say "Failed." They give you a detailed report: "Failed at 8,000 RPM because cylinder 3 lost pressure." That detailed report is exactly what Pytest does for your code.
+
+## 3. Concept Explanation
+
+Pytest is a testing framework. It automatically discovers test files in your project, runs the functions inside them, and reports the results.
+
+You use Pytest to:
+- Verify that your functions return what they are supposed to.
+- Ensure that edge cases (like passing `None` or negative numbers) are handled correctly.
+- Refactor your code with confidence, knowing that if you break something, Pytest will catch it immediately.
+
+<LearningFlow
+  diagram={{
+    title: 'Pytest Execution Flow',
+    height: 400,
+    miniMap: true,
+    nodes: [
+      {id: 'dev', title: 'Developer', detail: 'Runs "pytest"', x: 50, y: 150, kind: 'core'},
+      {id: 'discovery', title: 'Test Discovery', detail: 'Finds test_*.py files', x: 250, y: 150, kind: 'process'},
+      {id: 'fixtures', title: 'Fixtures Setup', detail: 'Creates mock DBs/data', x: 450, y: 150, kind: 'tool'},
+      {id: 'execute', title: 'Execute Tests', detail: 'Runs assert statements', x: 650, y: 150, kind: 'process'},
+      {id: 'pass', title: 'Pass', detail: 'Green text! Ship it!', x: 850, y: 50, kind: 'output'},
+      {id: 'fail', title: 'Fail', detail: 'Red text! Shows exact error.', x: 850, y: 250, kind: 'warning'},
+    ],
+    edges: [
+      {source: 'dev', target: 'discovery', label: 'Command'},
+      {source: 'discovery', target: 'fixtures', label: 'Prepares'},
+      {source: 'fixtures', target: 'execute', label: 'Injects data'},
+      {source: 'execute', target: 'pass', label: 'If asserts are True'},
+      {source: 'execute', target: 'fail', label: 'If asserts are False'},
+    ],
+  }}
+/>
+
+## 4. Syntax Table
+
+| Operation | Pytest Example |
+|---|---|
+| Basic Test | `def test_math(): assert 1 + 1 == 2` |
+| Expecting an Error | `with pytest.raises(ZeroDivisionError): 1 / 0` |
+| Parametrize (Multiple Inputs) | `@pytest.mark.parametrize("x, expected", [(1, 2), (3, 4)])` |
+| Fixture (Setup Data) | `@pytest.fixture def user(): return User("Bro")` |
+
+## 5. Beginner Example
+
+Here is how simple it is to test a function using Pytest.
+
+**`math_functions.py`** (The code you wrote)
+```python
+def calculate_discount(price, discount_percent):
+    if discount_percent < 0 or discount_percent > 100:
+        raise ValueError("Invalid discount")
+    return price - (price * (discount_percent / 100))
+```
+
+**`test_math_functions.py`** (The Pytest file)
+```python
+import pytest
+from math_functions import calculate_discount
+
+def test_calculate_discount_normal():
+    # Arrange & Act
+    final_price = calculate_discount(100, 20)
+    # Assert
+    assert final_price == 80.0
+
+def test_calculate_discount_invalid():
+    # Assert that a ValueError is raised
+    with pytest.raises(ValueError):
+        calculate_discount(100, 150)
+```
+
+Bro, notice how clean that is? No classes. No `self.assertEqual()`. Just standard Python `assert` statements.
+
+## 6. Real-World Engineering Example
+
+In the real world, tests often need setup data (like a fake database connection or an authenticated user). Pytest handles this brilliantly using **Fixtures**.
+
+```python
+import pytest
+
+# 1. Define a Fixture
+@pytest.fixture
+def auth_token():
+    # This simulates generating a JWT token for a test user
+    return "Bearer fake-jwt-token-123"
+
+# 2. Pytest automatically injects the fixture into the test!
+def test_access_protected_route(auth_token):
+    headers = {"Authorization": auth_token}
+
+    # Simulate API call
+    response_status = 200 # fake_api_call("/profile", headers=headers)
+
+    assert response_status == 200
+    assert "Bearer " in auth_token
+```
+
+## 7. Internal Working
+
+When you type `pytest` in your terminal:
+1. **Discovery:** It scans your directories looking for files named `test_*.py` or `*_test.py`.
+2. **Collection:** Inside those files, it looks for functions that start with `test_`.
+3. **Execution:** It runs them.
+4. **Assertion Rewriting:** This is Pytest's superpower. It intercepts standard Python `assert` statements and rewrites them so that if `assert a == b` fails, Pytest prints EXACTLY what the value of `a` and `b` were, instead of just throwing an `AssertionError`.
+
+## 8. Performance Table
+
+| Feature | Impact | Note |
+|---|---|---|
+| Running 1000 Unit Tests | Extremely Fast | Usually takes < 1 second. |
+| Fixtures with scope="module" | Performance Boost | Creates the test data once per file, instead of once per test. |
+| Pytest-xdist | Huge Speedup | A plugin that runs tests in parallel across multiple CPU cores. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Pytest vs Unittest? | Unittest is built-in but requires boilerplate OOP code. Pytest is third-party, uses simple functions, and has powerful fixtures. |
+| What is a Pytest Fixture? | A function that provides data, mock objects, or setup state to test functions. |
+| How do you test that an exception is raised? | Use the `with pytest.raises(ExceptionType):` context manager. |
+| What is `pytest.mark.parametrize`? | A decorator that allows you to run the exact same test function multiple times with different inputs. |
+
+## 10. Tricky Questions & Edge Cases
+
+Look at this parametrization. It is one of the most powerful features of Pytest.
+
+```python
+import pytest
+
+# We want to test our login function with 3 different scenarios
+@pytest.mark.parametrize("username, password, expected_result", [
+    ("admin", "secret123", True),   # Valid login
+    ("admin", "wrong", False),      # Wrong password
+    ("unknown", "secret123", False) # Unknown user
+])
+def test_login(username, password, expected_result):
+    # This single function will be run 3 times by Pytest!
+    result = login_function(username, password)
+    assert result == expected_result
+```
+
+This saves you from writing 3 separate test functions for identical logic.
+
+## 11. Real-World Usage
+
+- **CI/CD Pipelines:** GitHub Actions or Jenkins will run `pytest` automatically on every Pull Request. If tests fail, the merge is blocked.
+- **FastAPI / Django:** Used extensively alongside `TestClient` to simulate HTTP requests and verify API responses.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Name files `test_*.py` and functions `test_*` so Pytest finds them automatically. | Put `assert` statements inside a `try/except` block. Let Pytest handle errors. |
+| Use fixtures to manage setup and teardown logic. | Copy-paste the same setup code into 15 different test functions. |
+| Keep tests independent. Test A should not rely on Test B finishing first. | Write tests that rely on external live APIs (use mocking instead). |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+Bro, as your codebase grows, your test suite will get slow. A test suite that takes 20 minutes to run destroys developer productivity.
+Use `pytest-xdist` to run tests in parallel (`pytest -n auto`).
+Also, aggressively use fixture scoping (`@pytest.fixture(scope="session")`) for heavy operations like spinning up a database container, so it only happens once for the entire test run.
+
+## 14. Common Mistakes
+
+- **Testing the Framework:** Writing tests to verify that SQLAlchemy can save to the database. Don't test the library; test YOUR logic.
+- **Flaky Tests:** Tests that pass 90% of the time and fail 10% of the time (usually due to relying on the current time, or unpredictable network latency).
+- **Ignoring Coverage:** Writing 10 tests for a simple math function, but writing 0 tests for your complex payment processing logic. Use `pytest-cov` to measure which lines of code are actually being tested.
+
+## 15. Related Topics
+
+- Unit Testing
+- Mocking
+- Integration Testing
+- CI/CD Pipelines

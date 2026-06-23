@@ -2,6 +2,219 @@
 sidebar_position: 5
 ---
 
-# Transactions
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Transactions.
+# Database Transactions
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Database Transactions |
+| Difficulty | Intermediate |
+| Used For | Ensuring data integrity during multiple operations |
+| Main Strength | ACID properties (Atomicity, Consistency, Isolation, Durability) |
+| Common Mistake | Leaving a transaction open for too long, locking up the database |
+
+Bro, transactions are the safety net of your database. A transaction ensures that a group of database operations either all succeed completely, or all fail together. You never want a scenario where money leaves one bank account but doesn't arrive in the other.
+
+## 2. Real-World Analogy
+
+Think of a transaction like buying a house.
+
+1. You sign the papers.
+2. The bank transfers the money.
+3. The seller hands over the keys.
+
+If ANY of those steps fail (e.g., the bank transfer fails), the entire deal is canceled (rolled back). You don't end up with half a house or missing money. The transaction guarantees it's "all or nothing."
+
+## 3. Concept Explanation
+
+A transaction bundles multiple SQL statements into a single unit of work.
+
+Transactions follow the **ACID** properties:
+- **Atomicity:** All operations succeed, or none do (All or nothing).
+- **Consistency:** The database moves from one valid state to another.
+- **Isolation:** Concurrent transactions don't interfere with each other.
+- **Durability:** Once committed, the changes are permanent (even if the power goes out).
+
+You use transactions when:
+- You are updating multiple related tables (e.g., creating an Order and deducting Inventory).
+- You are processing payments.
+- You need absolute guarantee of data integrity.
+
+<LearningFlow
+  diagram={{
+    title: 'Transaction Flow',
+    height: 400,
+    miniMap: true,
+    nodes: [
+      {id: 'start', title: 'BEGIN', detail: 'Start Transaction', x: 250, y: 50, kind: 'core'},
+      {id: 'op1', title: 'Deduct Account A', detail: 'UPDATE balance - 100', x: 250, y: 150, kind: 'process'},
+      {id: 'op2', title: 'Add Account B', detail: 'UPDATE balance + 100', x: 250, y: 250, kind: 'process'},
+      {id: 'commit', title: 'COMMIT', detail: 'Success! Save changes.', x: 100, y: 350, kind: 'output'},
+      {id: 'rollback', title: 'ROLLBACK', detail: 'Error! Undo everything.', x: 400, y: 350, kind: 'warning'},
+    ],
+    edges: [
+      {source: 'start', target: 'op1', label: 'Executes'},
+      {source: 'op1', target: 'op2', label: 'Executes'},
+      {source: 'op2', target: 'commit', label: 'If successful'},
+      {source: 'op1', target: 'rollback', label: 'If fails', type: 'step'},
+      {source: 'op2', target: 'rollback', label: 'If fails', type: 'step'},
+    ],
+  }}
+/>
+
+## 4. Syntax Table
+
+| SQL Command | Python / SQLAlchemy equivalent | Purpose |
+|---|---|---|
+| `BEGIN` | `session.begin()` | Starts the transaction |
+| `COMMIT` | `session.commit()` | Saves changes permanently |
+| `ROLLBACK` | `session.rollback()` | Undoes uncommitted changes |
+
+## 5. Beginner Example
+
+Let's look at how we handle a simple money transfer using Python and SQLite.
+
+```python
+import sqlite3
+
+# Connect to database
+conn = sqlite3.connect('bank.db')
+cursor = conn.cursor()
+
+try:
+    # 1. Start the transaction explicitly (though sqlite does it automatically for DML)
+    conn.execute('BEGIN TRANSACTION')
+
+    # 2. Deduct from Alice
+    cursor.execute("UPDATE accounts SET balance = balance - 100 WHERE name = 'Alice'")
+
+    # Simulate an error!
+    # raise ValueError("Network crashed!")
+
+    # 3. Add to Bob
+    cursor.execute("UPDATE accounts SET balance = balance + 100 WHERE name = 'Bob'")
+
+    # 4. If we reach here, both succeeded. Save it!
+    conn.commit()
+    print("Transfer successful!")
+
+except Exception as e:
+    # 5. If ANYTHING failed, undo everything!
+    conn.rollback()
+    print("Transfer failed, reverting changes.")
+```
+
+## 6. Real-World Engineering Example
+
+In production, you usually use a Context Manager (the `with` statement) or a decorator so you don't forget to call `commit()` or `rollback()`. Here is how it's done in SQLAlchemy.
+
+```python
+from sqlalchemy.orm import Session
+
+def process_order(session: Session, user_id: int, product_id: int):
+    # Using a context manager automatically commits if no exception,
+    # and rolls back if an exception occurs!
+    with session.begin():
+        # 1. Create order
+        order = Order(user_id=user_id, product_id=product_id)
+        session.add(order)
+
+        # 2. Deduct inventory
+        product = session.query(Product).filter_by(id=product_id).with_for_update().first()
+        if product.stock < 1:
+            raise ValueError("Out of stock!")
+        product.stock -= 1
+
+        # 3. Deduct wallet
+        user = session.query(User).filter_by(id=user_id).with_for_update().first()
+        user.wallet -= product.price
+
+# If ValueError is raised, the entire block is rolled back.
+```
+
+Bro, notice the `with_for_update()`? That's a row lock. It prevents another concurrent transaction from buying the exact same product at the exact same millisecond.
+
+## 7. Internal Working
+
+Databases manage transactions using **Write-Ahead Logging (WAL)** and **Locks**.
+
+When you run an `UPDATE` inside a transaction, the database doesn't immediately overwrite the actual data file on the hard drive.
+1. It writes the intention to a Log file.
+2. It modifies the data in memory (RAM).
+3. It places a "Lock" on that row so nobody else can touch it.
+
+When you `COMMIT`, it flushes the memory to disk and releases the lock.
+When you `ROLLBACK`, it throws away the memory changes and releases the lock.
+
+## 8. Performance Table
+
+| Action | Performance Impact | Note |
+|---|---|---|
+| Keeping transaction open | High (Bad) | Holds locks, blocks other users from reading/writing. |
+| Large bulk transactions | Moderate | Batching 1000 inserts in 1 transaction is vastly faster than 1000 separate transactions. |
+| Row locks (`FOR UPDATE`) | Moderate | Essential for correctness, but creates bottlenecks if everyone wants the same row. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does ACID stand for? | Atomicity, Consistency, Isolation, Durability. |
+| What is a Deadlock? | When Trans A is waiting for Trans B to finish, and Trans B is waiting for Trans A to finish. Both freeze forever. |
+| What happens if a server crashes during a transaction? | The database will automatically Rollback the incomplete transaction upon reboot using its logs. |
+| Why shouldn't you do an API call inside a DB transaction? | API calls are slow. If it takes 5 seconds, you are locking database rows for 5 seconds, crashing performance. |
+
+## 10. Tricky Questions & Edge Cases
+
+Look at this code snippet. What is wrong with it?
+
+```python
+with session.begin():
+    user = session.query(User).filter_by(id=1).first()
+    user.status = "active"
+
+    # Sending a welcome email
+    response = requests.post("https://api.email.com/send", json={"to": user.email})
+
+    if response.status_code != 200:
+        raise Exception("Email failed")
+```
+
+**What happens?**
+Bro, this is a massive production mistake! You have an open database transaction while making a network request (`requests.post`).
+If the email API takes 10 seconds to respond, your database transaction stays open for 10 seconds. Any other process trying to read or update that user will freeze.
+
+Never put external network calls inside a database transaction. Update the DB, commit, THEN send the email (preferably using a background queue).
+
+## 11. Real-World Usage
+
+- **E-Commerce:** Ensuring inventory isn't oversold during Black Friday sales.
+- **Banking:** Processing thousands of transfers per second without losing a penny.
+- **Microservices:** Implementing the "Saga Pattern" to handle transactions that span across multiple different databases.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Keep transactions as short and fast as possible. | Make API calls or do heavy computation inside a transaction. |
+| Use `try/except/finally` or Context Managers. | Forget to call `rollback()` on error. |
+| Batch operations (e.g. 1 transaction for 100 inserts). | Do 100 separate transactions in a loop. |
+
+## 13. Production Notes
+
+> ⚠ Production Note:
+Isolation levels matter. By default, most databases use "Read Committed". If you are building financial software where you cannot tolerate phantom reads, you might need to escalate the isolation level to "Serializable". However, Serializable transactions are very slow and frequently cause Deadlocks, so you must write your Python code to automatically retry failed transactions.
+
+## 14. Common Mistakes
+
+- **Swallowing Exceptions:** Catching an error, printing it, but forgetting to explicitly `rollback()`. The transaction stays in an aborted state and breaks future queries on that connection.
+- **Deadlocks:** Accessing tables in different orders. Transaction A updates Table1 then Table2. Transaction B updates Table2 then Table1. Boom, deadlock. Always access tables in the same predictable order.
+
+## 15. Related Topics
+
+- PostgreSQL
+- ORM vs Raw SQL
+- Locks and Semaphores
+- Connection Pooling
