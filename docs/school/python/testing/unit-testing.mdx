@@ -2,6 +2,162 @@
 sidebar_position: 2
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Unit Testing
 
-Placeholder: introduce Unit Testing.
+## 1. Quick Summary
+Bro, Unit Testing is the foundation of a healthy codebase. It involves testing the smallest possible "units" of code (usually functions or methods) in absolute isolation from the rest of the system. If your code is a car engine, unit testing is testing every single screw and piston on a workbench before assembling the car.
+
+## 2. Real-World Analogy
+Imagine you are building a smartphone. You don't just put all the pieces together and hope it turns on. First, you test the screen on a machine. Then you test the battery by itself. Then the camera module. If the camera module fails its solo test (Unit Test), you know exactly what to fix without worrying if the battery caused it.
+
+## 3. Concept Explanation
+A unit test should execute incredibly fast (milliseconds). To achieve this, it must be completely isolated. It should **never** talk to a real database, hit an external API, or read from the file system.
+We structure unit tests using the **Arrange, Act, Assert (AAA)** pattern:
+- **Arrange:** Set up the initial state and inputs.
+- **Act:** Call the function you want to test.
+- **Assert:** Verify the output or behavior matches expectations.
+
+## 4. Syntax Table
+
+| Phase | Description | Example (using Pytest) |
+|---|---|---|
+| Arrange | Prepare data | `price = 100; discount = 0.2` |
+| Act | Execute function | `result = calculate_final_price(price, discount)` |
+| Assert | Verify output | `assert result == 80` |
+
+## 5. Beginner Example
+
+Let's write a unit test for a simple function.
+
+```python
+# shopping.py
+def apply_discount(price: float, discount_percent: float) -> float:
+    if discount_percent < 0 or discount_percent > 100:
+        raise ValueError("Invalid discount")
+    return price - (price * (discount_percent / 100))
+
+# test_shopping.py
+import pytest
+from shopping import apply_discount
+
+def test_apply_discount_valid():
+    # Arrange
+    price = 100
+    discount = 20
+
+    # Act
+    final_price = apply_discount(price, discount)
+
+    # Assert
+    assert final_price == 80.0
+
+def test_apply_discount_invalid_percent():
+    # Arrange & Act & Assert
+    with pytest.raises(ValueError):
+        apply_discount(100, 150)
+```
+
+## 6. Real-World Engineering Example
+In real engineering, code often depends on other classes. To maintain isolation in a unit test, we use Dependency Injection or Mocking to fake the external dependencies.
+
+```python
+# notification.py
+class EmailService:
+    def send(self, email, message):
+        # Imagine this makes a real SMTP network call
+        pass
+
+class UserRegistration:
+    def __init__(self, email_service):
+        self.email_service = email_service
+
+    def register(self, email):
+        # Domain logic
+        print(f"Registered {email} in DB")
+        # External dependency call
+        self.email_service.send(email, "Welcome bro!")
+        return True
+
+# test_notification.py
+from unittest.mock import Mock
+from notification import UserRegistration
+
+def test_user_registration_sends_email():
+    # Arrange: Use a Mock to simulate the EmailService (no real emails sent!)
+    fake_email_service = Mock()
+    registration = UserRegistration(email_service=fake_email_service)
+
+    # Act
+    result = registration.register("bro@example.com")
+
+    # Assert
+    assert result is True
+    # Verify the external dependency was called correctly
+    fake_email_service.send.assert_called_once_with("bro@example.com", "Welcome bro!")
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'Unit Test File' }, position: { x: 250, y: 50 } },
+    { id: '2', type: 'process', data: { label: 'Arrange (Setup Mocks/Data)' }, position: { x: 250, y: 150 } },
+    { id: '3', type: 'process', data: { label: 'Act (Call Target Function)' }, position: { x: 250, y: 250 } },
+    { id: '4', type: 'data', data: { label: 'Target Function Executing' }, position: { x: 450, y: 250 } },
+    { id: '5', type: 'output', data: { label: 'Assert (Verify Result/Mocks)' }, position: { x: 250, y: 350 } },
+    { id: 'e1-2', source: '1', target: '2', label: '' },
+    { id: 'e2-3', source: '2', target: '3', label: '' },
+    { id: 'e3-4', source: '3', target: '4', label: 'Isolated Call' },
+    { id: 'e4-3', source: '4', target: '3', label: 'Return' },
+    { id: 'e3-5', source: '3', target: '5', label: '' }
+  ]}
+/>
+
+A unit test framework runs in a separate process. It loads your code into memory, swaps out external network/file dependencies with stubs or mocks, executes the CPU-bound logic, and checks the results against the expected state.
+
+## 8. Performance Table
+
+| Test Type | Execution Time | Isolation Level | Coverage |
+|---|---|---|---|
+| Unit Test | ~1-5 milliseconds | High (Mocks dependencies) | Small logic chunks |
+| Integration Test | ~100-500 milliseconds | Low (Hits real DB/Network) | Subsystems combined |
+| End-to-End Test | Seconds to Minutes | None (Hits full stack) | Entire user flow |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the AAA pattern? | Arrange (setup data), Act (call function), Assert (verify outcome). |
+| What should a unit test NOT do? | Talk to a real database, communicate across the network, read/write files, or rely on other unit tests running first. |
+| What is test coverage? | The percentage of your source code lines that are executed during your automated tests. 80% is a common industry standard. |
+
+## 10. Tricky Questions & Edge Cases
+Bro, beware of "Tautological Tests" (tests that test the test).
+If you write:
+`expected = a + b`
+`assert add(a, b) == expected`
+You haven't tested the logic; you just duplicated the logic in the test! Always use hardcoded expected values in unit tests, e.g., `assert add(2, 2) == 4`.
+
+## 11. Real-World Usage
+Unit tests run constantly. On every file save, on every git commit (via pre-commit hooks), and in CI/CD pipelines before code is allowed to be merged into the `main` branch.
+
+## 12. Best Practices
+- Focus on testing behavior, not implementation details.
+- Only test public methods. Let the public methods test the private methods internally.
+- Keep tests deterministic (they should pass 100% of the time. If they fail randomly, they are "flaky" and useless).
+- One logical assertion concept per test.
+
+## 13. Production Notes
+If your code is hard to unit test (e.g., requires complex setup, deep mocking), it usually means your code is poorly designed. High coupling makes testing hard. Refactoring to use dependency injection usually fixes this.
+
+## 14. Common Mistakes
+- **Testing the Mock:** You mock an API response, and then assert that the API returned that response. You learned nothing.
+- **Flaky tests with Time:** Using `datetime.now()` in your logic and trying to assert against it in a test. Always mock the clock or pass time as an argument.
+- **Ignoring Edge Cases:** Only testing the "happy path" and ignoring nulls, negative numbers, or missing keys.
+
+## 15. Related Topics
+- `testing/pytest.mdx`
+- `testing/mocking.mdx`
+- `testing/integration-testing.mdx`

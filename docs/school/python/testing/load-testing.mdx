@@ -2,6 +2,145 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Load Testing
 
-Placeholder: introduce Load Testing.
+## 1. Quick Summary
+Bro, load testing is how you prove your app won't crash when it goes viral. While unit and integration tests prove your code works for *one* user, load testing proves it works for *thousands* of concurrent users. It measures response times, throughput, and system resource usage under heavy stress.
+
+## 2. Real-World Analogy
+Imagine a bridge. A unit test is driving a single car across it to make sure it holds. Load testing is parking 500 semi-trucks on the bridge simultaneously during a hurricane to see if the steel beams snap.
+
+## 3. Concept Explanation
+Load testing tools (like Locust or k6) simulate thousands of virtual users hitting your endpoints at the same time. You define a "scenario" (e.g., login, browse products, add to cart), and the tool executes that scenario concurrently.
+You are looking for bottlenecks: Does the database connection pool run out? Does the CPU max out? Does memory leak and crash the server?
+
+## 4. Syntax Table
+
+| Tool | Language | Use Case | Example Command |
+|---|---|---|---|
+| **Locust** | Python | Complex, stateful user flows written in Python. | `locust -f load_test.py` |
+| **k6** | JavaScript | Ultra-high performance, massive concurrency. | `k6 run script.js` |
+| **Apache JMeter**| Java (GUI) | Legacy enterprise systems, complex setups. | `jmeter -n -t test.jmx` |
+| **wrk** | C | Extremely fast, simple HTTP benchmarking. | `wrk -t12 -c400 -d30s http://api`|
+
+## 5. Beginner Example
+
+Let's use **Locust**, which is built in Python, making it perfect for Python devs.
+
+```python
+# locustfile.py
+from locust import HttpUser, task, between
+
+class WebsiteUser(HttpUser):
+    # Wait between 1 and 5 seconds between tasks (simulates real human reading time)
+    wait_time = between(1, 5)
+
+    @task(3) # This task runs 3x more often than the others
+    def view_homepage(self):
+        self.client.get("/")
+
+    @task(1)
+    def view_about_page(self):
+        self.client.get("/about")
+
+    @task(1)
+    def api_search(self):
+        # We can test API endpoints directly
+        self.client.post("/api/search", json={"query": "python load testing"})
+
+# Run it: locust -f locustfile.py
+# Then open http://localhost:8089 to start the swarm!
+```
+
+## 6. Real-World Engineering Example
+In real engineering, we don't just hit a single endpoint. We simulate a full user journey, complete with authentication tokens and dynamic data.
+
+```python
+from locust import HttpUser, SequentialTaskSet, task
+import random
+
+class UserBehavior(SequentialTaskSet):
+
+    def on_start(self):
+        # 1. Login once when the user starts
+        res = self.client.post("/auth/login", json={"user": "bro", "pass": "secret"})
+        self.token = res.json().get("token")
+        self.headers = {"Authorization": f"Bearer {self.token}"}
+
+    @task
+    def load_dashboard(self):
+        # 2. Hit the dashboard
+        self.client.get("/api/dashboard", headers=self.headers)
+
+    @task
+    def update_profile(self):
+        # 3. Simulate a write operation
+        new_age = random.randint(20, 50)
+        self.client.put("/api/profile", json={"age": new_age}, headers=self.headers)
+
+class APITester(HttpUser):
+    tasks = [UserBehavior]
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'Load Generator (Locust Master)' }, position: { x: 250, y: 50 } },
+    { id: '2a', type: 'tool', data: { label: 'Worker Node 1 (1000 Users)' }, position: { x: 50, y: 150 } },
+    { id: '2b', type: 'tool', data: { label: 'Worker Node 2 (1000 Users)' }, position: { x: 450, y: 150 } },
+    { id: '3', type: 'process', data: { label: 'Target Application Server' }, position: { x: 250, y: 250 } },
+    { id: '4', type: 'data', data: { label: 'Database' }, position: { x: 250, y: 350 } },
+    { id: 'e1-2a', source: '1', target: '2a', label: 'Distribute' },
+    { id: 'e1-2b', source: '1', target: '2b', label: 'Distribute' },
+    { id: 'e2a-3', source: '2a', target: '3', label: 'Concurrent HTTP Requests' },
+    { id: 'e2b-3', source: '2b', target: '3', label: 'Concurrent HTTP Requests' },
+    { id: 'e3-4', source: '3', target: '4', label: 'Max Connections Hit' }
+  ]}
+/>
+
+To generate massive load, tools use asynchronous IO (like `gevent` in Locust or Go-routines in k6) to simulate thousands of users from a single machine without requiring thousands of actual OS threads. For extreme load, tests are distributed across multiple worker machines.
+
+## 8. Performance Table
+
+| Metric | What it means | Bad | Good |
+|---|---|---|---|
+| Response Time (P95) | 95% of users get a response faster than this time. | > 1000ms | < 200ms |
+| Requests Per Second (RPS) | Throughput. How many queries the server handles. | Drops under load | Stable as users increase |
+| Error Rate | Percentage of 5xx or timeout errors. | > 1% | 0% |
+| CPU Utilization | How hard the server is working. | 100% (Bottleneck) | 60-80% (Healthy usage) |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between Load Testing and Stress Testing? | Load testing checks if the system can handle the *expected* peak traffic. Stress testing pushes the system *beyond* limits until it breaks, to see how it fails and recovers. |
+| Why look at P95 latency instead of Average latency? | Average hides outliers. If 99 users load a page in 10ms, but 1 user takes 5000ms, the average is ~60ms (looks fine). P95 (or P99) exposes the bad experience that the slowest 5% of users are having. |
+| What is a common bottleneck found during load testing? | Database connection pool exhaustion. The app tries to open 500 DB connections, but the DB only allows 100. Requests queue up and time out. |
+
+## 10. Tricky Questions & Edge Cases
+Bro, never load test your app from your local laptop over Wi-Fi.
+Your Wi-Fi router or ISP will throttle the connections, and you'll think your app is failing at 200 RPS. In reality, your router died.
+**Fix:** Always run load generation tools from a cloud server (like an EC2 instance) in the same region as your application, using a hardwired gigabit network.
+
+## 11. Real-World Usage
+Major tech companies run load tests before big events (Black Friday, product launches, Super Bowl ads). It's also used to test auto-scaling rules (does Kubernetes actually spin up new pods when CPU hits 80%?).
+
+## 12. Best Practices
+- Never run a destructive load test against the Production database. Use a Staging environment that mirrors Production specs exactly.
+- Test read-heavy flows and write-heavy flows separately.
+- Gradually ramp up users (e.g., add 50 users per second). If you hit it with 10,000 users at second zero, you'll trigger DDoS protection, not app limits.
+
+## 13. Production Notes
+Load testing costs real money. If your infrastructure auto-scales, a massive load test will cause AWS to spin up 50 servers and upgrade your database. Make sure you scale down afterward.
+
+## 14. Common Mistakes
+- **Testing only the Homepage:** Caching makes the homepage lightning fast. You must test complex database queries (like search or checkout) to find real bottlenecks.
+- **Ignoring 3rd Party APIs:** If your app sends an email via SendGrid on signup, a load test of 10,000 signups might get your SendGrid account banned. Mock external services during load tests.
+
+## 15. Related Topics
+- `testing/integration-testing.mdx`
+- `performance/profiling.mdx`
+- `performance/caching.mdx`

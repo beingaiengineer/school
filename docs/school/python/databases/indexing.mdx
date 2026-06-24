@@ -2,6 +2,131 @@
 sidebar_position: 6
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Indexing
 
-Placeholder: introduce Indexing.
+## 1. Quick Summary
+Bro, an index is a data structure that improves the speed of data retrieval operations on a database table at the cost of slower writes and increased storage space. If your database queries are slow, 90% of the time, missing indexes are the culprit.
+
+## 2. Real-World Analogy
+Imagine a textbook with 1,000 pages. If you want to find every mention of "Python", you'd have to read every single page (a Full Table Scan). But if you use the Index at the back of the book, you look up "Python", see it's on pages 45, 90, and 112, and jump straight there. That's exactly what database indexing does.
+
+## 3. Concept Explanation
+Under the hood, most relational databases use B-Trees (Balanced Trees) for indexing. When you index a column (like `email`), the database creates a separate data structure that holds a sorted list of emails and a pointer to the actual row in the table.
+When you write an `INSERT` or `UPDATE`, the database must update both the main table AND the index, which is why having too many indexes slows down write performance.
+
+## 4. Syntax Table
+
+| Action | SQL Syntax | SQLAlchemy ORM Syntax |
+|---|---|---|
+| Create simple index | `CREATE INDEX idx_email ON users(email);` | `email = Column(String, index=True)` |
+| Unique index | `CREATE UNIQUE INDEX idx_u_email ON users(email);` | `email = Column(String, unique=True, index=True)` |
+| Composite index | `CREATE INDEX idx_name_age ON users(name, age);` | `__table_args__ = (Index('idx_name_age', 'name', 'age'),)` |
+| Drop index | `DROP INDEX idx_email;` | N/A (Handled via migrations like Alembic) |
+
+## 5. Beginner Example
+
+Let's see how you define an index in SQLAlchemy.
+
+```python
+from sqlalchemy import Column, Integer, String, Index
+from sqlalchemy.orm import declarative_base
+
+Base = declarative_base()
+
+class User(Base):
+    __tablename__ = 'users'
+
+    id = Column(Integer, primary_key=True) # Primary keys are automatically indexed!
+    username = Column(String, index=True)  # Simple index
+    email = Column(String, unique=True)    # Unique constraints also create indexes
+    department = Column(String)
+    salary = Column(Integer)
+
+    # Composite index for queries like: WHERE department='Engineering' AND salary > 100000
+    __table_args__ = (
+        Index('idx_dept_salary', 'department', 'salary'),
+    )
+```
+
+## 6. Real-World Engineering Example
+In production, you don't just guess what needs indexing. You use `EXPLAIN ANALYZE` (in Postgres) to see if the database is actually using the index or doing a sequential scan.
+
+```python
+# Raw SQL execution to profile a query
+from sqlalchemy import text
+
+# Running this will tell you how the DB executed the query
+explain_query = text("EXPLAIN ANALYZE SELECT * FROM users WHERE email = 'test@test.com'")
+
+with engine.connect() as conn:
+    result = conn.execute(explain_query)
+    for row in result:
+        print(row)
+
+# Output without index: "Seq Scan on users (cost=0.00..15.00 rows=1 width=200) (actual time=0.045..0.045 loops=1)" -> SLOW
+# Output WITH index: "Index Scan using idx_email on users (cost=...)" -> FAST
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'SELECT * FROM users WHERE email="x"' }, position: { x: 250, y: 50 } },
+    { id: '2', type: 'process', data: { label: 'Query Optimizer' }, position: { x: 250, y: 150 } },
+    { id: '3a', type: 'warning', data: { label: 'No Index: Full Table Scan (Reads every row)' }, position: { x: 50, y: 250 } },
+    { id: '3b', type: 'tool', data: { label: 'Has Index: B-Tree Traversal (O(log n))' }, position: { x: 450, y: 250 } },
+    { id: '4', type: 'output', data: { label: 'Return Row Data' }, position: { x: 250, y: 350 } },
+    { id: 'e1-2', source: '1', target: '2', label: '' },
+    { id: 'e2-3a', source: '2', target: '3a', label: 'Missing Index' },
+    { id: 'e2-3b', source: '2', target: '3b', label: 'Index Exists' },
+    { id: 'e3a-4', source: '3a', target: '4', label: 'Slow' },
+    { id: 'e3b-4', source: '3b', target: '4', label: 'Fast' }
+  ]}
+/>
+
+A B-Tree allows the database to find a specific value in `O(log n)` time instead of `O(n)` time. It navigates from the root node down through branches until it finds the leaf node containing the pointer to the actual hard drive location of the row.
+
+## 8. Performance Table
+
+| Operation | Without Index | With Index | Explanation |
+|---|---|---|---|
+| `SELECT` (Search) | Slow `O(N)` | Very Fast `O(log N)` | B-Tree allows skipping irrelevant data. |
+| `INSERT` | Fast | Slower | DB must write the row AND update the B-Tree index. |
+| `UPDATE` (Indexed col) | Fast | Slower | DB must update the row AND reorganize the B-Tree. |
+| Storage Space | Small | Larger | Indexes consume RAM and Disk space. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| When should you NOT use an index? | On small tables, on columns that are frequently updated but rarely searched, or on columns with low cardinality (like a boolean `is_active` column where 99% of users are active). |
+| What is a Composite Index? | An index on multiple columns. Order matters! An index on `(A, B)` helps queries filtering on `A`, or `A and B`, but usually NOT queries filtering only on `B`. |
+| What is the difference between a Clustered and Non-Clustered index? | A clustered index dictates the actual physical order of data on disk (usually the Primary Key). A non-clustered index is a separate structure pointing to the physical rows. |
+
+## 10. Tricky Questions & Edge Cases
+Bro, beware of function calls in queries.
+If you have an index on `created_at`, but you run `SELECT * FROM users WHERE DATE(created_at) = '2023-01-01'`, the database **cannot** use the index! Applying a function to the column breaks the index usage.
+**Fix:** You either need a "Function-Based Index" or rewrite the query as `WHERE created_at >= '2023-01-01' AND created_at < '2023-01-02'`.
+
+## 11. Real-World Usage
+Any column that is frequently used in `WHERE`, `JOIN`, `ORDER BY`, or `GROUP BY` clauses is a prime candidate for indexing. Examples include `user_id` in foreign keys, `email` for logins, and `created_at` for dashboards.
+
+## 12. Best Practices
+- Always index Foreign Keys.
+- Don't over-index. Start with the obvious ones and add more based on slow query logs.
+- The order of columns in a composite index matters (put the most selective column first).
+- Use `EXPLAIN` to verify your indexes are actually being used.
+
+## 13. Production Notes
+Creating an index on a massive production table can lock the table and cause downtime. In PostgreSQL, always use `CREATE INDEX CONCURRENTLY` to build the index in the background without locking writes to the table.
+
+## 14. Common Mistakes
+- **Indexing Booleans:** Indexing an `is_deleted` column when 95% of rows are `False`. The DB optimizer will likely ignore the index anyway because a full table scan is faster than reading the index and then jumping to 95% of the rows.
+- **Missing `ORDER BY` indexes:** People index the `WHERE` clause but forget that sorting 10 million rows in memory is slow. Indexing can speed up `ORDER BY`.
+
+## 15. Related Topics
+- `databases/postgresql.mdx`
+- `performance/profiling.mdx`
+- `databases/orm-vs-raw-sql.mdx`

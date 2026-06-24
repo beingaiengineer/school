@@ -2,6 +2,155 @@
 sidebar_position: 3
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Mocking
 
-Placeholder: introduce Mocking.
+## 1. Quick Summary
+Bro, mocking is the art of faking things in your tests. When you write a unit test, you want to test *your* code, not the external AWS server, not the Postgres database, and not the Stripe payment gateway. Mocking allows you to intercept calls to external dependencies and return predefined fake data instead.
+
+## 2. Real-World Analogy
+Think of a movie set. The actors are standing in front of a green screen. They are acting as if a giant alien is attacking them, but in reality, there's just a tennis ball on a stick. The director (the test) put the tennis ball (the Mock) there so the actors (your code) can react to it predictably without having to hire a real alien.
+
+## 3. Concept Explanation
+In Python, mocking is primarily done using the `unittest.mock` library. A `Mock` object is a dummy object that absorbs all method calls and attribute accesses.
+The `patch` decorator is used to intercept imports in your code and replace them with these Mock objects during the test. You can configure the Mock to `return_value` (for standard returns) or `side_effect` (to raise exceptions or return different values on consecutive calls).
+
+## 4. Syntax Table
+
+| Method | Syntax | Explanation |
+|---|---|---|
+| Create Mock | `mock_obj = Mock()` | Creates a generic mock object. |
+| Set Return | `mock_obj.get_user.return_value = "Bro"` | Forces a method to return a specific value. |
+| Set Exception | `mock_obj.get_user.side_effect = Exception("DB Down")` | Forces a method to throw an error. |
+| Patching | `@patch('myapp.module.ExternalAPI')` | Replaces a real class/function with a mock during a test. |
+| Verify Call | `mock_obj.get_user.assert_called_once_with(1)` | Checks if your code actually called the mock correctly. |
+
+## 5. Beginner Example
+
+Let's say we have a function that gets the current weather from an external API.
+
+```python
+# weather.py
+import requests
+
+def get_temperature(city):
+    # We DO NOT want this to run during our unit test!
+    response = requests.get(f"https://api.weather.com/{city}")
+    return response.json()['temp']
+
+# test_weather.py
+from unittest.mock import patch
+from weather import get_temperature
+
+# We patch the 'requests.get' function exactly where it is used.
+@patch('weather.requests.get')
+def test_get_temperature(mock_get):
+    # Arrange: Setup what the fake response should look like
+    mock_get.return_value.json.return_value = {'temp': 75}
+
+    # Act: Call our function
+    temp = get_temperature("Miami")
+
+    # Assert: Verify the logic
+    assert temp == 75
+    # Verify our code made the correct API call
+    mock_get.assert_called_once_with("https://api.weather.com/Miami")
+```
+
+## 6. Real-World Engineering Example
+In production code, we often need to test how our application handles failure from third-party services, like a database timeout or a 500 server error.
+
+```python
+# payment.py
+class StripeGateway:
+    def charge(self, amount):
+        pass # Real HTTP call happens here
+
+def process_checkout(gateway, amount):
+    try:
+        gateway.charge(amount)
+        return "Success"
+    except ValueError:
+        return "Card Declined"
+    except Exception:
+        return "System Error"
+
+# test_payment.py
+import pytest
+from unittest.mock import Mock
+from payment import process_checkout
+
+def test_process_checkout_declined():
+    # Arrange
+    mock_gateway = Mock()
+    # Simulate Stripe throwing a ValueError for a declined card
+    mock_gateway.charge.side_effect = ValueError("Insufficient funds")
+
+    # Act
+    result = process_checkout(mock_gateway, 100)
+
+    # Assert
+    assert result == "Card Declined"
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'Test Code Calls Target' }, position: { x: 250, y: 50 } },
+    { id: '2', type: 'process', data: { label: 'Target Code Execution' }, position: { x: 250, y: 150 } },
+    { id: '3a', type: 'warning', data: { label: 'Real External Service (Bypassed)' }, position: { x: 50, y: 250 } },
+    { id: '3b', type: 'tool', data: { label: 'Intercepted by @patch / Mock' }, position: { x: 450, y: 250 } },
+    { id: '4', type: 'data', data: { label: 'Returns predefined `return_value`' }, position: { x: 450, y: 350 } },
+    { id: '5', type: 'output', data: { label: 'Target Logic Continues' }, position: { x: 250, y: 450 } },
+    { id: 'e1-2', source: '1', target: '2', label: '' },
+    { id: 'e2-3b', source: '2', target: '3b', label: 'Network Call Attempt' },
+    { id: 'e3b-4', source: '3b', target: '4', label: 'Absorbs Call' },
+    { id: 'e4-5', source: '4', target: '5', label: 'Returns Fake Data' }
+  ]}
+/>
+
+When you use `@patch`, Python dynamically alters the module's namespace during runtime. It replaces the real reference (like `requests.get`) with an instance of `MagicMock`. When the test ends, Python cleans up the namespace and puts the real `requests.get` back.
+
+## 8. Performance Table
+
+| Mocking Strategy | Speed | Realism | Use Case |
+|---|---|---|---|
+| `unittest.mock.patch` | Very Fast | Low | Testing purely internal business logic. |
+| `responses` / `httpx-mock` | Fast | Medium | Mocking HTTP responses specifically. |
+| `moto` (AWS mocking) | Fast | High | Testing AWS SDK calls without hitting AWS. |
+| No Mocks (Real DB/API) | Slow | Absolute | Integration Testing (not Unit Testing). |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Where should you patch an object? | You must patch the object **where it is used**, not where it is defined. If `fileA.py` imports `requests`, you patch `fileA.requests`, not `requests`. |
+| What is the difference between `return_value` and `side_effect`? | `return_value` gives a static result. `side_effect` can throw exceptions, or return an iterable (different result per call), or call a custom function. |
+| What is a MagicMock? | It's a subclass of Mock that implements all the Python magic methods (`__str__`, `__len__`, `__iter__` etc.) by default, making it behave more like native Python objects. |
+
+## 10. Tricky Questions & Edge Cases
+Bro, mocking can lead to false confidence.
+If you mock `boto3.client('s3').upload_file` and assert it was called, your test passes. But what if Amazon changed the required arguments for `upload_file` in their latest SDK? Your mock doesn't know that. Your test passes, but production crashes.
+**Fix:** Use `autospec=True` when patching. It ensures your mock has the exact same signature as the real object, failing the test if you call it with the wrong arguments!
+
+## 11. Real-World Usage
+Mocking is heavily used for isolating code from Databases, Redis caches, 3rd party APIs (Stripe, Twilio), and File IO (reading/writing to disk).
+
+## 12. Best Practices
+- Mock external boundaries only. Do not mock internal private methods just to make a test pass.
+- Always prefer Dependency Injection over `patch`. Passing a fake object into a function is cleaner than hijacking imports globally.
+- Use `assert_called_once_with` to verify your code is sending the correct payloads to the external service.
+
+## 13. Production Notes
+Don't overuse mocks. If a test file has 20 `@patch` decorators for a single test, your code architecture is likely too tightly coupled. You are testing the mocks, not your logic.
+
+## 14. Common Mistakes
+- **Patching the wrong path:** Patching `mymodule.foo` when your code actually did `from mymodule import foo` (you need to patch the destination file's namespace).
+- **Forgetting `return_value` on chained calls:** `mock.json()` returns another mock. To set the dictionary result, you need `mock.json.return_value = {}`.
+
+## 15. Related Topics
+- `testing/unit-testing.mdx`
+- `testing/pytest.mdx`
+- `testing/integration-testing.mdx`

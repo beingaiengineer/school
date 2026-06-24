@@ -2,6 +2,160 @@
 sidebar_position: 4
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Integration Testing
 
-Placeholder: introduce Integration Testing.
+## 1. Quick Summary
+Bro, Integration Testing is where the rubber meets the road. While unit tests verify that individual pieces of your code work in isolation (using mocks), integration tests verify that those pieces work correctly *together*, usually involving real databases, file systems, or external services.
+
+## 2. Real-World Analogy
+Think of building a car.
+Unit testing is verifying that the engine starts on a test bench, and the transmission shifts on a test bench.
+Integration testing is bolting the engine and transmission together in the car frame and verifying that pressing the gas pedal actually turns the wheels. The parts work individually, but do they talk to each other correctly?
+
+## 3. Concept Explanation
+In Python, an integration test drops the heavy use of `unittest.mock`. Instead of faking a database connection, you spin up a real (usually temporary or Dockerized) database. Instead of faking an API client, you might hit a real staging API.
+Because they hit real IO (Input/Output), integration tests are slower than unit tests, but they provide much higher confidence that your system actually works in reality.
+
+## 4. Syntax Table
+
+| Concept | Testing Strategy | Example Setup |
+|---|---|---|
+| Database Integration | Use a test-specific DB | `engine = create_engine("postgresql://user:pass@localhost/test_db")` |
+| API Integration | Hit real endpoints | `response = client.post("/users", json={"name": "Bro"})` |
+| File IO Integration | Use temporary directories | `tmp_path` fixture in Pytest |
+| External Services | Use Sandbox/Test environments | Stripe Test API keys |
+
+## 5. Beginner Example
+
+Let's test saving a user to a real SQLite database. No mocks.
+
+```python
+# test_db_integration.py
+import pytest
+from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy.orm import declarative_base, Session
+
+Base = declarative_base()
+class User(Base):
+    __tablename__ = 'users'
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+
+# Fixture to provide a real database session
+@pytest.fixture
+def real_db_session():
+    # Setup: Create an in-memory SQLite database
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    session = Session(engine)
+
+    yield session  # Pass to the test
+
+    # Teardown
+    session.close()
+
+def test_user_creation_integration(real_db_session):
+    # Act: Actually interact with the database
+    new_user = User(name="BroCoder")
+    real_db_session.add(new_user)
+    real_db_session.commit()
+
+    # Assert: Query it back out to prove it saved
+    saved_user = real_db_session.query(User).filter_by(name="BroCoder").first()
+    assert saved_user is not None
+    assert saved_user.id == 1
+```
+
+## 6. Real-World Engineering Example
+In a FastAPI application, an integration test hits the actual HTTP endpoints using `TestClient`. It tests the routing, the validation (Pydantic), the business logic, and the database interaction all in one go.
+
+```python
+from fastapi.testclient import TestClient
+from main import app  # Your real FastAPI app
+from database import get_db
+
+client = TestClient(app)
+
+# We use dependency override to point the app to our test database instead of prod
+def override_get_db():
+    try:
+        db = TestingSessionLocal()
+        yield db
+    finally:
+        db.close()
+
+app.dependency_overrides[get_db] = override_get_db
+
+def test_create_user_endpoint():
+    # This hits the HTTP layer -> Pydantic Validation -> DB Insert
+    response = client.post(
+        "/users/",
+        json={"email": "bro@example.com", "password": "securepassword"}
+    )
+
+    assert response.status_code == 201
+    assert response.json()["email"] == "bro@example.com"
+    assert "id" in response.json()
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'Test Code (Pytest)' }, position: { x: 250, y: 50 } },
+    { id: '2', type: 'process', data: { label: 'HTTP Test Client' }, position: { x: 250, y: 150 } },
+    { id: '3', type: 'process', data: { label: 'App Routing & Logic' }, position: { x: 250, y: 250 } },
+    { id: '4', type: 'data', data: { label: 'Real Test Database (Postgres/SQLite)' }, position: { x: 250, y: 350 } },
+    { id: 'e1-2', source: '1', target: '2', label: 'POST /users' },
+    { id: 'e2-3', source: '2', target: '3', label: '' },
+    { id: 'e3-4', source: '3', target: '4', label: 'INSERT Statement' },
+    { id: 'e4-3', source: '4', target: '3', label: 'Returns Rows' },
+    { id: 'e3-1', source: '3', target: '1', label: 'Assert HTTP 201' }
+  ]}
+/>
+
+Integration tests traverse the actual boundaries between systems. Unlike unit tests which stop at the edge of the function, integration tests serialize data, send it over a protocol (like HTTP or TCP), process it in the database engine, and return it.
+
+## 8. Performance Table
+
+| Test Type | Speed per Test | Setup Complexity | Confidence Level |
+|---|---|---|---|
+| Unit Test | ~1ms | Low | Low (Mocks might be wrong) |
+| Database Integration | ~50ms | Medium (Requires DB schema setup) | High |
+| Full API Integration | ~100ms | High (Requires App + DB running) | Very High |
+| E2E (UI Automation) | ~5s | Very High (Requires Browser + Network) | Absolute |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why do we need Integration Tests if we have 100% Unit Test coverage? | Mocks are assumptions. You might mock the DB to return a string, but the real DB actually returns an integer. Unit tests will pass, but the app will crash in production. Integration tests catch these boundary mismatches. |
+| How do you handle database state in integration tests? | Use a dedicated test database. Run migrations before the test suite starts. Wrap each test in a database transaction and `ROLLBACK` at the end of the test so the database stays clean for the next test. |
+| What is Testcontainers? | A library that automatically spins up Docker containers (like Postgres or Redis) inside your test setup and tears them down after, ensuring you test against the exact same infrastructure as production. |
+
+## 10. Tricky Questions & Edge Cases
+Bro, test data pollution is a nightmare.
+If Test A creates a user "Bro", and Test B expects the database to be empty, Test B will fail if Test A runs first.
+**Fix:** Never rely on test execution order. Every test must set up its own state and clean up after itself. The best way is using Pytest fixtures with `yield` and a DB rollback mechanism.
+
+## 11. Real-World Usage
+In the "Testing Pyramid", you should have hundreds of unit tests (fast, cheap) and dozens of integration tests (slower, more expensive). They are essential for testing ORM queries, complex SQL joins, and REST API contracts.
+
+## 12. Best Practices
+- **NEVER** run integration tests against a production database.
+- Separate unit tests and integration tests into different folders (e.g., `tests/unit/` and `tests/integration/`).
+- Use Pytest markers (e.g., `@pytest.mark.integration`) so you can run just the fast unit tests during local development, and run the slow integration tests only in CI/CD.
+
+## 13. Production Notes
+In CI/CD (like GitHub Actions), you need to define `services` (like Postgres and Redis) in your workflow YAML file so your integration tests have real databases to connect to when they run in the cloud.
+
+## 14. Common Mistakes
+- **Using SQLite for Postgres apps:** SQLite handles types (like JSON or Arrays) differently than Postgres. If production uses Postgres, your integration tests MUST use Postgres (via Docker/Testcontainers), otherwise you will miss DB-specific bugs.
+- **Hardcoding IDs:** Writing `assert user.id == 1`. If the test DB isn't perfectly clean, the ID might be 2. Assert against the data (`user.name == "Bro"`), not auto-incrementing IDs.
+
+## 15. Related Topics
+- `testing/unit-testing.mdx`
+- `testing/pytest.mdx`
+- `testing/test-best-practices.mdx`

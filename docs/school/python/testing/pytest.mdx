@@ -2,6 +2,146 @@
 sidebar_position: 1
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Pytest
 
-Placeholder: introduce Pytest.
+## 1. Quick Summary
+Bro, `pytest` is the undisputed king of Python testing frameworks. It is designed to make writing small tests easy, yet it scales perfectly to support complex functional testing for massive applications. Forget the boilerplate of the built-in `unittest` module; `pytest` uses simple `assert` statements and powerful "fixtures" to handle setup and teardown.
+
+## 2. Real-World Analogy
+Think of `pytest` like a health inspector at a restaurant. Instead of you having to write a 10-page manual on *how* to inspect the kitchen (like `unittest` requires), the inspector just walks in, looks at the fridge, and says `assert fridge_temp < 40`. If it fails, the inspector gives you a detailed report of exactly what went wrong.
+
+## 3. Concept Explanation
+`pytest` auto-discovers tests. If you name a file `test_something.py` and a function inside it `test_my_func()`, `pytest` will find it and run it.
+Instead of specialized assertion methods (`assertEqual`, `assertTrue`), `pytest` uses Python's standard `assert` keyword and deeply introspects it to provide incredibly detailed failure messages. Its superpower, however, is **Fixtures**: modular, reusable components for injecting dependencies (like database connections or mock data) into your tests.
+
+## 4. Syntax Table
+
+| Feature | Pytest Syntax | Explanation |
+|---|---|---|
+| Basic Test | `def test_addition(): assert 1 + 1 == 2` | Simple, no classes required. |
+| Exception Testing | `with pytest.raises(ValueError):` | Verify that a function throws an expected error. |
+| Fixture | `@pytest.fixture` | Define setup/teardown logic to be injected. |
+| Parameterize | `@pytest.mark.parametrize("x,y", [(1,2), (3,4)])` | Run the same test with different inputs. |
+
+## 5. Beginner Example
+
+Let's test a simple function.
+
+```python
+# math_funcs.py
+def divide(a, b):
+    if b == 0:
+        raise ValueError("Cannot divide by zero")
+    return a / b
+
+# test_math_funcs.py
+import pytest
+from math_funcs import divide
+
+def test_divide_normal():
+    # Simple, standard Python assert
+    assert divide(10, 2) == 5.0
+
+def test_divide_by_zero():
+    # Test that the exception is raised
+    with pytest.raises(ValueError) as excinfo:
+        divide(10, 0)
+
+    # Optional: Check the error message
+    assert str(excinfo.value) == "Cannot divide by zero"
+```
+
+## 6. Real-World Engineering Example
+In real engineering, we use **fixtures** to set up database connections and **parameterization** to test multiple edge cases without writing redundant code.
+
+```python
+import pytest
+
+# 1. Define a fixture (e.g., a mock database session)
+@pytest.fixture
+def db_session():
+    print("\n[Setup] Connecting to test DB")
+    session = {"connected": True, "users": ["alice", "bob"]}
+    yield session  # This is passed to the test
+    print("\n[Teardown] Dropping test DB tables")
+    session["connected"] = False
+
+# 2. Inject the fixture by putting it in the test signature
+def test_db_users(db_session):
+    assert "alice" in db_session["users"]
+
+# 3. Parameterize a test to cover multiple scenarios quickly
+@pytest.mark.parametrize("username, is_valid", [
+    ("alice", True),
+    ("b", False),          # Too short
+    ("admin_user", True),
+])
+def test_username_validation(username, is_valid):
+    def validate(name): return len(name) >= 3
+    assert validate(username) == is_valid
+```
+
+## 7. Internal Working
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'pytest Command Run' }, position: { x: 250, y: 50 } },
+    { id: '2', type: 'process', data: { label: 'Test Discovery (finds test_*.py)' }, position: { x: 250, y: 150 } },
+    { id: '3', type: 'tool', data: { label: 'Resolve Fixtures (Setup)' }, position: { x: 250, y: 250 } },
+    { id: '4', type: 'process', data: { label: 'Execute `assert` Statements' }, position: { x: 250, y: 350 } },
+    { id: '5', type: 'data', data: { label: 'Teardown & Report' }, position: { x: 250, y: 450 } },
+    { id: 'e1-2', source: '1', target: '2', label: '' },
+    { id: 'e2-3', source: '2', target: '3', label: '' },
+    { id: 'e3-4', source: '3', target: '4', label: 'Inject Data' },
+    { id: 'e4-5', source: '4', target: '5', label: '' }
+  ]}
+/>
+
+When you type `pytest`, it scans directories for files matching `test_*.py` or `*_test.py`. It builds a dependency graph of fixtures, executes setups, runs the tests, catches `AssertionError` exceptions using AST rewriting (to give you nice failure diffs), and finally runs fixture teardowns.
+
+## 8. Performance Table
+
+| Feature | Impact | Explanation |
+|---|---|---|
+| Standard Run | Fast | Tests run sequentially. |
+| `pytest-xdist` | Very Fast | Plugin that runs tests in parallel across multiple CPU cores. |
+| Fixture Scope (`session`) | Faster Tests | Setup DB once per test suite, not once per test. |
+| Fixture Scope (`function`) | Slower Tests | Safest (full isolation), but recreating DB per test is slow. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is a pytest fixture? | A function decorated with `@pytest.fixture` that provides setup data/state to tests. It's injected into tests via dependency injection (arguments matching the fixture name). |
+| How do you do teardown in a fixture? | Use the `yield` keyword instead of `return`. Code before `yield` is setup; code after `yield` is teardown. |
+| How is `pytest` better than `unittest`? | Less boilerplate (no classes needed), standard `assert` keyword, powerful dependency injection (fixtures), and highly descriptive failure outputs. |
+
+## 10. Tricky Questions & Edge Cases
+Bro, be careful with fixture scoping.
+If you have a fixture that creates a database, its default scope is `function` (runs every single test). This makes tests painfully slow.
+If you change it to `@pytest.fixture(scope="session")`, it runs once. BUT, if Test A mutates the database, Test B might fail because the state leaked!
+**Fix:** Use nested transactions or clear the DB between tests if using session scope.
+
+## 11. Real-World Usage
+`pytest` is the industry standard. It's used to test everything from small Python scripts to massive web backends (Django/FastAPI) and data engineering pipelines.
+
+## 12. Best Practices
+- Keep tests small and focused on one assertion (or one logical group).
+- Use `conftest.py` to share fixtures across multiple test files.
+- Name tests descriptively: `test_user_registration_fails_with_invalid_email`.
+- Use `pytest.mark.parametrize` instead of `for` loops inside tests so you get individual test reports for each case.
+
+## 13. Production Notes
+In CI/CD pipelines (like GitHub Actions), always run pytest with the `--cov` flag (via `pytest-cov` plugin) to generate a code coverage report, ensuring developers aren't merging untested code.
+
+## 14. Common Mistakes
+- **Complex Assertions:** Writing `assert A and B and C`. If it fails, pytest can't tell you *which* part failed easily. Split them up.
+- **Forgetting the `test_` prefix:** Pytest silently ignores your file if it's named `my_tests.py` instead of `test_my.py`.
+- **Global state mutation:** Modifying a global variable in one test and causing seemingly random failures in another test.
+
+## 15. Related Topics
+- `testing/unit-testing.mdx`
+- `testing/mocking.mdx`
+- `testing/test-best-practices.mdx`
