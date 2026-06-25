@@ -19,7 +19,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Install dependencies
         run: npm ci
@@ -39,7 +39,7 @@ jobs:
           script: |
             const pr = context.payload.pull_request;
             if (!pr) throw new Error('No pull request payload available.');
-            await github.pulls.createReview({
+            await github.rest.pulls.createReview({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: pr.number,
@@ -54,7 +54,7 @@ jobs:
           script: |
             const pr = context.payload.pull_request;
             if (!pr) throw new Error('No pull request payload available.');
-            await github.pulls.merge({
+            await github.rest.pulls.merge({
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: pr.number,
