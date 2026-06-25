@@ -2,6 +2,208 @@
 sidebar_position: 2
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Unit Testing
 
-Placeholder: introduce Unit Testing.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Unit Testing |
+| Difficulty | Beginner |
+| Used For | Testing individual, isolated pieces of code |
+| Common Mistake | Connecting to a real database inside a unit test |
+| Performance | Blazing fast (milliseconds per test) |
+
+---
+
+# 2. Real-World Analogy
+
+Think of building a smartphone.
+
+Bro, before you assemble the whole phone, you test the camera module by itself. You test the battery by itself. You test the screen by itself. If the screen doesn't turn on, you know exactly what is broken.
+
+**Unit testing** is exactly this. You aren't testing the whole application. You are testing one single function or class completely isolated from the rest of the system.
+
+---
+
+# 3. Concept Explanation
+
+A unit test focuses on the smallest testable part of an application.
+
+It exists to prove that the core logic of a function is correct.
+
+Bro, use unit tests to check math, data transformations, string formatting, and validation logic. **DO NOT** use unit tests to check if your API connects to PostgreSQL correctly—that is an Integration Test. Unit tests must never talk to a database, network, or file system.
+
+---
+
+# 4. Syntax Table
+
+| Operation | Example (Pytest) |
+|---|---|
+| Test simple logic | `assert calculate_discount(100) == 90` |
+| Test boundary | `assert calculate_discount(0) == 0` |
+| Test failure | `with pytest.raises(ValueError): calculate_discount(-50)` |
+
+---
+
+# 5. Beginner Example
+
+Let's test a simple password validator.
+
+```python
+# auth.py
+def is_valid_password(password: str) -> bool:
+    if len(password) < 8:
+        return False
+    if not any(char.isdigit() for char in password):
+        return False
+    return True
+
+# test_auth.py
+from auth import is_valid_password
+
+def test_password_too_short():
+    assert is_valid_password("abc12") == False
+
+def test_password_missing_number():
+    assert is_valid_password("password") == False
+
+def test_valid_password():
+    assert is_valid_password("strongpass123") == True
+```
+
+Notice how these tests don't need a database or web server. They just pass strings in and check booleans out. Fast and isolated.
+
+---
+
+# 6. Real-World Engineering Example
+
+In a banking app, you might have a service that calculates compound interest. This math is critical and must be heavily unit tested.
+
+```python
+def calculate_interest(principal: float, rate: float, years: int) -> float:
+    if principal < 0 or rate < 0 or years < 0:
+        raise ValueError("Inputs cannot be negative")
+
+    amount = principal * (1 + rate) ** years
+    return round(amount, 2)
+
+# --- Tests ---
+import pytest
+
+def test_standard_interest():
+    assert calculate_interest(1000, 0.05, 5) == 1276.28
+
+def test_zero_years():
+    assert calculate_interest(1000, 0.05, 0) == 1000.00
+
+def test_negative_principal_raises_error():
+    with pytest.raises(ValueError, match="cannot be negative"):
+        calculate_interest(-100, 0.05, 5)
+```
+
+Bro, a bug in this code costs real money. Unit tests ensure that future developers don't accidentally break the math formula.
+
+---
+
+# 7. Internal Working
+
+<LearningFlow
+  title="The Unit Test Sandbox"
+  nodes={[
+    { id: '1', type: 'data', label: 'Inputs (Arguments)', position: { x: 50, y: 100 } },
+    { id: '2', type: 'core', label: 'Function Under Test', position: { x: 300, y: 100 } },
+    { id: '3', type: 'output', label: 'Outputs (Return Value)', position: { x: 550, y: 100 } },
+    { id: '4', type: 'warning', label: 'Isolated Boundary (No DB/Network)', position: { x: 300, y: 200 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', type: 'smoothstep' },
+    { id: 'e2-3', source: '2', target: '3', label: 'Assert == expected', type: 'smoothstep' }
+  ]}
+/>
+
+A unit test forces your code into a strict sandbox. The execution flow only enters the function, processes the arguments in RAM, and exits with a return value. It strictly forbids "side effects" (like writing to a disk).
+
+---
+
+# 8. Performance Table
+
+| Metric | Expectation |
+|---|---|
+| Speed | less than 10 milliseconds per test |
+| Suite Execution | 1000 tests should run in under 5 seconds |
+| Flakiness | 0% (Should always pass or always fail) |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What defines a Unit Test? | It tests a single, isolated unit of code (function/class) without any external dependencies like databases or networks. |
+| What is TDD (Test Driven Development)? | A process where you write the failing unit test *first*, then write the code to make it pass, and finally refactor. |
+| How do you handle functions that talk to an API in a unit test? | You use "Mocking" to fake the API response, ensuring the test remains fast and isolated. |
+| What is Code Coverage? | The percentage of your application's source code lines that are executed during the tests. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, look at this function:
+
+```python
+import datetime
+
+def is_weekend():
+    today = datetime.datetime.now().weekday()
+    return today >= 5
+```
+
+How do you unit test this?
+
+If you run the test on a Tuesday, it returns `False`. If your CI pipeline runs on Saturday, it returns `True`. The test will randomly fail!
+
+**The fix:** Code that depends on the system clock is not easily testable. You must either pass the date as an argument, or use a tool like `freezegun` to fake the system time during the test.
+
+---
+
+# 11. Real-World Usage
+
+- **Financial Algorithms:** Heavily unit tested to prevent calculation errors.
+- **Data Parsers:** Unit tested against thousands of edge-case strings to ensure they don't crash.
+- **Game Physics:** Math engines in games use unit tests to ensure gravity calculations are always exact.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Test one concept per test function | Write a 50-line test with 20 different asserts |
+| Name tests clearly (`test_input_X_returns_Y`) | Put database calls in unit tests |
+| Test edge cases (Null, empty string, negative nums) | Only test the "happy path" |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Bro, do not chase 100% Code Coverage blindly. A codebase with 100% coverage can still have critical bugs if the tests only check that the code runs, rather than checking if the business logic is actually correct. Aim for 80% coverage focused on complex business logic, and don't waste time unit testing standard framework code like Django URL routers.
+
+---
+
+# 14. Common Mistakes
+
+- **Writing Integration Tests and calling them Unit Tests:** If your test fails when the wifi is disconnected, it is not a unit test.
+- **Brittle tests:** Testing private methods (methods starting with `_`). You should only test the public API of a class. If you test private methods, your tests will break every time you refactor internals.
+
+---
+
+# 15. Related Topics
+
+- Pytest
+- Mocking
+- Integration Testing
+- Clean Code

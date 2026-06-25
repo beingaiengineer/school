@@ -2,6 +2,223 @@
 sidebar_position: 3
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Mocking
 
-Placeholder: introduce Mocking.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Mocking (unittest.mock) |
+| Difficulty | Intermediate |
+| Used For | Faking external dependencies in unit tests |
+| Common Mistake | Mocking the wrong import path |
+| Performance | Makes slow network/DB tests run instantly |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, imagine you are an actor practicing for a movie scene where you have to talk to an alien.
+
+You can't wait for a real alien to show up to practice your lines. Instead, a guy with a tennis ball on a stick stands in front of you and says the alien's lines.
+
+**Mocking** is the tennis ball. When your code needs to talk to the Stripe API or an AWS S3 bucket, you don't actually hit the real API during a unit test. You create a fake "Mock" object that pretends to be the API and instantly returns the data you want.
+
+---
+
+# 3. Concept Explanation
+
+Mocking replaces real, slow, or unpredictable external systems with fake objects during tests.
+
+It exists to keep unit tests isolated, fast, and deterministic (meaning they don't randomly fail if the wifi drops).
+
+Bro, use mocking when your function calls an external HTTP API, sends an email, reads a file, or queries a database. Do NOT use mocking to fake the core logic you are actually trying to test.
+
+---
+
+# 4. Syntax Table
+
+| Operation | Example |
+|---|---|
+| Create Mock | `mock_api = Mock()` |
+| Set Return Value | `mock_api.get_user.return_value = {"name": "Bro"}` |
+| Check if called | `mock_api.get_user.assert_called_once()` |
+| Patching (Replace real) | `@patch('myapp.services.requests.get')` |
+
+---
+
+# 5. Beginner Example
+
+Let's mock a simple external API call.
+
+```python
+# weather.py
+import requests
+
+def get_temperature(city: str) -> int:
+    # Slow API call
+    response = requests.get(f"https://api.weather.com/{city}")
+    return response.json()["temp"]
+
+# test_weather.py
+from unittest.mock import patch
+from weather import get_temperature
+
+@patch('weather.requests.get')
+def test_get_temperature(mock_get):
+    # 1. Setup the fake response
+    mock_get.return_value.json.return_value = {"temp": 75}
+
+    # 2. Call the function (it will use the mock, not the internet)
+    result = get_temperature("London")
+
+    # 3. Assert the result
+    assert result == 75
+    mock_get.assert_called_once_with("https://api.weather.com/London")
+```
+
+Bro, notice we patched `weather.requests.get`, NOT `requests.get`. We patch where the object is *used*, not where it is *defined*.
+
+---
+
+# 6. Real-World Engineering Example
+
+Imagine a user registration flow that sends a welcome email via AWS SES.
+
+```python
+# users.py
+from email_service import send_email
+
+def register_user(email: str):
+    # DB logic here...
+
+    # We do NOT want to send real emails during tests!
+    success = send_email(to=email, subject="Welcome!")
+    return success
+
+# test_users.py
+from unittest.mock import patch
+from users import register_user
+
+@patch('users.send_email')
+def test_register_user_sends_email(mock_send):
+    mock_send.return_value = True
+
+    result = register_user("bro@example.com")
+
+    assert result is True
+    # Verify the email function was called with exactly these arguments
+    mock_send.assert_called_once_with(to="bro@example.com", subject="Welcome!")
+```
+
+This ensures the test is 100% free and takes 1 millisecond.
+
+---
+
+# 7. Internal Working
+
+<LearningFlow
+  title="Mock Patching Mechanism"
+  nodes={[
+    { id: '1', type: 'core', label: 'Function Under Test', position: { x: 50, y: 100 } },
+    { id: '2', type: 'data', label: 'Original HTTP Client', position: { x: 300, y: 50 } },
+    { id: '3', type: 'process', label: '@patch replaces memory reference', position: { x: 300, y: 150 } },
+    { id: '4', type: 'tool', label: 'MagicMock Object', position: { x: 550, y: 150 } },
+    { id: '5', type: 'output', label: 'Returns Fake Data', position: { x: 800, y: 150 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'Normal Flow', type: 'smoothstep', animated: false },
+    { id: 'e1-3', source: '1', target: '3', label: 'During Test', type: 'step' },
+    { id: 'e3-4', source: '3', target: '4', type: 'step' },
+    { id: 'e4-5', source: '4', target: '5', label: 'Instant', type: 'smoothstep' }
+  ]}
+/>
+
+When you use `@patch('module.target')`, Python uses reflection to reach into the `module`'s namespace during runtime. It temporarily overrides the memory reference of `target` with a `MagicMock` object. When the test finishes, Python restores the original memory reference.
+
+---
+
+# 8. Performance Table
+
+| Strategy | Performance | Reliability |
+|---|---|---|
+| Hit Real API | Very Slow (1s+) | Low (Wifi drops, API limits) |
+| Mock Objects | Very Fast (less than 1ms) | High (Always deterministic) |
+| Local Mock Server | Medium (10ms) | Very High (Tests network layer too) |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between Mock and MagicMock? | `MagicMock` is a subclass of `Mock` that comes with all the Python magic methods pre-created (like `__len__`, `__iter__`, `__getitem__`). Use `MagicMock` by default. |
+| Where should you patch an object? | "Patch where it is used, not where it is defined." If `app.py` does `from external import fetch`, you patch `app.fetch`. |
+| What is a Side Effect in mocking? | Instead of a static return value, `side_effect` lets you raise an Exception or call a custom function when the mock is called. |
+| Why is over-mocking bad? | If you mock everything, your test just proves that your mock works, not that your actual code works. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, how do you test that your code handles a network timeout correctly?
+
+```python
+# test_failures.py
+from unittest.mock import patch
+import requests
+
+@patch('weather.requests.get')
+def test_api_timeout(mock_get):
+    # Set a side effect to RAISE an exception, not return a value
+    mock_get.side_effect = requests.exceptions.Timeout("API is down")
+
+    # Now check if our function handles the error gracefully
+    result = get_temperature("London")
+    assert result == "Error: Try again later"
+```
+
+Using `side_effect` is the only way to reliably simulate server crashes or network drops in unit tests.
+
+---
+
+# 11. Real-World Usage
+
+- **Payment Gateways:** You NEVER hit the real Stripe or PayPal API in unit tests. You mock them so you don't accidentally charge real credit cards.
+- **AWS SDK (Boto3):** Instead of manually mocking every AWS service, developers use libraries like `moto` which provide pre-built mocks for S3, DynamoDB, etc.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `assert_called_once_with` to verify exact arguments | Over-mock core business logic |
+| Use `side_effect` to test exception handling | Mock standard library functions like `datetime.now()` (use `freezegun` instead) |
+| Patch where the object is imported/used | Forget that Mock returns Mock by default |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Bro, if your test suite requires hitting a real 3rd party API, your CI/CD pipeline will eventually fail because of rate limiting. The build will break randomly, blocking deployments. Always mock 3rd party APIs in unit tests. Use a separate, dedicated "E2E Integration Test" suite that runs less frequently to check the real APIs.
+
+---
+
+# 14. Common Mistakes
+
+- **Patch location error:** Patching `requests.get` instead of `my_module.requests.get`. The mock won't apply, and you'll hit the real API.
+- **Mocking the system under test:** If you are testing `calculate_tax()`, do not mock `calculate_tax()`.
+- **Assuming Mock checks types:** A Mock will accept ANY arguments. If the real API changes to require `user_id` instead of `email`, your mock test will still pass! This is why Integration Tests are also needed.
+
+---
+
+# 15. Related Topics
+
+- Unit Testing
+- Pytest
+- Integration Testing
+- API Development

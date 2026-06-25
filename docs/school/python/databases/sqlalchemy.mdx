@@ -2,6 +2,214 @@
 sidebar_position: 3
 ---
 
-# Sqlalchemy
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Sqlalchemy.
+# SQLAlchemy
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | SQLAlchemy |
+| Difficulty | Intermediate |
+| Used For | Interacting with relational databases using Python |
+| Common Mistake | Using N+1 queries when loading relationships |
+| Performance | Fast, but overhead compared to raw SQL if misused |
+
+---
+
+# 2. Real-World Analogy
+
+Think of SQLAlchemy like a professional translator at the United Nations. Bro, you speak Python, but the database only speaks SQL. Instead of you trying to learn every single SQL dialect (PostgreSQL, MySQL, SQLite), you just tell the translator what you want in Python, and they perfectly translate it into the exact dialect the database needs.
+
+---
+
+# 3. Concept Explanation
+
+SQLAlchemy is the most popular Object-Relational Mapper (ORM) and SQL toolkit for Python. It allows you to write Python classes and objects to represent database tables and rows.
+
+It exists because writing raw SQL strings inside Python code can become extremely messy, hard to maintain, and vulnerable to SQL injection. Bro, use it when you have a structured relational database and want your team to work with Python objects instead of raw SQL strings. Don't use it if you are doing massive data analytics where raw SQL is strictly required for absolute maximum performance.
+
+---
+
+# 4. Syntax Table
+
+| Operation | Example |
+|---|---|
+| Create Engine | `engine = create_engine('sqlite:///app.db')` |
+| Define Model | `class User(Base): __tablename__ = 'users'` |
+| Add Row | `session.add(new_user); session.commit()` |
+| Query | `users = session.query(User).all()` |
+
+---
+
+# 5. Beginner Example
+
+Let's see how simple it is to add a user.
+
+```python
+from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy.orm import declarative_base, sessionmaker
+
+Base = declarative_base()
+
+class User(Base):
+    __tablename__ = 'users'
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+
+# Connect and create table
+engine = create_engine('sqlite:///:memory:')
+Base.metadata.create_all(engine)
+
+Session = sessionmaker(bind=engine)
+session = Session()
+
+# Add a user
+bro_user = User(name="Rahul")
+session.add(bro_user)
+session.commit()
+
+print(session.query(User).first().name) # Output: Rahul
+```
+
+Bro, notice how we didn't write a single `INSERT INTO` statement.
+
+---
+
+# 6. Real-World Engineering Example
+
+In a real production system like a food delivery app, you might be fetching orders for a specific user and updating their status.
+
+```python
+def mark_orders_delivered(user_id: int, session):
+    # Fetch all pending orders for the user
+    orders = session.query(Order).filter(
+        Order.user_id == user_id,
+        Order.status == 'PENDING'
+    ).all()
+
+    # Update them as Python objects
+    for order in orders:
+        order.status = 'DELIVERED'
+
+    try:
+        session.commit() # One atomic commit
+        print(f"Updated {len(orders)} orders for user {user_id}.")
+    except Exception as e:
+        session.rollback()
+        print(f"Failed to update orders: {e}")
+```
+
+Here, `session.rollback()` is extremely important. If anything goes wrong, we undo all changes to ensure data consistency.
+
+---
+
+# 7. Internal Working
+
+<LearningFlow
+  title="SQLAlchemy Execution Flow"
+  nodes={[
+    { id: '1', type: 'core', label: 'Python Object (Model)', position: { x: 50, y: 50 } },
+    { id: '2', type: 'process', label: 'SQLAlchemy ORM', position: { x: 300, y: 50 } },
+    { id: '3', type: 'process', label: 'Core / Dialect Compiler', position: { x: 550, y: 50 } },
+    { id: '4', type: 'data', label: 'Database (PostgreSQL/MySQL)', position: { x: 800, y: 50 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'session.add()', type: 'smoothstep' },
+    { id: 'e2-3', source: '2', target: '3', label: 'generates Abstract SQL', type: 'smoothstep' },
+    { id: 'e3-4', source: '3', target: '4', label: 'executes Raw SQL', type: 'smoothstep' }
+  ]}
+/>
+
+Under the hood, SQLAlchemy has two main parts: Core and ORM. The ORM maps objects to tables, but it relies on the Core to actually build the SQL strings. When you run a query, SQLAlchemy compiles it down to a dialect-specific SQL string (like Postgres SQL or SQLite SQL), and then passes it to the DB API driver (like `psycopg2`).
+
+---
+
+# 8. Performance Table
+
+| Operation | Complexity/Speed |
+|---|---|
+| Single Insert | Fast |
+| Bulk Insert | Very Fast (use `bulk_save_objects`) |
+| N+1 Query | Very Slow (Avoid) |
+| Joined Load | Fast (Resolves N+1) |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the N+1 problem in SQLAlchemy? | It's when fetching an object triggers 1 query, and fetching its relationships triggers N additional queries. Fix it with `joinedload()`. |
+| What is the difference between `flush()` and `commit()`? | `flush()` sends SQL to the database but doesn't persist the transaction. `commit()` makes it permanent. |
+| How do you prevent SQL injection in SQLAlchemy? | By default, SQLAlchemy uses parameterized queries, which automatically prevent SQL injection. |
+| What is `declarative_base()`? | It's a factory function that creates a base class for declarative class definitions (your models). |
+| How do you handle database migrations with SQLAlchemy? | Using Alembic, which is a lightweight database migration tool written specifically for use with SQLAlchemy. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, look at this code. What happens if an error occurs before the commit?
+
+```python
+user1 = User(name="Alice")
+user2 = User(name="Bob")
+
+session.add(user1)
+session.flush() # user1 gets an ID, but isn't committed yet
+
+# Imagine an error happens right here!
+# 1/0
+
+session.add(user2)
+session.commit()
+```
+
+If an error happens, the transaction is broken. `user1` will NOT be in the database, even though `flush()` gave it an ID. The database rolls back the transaction. You must always wrap commits in try-except blocks and call `session.rollback()` on failure so the session can be used again.
+
+---
+
+# 11. Real-World Usage
+
+Companies use SQLAlchemy extensively:
+- Reddit uses it for their backend architecture.
+- Yelp uses it for managing complex relational models.
+- Financial systems use it because of its strong transaction management.
+- Data engineering pipelines use SQLAlchemy Core for bulk data loading.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `joinedload` or `selectinload` for relationships | Let lazy loading trigger hundreds of queries |
+| Manage sessions via context managers (`with` block) | Leave sessions open indefinitely |
+| Use bulk operations for inserting many rows | Iterate and `session.add()` 10,000 rows individually |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Bro, in a high-traffic production system, your database connections are the biggest bottleneck. Always use SQLAlchemy with a connection pool (like PgBouncer or SQLAlchemy's internal pool) and ensure you strictly close/remove sessions at the end of every API request. Failing to do so will lead to "Too many connections" errors and crash your app.
+
+---
+
+# 14. Common Mistakes
+
+- **Forgetting `session.commit()`**: Changes won't save to the DB.
+- **Leaking sessions**: Not closing sessions after a request finishes.
+- **Implicit lazy loading**: Accidentally causing N+1 queries in a simple loop over items.
+- **Using ORM for heavy analytics**: If you need to group/aggregate millions of rows, use raw SQL or SQLAlchemy Core, not the full ORM.
+
+---
+
+# 15. Related Topics
+
+- PostgreSQL
+- ORM vs Raw SQL
+- Connection Pooling
+- Transactions

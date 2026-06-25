@@ -2,6 +2,204 @@
 sidebar_position: 1
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Pytest
 
-Placeholder: introduce Pytest.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Pytest |
+| Difficulty | Beginner |
+| Used For | Writing and running tests in Python |
+| Common Mistake | Writing complex test state setups manually instead of using fixtures |
+| Performance | Fast test discovery and parallel execution plugins available |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, imagine you are a car mechanic.
+
+Writing code without tests is like building an engine, installing it in a car, and turning the key while hoping it doesn't explode.
+
+Using **Pytest** is like having an automated diagnostics machine. Before you start the car, the machine automatically connects to every single sensor, checks the oil, checks the battery, and gives you a green light that the engine is built perfectly. It gives you confidence that your code actually works before you ship it to production.
+
+---
+
+# 3. Concept Explanation
+
+Pytest is the most popular testing framework in Python. It replaces the older built-in `unittest` module because it requires significantly less boilerplate code.
+
+Instead of writing complex classes and using `self.assertEqual()`, Pytest lets you write simple Python functions and use the standard Python `assert` keyword. Bro, use it for everything: unit tests, integration tests, and API tests.
+
+---
+
+# 4. Syntax Table
+
+| Operation | Pytest Example |
+|---|---|
+| Basic Test | `def test_math(): assert 1 + 1 == 2` |
+| Exception Test | `with pytest.raises(ZeroDivisionError): 1 / 0` |
+| Fixture | `@pytest.fixture def user(): return User("Bro")` |
+| Parametrize | `@pytest.mark.parametrize("x, y", [(1,2), (3,4)])` |
+
+---
+
+# 5. Beginner Example
+
+Let's test a simple function.
+
+```python
+# math_funcs.py
+def add(a, b):
+    return a + b
+
+# test_math.py
+from math_funcs import add
+
+def test_add_positive_numbers():
+    assert add(2, 3) == 5
+
+def test_add_negative_numbers():
+    assert add(-1, 1) == 0
+```
+
+To run this, you just type `pytest` in your terminal. Pytest automatically finds any file starting with `test_` and runs any function starting with `test_`. Bro, notice there is zero boilerplate.
+
+---
+
+# 6. Real-World Engineering Example
+
+In the real world, tests need mock data, like a fake database connection or a user object. Pytest handles this using **Fixtures**.
+
+```python
+import pytest
+
+# 1. Define a fixture (setup logic)
+@pytest.fixture
+def fake_db():
+    db = {"users": ["alice", "bob"]}
+    yield db # Provides the data to the test
+    # Teardown logic (runs after test finishes)
+    db.clear()
+
+# 2. Inject the fixture by putting it in the arguments
+def test_database_has_users(fake_db):
+    assert len(fake_db["users"]) == 2
+    assert "alice" in fake_db["users"]
+
+def test_add_user(fake_db):
+    fake_db["users"].append("charlie")
+    assert len(fake_db["users"]) == 3
+```
+
+Fixtures prevent you from copying and pasting setup code across 50 different test files.
+
+---
+
+# 7. Internal Working
+
+<LearningFlow
+  title="Pytest Execution Flow"
+  nodes={[
+    { id: '1', type: 'core', label: 'CLI: `pytest`', position: { x: 50, y: 100 } },
+    { id: '2', type: 'process', label: 'Discovery Phase', position: { x: 250, y: 100 } },
+    { id: '3', type: 'process', label: 'Setup Fixtures', position: { x: 450, y: 50 } },
+    { id: '4', type: 'process', label: 'Run Test (Asserts)', position: { x: 650, y: 100 } },
+    { id: '5', type: 'process', label: 'Teardown Fixtures', position: { x: 450, y: 150 } },
+    { id: '6', type: 'output', label: 'Report Results', position: { x: 850, y: 100 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'scans for test_*.py', type: 'smoothstep' },
+    { id: 'e2-3', source: '2', target: '3', type: 'smoothstep' },
+    { id: 'e3-4', source: '3', target: '4', type: 'smoothstep' },
+    { id: 'e4-5', source: '4', target: '5', type: 'smoothstep' },
+    { id: 'e5-6', source: '5', target: '6', type: 'smoothstep' }
+  ]}
+/>
+
+When you run `pytest`, it doesn't just run code top-to-bottom. It first does **Discovery**, recursively finding all test files and functions. Then, for each test, it executes a lifecycle: resolve and run requested fixtures, run the actual test code, catch any `AssertionError` if it fails, and finally run any teardown code in the fixtures.
+
+---
+
+# 8. Performance Table
+
+| Feature | Impact |
+|---|---|
+| `pytest-xdist` | Runs tests in parallel across multiple CPU cores (massive speedup) |
+| Fixture Scope (`session`) | Runs setup once per test suite instead of per function (fast) |
+| Fixture Scope (`function`) | Runs setup before EVERY single test (slow, but isolated) |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why prefer Pytest over `unittest`? | Pytest uses standard `assert`, has powerful fixtures, requires no class boilerplate, and has a massive plugin ecosystem. |
+| What is a Pytest fixture? | A function decorated with `@pytest.fixture` that provides setup, data, or state to tests. |
+| How do you test that an exception is raised? | Using the context manager: `with pytest.raises(ValueError): my_func()` |
+| What does `@pytest.mark.parametrize` do? | It runs the exact same test function multiple times with different sets of input data. |
+| How does Pytest know what to run? | By default, it looks for files named `test_*.py` or `*_test.py`, and functions starting with `test_`. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, look at this parametrization example:
+
+```python
+import pytest
+
+@pytest.mark.parametrize("email, is_valid", [
+    ("test@test.com", True),
+    ("bad-email", False),
+    ("", False)
+])
+def test_email_validator(email, is_valid):
+    assert validate_email(email) == is_valid
+```
+
+This is one test function, but Pytest will treat it as **THREE** separate tests. If the second one fails, the first and third will still run and report success. This is incredibly powerful for testing boundary conditions without writing 10 different functions.
+
+---
+
+# 11. Real-World Usage
+
+- **Open Source:** Almost every major Python library (Requests, FastAPI, Pandas) uses Pytest for their test suites.
+- **CI/CD Pipelines:** Companies run Pytest in GitHub Actions or Jenkins. If Pytest fails, the code cannot be merged or deployed.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use fixtures for repeated setup | Copy-paste `db_connect()` into every test |
+| Name tests descriptively (`test_auth_fails_on_bad_password`) | Name tests vaguely (`test_auth_2`) |
+| Use `yield` in fixtures for teardown | Forget to clean up mock database records |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Bro, as your app grows, your test suite will get slow. A 20-minute test suite destroys developer productivity. Always design your fixtures efficiently. If a database setup fixture takes 2 seconds to run, and you use it in 500 tests with default scope, your suite takes 16 minutes. Change its scope to `session` so it runs once, reducing test time to 2 seconds total for that setup.
+
+---
+
+# 14. Common Mistakes
+
+- **Testing implementation, not behavior:** Writing tests that check exactly *how* a function works internally. If you refactor the code, the test breaks even if the output is correct. Test the inputs and outputs!
+- **State Leakage:** Test A modifies the database, and Test B fails because it expected an empty database. Tests MUST be perfectly isolated from each other.
+
+---
+
+# 15. Related Topics
+
+- Unit Testing
+- Mocking
+- Integration Testing
+- Test Driven Development (TDD)
