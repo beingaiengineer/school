@@ -2,6 +2,215 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Load Testing
 
-Placeholder: introduce Load Testing.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Load Testing |
+| Difficulty | Advanced |
+| Used For | Proving your app won't crash when 10,000 users log in at once |
+| Common Mistake | Running a load test against the production database during peak hours |
+| Performance | Evaluates the performance of the entire system under stress |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, think of opening a new coffee shop.
+
+**Unit Testing** is making one coffee for yourself to ensure it tastes good.
+**Integration Testing** is making sure the espresso machine and the cash register work together.
+
+**Load Testing** is hiring 500 people to sprint into your coffee shop at exactly 9:00 AM and all shout their orders at once.
+You want to see if the barista cries, if the espresso machine catches fire, or if the system actually holds up under the pressure.
+
+---
+
+# 3. Concept Explanation
+
+Load Testing simulates heavy traffic on your application to identify bottlenecks before real users hit them.
+
+We use tools like **Locust** (written in Python) or **k6** (written in JS/Go) to spawn thousands of "virtual users" that constantly send HTTP requests to your API.
+
+It answers critical questions:
+- How many Requests Per Second (RPS) can my API handle?
+- At what point does the database connection pool run out?
+- Does memory usage spike to 100% and crash the server (OOM)?
+
+---
+
+# 4. Syntax Table
+
+| Tool | Approach | Language |
+|---|---|---|
+| Locust | Define user behavior in Python classes. Run via CLI or Web UI. | Python |
+| k6 | Define scenarios in JavaScript. Extremely fast engine. | JavaScript (Go runtime) |
+| Apache JMeter | Heavy, GUI-based Java application. | XML/GUI |
+
+---
+
+# 5. Beginner Example
+
+Let's use **Locust** to load test a simple FastAPI endpoint.
+
+**`locustfile.py`**
+```python
+from locust import HttpUser, task, between
+
+class WebsiteUser(HttpUser):
+    # Wait between 1 and 3 seconds between tasks
+    wait_time = between(1, 3)
+
+    @task
+    def load_homepage(self):
+        self.client.get("/")
+
+    @task(3) # This task runs 3x more often
+    def view_item(self):
+        self.client.get("/item/42")
+```
+
+**Run it:**
+```bash
+pip install locust
+locust -f locustfile.py
+```
+This opens a Web UI at `http://localhost:8089` where you can type "Spawn 1000 users" and hit start.
+
+---
+
+# 6. Real-World Engineering Example
+
+In the real world, you test authentication, database inserts, and specific bottlenecks.
+
+```python
+from locust import HttpUser, task, between
+import random
+
+class APIUser(HttpUser):
+    wait_time = between(0.5, 2)
+    token = None
+
+    def on_start(self):
+        # Runs once per virtual user. Simulate logging in.
+        response = self.client.post("/login", json={"user": "test", "pass": "123"})
+        self.token = response.json().get("token")
+
+    @task
+    def create_order(self):
+        # Stress test the database write path
+        headers = {"Authorization": f"Bearer {self.token}"}
+        item_id = random.randint(1, 100)
+        self.client.post("/orders", json={"item_id": item_id}, headers=headers)
+```
+If you spawn 5,000 of these users, you will very quickly find out if your Postgres connection pool is configured correctly!
+
+---
+
+# 7. Internal Working
+
+Load testing tools work by utilizing asynchronous I/O (like Python's `asyncio` or gevent) or highly concurrent languages (like Go) to generate massive amounts of network requests from a single machine.
+
+They track:
+1. **Response Time:** How long a request took (e.g., 99th percentile response time is 200ms).
+2. **RPS (Requests Per Second):** Total throughput.
+3. **Error Rate:** How many requests returned 5xx errors or timed out.
+
+<LearningFlow
+  nodes={[
+    { id: 'locust', type: 'tool', data: { label: 'Locust Master\n(Web UI / Metrics)' }, position: { x: 250, y: 50 } },
+    { id: 'worker1', type: 'process', data: { label: 'Worker Process\n(Spawns 500 V-Users)' }, position: { x: 100, y: 150 } },
+    { id: 'worker2', type: 'process', data: { label: 'Worker Process\n(Spawns 500 V-Users)' }, position: { x: 400, y: 150 } },
+    { id: 'loadbalancer', type: 'tool', data: { label: 'Load Balancer / API Gateway' }, position: { x: 250, y: 250 } },
+    { id: 'api', type: 'core', data: { label: 'Python API\n(FastAPI / Django)' }, position: { x: 250, y: 350 } },
+    { id: 'db', type: 'warning', data: { label: 'Database\n(The Bottleneck)' }, position: { x: 250, y: 450 } },
+  ]}
+  edges={[
+    { id: 'e1', source: 'locust', target: 'worker1', type: 'smoothstep' },
+    { id: 'e2', source: 'locust', target: 'worker2', type: 'smoothstep' },
+    { id: 'e3', source: 'worker1', target: 'loadbalancer', label: 'HTTP GET/POST', type: 'step', animated: true },
+    { id: 'e4', source: 'worker2', target: 'loadbalancer', label: 'HTTP GET/POST', type: 'step', animated: true },
+    { id: 'e5', source: 'loadbalancer', target: 'api', type: 'step' },
+    { id: 'e6', source: 'api', target: 'db', label: 'Exhausts Connections', type: 'step' },
+  ]}
+/>
+
+---
+
+# 8. Performance Table
+
+| Metric | Good State | Danger State |
+|---|---|---|
+| p99 Response Time | < 200ms | > 2000ms (Users are leaving) |
+| Error Rate | 0% | > 1% (Servers are dropping requests) |
+| CPU Usage | 60-80% | 100% (No headroom for spikes) |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between Load Testing and Stress Testing? | Load testing tests the system under expected peak traffic. Stress testing pushes the system *beyond* limits until it breaks, to see how it fails and recovers. |
+| What is p99 (99th percentile) latency? | It means 99% of requests were faster than this time, and 1% were slower. It's a much better metric than "Average latency". |
+| Why did the API pass the load test but the DB crashed? | The API might have cached responses, or the test only hit endpoints that don't do heavy DB writes. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, look at this load testing mistake.
+
+**The Setup:**
+You run Locust on your Macbook. You point it at your Production API. You tell it to spawn 10,000 users.
+
+**The Trap:**
+Your Macbook only has so many network ports and CPU power. Your Locust script maxes out your Macbook's CPU at 2,000 RPS. You think, "Ah, my API can only handle 2,000 RPS."
+**Wrong.** Your *laptop* can only handle sending 2,000 RPS. The API was fine!
+
+**The Fix:**
+You must run load tests from dedicated, beefy cloud servers (or distributed workers), not your personal laptop, to ensure the bottleneck is the target server, not the attacking machine.
+
+---
+
+# 11. Real-World Usage
+
+- **E-Commerce Sales:** Swiggy or Amazon run massive distributed load tests weeks before Diwali/Black Friday to ensure the platform won't crash when millions of users log on.
+- **Auto-Scaling Verification:** Using load tests to prove that when CPU hits 80%, Kubernetes automatically spins up new pods to handle the traffic.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Run load tests on a staging environment that matches production hardware. | Run load tests on your laptop against a tiny 1GB RAM staging server. |
+| Test read AND write paths (shopping carts, checkouts). | Only test hitting the homepage (which is usually cached). |
+| Monitor the Database CPU/Memory during the test. | Only look at the Locust dashboard. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ **Production Note:**
+> Never run a write-heavy load test against your actual Production database unless you know exactly what you are doing. You will fill the database with thousands of garbage rows ("test_user_1", "test_order_500") that you have to manually clean up later, or worse, you'll accidentally trigger real emails/payments!
+
+---
+
+# 14. Common Mistakes
+
+- **Testing the CDN:** Pointing a load test at `https://my-website.com/image.png`. You aren't testing your Python server; you are just load-testing Cloudflare's caching servers (they will win).
+- **Ignoring p99 latency:** Thinking "The average response is 50ms, we are great!" Meanwhile, 1% of your users (the ones doing complex checkouts) are waiting 15 seconds and timing out.
+
+---
+
+# 15. Related Topics
+
+- FastAPI / Django (Performance)
+- Database Connection Pooling
+- Caching (Redis)
+- Profiling

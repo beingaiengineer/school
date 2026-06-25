@@ -2,6 +2,239 @@
 sidebar_position: 4
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Integration Testing
 
-Placeholder: introduce Integration Testing.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Integration Testing |
+| Difficulty | Intermediate |
+| Used For | Verifying that different modules/services work together correctly |
+| Common Mistake | Using the production database instead of a dedicated test database |
+| Performance | Slower than Unit Tests, usually taking seconds to minutes |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, think of a car again.
+
+**Unit Testing** is checking that the steering wheel turns smoothly while it's sitting on a workbench.
+**Unit Testing** is checking that the front wheels pivot left and right when pushed.
+
+**Integration Testing** is connecting the steering wheel to the front wheels and turning the wheel to ensure the tires *actually* move.
+Both parts worked perfectly on their own, but if you connected them with the wrong bolt, the system fails. Integration testing catches the "wrong bolt."
+
+---
+
+# 3. Concept Explanation
+
+Integration tests verify that two or more components of your application interact correctly.
+
+In Python web development, this usually means testing:
+1. Your Python Code + Your Database (Does the ORM query actually work on Postgres?)
+2. Your Python Code + An External API (Can we successfully parse the real response from Stripe?)
+3. Your API Endpoint + Your Database (If I send a `POST /users`, is the user actually saved to the DB?)
+
+Unlike Unit Tests, we **do not mock** the database in Integration Tests. We use a real (but isolated) database.
+
+---
+
+# 4. Syntax Table
+
+| Tool / Concept | Approach |
+|---|---|
+| Test Database | Spin up a fresh PostgreSQL DB using Docker / Testcontainers. |
+| Pytest Fixtures | Use `@pytest.fixture(scope="session")` to setup/teardown the DB. |
+| Test Client | Use `TestClient(app)` in FastAPI/Flask to simulate HTTP requests. |
+
+---
+
+# 5. Beginner Example
+
+Testing a FastAPI endpoint with a SQLite test database.
+
+```python
+from fastapi.testclient import TestClient
+from main import app # Your FastAPI app
+
+client = TestClient(app)
+
+def test_create_item():
+    # 1. Send a real HTTP-like request to your API
+    response = client.post(
+        "/items/",
+        json={"name": "Gaming Mouse", "price": 50.0}
+    )
+
+    # 2. Check the HTTP response
+    assert response.status_code == 200
+    assert response.json()["name"] == "Gaming Mouse"
+
+    # 3. (Integration) The API should have saved it to the DB!
+    # A subsequent GET should find it.
+    get_response = client.get("/items/1")
+    assert get_response.status_code == 200
+```
+This tests the Route, the Pydantic Validation, the Business Logic, and the Database interaction all at once.
+
+---
+
+# 6. Real-World Engineering Example
+
+In production, you don't use SQLite if your real app uses Postgres, because the SQL syntax might differ. You use a real Postgres database for testing, usually via Pytest fixtures that wipe the tables between tests.
+
+```python
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from myapp.models import Base, User
+from myapp.crud import get_user_by_email
+
+# 1. Connect to a LOCAL TEST DATABASE (Never production!)
+TEST_DB_URL = "postgresql://user:pass@localhost/myapp_test_db"
+engine = create_engine(TEST_DB_URL)
+TestingSessionLocal = sessionmaker(bind=engine)
+
+@pytest.fixture(scope="function")
+def db_session():
+    # Setup: Create tables
+    Base.metadata.create_all(bind=engine)
+    session = TestingSessionLocal()
+
+    yield session  # Run the test
+
+    # Teardown: Close session and drop all tables so the next test is clean
+    session.close()
+    Base.metadata.drop_all(bind=engine)
+
+def test_database_integration(db_session):
+    # Act: Insert a real row into the real Postgres test DB
+    new_user = User(email="test@bro.com", name="Bro")
+    db_session.add(new_user)
+    db_session.commit()
+
+    # Assert: Query it back using our CRUD function
+    user = get_user_by_email(db_session, "test@bro.com")
+
+    # Verify the Python objects match the DB state
+    assert user is not None
+    assert user.name == "Bro"
+```
+
+---
+
+# 7. Internal Working
+
+Integration testing requires a heavy setup and teardown lifecycle to prevent tests from interfering with each other (Test Pollution).
+
+If Test A creates a user, and Test B expects the database to be empty, Test B will fail if Test A's data isn't cleaned up.
+
+<LearningFlow
+  nodes={[
+    { id: 'start', type: 'core', data: { label: 'Pytest Session Starts' }, position: { x: 250, y: 50 } },
+    { id: 'db_up', type: 'process', data: { label: 'Create Test DB & Tables' }, position: { x: 250, y: 150 } },
+    { id: 'test1', type: 'tool', data: { label: 'Run Test 1\n(Inserts User)' }, position: { x: 100, y: 250 } },
+    { id: 'test2', type: 'tool', data: { label: 'Run Test 2\n(Updates User)' }, position: { x: 400, y: 250 } },
+    { id: 'cleanup', type: 'process', data: { label: 'ROLLBACK / Drop Tables\n(Clean State)' }, position: { x: 250, y: 350 } },
+    { id: 'db_down', type: 'output', data: { label: 'Destroy Test DB' }, position: { x: 250, y: 450 } },
+  ]}
+  edges={[
+    { id: 'e1', source: 'start', target: 'db_up', type: 'smoothstep' },
+    { id: 'e2', source: 'db_up', target: 'test1', type: 'smoothstep' },
+    { id: 'e3', source: 'test1', target: 'cleanup', type: 'smoothstep' },
+    { id: 'e4', source: 'cleanup', target: 'test2', label: 'Reset DB', type: 'smoothstep' },
+    { id: 'e5', source: 'test2', target: 'cleanup', type: 'smoothstep' },
+    { id: 'e6', source: 'cleanup', target: 'db_down', label: 'All Tests Done', type: 'smoothstep' },
+  ]}
+/>
+
+---
+
+# 8. Performance Table
+
+| Cleanup Strategy | Speed | Details |
+|---|---|---|
+| Drop/Create Tables | Slow | Takes seconds per test. Very safe, but terrible for large suites. |
+| Truncate Tables | Medium | Deletes all rows but keeps tables. Faster than dropping. |
+| Database Transactions | Very Fast | Start a transaction, run the test, then `ROLLBACK`. Data is never permanently saved. Best practice. |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why do we need Integration tests if we have 100% Unit Test coverage? | Unit tests mock external systems. If your mock is wrong (e.g., your SQL query is invalid on Postgres), unit tests will pass, but the app will crash in production. |
+| What is "Test Pollution"? | When data inserted by Test A remains in the database and causes Test B to fail because Test B expected an empty table. |
+| Should you mock external 3rd-party APIs (like Stripe) in Integration tests? | Yes. You integration-test *your* database, but you usually still mock paid/rate-limited external APIs (or use their dedicated "Sandbox" environments). |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, look at this test pollution trap.
+
+```python
+# test_users.py
+def test_create_user(db_session):
+    db_session.add(User(email="admin@app.com"))
+    db_session.commit()
+    assert count_users(db_session) == 1
+
+def test_create_another_user(db_session):
+    db_session.add(User(email="bro@app.com"))
+    db_session.commit()
+    # Will this pass?
+    assert count_users(db_session) == 1
+```
+
+**The Trap:**
+If you run `test_create_another_user` by itself, it passes.
+If you run `pytest` to run all tests, `test_create_another_user` **FAILS**, because `admin@app.com` is still in the database from the first test! The count is 2.
+
+**The Fix:**
+You must ensure your Pytest fixtures clean the database after EVERY test, either by dropping tables or rolling back the transaction. Tests must be order-independent.
+
+---
+
+# 11. Real-World Usage
+
+- **Testcontainers:** A library that automatically spins up a real Docker container (e.g., Redis, Postgres, Kafka) right before your tests run, and tears it down after. It guarantees your integration tests run against the exact same infrastructure versions as production.
+- **CI/CD:** In GitHub Actions, you spin up a `postgres` service container, run your integration tests against it, and then the container is destroyed.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use a dedicated test database (e.g., `myapp_test`). | EVER run integration tests against a production or staging database. |
+| Run integration tests against the same DB engine you use in prod (Postgres vs Postgres). | Use SQLite for tests if you use Postgres in production (dialects differ). |
+| Ensure tests can run in any order without failing. | Rely on state left behind by a previous test. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ **Production Note:**
+> The "Testing Pyramid" states you should have many fast Unit Tests, a moderate amount of Integration Tests, and a few E2E tests. If you write 5,000 Integration Tests that hit the database, your test suite will take 45 minutes to run, killing developer velocity. Keep integration tests focused on critical paths.
+
+---
+
+# 14. Common Mistakes
+
+- **Hardcoding IDs:** Doing `assert user.id == 1`. The ID might be `2` if a previous test didn't clean up the auto-increment counter properly. Assert on emails or UUIDs instead.
+- **Connecting to Prod:** Hardcoding your `.env` loading in tests, accidentally pointing `TEST_DB_URL` to the production database, and wiping the company's data. Always verify the DB name contains `_test`.
+
+---
+
+# 15. Related Topics
+
+- Unit Testing
+- Pytest Fixtures
+- Mocking
+- SQLAlchemy Transactions

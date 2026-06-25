@@ -2,6 +2,237 @@
 sidebar_position: 2
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Unit Testing
 
-Placeholder: introduce Unit Testing.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Unit Testing |
+| Difficulty | Beginner |
+| Used For | Verifying that individual, isolated pieces of code work correctly |
+| Common Mistake | Testing multiple functions or hitting a real database in a unit test |
+| Performance | Should be extremely fast (milliseconds per test) |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, think of unit testing like checking the parts of a bicycle before assembling it.
+
+You don't build the whole bike and *then* check if the brakes work by riding it down a hill.
+Instead, you test the brakes on a workbench (Unit Test). You test the chain. You test the pedals.
+If the brakes fail on the workbench, you know exactly what the problem is. If they fail while riding down the hill (E2E Test), you crash, and you aren't sure if it was the brakes, the wheel, or the road.
+
+---
+
+# 3. Concept Explanation
+
+Unit testing is the practice of testing the smallest testable parts of an application (units)—usually individual functions or methods—in total isolation.
+
+"Total isolation" means:
+- No database connections.
+- No network requests.
+- No file system reads/writes.
+
+If a function relies on these external things, you use **Mocking** to fake them. The goal is to prove the *logic* of the function is correct, independent of the outside world.
+
+---
+
+# 4. Syntax Table
+
+| Concept | Example (using Pytest) |
+|---|---|
+| Test Function | `def test_calculate_tax():` |
+| Execution | `result = calculate_tax(100)` |
+| Verification | `assert result == 10` |
+
+---
+
+# 5. Beginner Example
+
+Let's test a simple business logic function.
+
+**`billing.py` (The Code)**
+```python
+def calculate_discount(price, is_premium_member):
+    if price < 0:
+        raise ValueError("Price cannot be negative")
+
+    if is_premium_member:
+        return price * 0.8  # 20% off
+    return price
+```
+
+**`test_billing.py` (The Unit Tests)**
+```python
+import pytest
+from billing import calculate_discount
+
+def test_calculate_discount_premium():
+    assert calculate_discount(100, is_premium_member=True) == 80.0
+
+def test_calculate_discount_standard():
+    assert calculate_discount(100, is_premium_member=False) == 100
+
+def test_calculate_discount_negative_price():
+    with pytest.raises(ValueError):
+        calculate_discount(-50, is_premium_member=True)
+```
+
+---
+
+# 6. Real-World Engineering Example
+
+In the real world, functions often call external APIs. To unit test them, we must isolate them.
+
+**`weather.py`**
+```python
+import requests
+
+def get_temperature(city):
+    # Real network call! Bad for unit tests.
+    response = requests.get(f"https://api.weather.com/{city}")
+    data = response.json()
+    return data['temp']
+
+def is_freezing(city):
+    temp = get_temperature(city)
+    return temp < 0
+```
+
+**`test_weather.py`**
+To test `is_freezing` without hitting the internet, we "mock" (fake) the `get_temperature` function.
+
+```python
+from unittest import mock
+from weather import is_freezing
+
+@mock.patch('weather.get_temperature')
+def test_is_freezing_true(mock_get_temp):
+    # Force the fake function to return -5
+    mock_get_temp.return_value = -5
+
+    # Run the function. It uses the fake temperature!
+    assert is_freezing("Kashmir") is True
+
+@mock.patch('weather.get_temperature')
+def test_is_freezing_false(mock_get_temp):
+    mock_get_temp.return_value = 25
+    assert is_freezing("Mumbai") is False
+```
+
+---
+
+# 7. Internal Working
+
+A Unit Test always follows the **Arrange, Act, Assert (AAA)** pattern.
+
+1. **Arrange:** Set up the test data, mocks, and conditions.
+2. **Act:** Call the function you want to test.
+3. **Assert:** Verify the output or behavior matches expectations.
+
+<LearningFlow
+  nodes={[
+    { id: 'arrange', type: 'core', data: { label: 'Arrange (Setup Inputs)' }, position: { x: 250, y: 50 } },
+    { id: 'act', type: 'process', data: { label: 'Act (Call Function)' }, position: { x: 250, y: 150 } },
+    { id: 'isolated', type: 'tool', data: { label: 'Function Under Test' }, position: { x: 400, y: 150 } },
+    { id: 'assert', type: 'process', data: { label: 'Assert (Verify Output)' }, position: { x: 250, y: 250 } },
+    { id: 'pass', type: 'output', data: { label: 'PASS' }, position: { x: 100, y: 350 } },
+    { id: 'fail', type: 'warning', data: { label: 'FAIL' }, position: { x: 400, y: 350 } },
+  ]}
+  edges={[
+    { id: 'e1', source: 'arrange', target: 'act', type: 'smoothstep' },
+    { id: 'e2', source: 'act', target: 'isolated', label: 'Executes', type: 'step' },
+    { id: 'e3', source: 'isolated', target: 'assert', label: 'Returns Value', type: 'step' },
+    { id: 'e4', source: 'assert', target: 'pass', label: 'Matches', type: 'smoothstep' },
+    { id: 'e5', source: 'assert', target: 'fail', label: 'Differs', type: 'smoothstep', animated: true },
+  ]}
+/>
+
+---
+
+# 8. Performance Table
+
+| Test Type | Execution Speed | Scope |
+|---|---|---|
+| Unit Test | ~1ms | Single Function |
+| Integration Test | ~100ms - 1s | Multiple Functions + DB |
+| E2E Test | ~5s - 30s | Full System via Browser/Network |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the AAA pattern? | Arrange, Act, Assert. The standard way to structure a unit test. |
+| What is Test-Driven Development (TDD)? | Writing the unit test *before* you write the actual code. |
+| What is Code Coverage? | A metric (e.g., 85%) showing how many lines of your source code are executed by your tests. |
+| What is the difference between a Unit Test and an Integration Test? | Unit tests test one function in isolation (mocking DBs). Integration tests test how components work together (using a real DB). |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, look at this test. It passes, but it's fundamentally flawed.
+
+```python
+def generate_random_id():
+    import uuid
+    return str(uuid.uuid4())
+
+def test_generate_random_id():
+    result1 = generate_random_id()
+    result2 = generate_random_id()
+    # TRAP: Testing that random things are random.
+    assert result1 != result2
+```
+
+**The Trap:**
+You are testing Python's `uuid` library, not your own logic. You cannot reliably unit test pure randomness.
+
+**The Fix:**
+You should mock the random generator to return a fixed value, and test that your code handles that value correctly.
+
+---
+
+# 11. Real-World Usage
+
+Companies require Unit Tests before code can be merged.
+If you push code at Google or Amazon, a CI/CD pipeline runs thousands of unit tests. If your new code breaks an existing unit test, your code is rejected. This prevents regressions.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Test edge cases (empty lists, negative numbers, None). | Only test the "happy path" where everything works perfectly. |
+| Name tests descriptively (`test_discount_fails_on_negative_price`). | Name tests vaguely (`test_discount_1`). |
+| Mock databases and network calls. | Connect to a live production database in a test. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ **Production Note:**
+> Don't chase 100% code coverage. Testing standard getters/setters or simple configuration dicts provides zero value and slows down development. Aim for 80% coverage, focusing heavily on complex business logic, billing calculations, and security rules.
+
+---
+
+# 14. Common Mistakes
+
+- **Testing Private Methods:** You should generally test the public API of a class, not the internal `_private_methods`. The public tests should naturally cover the private methods.
+- **Fragile Tests:** Writing tests that break every time you rename a variable or change a minor implementation detail. Tests should test *behavior*, not *implementation*.
+
+---
+
+# 15. Related Topics
+
+- Pytest
+- Mocking (`unittest.mock`)
+- Integration Testing
+- CI/CD Pipelines

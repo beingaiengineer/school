@@ -2,6 +2,256 @@
 sidebar_position: 3
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Mocking
 
-Placeholder: introduce Mocking.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Mocking (`unittest.mock`) |
+| Difficulty | Intermediate |
+| Used For | Faking external dependencies (APIs, Databases, Time) during tests |
+| Common Mistake | Mocking the object in the wrong file (Target vs Definition) |
+| Performance | Makes tests instantly fast by bypassing network/disk I/O |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, think of Mocking like a fire drill in an office building.
+
+If you want to test if employees know how to exit the building during a fire (the function you are testing), you don't *actually* start a real fire (connecting to a live production database).
+
+Instead, you use a fire alarm bell (a Mock). The employees hear the bell and react exactly as if there was a real fire. The alarm perfectly fakes the real event, allowing you to test the employees' reactions safely and instantly.
+
+---
+
+# 3. Concept Explanation
+
+Mocking is the process of replacing parts of your system under test with fake objects that simulate the behavior of the real ones.
+
+In Python, we use the `unittest.mock` library (specifically `patch` and `MagicMock`).
+
+**Why do we mock?**
+1. **Speed:** Real network calls take seconds. Mocks take microseconds.
+2. **Determinism:** Real APIs might go down or change data. Mocks always return exactly what you tell them to.
+3. **Isolation:** If your test fails, you want to know your *logic* failed, not that your WiFi dropped.
+
+---
+
+# 4. Syntax Table
+
+| Concept | Python Syntax |
+|---|---|
+| Patch Decorator | `@patch('module.file.function_to_mock')` |
+| Set Return Value | `mock_obj.return_value = {"status": "ok"}` |
+| Raise Exception | `mock_obj.side_effect = ConnectionError("API Down")` |
+| Verify Call | `mock_obj.assert_called_once_with('user_id_1')` |
+
+---
+
+# 5. Beginner Example
+
+Let's say we have a function that gets a Bitcoin price from an API. We don't want to hit the real internet during our unit test.
+
+**`crypto.py`**
+```python
+import requests
+
+def get_bitcoin_price():
+    # Real network call!
+    response = requests.get("https://api.crypto.com/btc")
+    return response.json()['price']
+
+def is_good_time_to_buy():
+    price = get_bitcoin_price()
+    return price < 30000
+```
+
+**`test_crypto.py`**
+```python
+from unittest.mock import patch
+from crypto import is_good_time_to_buy
+
+# We patch where the function is USED, not where it is defined.
+@patch('crypto.get_bitcoin_price')
+def test_should_buy(mock_get_price):
+    # Setup the mock to return 25000 instantly without hitting the internet
+    mock_get_price.return_value = 25000
+
+    # Run our function
+    assert is_good_time_to_buy() is True
+
+    # Verify our code actually called the mocked function
+    mock_get_price.assert_called_once()
+```
+
+---
+
+# 6. Real-World Engineering Example
+
+In production, APIs often fail. We must use mocks to test how our code handles those failures (testing the `except` block). We do this using `side_effect`.
+
+**`payment.py`**
+```python
+import requests
+
+def charge_credit_card(user_id, amount):
+    try:
+        response = requests.post("https://stripe.com/api/charge", data={"id": user_id, "amount": amount})
+        response.raise_for_status() # Raises exception on 4xx/5xx errors
+        return "Success"
+    except requests.exceptions.RequestException:
+        return "Payment Failed"
+```
+
+**`test_payment.py`**
+```python
+from unittest.mock import patch
+import requests
+from payment import charge_credit_card
+
+@patch('payment.requests.post')
+def test_charge_failure(mock_post):
+    # Force the mock to RAISE an exception instead of returning a value
+    mock_post.side_effect = requests.exceptions.ConnectionError("Stripe is down")
+
+    result = charge_credit_card(user_id=1, amount=100)
+
+    assert result == "Payment Failed"
+    # Ensure our code passed the right data to Stripe before it "failed"
+    mock_post.assert_called_with("https://stripe.com/api/charge", data={"id": 1, "amount": 100})
+```
+
+---
+
+# 7. Internal Working
+
+How does `@patch` actually work?
+
+When Python runs, it stores modules and functions in a dictionary (`sys.modules`).
+When you use `@patch('my_module.my_func')`, Python temporarily overwrites the reference to `my_func` in memory with a `MagicMock` object.
+
+When your code tries to call `my_func`, it actually hits the `MagicMock`. The Mock records the call (what arguments were passed) and returns whatever you configured in `return_value`. When the test ends, `@patch` automatically restores the original function.
+
+<LearningFlow
+  nodes={[
+    { id: 'test', type: 'core', data: { label: 'Unit Test' }, position: { x: 250, y: 50 } },
+    { id: 'code', type: 'process', data: { label: 'Your Function\nis_good_time_to_buy()' }, position: { x: 250, y: 150 } },
+    { id: 'mock', type: 'tool', data: { label: 'MagicMock\n(Intercepts Call)' }, position: { x: 400, y: 250 } },
+    { id: 'api', type: 'warning', data: { label: 'Real External API\n(Skipped!)' }, position: { x: 100, y: 250 } },
+    { id: 'return', type: 'data', data: { label: 'Returns Fake Data\n(e.g., 25000)' }, position: { x: 400, y: 350 } },
+  ]}
+  edges={[
+    { id: 'e1', source: 'test', target: 'code', type: 'smoothstep' },
+    { id: 'e2', source: 'code', target: 'mock', label: 'Calls', type: 'step' },
+    { id: 'e3', source: 'code', target: 'api', label: 'Blocked by @patch', type: 'step', style: { strokeDasharray: '5, 5' } },
+    { id: 'e4', source: 'mock', target: 'return', type: 'smoothstep' },
+    { id: 'e5', source: 'return', target: 'code', type: 'smoothstep', animated: true },
+  ]}
+/>
+
+---
+
+# 8. Performance Table
+
+| Strategy | Speed | Reliability |
+|---|---|---|
+| Mocking Network Calls | Instant | High (Tests Logic, not Network) |
+| Mocking Database Calls | Instant | Medium (You might write SQL that is invalid on the real DB) |
+| No Mocking (Real APIs) | Slow (Seconds) | Low (Fails if internet is down) |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between `return_value` and `side_effect`? | `return_value` returns a static object. `side_effect` can raise an Exception, or it can be an iterable that returns different values on consecutive calls. |
+| Where should you patch an object? | "Patch where an object is *used*, not where it is *defined*." If `file_a.py` imports `requests`, you patch `file_a.requests`, not `requests`. |
+| What does `mock.assert_called_once_with()` do? | It verifies that the mocked function was called exactly one time, and asserts that the arguments passed to it were exactly what you specify. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, look at this patching mistake. This is the #1 reason mocks fail.
+
+**`helpers.py`**
+```python
+def fetch_data():
+    return "Real Data"
+```
+
+**`app.py`**
+```python
+from helpers import fetch_data
+
+def process():
+    return fetch_data()
+```
+
+**`test_app.py`**
+```python
+from unittest.mock import patch
+from app import process
+
+# TRAP! WRONG PATH!
+@patch('helpers.fetch_data')
+def test_process(mock_fetch):
+    mock_fetch.return_value = "Fake Data"
+    assert process() == "Fake Data" # FAILS! Returns "Real Data"
+```
+
+**The Catch:**
+Because `app.py` did `from helpers import fetch_data`, it already loaded the real function into its own namespace BEFORE the test ran. Patching `helpers.fetch_data` does nothing to the copy inside `app.py`.
+
+**The Fix:**
+Patch where it is *used*.
+```python
+@patch('app.fetch_data') # Correct!
+```
+
+---
+
+# 11. Real-World Usage
+
+- **AWS / Boto3:** Using libraries like `moto` to mock AWS S3 buckets so your tests don't actually upload files and cost you money.
+- **Time/Dates:** Using `freezegun` to mock `datetime.now()`. If your code checks "Is it Monday?", you mock the time so the test doesn't randomly fail on Tuesday.
+- **Emails:** Mocking the SMTP server so you don't spam real users every time your CI/CD pipeline runs.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use mocks for Network I/O, File I/O, and Databases in Unit Tests. | Mock standard library math functions or simple data classes. |
+| Verify the mock was called with the right parameters (`assert_called_with`). | Mock everything so heavily that the test is just checking if Python can assign variables. |
+| Use `patch` as a context manager (`with patch(...)`) if you only need it for 2 lines of code. | |
+
+---
+
+# 13. Production Notes
+
+> ⚠ **Production Note:**
+> Over-mocking is a massive problem. If you mock the database driver, the ORM, and the request object, your test will pass perfectly, but production will crash immediately because you wrote an invalid SQL query. Mocks only test your *Python logic*, they do not prove your system works in reality. This is why you must also have Integration Tests.
+
+---
+
+# 14. Common Mistakes
+
+- **Testing the Mock:** Writing code that just asserts the mock returned what you told it to return. That proves nothing about your business logic.
+- **Mocking too deeply:** `mock_obj.child.child.return_value = X`. If you have to do this, your code is too tightly coupled (Law of Demeter violation).
+- **Leaking Mocks:** If you manually start a patch (`patcher.start()`) and forget to stop it (`patcher.stop()`), that function remains mocked for all subsequent tests in your test suite, causing bizarre failures.
+
+---
+
+# 15. Related Topics
+
+- Unit Testing
+- Pytest Fixtures
+- Integration Testing
+- Dependency Injection
