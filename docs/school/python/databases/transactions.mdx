@@ -2,6 +2,216 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Transactions
 
-Placeholder: introduce Transactions.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Database Transactions |
+| Difficulty | Intermediate |
+| Used For | Ensuring data integrity during multiple operations |
+| Common Mistake | Forgetting to rollback on failure |
+| Performance | Holds database locks; keep them short |
+
+---
+
+# 2. Real-World Analogy
+
+Think of a transaction like buying a house. Bro, you don't just hand over the money and hope they give you the keys eventually. It's an all-or-nothing deal. You sign the papers AND transfer the money at the exact same time through a trusted escrow.
+
+If your bank transfer fails, the paperwork is cancelled. If the seller backs out, your money is refunded. Either EVERYTHING happens successfully, or NOTHING happens. That's a database transaction.
+
+---
+
+# 3. Concept Explanation
+
+A database transaction is a sequence of database operations treated as a single, logical unit of work.
+
+They exist to maintain ACID properties (Atomicity, Consistency, Isolation, Durability).
+
+Bro, use transactions whenever you have multiple steps that modify data, and if any one of those steps fails, you need all the previous steps to be undone to prevent corrupted, partial data.
+
+---
+
+# 4. Syntax Table
+
+| Operation | Example (SQLAlchemy) |
+|---|---|
+| Start | Automatically starts on first operation in a session |
+| Commit | `session.commit()` |
+| Rollback | `session.rollback()` |
+
+---
+
+# 5. Beginner Example
+
+Let's look at a simple bank transfer.
+
+```python
+from sqlalchemy.orm import Session
+
+def transfer_money(session: Session, from_acc: int, to_acc: int, amount: float):
+    try:
+        # Step 1: Deduct from sender
+        sender = session.query(Account).get(from_acc)
+        sender.balance -= amount
+
+        # Step 2: Add to receiver
+        receiver = session.query(Account).get(to_acc)
+        receiver.balance += amount
+
+        # Step 3: Commit BOTH changes at once
+        session.commit()
+        print("Transfer successful!")
+
+    except Exception as e:
+        # If ANYTHING goes wrong, undo everything
+        session.rollback()
+        print(f"Transfer failed. Money is safe. Error: {e}")
+```
+
+If the server crashes right after deducting the sender's balance but before adding to the receiver, the `rollback()` ensures the sender gets their money back.
+
+---
+
+# 6. Real-World Engineering Example
+
+In an e-commerce system, placing an order is complex.
+
+```python
+def place_order(session, user_id, item_id):
+    try:
+        # 1. Create order record
+        order = Order(user_id=user_id, item_id=item_id, status='PENDING')
+        session.add(order)
+
+        # 2. Decrease inventory
+        item = session.query(Inventory).filter_by(id=item_id).with_for_update().first()
+        if item.stock <= 0:
+            raise ValueError("Item out of stock")
+        item.stock -= 1
+
+        # 3. Charge user
+        user = session.query(User).get(user_id)
+        charge_stripe_api(user.stripe_id) # External call
+
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        log_failure(e)
+```
+
+Bro, notice `with_for_update()`. This locks the inventory row so no other transaction can buy the exact same item at the exact same millisecond.
+
+---
+
+# 7. Internal Working
+
+<LearningFlow
+  title="Transaction Lifecycle"
+  nodes={[
+    { id: '1', type: 'core', label: 'BEGIN', position: { x: 50, y: 100 } },
+    { id: '2', type: 'process', label: 'Operation 1 (Deduct)', position: { x: 250, y: 100 } },
+    { id: '3', type: 'process', label: 'Operation 2 (Add)', position: { x: 450, y: 100 } },
+    { id: '4', type: 'output', label: 'COMMIT (Success)', position: { x: 700, y: 50 } },
+    { id: '5', type: 'warning', label: 'ROLLBACK (Failure)', position: { x: 700, y: 150 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', type: 'smoothstep' },
+    { id: 'e2-3', source: '2', target: '3', type: 'smoothstep' },
+    { id: 'e3-4', source: '3', target: '4', label: 'All OK', type: 'smoothstep' },
+    { id: 'e3-5', source: '3', target: '5', label: 'Error occurs', type: 'smoothstep' }
+  ]}
+/>
+
+When a transaction begins, the database doesn't immediately write changes to the main storage. It writes them to a temporary log (like the WAL in Postgres). If a `COMMIT` is issued, those changes are permanently applied. If a `ROLLBACK` is issued, the temporary log for that transaction is discarded, and the main data remains untouched.
+
+---
+
+# 8. Performance Table
+
+| Metric | Impact |
+|---|---|
+| Duration | Keep them extremely short |
+| Row Locks | Transactions lock rows they modify |
+| External APIs | NEVER call slow external APIs inside a transaction |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does ACID stand for? | Atomicity, Consistency, Isolation, Durability. |
+| What is Atomicity? | All or nothing. Either the whole transaction succeeds, or none of it does. |
+| What is Isolation? | How much a transaction is affected by other concurrent transactions. |
+| What happens if a server crashes mid-transaction? | The database will automatically rollback any uncommitted transactions upon recovery. |
+| Why is `with_for_update()` used? | To apply a row-level lock (Pessimistic Locking) preventing other transactions from modifying the row until you commit. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, look at this disaster:
+
+```python
+try:
+    user = session.query(User).get(1)
+    user.status = 'ACTIVE'
+
+    # Sending email takes 5 seconds!
+    send_welcome_email(user.email)
+
+    session.commit()
+except:
+    session.rollback()
+```
+
+If you put a 5-second API call or email send inside a transaction, the database locks the `user` row for 5 whole seconds. If 100 users sign up, your database runs out of connections and crashes.
+
+**Fix:** Commit the transaction FIRST, then send the email asynchronously via a task queue (like Celery).
+
+---
+
+# 11. Real-World Usage
+
+- **Fintech (Stripe/PayPal):** Transactions are critical. Money cannot be created or destroyed due to server crashes.
+- **E-commerce (Amazon):** Inventory decrement and order creation must be atomic.
+- **Flight Booking:** Two people cannot book the exact same seat simultaneously.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Keep transactions as fast as possible | Put slow API calls inside transactions |
+| Use `try/except` to ensure rollbacks | Leave transactions hanging uncommitted |
+| Use row locks (`FOR UPDATE`) for critical updates | Rely solely on application-level checks for concurrency |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Bro, in highly concurrent systems, "deadlocks" happen. This is when Transaction A locks Row 1 and waits for Row 2, while Transaction B locks Row 2 and waits for Row 1. They wait forever. Postgres will detect this and kill one of them. Your application MUST be designed to catch transaction aborts and retry the operation.
+
+---
+
+# 14. Common Mistakes
+
+- **Silent Failures:** Catching an exception but forgetting to call `session.rollback()`. The next operation on that session will crash.
+- **Fat Transactions:** Doing 10,000 updates in a single transaction. It locks too much data and fills up transaction logs. Batch them instead.
+- **Assuming ORM objects are fresh:** In long transactions, the data might have changed in the DB. Always reload or use `with_for_update()` for critical checks.
+
+---
+
+# 15. Related Topics
+
+- SQLAlchemy
+- ORM vs Raw SQL
+- Connection Pooling
+- PostgreSQL Locks

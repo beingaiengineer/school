@@ -2,6 +2,201 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Load Testing
 
-Placeholder: introduce Load Testing.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Load Testing (Locust) |
+| Difficulty | Intermediate |
+| Used For | Checking how your system handles massive traffic |
+| Common Mistake | Load testing against a production database without warning |
+| Performance | Simulates thousands of users hitting your API |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, imagine you own a brand new restaurant.
+
+Unit testing is checking if the chef can cook one perfect burger. Integration testing is checking if the waiter can take the burger from the kitchen to table 4 without dropping it.
+
+**Load testing** is simulating what happens when 500 angry, hungry customers walk through the front door at the exact same second. Does the kitchen catch on fire? Does the waiter quit? You need to know this *before* opening day.
+
+---
+
+# 3. Concept Explanation
+
+Load testing is the process of putting simulated demand on a software system and measuring its response.
+
+It exists to find bottlenecks (like slow DB queries, running out of RAM, or deadlocks) before your real users find them during a traffic spike.
+
+Bro, use tools like **Locust** (written in Python) or **k6** to simulate hundreds or thousands of concurrent users hitting your API.
+
+---
+
+# 4. Syntax Table
+
+| Tool | Example (Locust) |
+|---|---|
+| Define User | `class WebsiteUser(HttpUser): wait_time = between(1, 5)` |
+| Define Task | `@task def view_home(self): self.client.get("/")` |
+| Run Test | `locust -f load_test.py --users 100 --spawn-rate 10` |
+
+---
+
+# 5. Beginner Example
+
+Let's write a simple Locust script to test an API.
+
+```python
+# load_test.py
+from locust import HttpUser, task, between
+
+class APIUser(HttpUser):
+    # Simulate a user waiting 1 to 3 seconds between clicks
+    wait_time = between(1, 3)
+
+    @task(weight=3) # This happens 3x more often
+    def get_users(self):
+        self.client.get("/api/users")
+
+    @task(weight=1)
+    def create_user(self):
+        self.client.post("/api/users", json={"name": "Load Test Bro"})
+```
+
+When you run this, Locust provides a beautiful web UI where you can say "Spawn 500 users at 10 users per second" and watch a live graph of your API's response times and failure rates.
+
+---
+
+# 6. Real-World Engineering Example
+
+In the real world, you need to simulate complex user flows, like logging in, getting a token, and then fetching profile data.
+
+```python
+from locust import HttpUser, task, between
+
+class AuthenticatedUser(HttpUser):
+    wait_time = between(1, 2)
+    token = ""
+
+    def on_start(self):
+        # Runs ONCE when the simulated user "spawns"
+        response = self.client.post("/api/login", json={"user": "test", "pass": "pass"})
+        if response.status_code == 200:
+            self.token = response.json().get("token")
+
+    @task
+    def view_dashboard(self):
+        # Uses the token for subsequent requests
+        headers = {"Authorization": f"Bearer {self.token}"}
+        # Catch failures explicitly based on business logic
+        with self.client.get("/api/dashboard", headers=headers, catch_response=True) as response:
+            if response.elapsed.total_seconds() > 2.0:
+                response.failure("Took too long bro! Over 2 seconds.")
+```
+
+Bro, this accurately simulates real users holding state (tokens) and taking action based on performance limits.
+
+---
+
+# 7. Internal Working
+
+<LearningFlow
+  title="Load Testing Architecture"
+  nodes={[
+    { id: '1', type: 'tool', label: 'Locust Master Node', position: { x: 300, y: 50 } },
+    { id: '2', type: 'process', label: 'Worker 1 (500 Users)', position: { x: 100, y: 150 } },
+    { id: '3', type: 'process', label: 'Worker 2 (500 Users)', position: { x: 500, y: 150 } },
+    { id: '4', type: 'data', label: 'Target Web API', position: { x: 300, y: 250 } },
+    { id: '5', type: 'data', label: 'Database / Cache', position: { x: 300, y: 350 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'Distribute Tasks', type: 'straight' },
+    { id: 'e1-3', source: '1', target: '3', label: 'Distribute Tasks', type: 'straight' },
+    { id: 'e2-4', source: '2', target: '4', label: 'HTTP GET/POST', type: 'smoothstep' },
+    { id: 'e3-4', source: '3', target: '4', label: 'HTTP GET/POST', type: 'smoothstep' },
+    { id: 'e4-5', source: '4', target: '5', label: 'High Load', type: 'step' }
+  ]}
+/>
+
+A load testing tool uses asynchronous I/O (like Python's `gevent` in Locust) to simulate thousands of connections from a single machine. For massive scale (e.g., 100,000 users), tools use a Master-Worker architecture, distributing the attack across multiple machines in the cloud, all hitting your target API simultaneously.
+
+---
+
+# 8. Performance Table
+
+| Metric to Watch | Warning Sign |
+|---|---|
+| Requests Per Second (RPS) | Drops suddenly as load increases |
+| P99 Latency | 99% of requests take longer than 1000ms |
+| Error Rate | > 1% (API starts returning 502/503/504 errors) |
+| DB CPU / Connections | Hits 100% or "Too many connections" |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between Load, Stress, and Spike testing? | **Load:** Normal/High expected traffic. **Stress:** Pushing past the limit until it breaks. **Spike:** Sudden massive surge in traffic. |
+| What is P99 latency? | It means 99% of the requests were faster than this value. It's a much better metric than "Average" latency, which hides outliers. |
+| Why did the API return a 502 Bad Gateway during the test? | The web server (e.g., Nginx) dropped the connection because the Python application (Gunicorn/Uvicorn) was too busy and timed out. |
+| Why use Locust instead of JMeter? | Locust lets you write tests in pure Python, making it easy for Python developers to manage complex setup logic and store tests in Git. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, look at this scenario:
+
+You run a load test on your laptop, hitting your production server. The RPS maxes out at 50, and you panic thinking your server is slow.
+
+Is the server really slow?
+**Probably not.** Your laptop's wifi, your ISP's bandwidth limit, or your OS's max open file limit (ulimit) might be the actual bottleneck.
+
+**The Fix:** Always run heavy load tests from a cloud server (like AWS EC2) located in the same region as your target server to eliminate network/hardware bottlenecks from the test results.
+
+---
+
+# 11. Real-World Usage
+
+- **E-commerce:** Heavily load tested weeks before Black Friday to ensure the cart checkout system won't crash.
+- **Ticketing Platforms:** Spike testing for when concert tickets go on sale and 50,000 people refresh the page simultaneously.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Include realistic "think time" between user clicks | Hit a single URL 10,000 times in a tight `while True` loop |
+| Test against a production-like staging environment | Run a massive test against Production during peak business hours |
+| Monitor Database and Server CPU during the test | Only look at the Locust HTTP response times |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Bro, if you run a load test against an API that sends SMS messages or emails, you will accidentally send 10,000 real emails and get your company's AWS SES account banned for spam. Always ensure third-party integrations are mocked or pointed to sandbox environments in the environment you are load testing.
+
+---
+
+# 14. Common Mistakes
+
+- **Caching lies:** Testing an endpoint that is heavily cached by Cloudflare. You think your Python code handles 10k RPS, but your Python code actually received 0 requests. You just load tested Cloudflare. Bypass CDNs when testing backend limits.
+- **Ignoring the Database:** The DB is almost always the bottleneck. If your test just hits an endpoint that returns `{"status": "ok"}` without touching the DB, the test is useless.
+
+---
+
+# 15. Related Topics
+
+- Profiling
+- Caching
+- Connection Pooling
+- System Architecture
