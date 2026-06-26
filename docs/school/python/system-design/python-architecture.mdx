@@ -2,6 +2,233 @@
 sidebar_position: 1
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Python Architecture
 
-Placeholder: introduce Python Architecture.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Python Architecture |
+| Difficulty | Advanced |
+| Used For | Structuring large Python applications for maintainability and scale |
+| Common Mistake | Putting all business logic directly inside API route handlers |
+| Performance | Clean architecture doesn't make code run faster, it makes teams move faster |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, imagine building a house.
+
+If you just start nailing boards together wherever you want, you might get a shed. But if you want to build a skyscraper, you need a foundation, steel frames, plumbing shafts, and electrical grids.
+
+In Python, a script is a shed. You can put all your code in one file. But a production application is a skyscraper. If you let your database code talk directly to your HTML templates, your building will collapse the second you try to change a window. Architecture is how we separate the walls from the plumbing.
+
+---
+
+# 3. Concept Explanation
+
+Python architecture refers to how you organize your modules, classes, and responsibilities in a large project.
+
+The industry standard is to use **Layered Architecture** (often taking inspiration from Clean Architecture or Hexagonal Architecture). This means your database models (Data Layer) should not know about your FastAPI routes (Presentation Layer). All communication should pass through a middle layer of pure Python functions (Business Logic / Service Layer).
+
+Bro, when you decouple your code this way, you can swap out Postgres for MongoDB, or swap FastAPI for a CLI, without rewriting your actual business rules.
+
+---
+
+# 4. Syntax Table
+
+| Layer | Responsibility | What goes here |
+|---|---|---|
+| Presentation Layer | Taking inputs and returning outputs | FastAPI routers, Flask views, CLI args |
+| Service Layer | The actual business rules | Pure Python classes/functions doing math or logic |
+| Data Access Layer | Talking to external systems | SQLAlchemy models, Redis calls, 3rd party APIs |
+| DTOs (Schemas) | Moving data between layers | Pydantic models, Dataclasses |
+
+---
+
+# 5. Beginner Example
+
+Let's look at the classic mistake of mixing architecture layers, and how to fix it.
+
+```python
+# BAD: Mixed Architecture (The Spaghetti Way)
+# The route knows about the database, the HTTP request, and the business logic all at once.
+@app.post("/checkout")
+def checkout(request: Request, db: Session):
+    data = request.json()
+    user = db.query(User).filter(User.id == data['user_id']).first()
+
+    # Business logic buried in the route
+    if user.balance < data['amount']:
+        return {"error": "Insufficient funds"}
+
+    user.balance -= data['amount']
+    db.commit()
+    return {"status": "success"}
+
+
+# GOOD: Layered Architecture
+# 1. Presentation Layer (Only handles HTTP)
+@app.post("/checkout")
+def checkout_route(payload: CheckoutPayload, db: Session):
+    try:
+        # 2. Call the Service Layer
+        process_checkout(user_id=payload.user_id, amount=payload.amount, db=db)
+        return {"status": "success"}
+    except InsufficientFundsError:
+        return {"error": "Insufficient funds"}
+
+# 3. Service Layer (Only handles Business Logic)
+def process_checkout(user_id: int, amount: float, db: Session):
+    user = get_user_from_db(user_id, db) # 4. Data Layer call
+    if user.balance < amount:
+        raise InsufficientFundsError()
+
+    update_user_balance(user, amount, db) # 4. Data Layer call
+```
+
+Bro, the good way means I can test `process_checkout` without needing to fake an HTTP request.
+
+---
+
+# 6. Real-World Engineering Example
+
+In enterprise Python projects, you'll often see a strict folder structure enforcing this architecture.
+
+```text
+my_project/
+├── api/                  # Presentation Layer
+│   ├── routes.py
+│   └── dependencies.py
+├── core/                 # Business Logic (Service Layer)
+│   ├── services.py
+│   └── exceptions.py
+├── infrastructure/       # Data Access Layer
+│   ├── database.py
+│   ├── models.py         # SQLAlchemy models
+│   └── external_api.py   # Code to call Stripe/AWS
+└── schemas/              # DTOs
+    └── pydantic_models.py
+```
+
+If the product manager says "We are switching our payment provider from Stripe to PayPal", you only have to touch the `infrastructure/` folder. Your `core/` business logic stays exactly the same.
+
+---
+
+# 7. Internal Working
+
+<LearningFlow
+  elements={[
+    {
+      id: '1',
+      type: 'core',
+      data: { label: 'Presentation (FastAPI / HTTP)' },
+      position: { x: 250, y: 50 },
+    },
+    {
+      id: '2',
+      type: 'process',
+      data: { label: 'DTO (Pydantic Validation)' },
+      position: { x: 250, y: 150 },
+    },
+    {
+      id: '3',
+      type: 'core',
+      data: { label: 'Service Layer (Pure Python Logic)' },
+      position: { x: 250, y: 250 },
+    },
+    {
+      id: '4',
+      type: 'tool',
+      data: { label: 'Repository / Data Layer' },
+      position: { x: 250, y: 350 },
+    },
+    {
+      id: '5',
+      type: 'output',
+      data: { label: 'Postgres / Redis' },
+      position: { x: 250, y: 450 },
+    },
+    { id: 'e1-2', source: '1', target: '2', label: 'JSON -> Object' },
+    { id: 'e2-3', source: '2', target: '3', label: 'Calls' },
+    { id: 'e3-4', source: '3', target: '4', label: 'Requests Data' },
+    { id: 'e4-5', source: '4', target: '5', label: 'SQL Query' },
+  ]}
+/>
+
+Data flows downwards. The Presentation layer depends on the Service layer. The Service layer depends on the Data layer. Crucially, dependencies should never point upwards. The Data layer should never import anything from the Presentation layer.
+
+---
+
+# 8. Performance Table
+
+| Architecture Choice | Code Maintainability | Setup Time | Execution Overhead |
+|---|---|---|---|
+| Single File Script | Very Low | Very Fast | None |
+| Layered (MVC style) | High | Medium | Negligible (a few function calls) |
+| Clean / Hexagonal | Very High | Slow | Negligible |
+| Microservices | High (Decoupled) | Very Slow | High (Network latency) |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer | Explanation & Tricks |
+|---|---|---|
+| What is the purpose of the Service Layer? | To encapsulate business logic away from the web framework and database. | If you switch from Flask to FastAPI, your service layer shouldn't change at all. |
+| What is Dependency Injection? | Passing dependencies (like a DB connection) into a function rather than the function creating them itself. | This makes code infinitely easier to unit test, because you can pass in a mock DB connection. |
+| Why shouldn't you return SQLAlchemy ORM models directly from FastAPI routes? | It tightly couples your database schema to your API response schema. | You should convert ORM models to Pydantic models (DTOs) first, so if you rename a DB column, your public API doesn't break. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+**Tricky Scenario:** Circular Imports.
+If your `services.py` imports from `models.py`, and `models.py` imports a helper from `services.py`, Python will crash with an `ImportError`.
+**Solution:** Bro, this is an architectural smell. It means your responsibilities are tangled. Move the shared code to a third file (like `utils.py`), or strictly enforce that dependencies only flow in one direction.
+
+**Edge Case:** Anemia (Anemic Domain Model).
+If your classes are just data (no methods) and your Service layer is 5,000 lines of procedural code operating on that data, you aren't really doing Object-Oriented Programming. Balance logic between smart domain objects and coordination services.
+
+---
+
+# 11. Real-World Usage
+
+- **Fintech APIs:** Banks require strict separation of concerns. The code that calculates interest rates (Core) must be completely isolated from the code that generates the HTTP JSON response (Presentation) to pass security audits.
+- **Testing:** Companies with Layered Architecture have test suites that run in seconds, because they can unit test the Service Layer in pure Python without spinning up a Docker database.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Keep your Service Layer pure Python | Pass `flask.request` objects into your Service Layer |
+| Use Pydantic to validate data at the boundaries | Trust raw dictionaries passed from the web |
+| Organize folders by Feature (Domain) or Layer | Dump 150 functions into one `utils.py` file |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Bro, don't over-engineer on Day 1. If you are building a simple CRUD app that just reads a database and returns JSON, forcing a strict 5-layer Clean Architecture with Repository Patterns and Interfaces will just slow you down. Start with a simple Layered approach (Routes -> Services -> DB), and only add complexity when the codebase actually hurts to maintain.
+
+---
+
+# 14. Common Mistakes
+
+- **Fat Controllers:** Writing 200 lines of logic inside a Flask `@app.route` or Django View. It makes the code impossible to reuse if you want to run that same logic via a background Celery task.
+- **Leaking Secrets:** Returning an entire Database Object to the frontend without a DTO, accidentally exposing `hashed_password` to the internet.
+
+---
+
+# 15. Related Topics
+
+- Scalable Python
+- Microservices
+- Clean Code
+- Project Structure

@@ -2,6 +2,233 @@
 sidebar_position: 6
 ---
 
-# Numpy Performance
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Numpy Performance.
+# NumPy Performance
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | NumPy Performance |
+| Difficulty | Advanced |
+| Used For | Maximizing the speed and memory efficiency of scientific computing in Python |
+| Common Mistake | Treating NumPy arrays like standard Python lists and using `append()` or `for` loops |
+| Performance | Critical for data science, AI, and financial modeling to process massive datasets in milliseconds |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, imagine moving houses.
+
+Using standard Python lists is like moving your furniture by carrying one chair at a time to your new house, driving back, grabbing a lamp, driving back.
+
+Using NumPy effectively is like hiring a massive shipping container. You pack everything perfectly tight into one solid block, put it on a truck, and move the entire house in a single trip. NumPy arrays store data tightly in memory so the CPU can process it all at once without stopping.
+
+---
+
+# 3. Concept Explanation
+
+NumPy is the core library for high-performance computing in Python. It provides the `ndarray` (N-dimensional array) object.
+
+Python lists are arrays of pointers to objects scattered randomly in memory. NumPy arrays are contiguous blocks of uniform C types (like `int32` or `float64`). Because the data is packed tightly and is all the same type, the CPU can read it incredibly fast into its cache and perform vectorized operations on it using C libraries.
+
+Bro, to get the performance out of NumPy, you have to stop thinking in Python loops and start thinking in matrix operations.
+
+---
+
+# 4. Syntax Table
+
+| Concept | Bad (Slow) | Good (Fast) |
+|---|---|---|
+| Creation | `np.array([])` then looping to `append()` | `np.zeros(100)` then assigning by index |
+| Filtering | `[x for x in arr if x > 0]` | `arr[arr > 0]` (Boolean masking) |
+| Math | `[x * 2 for x in arr]` | `arr * 2` (Vectorization) |
+| Copying | `arr2 = np.copy(arr)` (often unnecessary) | `arr2 = arr[:]` (Creates a View, saves RAM) |
+
+---
+
+# 5. Beginner Example
+
+Let's look at the catastrophic mistake of using `append()` with NumPy.
+
+```python
+import numpy as np
+import time
+
+# BAD: Appending to a NumPy array in a loop
+def bad_numpy():
+    start = time.time()
+    arr = np.array([])
+    for i in range(100_000):
+        # This creates a brand new array in memory every single time!
+        arr = np.append(arr, i)
+    print(f"Bad took: {time.time() - start:.2f}s")
+
+# GOOD: Pre-allocating the array
+def good_numpy():
+    start = time.time()
+    # Allocate a block of memory for 100,000 ints instantly
+    arr = np.empty(100_000, dtype=np.int32)
+    for i in range(100_000):
+        arr[i] = i
+    # (Note: np.arange(100_000) is even better, but this shows assignment)
+    print(f"Good took: {time.time() - start:.5f}s")
+
+bad_numpy()  # Takes ~3.5 seconds
+good_numpy() # Takes ~0.005 seconds
+```
+
+Bro, the bad approach is 700x slower because `np.append` does not work like `list.append`. It forces the OS to allocate new memory and copy the old data into it on every single iteration.
+
+---
+
+# 6. Real-World Engineering Example
+
+In Machine Learning data pipelines, you frequently need to replace missing values (NaN) or clip extreme outliers.
+
+```python
+import numpy as np
+
+# A sensor outputs 1 million readings. Some are NaN, some are crazy high.
+sensor_data = np.random.uniform(0, 200, 1_000_000)
+sensor_data[np.random.choice(1_000_000, 5000)] = np.nan # inject NaNs
+
+# The Engineering approach to cleaning this data:
+def clean_sensor_data(data):
+    # 1. Replace NaNs with the average of the valid data
+    mean_val = np.nanmean(data)
+    # Boolean mask assignment - incredibly fast!
+    data[np.isnan(data)] = mean_val
+
+    # 2. Clip values between 0 and 100
+    np.clip(data, 0, 100, out=data)
+
+    return data
+
+clean_data = clean_sensor_data(sensor_data)
+```
+
+By using `np.isnan()` for boolean masking and `np.clip()` with the `out=` parameter (which updates the array in-place without creating a new copy), this code processes a million rows in a fraction of a millisecond.
+
+---
+
+# 7. Internal Working
+
+<LearningFlow
+  elements={[
+    {
+      id: '1',
+      type: 'core',
+      data: { label: 'Python List' },
+      position: { x: 100, y: 50 },
+    },
+    {
+      id: '2',
+      type: 'warning',
+      data: { label: 'Scattered Memory Pointers' },
+      position: { x: 100, y: 150 },
+    },
+    {
+      id: '3',
+      type: 'core',
+      data: { label: 'NumPy Array' },
+      position: { x: 400, y: 50 },
+    },
+    {
+      id: '4',
+      type: 'tool',
+      data: { label: 'Contiguous C Memory Block' },
+      position: { x: 400, y: 150 },
+    },
+    {
+      id: '5',
+      type: 'output',
+      data: { label: 'CPU Cache Hit (Super Fast)' },
+      position: { x: 400, y: 250 },
+    },
+    { id: 'e1-2', source: '1', target: '2' },
+    { id: 'e3-4', source: '3', target: '4' },
+    { id: 'e4-5', source: '4', target: '5' },
+  ]}
+/>
+
+Modern CPUs load data into fast caches (L1/L2) in chunks. If data is contiguous (like NumPy arrays), the CPU loads the next 100 numbers into the cache automatically. If data is scattered (like Python lists), the CPU suffers a "cache miss" and waits hundreds of cycles to fetch the next pointer from main RAM.
+
+---
+
+# 8. Performance Table
+
+| Memory Concept | NumPy Speed | Python List Speed | Why? |
+|---|---|---|---|
+| Element Access | Fast | Fast | Both use index lookups |
+| Vector Math | ~1 ms | ~50 ms | C-compiled SIMD instructions vs Python Interpreter |
+| Memory Size (1M ints) | ~4 MB | ~8 MB | Fixed types vs Object overhead |
+| Resizing (Appending) | Very Slow | Very Fast | NumPy must reallocate C memory; Lists over-allocate capacity |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer | Explanation & Tricks |
+|---|---|---|
+| Why are NumPy arrays faster than Python lists? | Contiguous memory and homogenous data types. | Explain that Python lists store pointers to objects, causing cache misses, while NumPy stores raw C-types in a single block. |
+| What is a "View" vs a "Copy" in NumPy? | A View shares the same underlying data buffer; a Copy duplicates it. | `slice = arr[0:5]` is a View. Modifying `slice` modifies `arr`. This saves RAM but causes bugs if you don't know it's happening. |
+| Does NumPy release the GIL? | Yes, for many operations. | This means NumPy operations can actually utilize multiple CPU cores in multi-threaded Python programs. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+**Tricky Scenario:** In-place operations vs new objects.
+```python
+a = np.ones(5)
+a = a + 1 # Creates a new array, uses more memory
+a += 1    # In-place operation, much faster and uses less RAM
+```
+**Solution:** Bro, always use `+=`, `*=`, or the `out=` parameter when possible to avoid memory spikes on massive arrays.
+
+**Edge Case:** Axis operations on multi-dimensional arrays.
+If you have a 2D array and want the sum of each column, you use `np.sum(arr, axis=0)`. Getting the axis wrong is the #1 cause of bugs in NumPy. `axis=0` crushes rows together (vertically). `axis=1` crushes columns together (horizontally).
+
+---
+
+# 11. Real-World Usage
+
+- **Pandas:** Pandas DataFrames are literally built on top of NumPy arrays. Understanding NumPy makes you instantly better at Pandas.
+- **Computer Vision:** Libraries like OpenCV represent images as 3D NumPy arrays (Height x Width x RGB).
+- **Quantitative Finance:** High-frequency trading algorithms use NumPy to calculate moving averages and volatility on tick data.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `np.empty()` or `np.zeros()` to preallocate | Use `np.append()` inside a loop |
+| Use boolean masking (`arr[arr > 5]`) | Use list comprehensions on NumPy arrays |
+| Specify `dtype=np.float32` if you don't need 64-bit | Let NumPy default to 64-bit if RAM is tight |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Bro, watch out for memory leaks when using NumPy Views. If you load a 10GB array, create a small slice of it (`small = giant_arr[0:10]`), and then `del giant_arr`, the memory is **not** freed! The `small` view is still holding a reference to the entire 10GB underlying C buffer. You must explicitly `.copy()` the slice if you want the giant array to be garbage collected.
+
+---
+
+# 14. Common Mistakes
+
+- **Object Arrays:** Creating a NumPy array of strings or mixed types (`dtype=object`). It ruins all performance benefits and makes it just as slow as a Python list.
+- **Forgetting the Axis:** Using `np.mean(arr)` on a 2D array and getting a single number back instead of an array of means per column.
+
+---
+
+# 15. Related Topics
+
+- Vectorization
+- Memory Optimization
+- Data Types
+- Garbage Collection

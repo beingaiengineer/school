@@ -2,6 +2,234 @@
 sidebar_position: 7
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Performance Best Practices
 
-Placeholder: introduce Performance Best Practices.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Performance Best Practices |
+| Difficulty | Advanced |
+| Used For | Writing Python code that is fast, scalable, and doesn't waste server resources |
+| Common Mistake | Prematurely optimizing code before profiling it |
+| Performance | Applying these patterns can save thousands of dollars in cloud infrastructure costs |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, imagine you manage a busy coffee shop.
+
+If you want to serve more customers, you don't instantly spend $50,000 buying faster espresso machines (premature optimization). First, you watch the workflow. You notice the cashier takes 2 minutes to write down names because the pen is out of ink.
+
+You fix the pen (the actual bottleneck). Then you notice the baristas are walking across the room to get milk. You move the fridge closer (data locality). Performance best practices are about systematically finding and fixing the bottlenecks, not just rewriting everything in C++.
+
+---
+
+# 3. Concept Explanation
+
+Performance best practices in Python involve a combination of choosing the right data structures, minimizing I/O operations, and leveraging the standard library effectively.
+
+Because Python is an interpreted language, it is inherently slower than C or Go. To make Python fast in production, you have to write code that avoids the interpreter's weaknesses (like heavy loop overhead) and leans into its strengths (like C-backed standard libraries and async I/O). Bro, the goal isn't to write perfect code; it's to write code that meets your Service Level Agreements (SLAs).
+
+---
+
+# 4. Syntax Table
+
+| Concept | The Slow Way | The Fast Way |
+|---|---|---|
+| String Concatenation | `s = ""; for word in words: s += word` | `s = "".join(words)` |
+| Lookups | `if item in my_list:` (O(N)) | `if item in my_set:` (O(1)) |
+| Loop Variables | `for i in range(len(arr)): do(arr[i])` | `for item in arr: do(item)` |
+| Object Creation | Instantiating classes inside loops | Reusing objects or using `__slots__` |
+
+---
+
+# 5. Beginner Example
+
+Let's look at the classic mistake of using the wrong data structure for lookups.
+
+```python
+import time
+
+# A database of 1 million registered user IDs
+registered_users_list = list(range(1_000_000))
+# Convert it to a set for O(1) lookups
+registered_users_set = set(registered_users_list)
+
+# We want to check if user ID 999,999 is registered
+user_to_check = 999_999
+
+# BAD: List Lookup (O(N))
+start = time.time()
+is_registered = user_to_check in registered_users_list
+print(f"List lookup took: {time.time() - start:.6f} seconds")  # Takes ~0.015000s
+
+# GOOD: Set Lookup (O(1))
+start = time.time()
+is_registered = user_to_check in registered_users_set
+print(f"Set lookup took: {time.time() - start:.6f} seconds")   # Takes ~0.000001s
+```
+
+Bro, the set lookup is over 10,000 times faster because it uses a hash table. Choosing the right data structure is the easiest and most powerful performance optimization.
+
+---
+
+# 6. Real-World Engineering Example
+
+In production, database queries (I/O) are almost always your biggest bottleneck. The N+1 query problem is the enemy of performance.
+
+```python
+# Assume we have an ORM like Django or SQLAlchemy
+
+# BAD: The N+1 Query Problem
+def get_user_cities_slow(users):
+    cities = []
+    # Query 1: Getting the users (already done)
+    for user in users:
+        # Query 2 through N+1: Hitting the database for EVERY SINGLE USER
+        address = db.query("SELECT city FROM addresses WHERE user_id = ?", user.id)
+        cities.append(address.city)
+    return cities
+
+# GOOD: Batching I/O
+def get_user_cities_fast(users):
+    user_ids = [user.id for user in users]
+    # One single query using an IN clause
+    # Query 1: SELECT city FROM addresses WHERE user_id IN (1, 2, 3...)
+    addresses = db.query("SELECT user_id, city FROM addresses WHERE user_id IN ?", user_ids)
+
+    # Map them in memory (Memory is fast, Databases are slow)
+    address_map = {a.user_id: a.city for a in addresses}
+    return [address_map.get(user.id) for user in users]
+```
+
+Bro, if you have 1,000 users, the bad way hits the database 1,001 times over the network. The good way hits it exactly 1 time.
+
+---
+
+# 7. Internal Working
+
+<LearningFlow
+  elements={[
+    {
+      id: '1',
+      type: 'core',
+      data: { label: 'Identify Bottleneck' },
+      position: { x: 250, y: 50 },
+    },
+    {
+      id: '2',
+      type: 'process',
+      data: { label: 'Is it I/O Bound? (DB/Network)' },
+      position: { x: 250, y: 150 },
+    },
+    {
+      id: '3',
+      type: 'tool',
+      data: { label: 'Use AsyncIO / Batching / Caching' },
+      position: { x: 100, y: 250 },
+    },
+    {
+      id: '4',
+      type: 'process',
+      data: { label: 'Is it CPU Bound? (Math/Loops)' },
+      position: { x: 400, y: 250 },
+    },
+    {
+      id: '5',
+      type: 'tool',
+      data: { label: 'Use NumPy / Multiprocessing' },
+      position: { x: 400, y: 350 },
+    },
+    { id: 'e1-2', source: '1', target: '2' },
+    { id: 'e2-3', source: '2', target: '3', label: 'Yes' },
+    { id: 'e2-4', source: '2', target: '4', label: 'No' },
+    { id: 'e4-5', source: '4', target: '5', label: 'Yes' },
+  ]}
+/>
+
+Performance optimization requires identifying if you are I/O bound (waiting on disks or network) or CPU bound (doing heavy math). You fix I/O by batching, caching, or using `asyncio`. You fix CPU bounds by using better algorithms, C-extensions (NumPy), or `multiprocessing`.
+
+---
+
+# 8. Performance Table
+
+| Optimization Strategy | Effort | Impact | When to do it |
+|---|---|---|---|
+| Fixing N+1 DB Queries | Low | Massive | Always, during development |
+| Using Sets instead of Lists | Low | High | Anytime doing lookups |
+| Adding Caching (Redis) | Medium | Massive | When DB reads are maxing out |
+| Rewriting in C/Rust | Very High | Massive | Absolute last resort |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer | Explanation & Tricks |
+|---|---|---|
+| What is Premature Optimization? | Spending time optimizing code that isn't actually a bottleneck. | "Premature optimization is the root of all evil." You should write clean, readable code first, then use a profiler to find what actually needs fixing. |
+| How do you optimize string concatenation in Python? | Use `"".join(list_of_strings)`. | Python strings are immutable. Doing `a += b` in a loop creates a brand new string object every time, which is O(N^2). |
+| What is the difference between CPU bound and I/O bound? | CPU bound means the processor is doing heavy calculations. I/O bound means the program is waiting for network/disk responses. | Threading/AsyncIO fixes I/O bound problems. Multiprocessing fixes CPU bound problems in Python. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+**Tricky Scenario:** Global variables in loops.
+Python looks up global variables slower than local variables because they are stored in a dictionary, whereas locals are stored in a fast C array.
+**Solution:** If you are using a global function inside a massive loop, assign it to a local variable first.
+```python
+# Slower
+for i in range(1_000_000): math.sqrt(i)
+
+# Faster
+local_sqrt = math.sqrt
+for i in range(1_000_000): local_sqrt(i)
+```
+
+**Edge Case:** The cost of function calls.
+In Python, calling a function has significant overhead. If you have a loop of 10 million items, and inside that loop you call a tiny function `def add(a, b): return a + b`, the overhead of making 10 million function calls will dwarf the actual math. For extreme performance, inline the code.
+
+---
+
+# 11. Real-World Usage
+
+- **E-Commerce:** Using Redis caching for the product catalog so the database doesn't crash on Black Friday.
+- **Data Engineering:** Using generators to process 500GB log files line-by-line so the server doesn't run out of RAM.
+- **Web APIs:** Using background Celery task queues for slow operations (like sending emails) so the API returns a response to the user instantly.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use built-in functions (`map`, `sum`) | Write custom `for` loops to do basic math |
+| Use List Comprehensions | Use `.append()` in a loop if you can avoid it |
+| Profile with `cProfile` before changing code | Guess what is slow based on gut feeling |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Bro, the fastest code is the code that never runs. Before you optimize a function to be 10x faster, ask the product manager if you even need to run that function. Can it be cached? Can it be run once a day in a cron job instead of on every user click? Architectural changes always beat micro-optimizations.
+
+---
+
+# 14. Common Mistakes
+
+- **Ignoring the Database:** Spending 3 days optimizing a Python loop that takes 0.05 seconds, while ignoring the SQL query that takes 3.0 seconds.
+- **Misusing AsyncIO:** Using `async`/`await` and then accidentally calling a blocking synchronous library (like `requests`) inside the event loop, freezing the entire async server.
+
+---
+
+# 15. Related Topics
+
+- Profiling
+- Caching
+- Vectorization
+- Asynchronous Programming
