@@ -2,6 +2,218 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Distributed Systems
 
-Placeholder: introduce Distributed Systems.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Distributed Systems |
+| Difficulty | Advanced |
+| Used For | Scaling beyond a single machine's limits |
+| Common Mistake | Assuming the network is reliable |
+| Performance | Massive horizontal scale, but high latency & complexity overhead |
+
+---
+
+# 2. Real-World Analogy
+
+Think of a massive college group project, bro.
+
+If one genius student does all the work (a Monolith/Single Server), things are simple, but they will eventually burn out or run out of time (hardware limits).
+
+If you distribute the work among 10 students (Distributed System), you can finish 10 times faster! BUT, now you have new problems: communicating, merging work, what if one student gets sick (fails), and how do you ensure everyone is working on the latest version?
+
+---
+
+# 3. Concept Explanation
+
+A Distributed System is a collection of independent computers that appear to the end-user as a single coherent system.
+
+Why use it?
+- **High Availability:** If one server dies, another takes over. No single point of failure.
+- **Horizontal Scaling:** You can't buy an infinitely large CPU, but you can rent 10,000 small ones.
+- **Geographic Locality:** Serve Asian users from Tokyo servers and US users from New York servers to reduce latency.
+
+When NOT to use it:
+- When you have a small user base. The complexity of distribution will slow your team down more than the performance gains will help.
+
+---
+
+# 4. Syntax Table (Concepts)
+
+| Concept | Description | Real-World Example |
+|---|---|---|
+| Node | A single server/instance in the system. | An EC2 instance |
+| Cluster | A group of nodes working together. | Kubernetes Cluster |
+| Replication | Copying data across multiple nodes. | Master/Slave DB setup |
+| Partitioning (Sharding) | Splitting data across multiple nodes. | Users A-M on DB1, N-Z on DB2 |
+
+---
+
+# 5. Beginner Example
+
+A simple conceptual demonstration of why we distribute state using a shared cache (Redis) instead of local memory.
+
+```python
+# BAD: Single Node State (Breaks when scaled to 3 servers)
+local_cache = {}
+
+def get_user(user_id):
+    if user_id in local_cache:
+        return local_cache[user_id] # Other servers don't have this!
+    # Fetch from DB and store...
+
+# GOOD: Distributed State
+import redis
+redis_client = redis.Redis(host='shared-cache.local')
+
+def get_user_distributed(user_id):
+    cached_user = redis_client.get(user_id) # All servers see the same cache
+    if cached_user:
+        return cached_user
+    # Fetch from DB, set in Redis...
+```
+
+---
+
+# 6. Real-World Engineering Example
+
+In a distributed system, handling failures gracefully is critical. We use the **Circuit Breaker** pattern to prevent cascading failures.
+
+```python
+import requests
+import time
+
+class CircuitBreaker:
+    def __init__(self, failure_threshold=3):
+        self.failure_threshold = failure_threshold
+        self.failures = 0
+        self.state = "CLOSED" # Closed means traffic flows normally
+
+    def call_external_service(self, url):
+        if self.state == "OPEN":
+            print("Circuit is OPEN. Fast-failing!")
+            return {"error": "Service unavailable"}
+
+        try:
+            response = requests.get(url, timeout=2)
+            response.raise_for_status()
+            self.failures = 0 # Reset on success
+            return response.json()
+        except Exception as e:
+            self.failures += 1
+            print(f"Request failed. Failure count: {self.failures}")
+            if self.failures >= self.failure_threshold:
+                self.state = "OPEN"
+                print("Tripping Circuit Breaker to OPEN state.")
+            return {"error": "Service failed"}
+
+# Usage
+breaker = CircuitBreaker()
+breaker.call_external_service("http://flaky-service.internal/api")
+```
+
+---
+
+# 7. Internal Working
+
+Bro, how do distributed systems agree on anything?
+
+They use **Consensus Algorithms** (like Paxos or Raft).
+Imagine a distributed database cluster needing to elect a "Leader" node to handle writes.
+1. Nodes send "votes" over the network.
+2. A node must receive a majority (quorum) of votes to become the leader.
+3. If the leader goes offline, a timeout occurs, and a new election happens automatically.
+
+<LearningFlow
+  title="Distributed Load Balancing"
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'User Traffic' }, position: { x: 50, y: 150 } },
+    { id: '2', type: 'process', data: { label: 'Load Balancer\n(Nginx)' }, position: { x: 250, y: 150 } },
+    { id: '3', type: 'tool', data: { label: 'Server Node A\n(US-East)' }, position: { x: 500, y: 50 } },
+    { id: '4', type: 'tool', data: { label: 'Server Node B\n(US-West)' }, position: { x: 500, y: 150 } },
+    { id: '5', type: 'tool', data: { label: 'Server Node C\n(EU-Central)' }, position: { x: 500, y: 250 } },
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true },
+    { id: 'e2-3', source: '2', target: '3', label: 'Route traffic' },
+    { id: 'e2-4', source: '2', target: '4', label: 'Route traffic' },
+    { id: 'e2-5', source: '2', target: '5', label: 'Route traffic' },
+  ]}
+/>
+
+---
+
+# 8. Performance Table
+
+| Metric | Single Machine | Distributed System |
+|---|---|---|
+| Throughput | Hard limit based on CPU/RAM | Theoretically infinite (Horizontal) |
+| Latency | Very Low (Internal memory) | Higher (Network hops) |
+| Maintenance | Simple | High operational overhead |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the CAP Theorem? | A distributed data store can only provide two of three: Consistency, Availability, Partition Tolerance. |
+| What is a Split-Brain scenario? | When a network partition happens and a cluster splits into two, both electing their own "Leader", leading to data corruption. |
+| Consistent Hashing? | A technique used in load balancing and databases to distribute data evenly across servers while minimizing data movement when servers are added or removed. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, what happens if server A sends a message to server B, but gets no response?
+
+Did server B crash before processing it?
+Did server B process it, but the network crashed on the reply?
+Did the network delay the message, and server B is still working on it?
+
+**You cannot know.** This is why distributed transactions are incredibly hard. You must design APIs to be retriable (idempotent) and handle duplicate requests.
+
+---
+
+# 11. Real-World Usage
+
+- **Google Search:** Distributed index spanning millions of machines globally.
+- **Netflix Streaming:** Global CDNs (Content Delivery Networks) distributing video files close to user locations.
+- **Blockchain:** A decentralized distributed ledger system relying heavily on consensus protocols.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Design for failure. Assume nodes will crash randomly. | Assume network latency is zero. |
+| Centralize logging and monitoring (Datadog/Splunk). | Store local state on web servers. |
+| Use Correlation IDs to trace requests across nodes. | Share a single relational DB if you have massive scale. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+The "Fallacies of Distributed Computing" is required reading for senior engineers. The most common mistake juniors make is assuming the network is reliable. Always configure aggressive timeouts, retries with exponential backoff, and circuit breakers for any network call between nodes.
+
+---
+
+# 14. Common Mistakes
+
+- **Ignoring clock drift:** Clocks on different servers are rarely exactly synced. Relying on `time.time()` to order events across a distributed system will lead to subtle, impossible-to-reproduce bugs. Use logical clocks (Vector Clocks) or central sequencing.
+- **Over-distributing:** Breaking a small app into 20 microservices before you have the team to support it.
+
+---
+
+# 15. Related Topics
+
+- Microservices
+- Event-Driven Systems
+- Scalable Python Architecture
+- Concurrency

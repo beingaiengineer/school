@@ -2,6 +2,220 @@
 sidebar_position: 4
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Queue Systems
 
-Placeholder: introduce Queue Systems.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Queue Systems |
+| Difficulty | Intermediate |
+| Used For | Buffering tasks, leveling workloads, background processing |
+| Common Mistake | Using the main web server thread to process heavy tasks |
+| Performance | Reduces API latency by moving heavy work to background workers |
+
+---
+
+# 2. Real-World Analogy
+
+Think of a bank, bro.
+
+If there is only one teller and 100 people rush in, chaos happens. Some people might get pushed out or leave.
+
+Instead, banks use a ticketing machine (the Queue). You take a ticket and sit down. The tellers (Workers) take the next ticket whenever they finish a customer. It prevents the system from being overwhelmed, even during a rush.
+
+---
+
+# 3. Concept Explanation
+
+A Queue System (or Message Queue) is an asynchronous service-to-service communication mechanism. A producer puts a task in the queue, and a background worker pulls it out to process it.
+
+Why use it?
+- **Load Leveling:** If you get a sudden spike in traffic, the queue absorbs it. Workers process it at their own pace without crashing.
+- **Fast APIs:** Instead of waiting 10 seconds to generate a PDF during a web request, you put "Generate PDF" in a queue, return a 200 OK instantly, and do the heavy lifting in the background.
+
+---
+
+# 4. Syntax Table (Concepts)
+
+| Concept | Description | Typical Python Tool |
+|---|---|---|
+| Enqueue | Adding a task to the queue | `celery_app.send_task()` |
+| Dequeue | Taking a task off the queue to process | Celery Worker |
+| Broker | The server holding the queue | Redis, RabbitMQ |
+| Worker | The background process running the code | Celery, RQ |
+
+---
+
+# 5. Beginner Example
+
+A simple simulation of a queue using Python's built-in `queue.Queue`.
+
+```python
+import queue
+import threading
+import time
+
+task_queue = queue.Queue()
+
+def worker():
+    while True:
+        task = task_queue.get()
+        if task is None:
+            break
+        print(f"[Worker] Processing task: {task}")
+        time.sleep(1) # Simulate heavy work
+        task_queue.task_done()
+
+# Start the background worker
+t = threading.Thread(target=worker)
+t.start()
+
+# API receives requests and queues them (Fast)
+print("API: Queuing task A")
+task_queue.put("Generate PDF")
+print("API: Queuing task B")
+task_queue.put("Send Email")
+
+# Wait for queue to empty
+task_queue.join()
+task_queue.put(None)
+t.join()
+```
+
+---
+
+# 6. Real-World Engineering Example
+
+In the real world, you use a library like Celery with Redis as the broker.
+
+```python
+# tasks.py
+# (Pretend this is configured with Celery and Redis)
+from celery import Celery
+import time
+
+app = Celery('tasks', broker='redis://localhost:6379/0')
+
+@app.task
+def process_video(video_id):
+    print(f"Starting heavy video encoding for {video_id}...")
+    time.sleep(10) # Heavy processing
+    print(f"Finished {video_id}")
+    return True
+
+# api.py
+# from tasks import process_video
+
+def upload_video_endpoint():
+    # Save file...
+    video_id = 99
+
+    # Send to queue! Does not block.
+    process_video.delay(video_id)
+
+    return {"status": "Video uploading. Processing in background."}
+```
+
+---
+
+# 7. Internal Working
+
+Bro, what happens when `.delay()` is called?
+
+1. Celery serializes the function name and arguments into JSON.
+2. It pushes this JSON string into a Redis List structure (the broker).
+3. The Celery Worker process, running in a separate terminal, constantly runs `BRPOP` against Redis, waiting for new items.
+4. It pops the JSON, deserializes it, and executes the actual Python function.
+
+<LearningFlow
+  title="Task Queue Architecture"
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Web Server\n(FastAPI/Django)' }, position: { x: 50, y: 150 } },
+    { id: '2', type: 'data', data: { label: 'Redis\n(Broker)' }, position: { x: 300, y: 150 } },
+    { id: '3', type: 'process', data: { label: 'Celery Worker 1' }, position: { x: 550, y: 50 } },
+    { id: '4', type: 'process', data: { label: 'Celery Worker 2' }, position: { x: 550, y: 250 } },
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'Push Task (JSON)', animated: true },
+    { id: 'e2-3', source: '2', target: '3', label: 'Pop Task', animated: true },
+    { id: 'e2-4', source: '2', target: '4', label: 'Pop Task', animated: true },
+  ]}
+/>
+
+---
+
+# 8. Performance Table
+
+| Operation | Scale Factor | Impact |
+|---|---|---|
+| Adding Web Traffic | Enqueue time remains O(1) | High API stability |
+| Queue gets too long | Increase Worker count | Horizontally scalable |
+| Broker memory fills up | Eviction or crash | Need monitoring on Redis |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Celery vs Asyncio? | Asyncio handles I/O bound tasks in a single process. Celery handles heavy CPU/Time tasks across multiple distributed machines. |
+| RabbitMQ vs Redis? | RabbitMQ is an enterprise message broker with complex routing and durability. Redis is an in-memory datastore often used as a simple, fast queue. |
+| What is a Dead Letter Queue? | A holding area for tasks that failed to process repeatedly so engineers can debug them later. |
+| How to ensure a task only runs once? | Use distributed locks (like Redis `SETNX`) inside the worker task. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, what if a worker crashes right in the middle of processing a payment?
+
+If the worker just "popped" the task and crashed, the task is lost.
+This is why robust queues use **Acknowledgements (ACK)**.
+
+The worker pulls the task, but the broker keeps it hidden. Only when the worker successfully finishes does it send an "ACK" to delete it. If the worker connection drops without an ACK, the broker puts the task back in the queue for another worker.
+
+---
+
+# 11. Real-World Usage
+
+- **Video Processing:** YouTube encoding videos after upload.
+- **Email/SMS Campaigns:** Sending 100,000 promotional emails without crashing the marketing dashboard.
+- **Report Generation:** Exporting a massive CSV of user data.
+- **Web Scraping:** Crawling millions of URLs asynchronously.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Pass database IDs to workers, not complex objects. | Pass entire ORM objects into the queue. |
+| Make tasks idempotent (safe to retry). | Put long-running infinite loops inside a task. |
+| Monitor queue length metrics. | Ignore failed tasks. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Never pass large objects (like a 10MB image or complex nested dictionary) as arguments to a background task. The payload must be serialized, pushed over the network to Redis, and deserialized. This kills performance.
+Instead, save the image to S3, save the record to the DB, and just pass the `image_id` or `s3_key` to the worker. Let the worker fetch it.
+
+---
+
+# 14. Common Mistakes
+
+- **Starting Celery as root:** A massive security risk. Always run workers as an unprivileged user.
+- **Forgetting to monitor the broker:** If Redis runs out of memory because workers are dead and the queue is growing, your whole API might go down trying to connect to it.
+
+---
+
+# 15. Related Topics
+
+- Event-Driven Systems
+- Concurrency
+- Multiprocessing
+- Redis

@@ -2,6 +2,207 @@
 sidebar_position: 2
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Numpy
 
-Placeholder: introduce Numpy.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | NumPy (Numerical Python) |
+| Difficulty | Intermediate |
+| Used For | Fast mathematical operations on arrays and matrices |
+| Common Mistake | Using Python `for` loops to iterate over NumPy arrays |
+| Performance | C-level speed, uses continuous memory blocks |
+
+---
+
+# 2. Real-World Analogy
+
+Think of carrying water, bro.
+
+A standard Python List is like carrying water in individual paper cups. If you want to carry 100 cups, you have to pick them up one by one, walk, and put them down. It's slow and tedious (looping).
+
+NumPy is like carrying the water in one massive bucket. You pick it all up at once and pour it all out at once (Vectorization). It's significantly faster and more efficient.
+
+---
+
+# 3. Concept Explanation
+
+NumPy is the foundational library for scientific computing in Python. Almost every other AI/Data library (Pandas, Scikit-Learn, TensorFlow) relies on NumPy under the hood.
+
+Its core feature is the `ndarray` (N-dimensional array). It is vastly superior to standard Python lists for math because it enforces strict data types and stores data in contiguous memory blocks, allowing C-level speed.
+
+---
+
+# 4. Syntax Table (Concepts)
+
+| Operation | Standard Python | NumPy |
+|---|---|---|
+| Create Array | `[1, 2, 3]` | `np.array([1, 2, 3])` |
+| Add 5 to all | `[x + 5 for x in arr]` | `arr + 5` |
+| Multiply arrays | `[x * y for x,y in zip(a,b)]`| `a * b` |
+| Matrix Dot Product| *(Complex nested loops)* | `np.dot(a, b)` |
+
+---
+
+# 5. Beginner Example
+
+Let's look at the power of Vectorization.
+
+```python
+import numpy as np
+
+# Create an array of prices
+prices = np.array([10.0, 20.0, 30.0])
+
+# Add 20% tax to EVERY price instantly.
+# No 'for' loop needed!
+prices_with_tax = prices * 1.20
+
+print(prices_with_tax)
+# Output: [12. 24. 36.]
+```
+
+---
+
+# 6. Real-World Engineering Example
+
+In machine learning, you frequently need to normalize data (scale values between 0 and 1) so neural networks can process them effectively.
+
+```python
+import numpy as np
+
+def normalize_dataset(data):
+    """
+    Normalizes a 2D matrix (e.g., an image or dataset)
+    so all values fall between 0 and 1.
+    """
+    min_val = np.min(data)
+    max_val = np.max(data)
+
+    # This single line performs math on thousands of numbers simultaneously
+    normalized = (data - min_val) / (max_val - min_val)
+    return normalized
+
+# Simulating a grayscale image (3x3 pixels) with values 0-255
+image_pixels = np.array([
+    [0, 128, 255],
+    [50, 100, 200],
+    [10, 20, 30]
+])
+
+print(normalize_dataset(image_pixels))
+```
+
+---
+
+# 7. Internal Working
+
+Bro, why is NumPy so much faster than Python lists?
+
+1. **Memory Layout:** Python lists store pointers to objects scattered randomly in memory. NumPy arrays store raw data sequentially in a single contiguous block of C memory.
+2. **Type Checking:** Python checks data types on every single iteration of a loop. NumPy arrays have one strict data type (e.g., `int32`), skipping type-checks entirely.
+3. **C-Bindings:** The math is executed in pre-compiled C code, entirely bypassing the Python interpreter.
+
+<LearningFlow
+  title="Memory Layout Comparison"
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Python List\n[1, "two", 3.0]' }, position: { x: 100, y: 50 } },
+    { id: '2', type: 'data', data: { label: 'Pointer to Int (1)' }, position: { x: -50, y: 150 } },
+    { id: '3', type: 'data', data: { label: 'Pointer to String ("two")' }, position: { x: 100, y: 200 } },
+    { id: '4', type: 'data', data: { label: 'Pointer to Float (3.0)' }, position: { x: 250, y: 150 } },
+    { id: '5', type: 'core', data: { label: 'NumPy Array\n[1, 2, 3]' }, position: { x: 500, y: 50 } },
+    { id: '6', type: 'data', data: { label: 'Contiguous C Memory\n[ 1 | 2 | 3 ]' }, position: { x: 500, y: 150 } },
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'Random RAM' },
+    { id: 'e1-3', source: '1', target: '3', label: 'Random RAM' },
+    { id: 'e1-4', source: '1', target: '4', label: 'Random RAM' },
+    { id: 'e5-6', source: '5', target: '6', label: 'Direct Access' },
+  ]}
+/>
+
+---
+
+# 8. Performance Table
+
+| Action | Python List | NumPy Array |
+|---|---|---|
+| Creation | Fast | Slightly slower (C-allocation overhead) |
+| Element lookup | Fast | Extremely Fast |
+| Mathematical Operations | Very Slow (O(n) Python loops) | Blazing Fast (C-level vectorization) |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Difference between Python List and NumPy Array? | Lists can hold mixed types and are scattered in memory. Arrays hold a single type and are contiguous, making math much faster. |
+| What is Broadcasting in NumPy? | NumPy's ability to perform math between arrays of different shapes (e.g., adding a scalar to a vector). |
+| What is `.shape`? | Returns a tuple indicating the dimensions of the array (e.g., `(3, 3)` for a 3x3 matrix). |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, what happens if you mutate a sliced NumPy array?
+
+This is a massive trap! In standard Python, slicing a list creates a **copy**.
+In NumPy, slicing creates a **view** to save memory. Changing the slice changes the original array!
+
+```python
+import numpy as np
+
+# NumPy View Trap
+arr = np.array([1, 2, 3, 4])
+slice_arr = arr[0:2]
+
+slice_arr[0] = 99
+
+print(arr) # Output: [99, 2, 3, 4] -> THE ORIGINAL CHANGED!
+
+# To fix this, explicitly call .copy()
+safe_slice = arr[0:2].copy()
+```
+
+---
+
+# 11. Real-World Usage
+
+- **Computer Vision:** Images are just massive 3D NumPy arrays (Height x Width x RGB channels). Manipulating the image is just math on the array.
+- **Financial Modeling:** Running thousands of Monte Carlo simulations on stock prices instantly.
+- **Machine Learning Data Prep:** Converting text into vectors (arrays of numbers) before feeding them into an LLM.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use vectorized operations (`arr * 5`). | Use `for` loops to iterate over arrays (`for x in arr:`). |
+| Pre-allocate arrays if you know the size (`np.zeros()`). | Constantly append to NumPy arrays in a loop (causes memory reallocation). |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+If you need to build an array dynamically (e.g., reading lines from a file and adding them), do NOT append to a NumPy array. Appending forces NumPy to create a brand new array in memory and copy all old data over, which is extremely slow. Instead, append to a standard Python `list` first, and then convert it `np.array(my_list)` at the very end.
+
+---
+
+# 14. Common Mistakes
+
+- **Mixed data types:** If you put a single string into a NumPy array of integers, NumPy will silently convert *every* integer into a string to maintain a single data type, ruining your math operations.
+- **Ignoring dimensions:** Trying to multiply a 1D array with a 2D array without understanding broadcasting rules, leading to `ValueError: operands could not be broadcast together`.
+
+---
+
+# 15. Related Topics
+
+- Pandas
+- Python for AI
+- Performance Optimization

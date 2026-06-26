@@ -2,6 +2,231 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Rag Pipelines
 
-Placeholder: introduce Rag Pipelines.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Retrieval-Augmented Generation (RAG) |
+| Difficulty | Intermediate |
+| Used For | Giving LLMs access to private, up-to-date, or proprietary data |
+| Common Mistake | Dumping thousands of pages into the prompt without semantic search |
+| Performance | Fast retrieval via Vector DBs; LLM generation remains the bottleneck |
+
+---
+
+# 2. Real-World Analogy
+
+Think of taking an open-book exam, bro.
+
+If you go to the exam with just your memory (Standard LLM), you might answer general questions well, but you will fail specific questions about chapter 5. You might even invent an answer (Hallucinate) to not look stupid.
+
+A RAG pipeline is the "Open Book."
+1. You read the question.
+2. You look at the index to find the relevant page (Retrieval).
+3. You read that specific paragraph.
+4. You write your answer using the facts from that paragraph (Generation).
+
+---
+
+# 3. Concept Explanation
+
+LLMs are trained on public data up to a specific cutoff date. They don't know your company's private HR policies or today's stock prices.
+
+**RAG solves this by combining search with generation:**
+1. **Retrieve:** Search your private database for documents relevant to the user's question.
+2. **Augment:** Inject those specific documents into the LLM's prompt.
+3. **Generate:** Ask the LLM to answer the question *only* using the injected documents.
+
+Why use it? It practically eliminates hallucinations and allows the AI to cite its sources.
+
+---
+
+# 4. Syntax Table (Concepts)
+
+| Concept | Description | Typical Tool |
+|---|---|---|
+| Embedding | Converting a sentence into a list of numbers (vector). | OpenAI Embeddings API |
+| Vector Database | A DB built to search and compare vectors quickly. | Pinecone, Chroma, Milvus |
+| Chunking | Splitting large PDFs into small paragraphs. | LangChain TextSplitter |
+| Retrieval | Finding the chunks most similar to the user's question. | Cosine Similarity search |
+
+---
+
+# 5. Beginner Example
+
+A conceptual Python flow of how RAG works (without the heavy Vector DB setup).
+
+```python
+import os
+from openai import OpenAI
+
+client = OpenAI()
+
+# Our "Private Database" (Usually a Vector DB)
+private_docs = {
+    "doc1": "Company policy: Remote work is allowed 3 days a week.",
+    "doc2": "Company policy: The wifi password is 'SuperSecret123'."
+}
+
+def dummy_retrieval(user_question):
+    """Simulates searching a database for the right document."""
+    if "wifi" in user_question.lower():
+        return private_docs["doc2"]
+    return private_docs["doc1"]
+
+def ask_rag_bot(question):
+    # 1. Retrieve
+    relevant_context = dummy_retrieval(question)
+
+    # 2. Augment & Generate
+    prompt = f"""
+    Answer the user's question using ONLY the provided context.
+
+    Context: {relevant_context}
+
+    Question: {question}
+    """
+
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": prompt}]
+    )
+    return response.choices[0].message.content
+
+print(ask_rag_bot("What is the wifi password?"))
+```
+
+---
+
+# 6. Real-World Engineering Example
+
+In production, you use **Embeddings**. You convert text into arrays of floats (vectors) and use math to find similar texts.
+
+```python
+# Conceptual production RAG flow using Langchain concepts
+def production_rag_flow(user_question):
+    # 1. Convert user question into a mathematical vector
+    question_vector = get_embedding(user_question)
+
+    # 2. Search Vector DB for the top 3 most mathematically similar text chunks
+    # (e.g., searching Pinecone using Cosine Similarity)
+    top_3_chunks = vector_db.similarity_search(question_vector, k=3)
+
+    # 3. Combine chunks into a single string
+    context_string = "\n\n".join([chunk.text for chunk in top_3_chunks])
+
+    # 4. Generate answer
+    system_prompt = "You are a helpful assistant. Base your answer on the context below."
+    user_prompt = f"Context:\n{context_string}\n\nQuestion: {user_question}"
+
+    return call_llm(system_prompt, user_prompt)
+```
+
+---
+
+# 7. Internal Working
+
+Bro, how does the Vector Database know what documents match the question?
+
+It uses **Embeddings** and **Cosine Similarity**.
+An embedding model (like `text-embedding-3-small`) turns the word "Dog" into a vector like `[0.1, 0.5, -0.2]`.
+It turns "Puppy" into `[0.12, 0.48, -0.25]`. Because the meanings are similar, the numbers are similar.
+
+When the user asks a question, it is vectorized. The database calculates the angle (Cosine Similarity) between the question's vector and all document vectors. The ones with the smallest angle are returned.
+
+<LearningFlow
+  title="RAG Architecture Flow"
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'User Question' }, position: { x: 50, y: 150 } },
+    { id: '2', type: 'tool', data: { label: 'Embedding Model\n(Convert to Vector)' }, position: { x: 300, y: 50 } },
+    { id: '3', type: 'data', data: { label: 'Vector Database\n(Pinecone)' }, position: { x: 550, y: 50 } },
+    { id: '4', type: 'tool', data: { label: 'Prompt Builder\n(Augment)' }, position: { x: 300, y: 250 } },
+    { id: '5', type: 'process', data: { label: 'LLM\n(Generation)' }, position: { x: 550, y: 250 } },
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: '1. Embed Question' },
+    { id: 'e2-3', source: '2', target: '3', label: '2. Similarity Search' },
+    { id: 'e3-4', source: '3', target: '4', label: '3. Return Chunks' },
+    { id: 'e1-4', source: '1', target: '4', label: 'Pass Question' },
+    { id: 'e4-5', source: '4', target: '5', label: '4. Full Prompt' },
+  ]}
+/>
+
+---
+
+# 8. Performance Table
+
+| Phase | Speed / Cost | Note |
+|---|---|---|
+| Embedding Creation | Fast / Very Cheap | Necessary to index documents and process questions |
+| Vector DB Search | Extremely Fast (pre-50ms) | Optimized for massive scale |
+| LLM Generation | Slow / Expensive | The primary bottleneck of the pipeline |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| RAG vs Fine-Tuning? | Fine-tuning teaches the model a new *style* or behavior, but is bad for memorizing facts. RAG is best for giving the model new *facts* and private knowledge. |
+| What is Chunking? | Splitting a large PDF into smaller 500-word pieces before embedding, so the vector search is accurate. |
+| Why use Cosine Similarity? | It measures the angle between two vectors, which represents semantic similarity, ignoring the magnitude (length) of the text. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, what happens if the user's question is "What was the second thing we talked about?"
+
+A Vector DB will embed that exact sentence and search for documents containing "second thing talked about." It will fail to find the answer because it lacks conversation history.
+
+**Fix (Query Transformation):**
+You must run a preliminary LLM call to rewrite the user's question using chat history.
+*Original:* "What was the second thing we talked about?"
+*Rewritten:* "What was the wifi password?"
+*Then* you send the rewritten question to the Vector DB.
+
+---
+
+# 11. Real-World Usage
+
+- **Internal Enterprise Search:** Letting employees chat with all company Notion docs, PDFs, and Slack messages securely.
+- **Customer Support Bots:** Reading the company's FAQ and troubleshooting guides to answer tickets accurately without hallucinating.
+- **Legal Tech:** Quickly finding specific clauses inside massive 500-page contracts.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Tell the LLM to reply "I don't know" if the context doesn't contain the answer. | Try to stuff an entire 100-page PDF into the prompt without a Vector DB. |
+| Clean your data before chunking it (remove HTML tags, headers). | Embed raw, dirty OCR text full of typos. |
+| Experiment with different chunk sizes (e.g., 500 tokens vs 1000 tokens). | Assume one embedding model is best for every language. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+The quality of a RAG pipeline is entirely dependent on the Retrieval step. If your Vector DB returns the wrong paragraphs, the LLM will generate the wrong answer. Focus 80% of your engineering effort on improving search relevance (using Hybrid Search: combining Keyword search with Vector search) rather than tweaking LLM prompts.
+
+---
+
+# 14. Common Mistakes
+
+- **Lost in the Middle:** If you retrieve 20 chunks and put them in a massive prompt, LLMs often ignore the chunks in the middle and only focus on the top and bottom. Only pass the top 3-5 most relevant chunks.
+- **Ignoring Metadata:** Storing text without metadata. If you store metadata (like `{"author": "HR", "date": "2023"}`), you can filter the database *before* doing the vector search, massively improving speed and accuracy.
+
+---
+
+# 15. Related Topics
+
+- LLM Basics
+- Vector Databases
+- AI Agents
+- Python for AI
