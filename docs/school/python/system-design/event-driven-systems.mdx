@@ -2,6 +2,222 @@
 sidebar_position: 3
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Event Driven Systems
 
-Placeholder: introduce Event Driven Systems.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Event-Driven Systems |
+| Difficulty | Intermediate |
+| Used For | Asynchronous communication between decoupled services |
+| Common Mistake | Creating tight coupling by using synchronous APIs instead |
+| Performance | High throughput, scalable, but adds latency and complexity |
+
+---
+
+# 2. Real-World Analogy
+
+Think of a restaurant kitchen, bro.
+
+If the waiter stands in the kitchen waiting for the chef to cook the food (synchronous API), the waiter can only serve one table at a time. This is slow.
+
+Instead, the waiter writes the order on a ticket and sticks it to the order board (Event Broker). The chef picks up the ticket when ready. The waiter is now free to take more orders. This is an Event-Driven System.
+
+---
+
+# 3. Concept Explanation
+
+An Event-Driven Architecture (EDA) is a design pattern where services communicate by producing and consuming **events**. An event is just a notification that *something happened* (e.g., `UserSignedUp`, `PaymentProcessed`).
+
+Why use it?
+- **Decoupling:** The producer doesn't need to know who the consumers are.
+- **Scalability:** You can add more consumers without changing the producer.
+- **Resilience:** If a consumer goes down, the producer can still publish events. The consumer will process them when it comes back up.
+
+When NOT to use it:
+- Simple CRUD apps where immediate consistency is required.
+- If you don't have the team capacity to handle distributed tracing and debugging.
+
+---
+
+# 4. Syntax Table (Concepts)
+
+| Concept | Description | Example (Python implementation concept) |
+|---|---|---|
+| Event | A record of something that happened. | `{"type": "user_created", "id": 123}` |
+| Producer | The service that creates the event. | User Service publishing to Kafka |
+| Consumer | The service that listens for events. | Email Service reading from Kafka |
+| Broker | The middleman that stores/routes events. | Apache Kafka, RabbitMQ, AWS SNS/SQS |
+
+---
+
+# 5. Beginner Example
+
+A simple simulation of an event-driven flow in Python using a list as a basic broker.
+
+```python
+# The "Broker"
+event_bus = []
+
+def produce_event(event_type, payload):
+    print(f"[Producer] Emitting: {event_type}")
+    event_bus.append({"type": event_type, "data": payload})
+
+def consume_events():
+    for event in event_bus:
+        if event["type"] == "user_signed_up":
+            print(f"[Consumer - Email Service] Sending welcome email to {event['data']['email']}")
+
+# Usage
+produce_event("user_signed_up", {"email": "bro@example.com"})
+consume_events()
+```
+
+---
+
+# 6. Real-World Engineering Example
+
+In production, you'd use a real message broker like Redis Pub/Sub, Kafka, or RabbitMQ. Here's a conceptual example using a mock Kafka producer.
+
+```python
+# Conceptual Kafka Producer in Python
+import json
+import time
+
+class MockKafkaProducer:
+    def send(self, topic, value):
+        print(f"[Kafka] Topic: {topic} | Event: {json.dumps(value)}")
+
+producer = MockKafkaProducer()
+
+def process_checkout(user_id, cart_items):
+    # 1. Do local synchronous work (e.g., save to DB)
+    print("Saving order to DB...")
+
+    # 2. Emit event for other services (async)
+    event_payload = {
+        "event_name": "OrderPlaced",
+        "user_id": user_id,
+        "items": cart_items,
+        "timestamp": time.time()
+    }
+
+    producer.send("orders_topic", event_payload)
+    print("Checkout complete. Payment & Inventory services will handle the rest async.")
+
+process_checkout(42, ["laptop", "mouse"])
+```
+
+---
+
+# 7. Internal Working
+
+Bro, how does the broker actually handle this?
+
+1. **Publishing:** A producer sends a serialized message (usually JSON or Protobuf) to a specific channel/topic in the broker.
+2. **Storage:** The broker stores the message. In Kafka, it's stored sequentially on disk (append-only log).
+3. **Consumption:** Consumers constantly poll the broker. When a new message arrives, the consumer reads it, processes it, and then "acknowledges" (ACK) it so the broker knows it's done.
+
+<LearningFlow
+  title="Event-Driven Flow"
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'User Service\n(Producer)' }, position: { x: 50, y: 150 } },
+    { id: '2', type: 'process', data: { label: 'Event Broker\n(Kafka / RabbitMQ)' }, position: { x: 300, y: 150 } },
+    { id: '3', type: 'tool', data: { label: 'Email Service\n(Consumer)' }, position: { x: 600, y: 50 } },
+    { id: '4', type: 'tool', data: { label: 'Analytics Service\n(Consumer)' }, position: { x: 600, y: 250 } },
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'Publishes "UserCreated"', animated: true },
+    { id: 'e2-3', source: '2', target: '3', label: 'Polls event', animated: true },
+    { id: 'e2-4', source: '2', target: '4', label: 'Polls event', animated: true },
+  ]}
+/>
+
+---
+
+# 8. Performance Table
+
+| Operation | Performance Impact | Why? |
+|---|---|---|
+| Synchronous API Call | Blocks the caller | Waiting for network and processing |
+| Emitting an Event | Very fast (O(1) from app perspective) | Just dropping a message to a broker |
+| End-to-End Latency | Higher than sync | Must wait for broker and consumer processing |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is Eventual Consistency? | The system isn't immediately synced, but "eventually" all services will process the events and become consistent. |
+| Pub/Sub vs Message Queues? | Pub/Sub broadcasts to many consumers. Queues deliver a message to exactly one consumer worker. |
+| What is the Outbox Pattern? | Writing an event to a local database table in the same transaction as the business data, then a separate process reads the table and sends it to the broker. Prevents lost events. |
+| How do you handle failed events? | Use a Dead Letter Queue (DLQ). If processing fails X times, move it to the DLQ for manual inspection. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, what happens if an event is processed twice?
+
+This is a huge trap. Network issues can cause brokers to retry sending an event.
+**You must design consumers to be Idempotent.**
+
+```python
+# BAD: Not Idempotent
+def handle_payment_event(event):
+    user.balance -= event.amount # If processed twice, charges twice!
+
+# GOOD: Idempotent
+def handle_payment_event(event):
+    if db.processed_events.find(event.id):
+        print("Already processed!")
+        return
+
+    user.balance -= event.amount
+    db.processed_events.save(event.id)
+```
+
+---
+
+# 11. Real-World Usage
+
+- **E-commerce (Amazon):** When you click "Buy", it's an event. Inventory, shipping, and email services all react to it asynchronously.
+- **Ride Sharing (Uber):** Driver location updates are streams of events processed by pricing and matching services.
+- **Log Analytics:** Every user click is an event shipped to a data lake for ML processing.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Make consumers idempotent. | Assume events arrive strictly in order. |
+| Use an event schema registry (like Protobuf/Avro) to prevent breaking changes. | Send massive payloads in events (send a reference ID instead). |
+| Implement Dead Letter Queues (DLQs). | Use event-driven for simple, immediate CRUD requirements. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Tracing a request across 5 different event-driven microservices is a nightmare without proper observability. Always inject a `correlation_id` into the event payload so you can track the full lifecycle of an action across all services in your centralized logging (e.g., Datadog, ELK).
+
+---
+
+# 14. Common Mistakes
+
+- **Creating distributed monoliths:** If Service A publishes an event, and Service B *must* process it immediately for Service A to continue, you haven't decoupled them; you just replaced an HTTP call with a slower message queue.
+- **Ignoring exactly-once delivery myths:** Brokers generally guarantee "at-least-once" delivery. Your code must handle duplicates.
+
+---
+
+# 15. Related Topics
+
+- Queue Systems
+- Distributed Systems
+- Microservices
+- Concurrency

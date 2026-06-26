@@ -2,6 +2,207 @@
 sidebar_position: 3
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Pandas
 
-Placeholder: introduce Pandas.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Pandas |
+| Difficulty | Intermediate |
+| Used For | Data analysis, cleaning, and manipulation |
+| Common Mistake | Using `.iterrows()` instead of vectorized functions |
+| Performance | Built on NumPy, highly optimized for structured data |
+
+---
+
+# 2. Real-World Analogy
+
+Think of an accountant organizing invoices, bro.
+
+Doing it manually with paper files is like using raw Python dictionaries and lists. Finding all invoices from "July" takes hours of flipping through pages.
+
+Pandas is like giving the accountant Microsoft Excel on steroids. They can instantly filter for "July", sum the totals, and group them by client with a single click.
+
+---
+
+# 3. Concept Explanation
+
+Pandas is the industry standard Python library for data manipulation. It introduces two main data structures:
+1. **Series:** A single column of data.
+2. **DataFrame:** A 2D table (like an Excel sheet or SQL table) made up of multiple Series.
+
+Why use it?
+It makes cleaning messy data, filling missing values, joining datasets, and aggregating data incredibly easy and fast.
+
+---
+
+# 4. Syntax Table (Concepts)
+
+| Operation | Pandas Syntax |
+|---|---|
+| Read CSV | `df = pd.read_csv("data.csv")` |
+| View top rows | `df.head()` |
+| Filter data | `df[df['age'] > 30]` |
+| Group and Sum | `df.groupby('city')['sales'].sum()` |
+
+---
+
+# 5. Beginner Example
+
+Let's load some basic data and manipulate it.
+
+```python
+import pandas as pd
+
+# Creating a DataFrame from a dictionary
+data = {
+    "Name": ["Rahul", "Priya", "Amit"],
+    "Age": [25, 29, 22],
+    "City": ["Mumbai", "Delhi", "Mumbai"]
+}
+
+df = pd.DataFrame(data)
+
+# Filter: Only get people from Mumbai
+mumbai_peeps = df[df["City"] == "Mumbai"]
+
+# Calculate average age of Mumbai peeps
+avg_age = mumbai_peeps["Age"].mean()
+
+print(f"Average age in Mumbai: {avg_age}")
+```
+
+---
+
+# 6. Real-World Engineering Example
+
+In production data pipelines (ETL), you frequently need to clean dirty data before saving it to a database.
+
+```python
+import pandas as pd
+import numpy as np
+
+def clean_customer_data(file_path):
+    # 1. Load the data
+    df = pd.read_csv(file_path)
+
+    # 2. Handle missing data (Fill empty emails with "unknown")
+    df['email'] = df['email'].fillna("unknown")
+
+    # 3. Remove duplicates based on User ID
+    df = df.drop_duplicates(subset=["user_id"])
+
+    # 4. Standardize text (make all names uppercase)
+    df['name'] = df['name'].str.upper()
+
+    # 5. Create a derived column
+    df['is_adult'] = np.where(df['age'] >= 18, True, False)
+
+    return df
+
+# df_clean = clean_customer_data("raw_customers.csv")
+```
+
+---
+
+# 7. Internal Working
+
+Bro, how does a DataFrame work under the hood?
+
+A DataFrame is essentially a dictionary of NumPy arrays. Every column is a NumPy array. This is why operations down a column (like summing prices) are incredibly fast—they use C-compiled vectorization. Operations across rows are slower because data is grouped by columns in memory.
+
+<LearningFlow
+  title="Pandas Internal Structure"
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Pandas DataFrame' }, position: { x: 250, y: 50 } },
+    { id: '2', type: 'data', data: { label: 'Index\n(Row Labels)' }, position: { x: 50, y: 150 } },
+    { id: '3', type: 'data', data: { label: 'Series (Col 1)\nNumPy Array [Int]' }, position: { x: 250, y: 150 } },
+    { id: '4', type: 'data', data: { label: 'Series (Col 2)\nNumPy Array [Str]' }, position: { x: 450, y: 150 } },
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2' },
+    { id: 'e1-3', source: '1', target: '3' },
+    { id: 'e1-4', source: '1', target: '4' },
+  ]}
+/>
+
+---
+
+# 8. Performance Table
+
+| Action | Performance | Note |
+|---|---|---|
+| Vectorized operation (e.g., `df['a'] + df['b']`) | Very Fast | Uses underlying C-level NumPy arrays |
+| `.apply()` function | Moderate | Applies a Python function to each row |
+| `.iterrows()` loop | Extremely Slow | Reconstructs a Series object for every single row |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Difference between `loc` and `iloc`? | `loc` selects by label/name (e.g., index name "Row_A"). `iloc` selects by integer position (e.g., row 0). |
+| How do you handle missing values? | Use `.fillna()` to replace them or `.dropna()` to remove the rows entirely. |
+| What is a Pandas Series? | A 1-dimensional labeled array. A DataFrame is a collection of Series. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, how do you change values based on a condition without throwing warnings?
+
+This is the infamous `SettingWithCopyWarning`.
+
+```python
+# BAD: Chained Indexing (Throws warning, might not update original data!)
+df[df['age'] > 30]['status'] = 'senior'
+
+# GOOD: Using .loc
+df.loc[df['age'] > 30, 'status'] = 'senior'
+```
+
+Never chain brackets `[][]` when assigning values. Always use `.loc[row_indexer, column_indexer]`.
+
+---
+
+# 11. Real-World Usage
+
+- **ETL Pipelines:** Extracting data from an API, using Pandas to clean and transform it, and loading it into PostgreSQL.
+- **Financial Analysts:** Replacing massive Excel sheets with Python scripts that calculate moving averages instantly.
+- **AI/ML:** Cleaning raw datasets, normalizing values, and splitting data into training/testing sets before passing them to PyTorch.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `.groupby()` for aggregations. | Write custom loops to group data. |
+| Chain methods cleanly using parentheses. | Use `.iterrows()` for data transformation. |
+| Define `dtypes` when reading large CSVs to save RAM. | Load 50GB CSVs into a 16GB laptop. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Pandas loads the entire dataset into RAM. If your CSV is 10GB, Pandas might use 30GB of RAM to process it, crashing your container. For massive datasets, you must switch tools. Use **Dask** (which uses Pandas syntax but parallelizes it out-of-core) or **PySpark** for distributed processing.
+
+---
+
+# 14. Common Mistakes
+
+- **Abusing `.apply()`:** While `.apply()` is better than a `for` loop, it is still essentially a loop under the hood. Always check if there is a built-in vectorized Pandas function (like `df['name'].str.lower()`) before writing a custom `.apply()` function.
+- **Ignoring indexes:** Forgetting to `.reset_index()` after filtering or grouping, leading to misaligned data when joining tables later.
+
+---
+
+# 15. Related Topics
+
+- NumPy
+- Python for AI
+- CSV Files

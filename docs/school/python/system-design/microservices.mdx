@@ -2,6 +2,223 @@
 sidebar_position: 6
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Microservices
 
-Placeholder: introduce Microservices.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Microservices |
+| Difficulty | Advanced |
+| Used For | Scaling engineering teams and independent deployment |
+| Common Mistake | Building a "Distributed Monolith" with tight coupling |
+| Performance | High network overhead, requires excellent observability |
+
+---
+
+# 2. Real-World Analogy
+
+Think of a massive corporate office, bro.
+
+A **Monolith** is like one giant room where the HR, Sales, and Engineering teams all sit at the same big desk, sharing the same filing cabinet. It's easy to talk to each other, but when the company grows to 500 people, the noise is unbearable and nobody can find their files.
+
+**Microservices** is giving each team their own separate office building and their own secure filing cabinet. They communicate only through official memos (APIs). It's scalable, but now you have to hire a mail delivery system (Network) to pass messages around.
+
+---
+
+# 3. Concept Explanation
+
+Microservices architecture splits a large application into small, independent services. Each service owns a specific business domain (e.g., Billing, Inventory, User Auth) and has its own database.
+
+Why use it?
+- **Team Autonomy:** The Billing team can deploy a new feature without waiting for the Inventory team to finish testing.
+- **Polyglot Tech Stack:** Auth can be in Go (for speed), Data Science in Python, and the Web backend in Node.js.
+- **Fault Isolation:** If the Email service crashes, the core Checkout service stays up.
+
+When NOT to use it:
+- Startups searching for Product-Market Fit. Monoliths are faster to build.
+- Teams without mature DevOps and CI/CD pipelines.
+
+---
+
+# 4. Syntax Table (Concepts)
+
+| Concept | Description | Typical Tooling |
+|---|---|---|
+| API Gateway | The single entry point for all clients. | Kong, AWS API Gateway |
+| Service Mesh | Handles internal service-to-service traffic. | Istio, Linkerd |
+| Centralized DB | Anti-pattern. Services must own their data. | N/A |
+| Orchestration | Managing the deployment of many containers. | Kubernetes |
+
+---
+
+# 5. Beginner Example
+
+A conceptual Python example showing how two microservices interact over HTTP instead of direct function calls.
+
+```python
+import requests
+
+# --- In a Monolith ---
+# def checkout(user_id):
+#     if inventory_module.check_stock("laptop"):
+#         billing_module.charge(user_id, 1000)
+
+# --- In Microservices ---
+def checkout_microservice_style(user_id):
+    # 1. Ask Inventory Service (HTTP Call over network)
+    inventory_res = requests.get("http://inventory-service/api/check?item=laptop")
+
+    if inventory_res.json().get("in_stock"):
+        # 2. Ask Billing Service (HTTP Call over network)
+        billing_res = requests.post("http://billing-service/api/charge",
+                                    json={"user_id": user_id, "amount": 1000})
+
+        if billing_res.status_code == 200:
+            print("Checkout successful")
+```
+
+---
+
+# 6. Real-World Engineering Example
+
+When microservices talk to each other, things fail. You must use tools like the **Saga Pattern** or **Retries** to handle partial failures.
+
+Here is an example of an API Gateway router using FastAPI to aggregate data from two different microservices.
+
+```python
+from fastapi import FastAPI, HTTPException
+import httpx
+import asyncio
+
+app = FastAPI()
+
+async def fetch_user(user_id: int):
+    async with httpx.AsyncClient() as client:
+        res = await client.get(f"http://user-service/users/{user_id}")
+        return res.json()
+
+async def fetch_orders(user_id: int):
+    async with httpx.AsyncClient() as client:
+        res = await client.get(f"http://order-service/orders?user={user_id}")
+        return res.json()
+
+@app.get("/api/dashboard/{user_id}")
+async def get_dashboard(user_id: int):
+    # Fetch from two separate microservices concurrently
+    try:
+        user_data, order_data = await asyncio.gather(
+            fetch_user(user_id),
+            fetch_orders(user_id)
+        )
+        return {"user": user_data, "recent_orders": order_data}
+    except httpx.RequestError:
+        raise HTTPException(status_code=503, detail="Downstream service unavailable")
+```
+
+---
+
+# 7. Internal Working
+
+Bro, the golden rule of microservices is **Database per Service**.
+
+If the Order Service reaches directly into the User Service's database to run a SQL `JOIN`, you have failed. You built a "Distributed Monolith." If the User team changes their DB schema, the Order team breaks.
+
+Data must only be accessed via APIs or Events.
+
+<LearningFlow
+  title="Microservices Architecture"
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Client (Mobile/Web)' }, position: { x: 250, y: 50 } },
+    { id: '2', type: 'process', data: { label: 'API Gateway' }, position: { x: 250, y: 150 } },
+    { id: '3', type: 'tool', data: { label: 'Auth Service' }, position: { x: 50, y: 250 } },
+    { id: '4', type: 'data', data: { label: 'Auth DB' }, position: { x: 50, y: 350 } },
+    { id: '5', type: 'tool', data: { label: 'Billing Service' }, position: { x: 250, y: 250 } },
+    { id: '6', type: 'data', data: { label: 'Billing DB' }, position: { x: 250, y: 350 } },
+    { id: '7', type: 'tool', data: { label: 'Inventory Service' }, position: { x: 450, y: 250 } },
+    { id: '8', type: 'data', data: { label: 'Inventory DB' }, position: { x: 450, y: 350 } },
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true },
+    { id: 'e2-3', source: '2', target: '3', label: 'Route HTTP' },
+    { id: 'e2-5', source: '2', target: '5', label: 'Route HTTP' },
+    { id: 'e2-7', source: '2', target: '7', label: 'Route HTTP' },
+    { id: 'e3-4', source: '3', target: '4' },
+    { id: 'e5-6', source: '5', target: '6' },
+    { id: 'e7-8', source: '7', target: '8' },
+  ]}
+/>
+
+---
+
+# 8. Performance Table
+
+| Metric | Monolith | Microservices |
+|---|---|---|
+| Latency | Very Low (In-memory calls) | High (Network hops, JSON parsing) |
+| Developer Speed | Fast early on, slow when huge | Slow early on, fast when teams scale |
+| Memory Usage | Low (Shared processes) | High (Every service needs its own OS runtime) |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is a Distributed Monolith? | An architecture that looks like microservices but is tightly coupled (e.g., sharing a DB, or hardcoded synchronous HTTP dependencies). Worst of both worlds. |
+| How do you handle distributed transactions? | Using the Saga Pattern. Since you can't lock two separate databases, you perform local transactions and emit events. If a later step fails, you emit compensating events to rollback earlier steps. |
+| What is an API Gateway? | A reverse proxy sitting in front of the services. Handles routing, auth, rate limiting, and SSL termination. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, how do you do a `JOIN` across two microservices?
+
+You can't write a SQL JOIN across different databases.
+Options:
+1. **API Composition:** An aggregator service queries both APIs and merges the JSON arrays in memory. (Slow for large datasets).
+2. **CQRS / Materialized Views:** Services publish events when their data changes. A separate reporting database consumes these events and builds a pre-joined, read-only table.
+
+---
+
+# 11. Real-World Usage
+
+- **Spotify:** Hundreds of microservices (Playlist service, Search service, Audio playback service).
+- **Amazon:** Pioneered the "two-pizza team" rule. Every service is owned by a team small enough to be fed by two pizzas.
+- **Uber:** Transitioned from a monolithic Node.js app to thousands of Go and Python microservices to handle global scale.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Enforce one database per service. | Share a single database across services. |
+| Use asynchronous events (Kafka) between services when possible. | Create long synchronous chains of HTTP calls (Service A calls B calls C calls D). |
+| Standardize logging and metrics (e.g., OpenTelemetry). | Build microservices without automated CI/CD. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Debugging a 500 Internal Server Error in a microservices environment is impossible without Distributed Tracing. You must inject a trace ID at the API Gateway and pass it in the HTTP headers to every downstream service. When a user complains, you search that single ID in Datadog/Jaeger to see exactly which service in the chain failed.
+
+---
+
+# 14. Common Mistakes
+
+- **Nano-services:** Making services too small. If a service only has one endpoint and relies entirely on another service to work, it shouldn't be a microservice.
+- **Ignoring backward compatibility:** If you change an API response format, you will break other teams' code in production. You must version your APIs (`/v1/`, `/v2/`).
+
+---
+
+# 15. Related Topics
+
+- Event-Driven Systems
+- Distributed Systems
+- Scalable Python Architecture
+- API Development
