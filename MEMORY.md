@@ -242,12 +242,12 @@ Before deleting files:
 - `concurrency`: all topics (threading, multiprocessing, asyncio, async-await, race-conditions, queues, locks-semaphores, gil)
 - `api-development`: all topics (requests-library, rest-api-basics, fastapi, flask, authentication, middleware, api-versioning, rate-limiting)
 - `databases`: all topics (sqlite, postgresql, sqlalchemy, orm-vs-raw-sql, transactions, indexing, connection-pooling)
-- `testing`: partial (pytest, unit-testing, mocking, integration-testing, load-testing completed; test-best-practices pending)
+- `testing`: all topics (pytest, unit-testing, mocking, integration-testing, load-testing, test-best-practices)
+- `performance`: all topics (profiling, memory-optimization, caching, lazy-loading, vectorization, numpy-performance, performance-best-practices)
+- `system-design`: partial (python-architecture, scalable-python completed; event-driven-systems, queue-systems, distributed-systems, microservices, production-patterns pending)
 
 **Pending Topics (Next Up):**
-- `testing`: test-best-practices
-- `performance`: all topics (profiling, memory-optimization, caching, lazy-loading, vectorization, numpy-performance, performance-best-practices)
-- `system-design`: all topics (python-architecture, scalable-python, event-driven-systems, queue-systems, distributed-systems, microservices, production-patterns)
+- `system-design`: partial (event-driven-systems, queue-systems, distributed-systems, microservices, production-patterns)
 - `ai-engineering`: all topics (python-for-ai, numpy, pandas, llm-basics, rag-pipelines, vector-databases, ai-agents, async-ai-workflows, ai-observability)
 - `best-practices`: all topics (clean-code, project-structure, coding-standards, security-best-practices, production-checklists, scalability-guidelines, engineering-principles)
 

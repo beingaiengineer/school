@@ -2,6 +2,232 @@
 sidebar_position: 3
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Caching
 
-Placeholder: introduce Caching.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Caching |
+| Difficulty | Intermediate |
+| Used For | Storing expensive function results so you don't have to compute them again |
+| Common Mistake | Forgetting to invalidate the cache when the underlying data changes |
+| Performance | Can turn an O(N) or O(2^N) operation into an O(1) instantaneous lookup |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, imagine you are a librarian.
+
+Someone asks you for the capital of Madagascar. You don't know it, so you walk down three aisles, pull out an encyclopedia, flip to the M section, read the page, and walk back to tell them: "It's Antananarivo." That took 5 minutes.
+
+Five minutes later, someone else asks you the exact same question. Are you going to walk back to the encyclopedia? No. You saved the answer in your brain (the cache). You answer instantly. Caching in Python is just storing the answer so the computer doesn't have to "walk to the encyclopedia" (the database or a heavy calculation) again.
+
+---
+
+# 3. Concept Explanation
+
+Caching is the process of storing the result of an expensive operation in fast memory so that subsequent requests for the exact same operation return the cached result instantly.
+
+In Python, you can cache data in variables, dictionaries, or by using built-in decorators like `@functools.lru_cache` and `@functools.cache`. Bro, caching is the easiest way to make a slow application incredibly fast, but it introduces the hardest problem in computer science: cache invalidation (knowing when to throw the old answer away).
+
+---
+
+# 4. Syntax Table
+
+| Concept | Syntax | When to Use |
+|---|---|---|
+| Basic Cache | `my_dict[key] = result` | Manual caching in a simple script |
+| LRU Cache | `@lru_cache(maxsize=128)` | Caching function calls, keeping only the 128 most recent |
+| Unlimited Cache | `@cache` | Python 3.9+. Caching function calls forever (watch your RAM!) |
+| Redis Cache | `redis.set(key, val, ex=60)` | Distributed caching for web servers with an expiration time |
+
+---
+
+# 5. Beginner Example
+
+Let's look at the classic Fibonacci sequence calculation. Without caching, it's brutally slow because it repeats the same calculations thousands of times.
+
+```python
+import time
+from functools import lru_cache
+
+# BAD: No caching. O(2^N) time complexity.
+def fib_slow(n):
+    if n < 2:
+        return n
+    return fib_slow(n-1) + fib_slow(n-2)
+
+# GOOD: Caching. O(N) time complexity.
+@lru_cache(maxsize=None)
+def fib_fast(n):
+    if n < 2:
+        return n
+    return fib_fast(n-1) + fib_fast(n-2)
+
+# Timing it
+start = time.time()
+print(fib_slow(35))  # Takes ~2-3 seconds
+print(f"Slow: {time.time() - start:.2f}s")
+
+start = time.time()
+print(fib_fast(35))  # Takes 0.00001 seconds
+print(f"Fast: {time.time() - start:.5f}s")
+```
+
+Bro, just adding one line (`@lru_cache`) made the function hundreds of thousands of times faster.
+
+---
+
+# 6. Real-World Engineering Example
+
+In web development, you don't want to hit the database for data that rarely changes, like user permissions or site configuration.
+
+```python
+from functools import lru_cache
+import time
+
+# Mock database call
+def db_get_user_role(user_id):
+    print(f"Executing expensive DB query for user {user_id}...")
+    time.sleep(1) # Simulating a slow query
+    return "admin" if user_id == 1 else "user"
+
+# Cache the results, but only keep the last 1000 users in memory
+@lru_cache(maxsize=1000)
+def get_user_role(user_id):
+    return db_get_user_role(user_id)
+
+print(get_user_role(1)) # Takes 1 second (Cache Miss)
+print(get_user_role(1)) # Instant! (Cache Hit)
+print(get_user_role(1)) # Instant! (Cache Hit)
+```
+
+By caching the role, the user's dashboard will load instantly on subsequent page refreshes instead of waiting for the database every time.
+
+---
+
+# 7. Internal Working
+
+<LearningFlow
+  elements={[
+    {
+      id: '1',
+      type: 'core',
+      data: { label: 'Function Call f(x)' },
+      position: { x: 250, y: 50 },
+    },
+    {
+      id: '2',
+      type: 'process',
+      data: { label: 'Check Cache Dict: {x: ?}' },
+      position: { x: 250, y: 150 },
+    },
+    {
+      id: '3',
+      type: 'output',
+      data: { label: 'Cache Hit: Return Value' },
+      position: { x: 100, y: 250 },
+    },
+    {
+      id: '4',
+      type: 'warning',
+      data: { label: 'Cache Miss: Compute f(x)' },
+      position: { x: 400, y: 250 },
+    },
+    {
+      id: '5',
+      type: 'process',
+      data: { label: 'Store in Cache Dict' },
+      position: { x: 400, y: 350 },
+    },
+    { id: 'e1-2', source: '1', target: '2' },
+    { id: 'e2-3', source: '2', target: '3', label: 'Key Exists' },
+    { id: 'e2-4', source: '2', target: '4', label: 'Key Missing' },
+    { id: 'e4-5', source: '4', target: '5' },
+    { id: 'e5-3', source: '5', target: '3', label: 'Return' },
+  ]}
+/>
+
+Under the hood, `@lru_cache` wraps your function in a dictionary lookup. The function arguments become the dictionary key. If the key exists, it returns the value. If not, it runs the function and stores the result. LRU stands for "Least Recently Used," meaning if the cache hits the `maxsize`, it deletes the oldest, least accessed item to make room.
+
+---
+
+# 8. Performance Table
+
+| Caching Strategy | Access Time | Persistence | Good For |
+|---|---|---|---|
+| Python Dict | Nanoseconds | In-Memory (lost on restart) | Simple scripts |
+| `@lru_cache` | Nanoseconds | In-Memory (lost on restart) | Heavy math, single-server apps |
+| Memcached | Milliseconds | RAM-only distributed | High-read distributed web apps |
+| Redis | Milliseconds | RAM + Disk persistence | Enterprise web apps, Celery queues |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer | Explanation & Tricks |
+|---|---|---|
+| What does `@lru_cache` do? | It caches the return values of a function based on the arguments provided, using a Least Recently Used eviction policy. | Interviewers want to know you understand *eviction*. If you cache everything forever (`@cache`), your server will run out of RAM. |
+| What is a Cache Stampede (or Thundering Herd)? | When a cache expires and 1,000 concurrent requests all try to compute and write the new value at the exact same time. | You fix this by using locks, so only the first request computes the value while the others wait. |
+| What must be true about the arguments to a cached function? | They must be hashable. | You cannot pass a `list` or a `dict` to a function decorated with `@lru_cache`. You must use `tuple` or `frozenset`. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+**Tricky Scenario:** Caching functions with mutable arguments.
+```python
+@lru_cache
+def process_data(data_list): # Fails!
+    pass
+```
+Lists are unhashable, so this throws a `TypeError`.
+**Solution:** Bro, you have to convert the list to a tuple before calling the cached function, or use a custom caching mechanism.
+
+**Edge Case:** Cache invalidation on distributed servers.
+If you use `@lru_cache` on Server A, and a user updates their profile on Server B, Server A will still show the old cached data.
+**Solution:** Do not use local memory caching for dynamic database records in a multi-server setup. Use a centralized cache like Redis.
+
+---
+
+# 11. Real-World Usage
+
+- **API Rate Limiting:** Checking if a user has exceeded their API limit using a fast Redis cache instead of querying Postgres on every request.
+- **Machine Learning:** Caching the preprocessing of large datasets so you don't have to clean the CSV files every time you restart your Jupyter Notebook.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Cache slow, read-heavy operations | Cache fast operations (the cache check might be slower!) |
+| Set a `maxsize` to prevent RAM exhaustion | Use `@cache` (unlimited) on user-generated inputs |
+| Use Redis for multi-server apps | Rely on `@lru_cache` if you have 5 gunicorn workers |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Bro, caching hides bugs. If your underlying database query is fundamentally broken but returns the correct cached result for 24 hours, you won't know the system is broken until the cache expires. Always have a way to manually flush (clear) the cache in production without having to restart the whole application.
+
+---
+
+# 14. Common Mistakes
+
+- **Caching the unexpected:** Caching a function that relies on external state (like `datetime.now()`). The cached function will return the exact same timestamp forever.
+- **No TTL (Time To Live):** Storing data in Redis without an expiration time. Over months, your Redis server fills up with gigabytes of dead data.
+
+---
+
+# 15. Related Topics
+
+- Big O Notation
+- Redis and Memcached
+- System Design Basics
+- Hashable and Unhashable Types
