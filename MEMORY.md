@@ -245,11 +245,11 @@ Before deleting files:
 - `testing`: all topics (pytest, unit-testing, mocking, integration-testing, load-testing, test-best-practices)
 - `performance`: all topics (profiling, memory-optimization, caching, lazy-loading, vectorization, numpy-performance, performance-best-practices)
 - `system-design`: all topics (python-architecture, scalable-python, event-driven-systems, queue-systems, distributed-systems, microservices, production-patterns)
-- `ai-engineering`: partial (python-for-ai, numpy, pandas, llm-basics, rag-pipelines)
+- `ai-engineering`: all topics (python-for-ai, numpy, pandas, llm-basics, rag-pipelines, vector-databases, ai-agents, async-ai-workflows, ai-observability)
+- `best-practices`: partial (clean-code, project-structure, coding-standards, security-best-practices, production-checklists, scalability-guidelines)
 
 **Pending Topics (Next Up):**
-- `ai-engineering`: partial (vector-databases, ai-agents, async-ai-workflows, ai-observability)
-- `best-practices`: all topics (clean-code, project-structure, coding-standards, security-best-practices, production-checklists, scalability-guidelines, engineering-principles)
+- `best-practices`: partial (engineering-principles)
 
 ## Current User Preferences
 

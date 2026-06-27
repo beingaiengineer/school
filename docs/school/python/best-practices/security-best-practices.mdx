@@ -2,6 +2,244 @@
 sidebar_position: 4
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Security Best Practices
 
-Placeholder: introduce Security Best Practices.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Python Security Best Practices |
+| Difficulty | Advanced |
+| Used For | Preventing hackers from stealing your data or taking over your server |
+| Common Mistake | Hardcoding API keys in source code and pushing to GitHub |
+| Performance | Minimal overhead compared to the cost of a data breach |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, imagine building a state-of-the-art bank vault.
+
+You install retina scanners, laser grids, and foot-thick steel doors (your firewall and AWS security groups). But then, you leave a Post-it note with the vault combination taped to the front door, and you let the delivery guy walk straight into the cash room unchecked.
+
+In Python, the Post-it note is a hardcoded API key, and the delivery guy is unvalidated user input (SQL injection). Security isn't just about infrastructure; it's about how you write the actual code.
+
+---
+
+# 3. Concept Explanation
+
+Security in Python development involves writing code defensively to protect against common vulnerabilities, mostly outlined by the OWASP Top 10.
+
+Because Python is often used for web backends (Django, FastAPI), data pipelines, and AI, it interacts heavily with databases, external APIs, and user input. The core philosophy is **Zero Trust**: never trust user input, never trust the network, and never hardcode secrets.
+
+Use it when:
+- Always. Every production system must be secure by default.
+
+Don't use it when:
+- Writing a local script that only you will ever run on dummy data.
+
+---
+
+<LearningFlow
+  title="The Zero-Trust Request Pipeline"
+  nodes={[
+    { id: '1', type: 'data', position: { x: 0, y: 150 }, data: { label: 'User Payload (JSON)' } },
+    { id: '2', type: 'process', position: { x: 250, y: 50 }, data: { label: 'Auth Middleware' } },
+    { id: '3', type: 'process', position: { x: 250, y: 150 }, data: { label: 'Pydantic Validation' } },
+    { id: '4', type: 'process', position: { x: 250, y: 250 }, data: { label: 'ORM Queries' } },
+    { id: '5', type: 'core', position: { x: 500, y: 150 }, data: { label: 'Database Execution' } },
+    { id: '6', type: 'warning', position: { x: 250, y: 350 }, data: { label: 'Secrets from ENV' } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'Verify JWT' },
+    { id: 'e1-3', source: '1', target: '3', label: 'Sanitize Input' },
+    { id: 'e3-4', source: '3', target: '4', label: 'Pass Safe Data' },
+    { id: 'e4-5', source: '4', target: '5', label: 'Parameterize' },
+    { id: 'e6-4', source: '6', target: '4', label: 'Inject Credentials' }
+  ]}
+/>
+
+---
+
+# 4. Syntax Table
+
+Here are the standard tools and patterns to enforce security:
+
+| Threat | Bad Pattern | Secure Solution |
+|---|---|---|
+| Hardcoded Secrets | `API_KEY = "sk-12345"` | `os.getenv("API_KEY")` |
+| SQL Injection | `execute(f"SELECT * FROM users WHERE id={id}")` | `execute("SELECT * FROM users WHERE id=?", (id,))` |
+| Command Injection | `os.system(f"ping {user_ip}")` | Use `subprocess.run` with lists, not shell strings. |
+| Dependency Vulnerabilities | Using old `pip` packages | Use `pip-audit` or Dependabot. |
+
+---
+
+# 5. Beginner Example
+
+Let's look at the most common beginner mistake: Hardcoding secrets.
+
+**Vulnerable Code:**
+```python
+import requests
+
+def get_weather():
+    # If this is pushed to a public GitHub repo, bots will steal this key in seconds.
+    api_key = "6b3a2f98e1..."
+    res = requests.get(f"https://weather.api.com?key={api_key}")
+    return res.json()
+```
+
+**Secure Code:**
+```python
+import os
+import requests
+from dotenv import load_dotenv
+
+# Load from .env file (which is in .gitignore!)
+load_dotenv()
+
+def get_weather():
+    api_key = os.getenv("WEATHER_API_KEY")
+    if not api_key:
+        raise ValueError("Missing API Key")
+
+    res = requests.get(f"https://weather.api.com?key={api_key}")
+    return res.json()
+```
+
+Bro, never commit `.env` to Git. Ever.
+
+---
+
+# 6. Real-World Engineering Example
+
+In production, SQL Injection is still a massive threat if you write raw SQL. Use an ORM (like SQLAlchemy) or parameterized queries.
+
+**Vulnerable (SQL Injection):**
+```python
+def get_user_by_name(cursor, username):
+    # A hacker sends username = "admin' --"
+    # Query becomes: SELECT * FROM users WHERE name = 'admin' --'
+    query = f"SELECT * FROM users WHERE name = '{username}'"
+    cursor.execute(query)
+    return cursor.fetchall()
+```
+
+**Secure (Parameterized Query):**
+```python
+def get_user_by_name(cursor, username):
+    # The database engine treats `username` strictly as a string literal, not executable SQL.
+    query = "SELECT * FROM users WHERE name = %s"
+    cursor.execute(query, (username,))
+    return cursor.fetchall()
+```
+
+Or better yet, use an ORM like SQLAlchemy:
+```python
+session.query(User).filter(User.name == username).all()
+```
+
+---
+
+# 7. Internal Working
+
+How does parameterization stop SQL Injection?
+
+When you use f-strings (`f"SELECT ... {input}"`), Python evaluates the string locally and sends one massive string to the database. The database parses it and runs it. If the input contained SQL commands, the database executes them.
+
+When you use parameterized queries (using `%s` or `?`), Python sends the query structure and the parameters *separately* over the database driver protocol. The database compiles the query structure first, then safely injects the parameters as pure data values, completely neutralizing any malicious SQL commands hidden in the input.
+
+---
+
+# 8. Performance Table
+
+| Practice | Latency Cost | Security Benefit |
+|---|---|---|
+| Reading Secrets from ENV | ~0ms | Prevents catastrophic credential leaks |
+| Parameterized SQL | ~0ms | Eliminates SQL Injection |
+| Hashing Passwords (bcrypt) | 50-100ms | Prevents password theft if DB is compromised |
+| Input Validation (Pydantic) | 1-5ms | Eliminates XSS and bad payload crashes |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| How do you securely store passwords in a database? | You never store plain text. You use a slow hashing algorithm with a salt, like `bcrypt` or `Argon2`. |
+| What is a CSRF attack? | Cross-Site Request Forgery. It forces an authenticated user to execute unwanted actions. Defend against it using CSRF tokens in forms and SameSite cookies. |
+| Why is `os.system` dangerous? | It passes the command directly to the system shell. If a user input is included in the string, they can inject `&& rm -rf /` and wipe the server. |
+| How do you prevent dependencies from introducing vulnerabilities? | Use lock files (`poetry.lock` or `requirements.txt` with hashes) and run tools like `pip-audit` or `safety` in your CI/CD pipeline. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Look at this YAML parsing code:
+
+```python
+import yaml
+
+def load_config(file_path):
+    with open(file_path, 'r') as f:
+        return yaml.load(f)
+```
+
+**The Trap:**
+The default `yaml.load()` in older versions (and `yaml.unsafe_load()` in new versions) can execute arbitrary Python functions hidden inside the YAML file. If a user uploads a malicious YAML file, they gain Remote Code Execution (RCE).
+
+**The Fix:**
+Always use `yaml.safe_load()`.
+
+```python
+import yaml
+
+def load_config(file_path):
+    with open(file_path, 'r') as f:
+        return yaml.safe_load(f)
+```
+
+---
+
+# 11. Real-World Usage
+
+Where do companies enforce this?
+
+- **CI/CD Pipelines:** GitHub Actions running `bandit` (a Python security linter) to scan every PR for hardcoded secrets, weak hashes (`md5`), and dangerous function calls (`eval`).
+- **Web Frameworks:** Django has built-in CSRF protection, SQL injection prevention via its ORM, and secure password hashing out-of-the-box.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Validate all incoming data shapes using `Pydantic` or `marshmallow`. | Trust that the frontend will only send integers. |
+| Run your application with the least privileges necessary (e.g., non-root Docker user). | Run your web server as the `root` Linux user. |
+| Use `secrets` module for generating tokens and passwords. | Use the `random` module for security (it is predictable). |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+> **Secrets Management.** In real enterprise systems, `.env` files are only for local development. In production, you do not manually set environment variables on a server. You use a Secrets Manager (like AWS Secrets Manager, HashiCorp Vault, or GitHub Secrets). The CI/CD pipeline or the application directly fetches the secrets at runtime.
+
+---
+
+# 14. Common Mistakes
+
+- **Using `eval()`:** Using `eval(user_input)` to calculate math or parse dictionaries. A user can easily input `__import__('os').system('rm -rf /')`. Use `ast.literal_eval()` instead.
+- **Leaking info in Error Messages:** Returning raw database error traces to the user (e.g., HTTP 500 returning "Table 'users' column 'password' not found"). Hackers use this info to map your database. Always return generic error messages to the client and log the real error internally.
+- **Ignoring Dependency Updates:** Running a 3-year-old version of `requests` or `urllib3` that has known CVEs.
+
+---
+
+# 15. Related Topics
+
+- FastAPI (Security & Auth)
+- Project Structure
+- Production Checklists
+- ORM vs Raw SQL

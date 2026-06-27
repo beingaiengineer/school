@@ -178,10 +178,10 @@ This checklist tracks the implementation of Python School playbook topics. Compl
 - [x] Pandas (`ai-engineering/pandas.mdx`)
 - [x] LLM Basics (`ai-engineering/llm-basics.mdx`)
 - [x] RAG Pipelines (`ai-engineering/rag-pipelines.mdx`)
-- [ ] Vector Databases (`ai-engineering/vector-databases.mdx`)
-- [ ] AI Agents (`ai-engineering/ai-agents.mdx`)
-- [ ] Async AI Workflows (`ai-engineering/async-ai-workflows.mdx`)
-- [ ] AI Observability (`ai-engineering/ai-observability.mdx`)
+- [x] Vector Databases (`ai-engineering/vector-databases.mdx`)
+- [x] AI Agents (`ai-engineering/ai-agents.mdx`)
+- [x] Async AI Workflows (`ai-engineering/async-ai-workflows.mdx`)
+- [x] AI Observability (`ai-engineering/ai-observability.mdx`)
 
 ## 19. Interview Prep
 - [x] Top Python Interview Questions (`interview-prep/top-python-interview-questions.mdx`)
@@ -192,10 +192,10 @@ This checklist tracks the implementation of Python School playbook topics. Compl
 - [x] Senior Python Questions (`interview-prep/senior-python-questions.mdx`)
 
 ## 20. Best Practices
-- [ ] Clean Code (`best-practices/clean-code.mdx`)
-- [ ] Project Structure (`best-practices/project-structure.mdx`)
-- [ ] Coding Standards (`best-practices/coding-standards.mdx`)
-- [ ] Security Best Practices (`best-practices/security-best-practices.mdx`)
-- [ ] Production Checklists (`best-practices/production-checklists.mdx`)
-- [ ] Scalability Guidelines (`best-practices/scalability-guidelines.mdx`)
+- [x] Clean Code (`best-practices/clean-code.mdx`)
+- [x] Project Structure (`best-practices/project-structure.mdx`)
+- [x] Coding Standards (`best-practices/coding-standards.mdx`)
+- [x] Security Best Practices (`best-practices/security-best-practices.mdx`)
+- [x] Production Checklists (`best-practices/production-checklists.mdx`)
+- [x] Scalability Guidelines (`best-practices/scalability-guidelines.mdx`)
 - [ ] Engineering Principles (`best-practices/engineering-principles.mdx`)

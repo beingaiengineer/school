@@ -2,6 +2,250 @@
 sidebar_position: 1
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Clean Code
 
-Placeholder: introduce Clean Code.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Clean Code |
+| Difficulty | Beginner to Advanced |
+| Used For | Writing code that humans can actually read and maintain |
+| Common Mistake | Writing "clever" one-liners that nobody understands 6 months later |
+| Performance | Zero runtime cost, massive developer-time savings |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, writing code is like writing a recipe for a kitchen.
+
+If you write a recipe that says: "Take the thing, heat it up to 400, put the other thing in, wait a bit, then serve." — the chef is going to ruin the meal.
+
+A clean recipe says: "Preheat oven to 400°F. Marinate the chicken in garlic. Bake chicken for 20 minutes."
+
+Clean code is just writing instructions so clearly that a brand new developer (or you in 6 months) can read it once and know exactly what it does, without needing to guess.
+
+---
+
+# 3. Concept Explanation
+
+Clean Code is a philosophy. It means writing code for the *reader*, not just for the compiler. The compiler doesn't care if your variable is named `x` or `user_account_status`. But the engineer reviewing your PR absolutely cares.
+
+Use it when:
+- Always. Literally always.
+
+Don't use it when:
+- You are writing a throwaway script you will delete in 5 minutes (and even then, you should probably just write it cleanly).
+
+---
+
+<LearningFlow
+  title="The Clean Code Pipeline"
+  nodes={[
+    { id: '1', type: 'data', position: { x: 0, y: 100 }, data: { label: 'Messy Code' } },
+    { id: '2', type: 'process', position: { x: 200, y: 0 }, data: { label: 'Rename Variables' } },
+    { id: '3', type: 'process', position: { x: 200, y: 100 }, data: { label: 'Extract Functions' } },
+    { id: '4', type: 'process', position: { x: 200, y: 200 }, data: { label: 'Add Type Hints' } },
+    { id: '5', type: 'core', position: { x: 400, y: 100 }, data: { label: 'Reviewable PR' } },
+    { id: '6', type: 'output', position: { x: 600, y: 100 }, data: { label: 'Maintainable System' } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'Refactor' },
+    { id: 'e1-3', source: '1', target: '3', label: 'Refactor' },
+    { id: 'e1-4', source: '1', target: '4', label: 'Refactor' },
+    { id: 'e2-5', source: '2', target: '5', label: 'Merges into' },
+    { id: 'e3-5', source: '3', target: '5', label: 'Merges into' },
+    { id: 'e4-5', source: '4', target: '5', label: 'Merges into' },
+    { id: 'e5-6', source: '5', target: '6', label: 'Results in' }
+  ]}
+/>
+
+---
+
+# 4. Syntax Table
+
+Here are the basic transformations from dirty to clean:
+
+| Concept | Dirty | Clean |
+|---|---|---|
+| Naming | `d = 10` | `days_to_expire = 10` |
+| Functions | `def do_everything(): ...` | `def validate_user(): ...` |
+| Conditions | `if user.age > 18 and user.is_active == True:` | `if user.is_adult and user.is_active:` |
+| Magic Numbers | `if status == 4:` | `if status == Status.CANCELLED:` |
+
+---
+
+# 5. Beginner Example
+
+Let's look at a classic beginner script.
+
+**Dirty:**
+```python
+def calc(a, b):
+    # check if b is 1
+    if b == 1:
+        x = a * 0.9 # 10% discount
+        return x
+    else:
+        return a
+```
+
+**Clean:**
+```python
+def calculate_discounted_price(price: float, has_coupon: bool) -> float:
+    DISCOUNT_RATE = 0.9
+
+    if has_coupon:
+        return price * DISCOUNT_RATE
+
+    return price
+```
+
+Bro, notice how the clean version doesn't even need comments? The code itself tells you exactly what is happening.
+
+---
+
+# 6. Real-World Engineering Example
+
+In production, you often see massive nested `if` statements. Clean code uses a pattern called **Guard Clauses** (or early returns) to flatten the logic.
+
+**Dirty:**
+```python
+def process_payment(user, amount):
+    if user:
+        if user.is_active:
+            if amount > 0:
+                if user.balance >= amount:
+                    user.balance -= amount
+                    return True
+                else:
+                    raise Exception("Insufficient funds")
+            else:
+                raise Exception("Invalid amount")
+        else:
+            raise Exception("Inactive user")
+    else:
+        raise Exception("User not found")
+```
+
+**Clean:**
+```python
+def process_payment(user, amount: float) -> bool:
+    # Guard clauses handle edge cases immediately
+    if not user:
+        raise ValueError("User not found")
+    if not user.is_active:
+        raise ValueError("Inactive user")
+    if amount <= 0:
+        raise ValueError("Invalid amount")
+    if user.balance < amount:
+        raise ValueError("Insufficient funds")
+
+    # The actual business logic is completely un-nested
+    user.balance -= amount
+    return True
+```
+
+---
+
+# 7. Internal Working
+
+Why does clean code matter technically?
+
+Python is a dynamic language. If you name a variable `data`, the interpreter doesn't care. But the interpreter doesn't maintain the code—humans do. When humans get confused, they introduce bugs. Bugs cause downtime. Downtime costs money.
+
+Furthermore, clean code naturally leads to better architecture. If you force yourself to write small functions (Single Responsibility Principle), those functions become easier to Unit Test. If code is easy to test, it usually means the architecture is decoupled and healthy.
+
+---
+
+# 8. Performance Table
+
+| Aspect | Dirty Code | Clean Code |
+|---|---|---|
+| Runtime Execution | Usually the same | Usually the same |
+| Code Review Time | Slow (requires heavy explanation) | Fast (self-documenting) |
+| Bug Fixing | High risk of regressions | Low risk (isolated functions) |
+| Onboarding | Weeks | Days |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does DRY mean? | Don't Repeat Yourself. If you write the same logic twice, extract it into a function. |
+| What are Magic Numbers? | Unexplained numbers hardcoded in logic (e.g., `if status == 4`). They should be replaced with named constants or Enums. |
+| Why are early returns (guard clauses) preferred? | They prevent deep nesting (Arrow Anti-Pattern) and handle edge cases at the top of the function, keeping the main logic clean. |
+| What is the Single Responsibility Principle? | A function or class should do exactly one thing and have exactly one reason to change. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Look at this common trap when trying to be "clean":
+
+```python
+# Extracting too much (Spaghetti Abstraction)
+def update_user(user):
+    validate(user)
+    save(user)
+    notify(user)
+
+def validate(user):
+    check_age(user)
+    check_email(user)
+```
+
+**The Trap:**
+Sometimes engineers abstract *everything* until you have to jump through 15 files just to figure out how a simple database update happens.
+
+**The Fix:**
+Abstraction is a trade-off. Clean code should group related logic, but it shouldn't hide the flow of the program. Keep cohesive logic together. If a function is only called once in the entire codebase and is only 3 lines long, you might not need to extract it.
+
+---
+
+# 11. Real-World Usage
+
+Where is clean code enforced?
+
+- **Open Source:** Try submitting a PR to Django or Pandas with variables named `x` and `y`. It will be rejected instantly.
+- **Enterprise CI/CD:** Companies use tools like `Ruff`, `Black`, and `Pylint` to automatically reject code that violates formatting and complexity standards.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use descriptive names (`fetch_active_users`). | Use abbreviations (`fau`). |
+| Write small functions that do one thing. | Write 500-line "God functions". |
+| Use Type Hints for everything. | Rely on docstrings to explain types. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+> **Comments should explain WHY, not WHAT.**
+> `x += 1 # increment x` is a useless comment. The code already tells me what it does.
+> `x += 1 # adjusting for 1-based API index` is a great comment. It tells me *why* you are doing it, which prevents me from accidentally removing it during a refactor.
+
+---
+
+# 14. Common Mistakes
+
+- **Clever Code:** Writing a massive one-line list comprehension with nested ternaries just to look smart. It's unreadable. Use a standard `for` loop if it's clearer.
+- **Outdated Comments:** Writing a massive comment explaining logic, then changing the code 2 years later but forgetting to update the comment. Now the comment is lying. Code is the only absolute truth.
+- **Inconsistent Formatting:** One file uses `camelCase`, another uses `snake_case`. Enforce a formatter like `Black` so humans don't have to argue about style.
+
+---
+
+# 15. Related Topics
+
+- Coding Standards
+- Engineering Principles
+- Solid Principles
+- Refactoring
