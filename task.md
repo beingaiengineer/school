@@ -198,4 +198,4 @@ This checklist tracks the implementation of Python School playbook topics. Compl
 - [x] Security Best Practices (`best-practices/security-best-practices.mdx`)
 - [x] Production Checklists (`best-practices/production-checklists.mdx`)
 - [x] Scalability Guidelines (`best-practices/scalability-guidelines.mdx`)
-- [ ] Engineering Principles (`best-practices/engineering-principles.mdx`)
+- [x] Engineering Principles (`best-practices/engineering-principles.mdx`)
