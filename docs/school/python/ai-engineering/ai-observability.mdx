@@ -2,6 +2,256 @@
 sidebar_position: 9
 ---
 
-# Ai Observability
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Ai Observability.
+# AI Observability
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | AI Observability |
+| Difficulty | Intermediate |
+| Used For | Monitoring, tracing, and debugging LLM applications |
+| Common Mistake | Only logging the final output, ignoring the intermediate agent steps |
+| Performance | Adds minimal overhead, but requires robust telemetry backend |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, imagine running a massive logistics company.
+
+Traditional software observability is like tracking if the delivery truck left the warehouse and arrived on time.
+
+**AI Observability** is like putting a GoPro on the driver to see *why* they took a detour, *what* they ate for lunch, and *who* they talked to along the way. Because LLMs are non-deterministic (they make decisions on the fly), you can't just look at the final delivery. You have to trace the exact "thought process" that led to the result to debug it when things go wrong.
+
+---
+
+# 3. Concept Explanation
+
+AI Observability is the practice of tracking inputs, outputs, latency, token usage, and intermediate reasoning steps (traces) of LLM applications.
+
+Unlike traditional APIs where you just monitor HTTP 200s and 500s, AI endpoints can return a 200 OK while returning completely hallucinated, toxic, or useless garbage. Observability in AI focuses on tracing the *chain of thought*, logging the prompt templates, tracking the exact retrieved context (in RAG), and measuring quality over time.
+
+Use it when:
+- Deploying RAG pipelines to production.
+- Running Agentic workflows with multiple steps.
+- You need to track token costs across different users or models.
+
+Don't use it when:
+- You are just running a one-off local script to generate a regex.
+
+---
+
+<LearningFlow
+  title="AI Observability Trace (RAG Request)"
+  nodes={[
+    { id: '1', type: 'data', position: { x: 250, y: 0 }, data: { label: 'User Request: "How do I reset?"' } },
+    { id: '2', type: 'process', position: { x: 50, y: 100 }, data: { label: 'Span: Embed Query (0.8s)' } },
+    { id: '3', type: 'process', position: { x: 50, y: 200 }, data: { label: 'Span: Vector Search (0.2s)' } },
+    { id: '4', type: 'core', position: { x: 450, y: 150 }, data: { label: 'Span: LLM Generation (3.5s)' } },
+    { id: '5', type: 'warning', position: { x: 450, y: 250 }, data: { label: 'Metadata: 1200 tokens used' } },
+    { id: '6', type: 'output', position: { x: 250, y: 350 }, data: { label: 'Trace Parent (Total 4.5s)' } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'triggers' },
+    { id: 'e2-3', source: '2', target: '3', label: 'then' },
+    { id: 'e3-4', source: '3', target: '4', label: 'feeds context' },
+    { id: 'e4-5', source: '4', target: '5', label: 'logs' },
+    { id: 'e1-6', source: '1', target: '6', label: 'monitored by' }
+  ]}
+/>
+
+---
+
+# 4. Syntax Table
+
+Here's how tracing concepts generally look using standard tools (like LangSmith or OpenTelemetry):
+
+| Concept | Example |
+|---|---|
+| Initialize Tracer | `os.environ["LANGCHAIN_TRACING_V2"] = "true"` |
+| Decorate Function | `@traceable(name="vector_search")` |
+| Add Metadata | `run_tree.add_tags(["production", "tier-1"])` |
+| Evaluate | `client.evaluate(dataset_name, evaluators=[accuracy])` |
+
+---
+
+# 5. Beginner Example
+
+Let's look at a basic manual logging approach that simulates what an observability platform does under the hood.
+
+```python
+import time
+import json
+
+def dummy_llm_call(prompt):
+    time.sleep(1) # simulate network latency
+    return f"Response to: {prompt}"
+
+def observable_rag_pipeline(query: str, user_id: str):
+    trace_id = "trace_99823"
+    logs = []
+
+    print(f"[{trace_id}] Starting RAG for {user_id}")
+
+    # Span 1: Retrieval
+    start = time.time()
+    context = "Retrieved document about passwords."
+    logs.append({"span": "retrieval", "latency": time.time() - start, "data": context})
+
+    # Span 2: Generation
+    start = time.time()
+    prompt = f"Context: {context}\nQuery: {query}"
+    result = dummy_llm_call(prompt)
+    logs.append({
+        "span": "llm_call",
+        "latency": time.time() - start,
+        "prompt": prompt,
+        "result": result,
+        "tokens": 45
+    })
+
+    # Save the trace to a DB (simulated)
+    print("Trace stored successfully.")
+    return result
+
+observable_rag_pipeline("I forgot my password", "user_123")
+```
+
+Bro, if the user complains the answer was wrong, you don't just look at the final answer. You open the trace and look at `logs[0]` to see if the retrieved context was garbage.
+
+---
+
+# 6. Real-World Engineering Example
+
+In production, you don't write custom logs. You use standard tools like LangSmith, Datadog, or Phoenix. Here is how seamless it is with LangChain and LangSmith.
+
+```python
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+import os
+
+# 1. Enable tracing via environment variables
+os.environ["LANGCHAIN_TRACING_V2"] = "true"
+os.environ["LANGCHAIN_API_KEY"] = "ls__your_key"
+os.environ["LANGCHAIN_PROJECT"] = "Customer_Support_Bot"
+
+# 2. Build the chain
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "You are a helpful assistant."),
+    ("user", "{input}")
+])
+llm = ChatOpenAI(model="gpt-4")
+output_parser = StrOutputParser()
+
+chain = prompt | llm | output_parser
+
+# 3. Execute
+# Because tracing is on, LangSmith automatically records:
+# - The exact prompt sent (after variable substitution)
+# - The LLM latency and token usage
+# - The final output
+# - The execution tree
+response = chain.invoke({"input": "How do I return a shirt?"})
+print(response)
+```
+
+---
+
+# 7. Internal Working
+
+How does automatic tracing work in AI frameworks?
+
+Under the hood, frameworks use a concept called **Callbacks** or **Context Variables** (like Python's `contextvars`).
+
+When a request starts, a `Trace ID` is generated.
+Every time a function runs (like a vector DB query or an API call), the framework fires an event:
+- `on_llm_start(prompt)`
+- `on_llm_end(response)`
+- `on_tool_start(tool_name)`
+
+These events are batched asynchronously and shipped to a telemetry backend (like LangSmith) via an HTTP background thread. This ensures that observability does not add latency to the user's actual request.
+
+---
+
+# 8. Performance Table
+
+| Component | Overhead | Note |
+|---|---|---|
+| Auto-instrumentation | ~1-5ms | Hooking into function calls via callbacks |
+| Async Exporting | 0ms | Traces are shipped in background threads |
+| Payload Size | Moderate | Storing full prompts/responses can consume significant DB storage |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is a Trace vs a Span? | A Trace is the entire lifecycle of a request (e.g., answering a user question). A Span is a single unit of work within that trace (e.g., retrieving data, calling the LLM). |
+| Why is traditional APM (like New Relic) not enough for AI? | Traditional APM tracks latency and HTTP codes. AI APM tracks token counts, prompt injections, hallucination rates, and specific prompt templates. |
+| How do you debug a bad AI response in production? | You look up the Trace ID for the bad response, inspect the specific context that was injected into the prompt, and determine if the failure was a bad retrieval or a bad LLM reasoning step. |
+| What is LLM Evaluation (Evals)? | Running automated tests on your traces (e.g., using an LLM to judge the output of another LLM) to score accuracy, tone, or toxicity. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Look at this common debugging nightmare:
+
+```python
+# User reports: "The bot gave me German answers instead of English!"
+```
+
+**The Trap:**
+If you only logged the final prompt text, you might not know *which version* of your system prompt was running at the time, or what temperature the model was set to.
+
+**The Fix:**
+You must log **configuration metadata** alongside the trace. AI Observability tools capture the `model_name`, `temperature`, and `prompt_version` automatically so you can replicate the exact conditions that caused the hallucination.
+
+---
+
+# 11. Real-World Usage
+
+Where is AI Observability critical?
+
+- **Cost Tracking:** Mapping token usage to specific customer IDs so you can bill them properly or cut off abusers.
+- **Continuous Improvement:** Filtering traces for user "thumbs down" feedback, and exporting those bad traces to a dataset for fine-tuning or prompt testing.
+- **Security Guardrails:** Monitoring for prompt injections (e.g., "Ignore previous instructions") and triggering alerts if toxic output is generated.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Inject a unique `session_id` or `user_id` as metadata into your traces so you can group them. | Log massive image bytes or PII (Personally Identifiable Information) without scrubbing it first. |
+| Use asynchronous background exporters for telemetry. | Block the main execution thread while making HTTP POST requests to your logging server. |
+| Setup alerts for sudden spikes in token usage. | Wait for the monthly OpenAI bill to realize you had an infinite loop bug. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+> **Data Privacy and PII are massive risks.** If you are building a healthcare or finance AI, your observability backend is now storing raw user prompts. If a user types their SSN or passwords into the prompt, it gets logged. You must implement PII scrubbing *before* the trace is exported to your observability platform, usually via local regex filters or dedicated scrubbing models.
+
+---
+
+# 14. Common Mistakes
+
+- **Logging Too Little:** Only logging `result = chain.invoke(...)`. When it fails, you have no idea what context was retrieved.
+- **Logging Too Much in Dev:** Leaving tracing on when running unit tests locally, flooding your observability dashboard with thousands of junk testing traces.
+- **Ignoring Evals:** Collecting millions of traces but never running automated evaluators on them to measure quality degradation over time.
+
+---
+
+# 15. Related Topics
+
+- Logging
+- Production Debugging
+- AI Agents
+- RAG Pipelines

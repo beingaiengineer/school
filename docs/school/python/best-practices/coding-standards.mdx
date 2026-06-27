@@ -2,6 +2,231 @@
 sidebar_position: 3
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Coding Standards
 
-Placeholder: introduce Coding Standards.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Python Coding Standards (PEP 8 & Beyond) |
+| Difficulty | Beginner |
+| Used For | Ensuring a team's codebase looks like it was written by one person |
+| Common Mistake | Arguing over formatting in PRs instead of using auto-formatters |
+| Performance | No runtime cost, massive improvement in code review speed |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, imagine moving to a new country where everyone spells words however they want, invents their own grammar, and ignores traffic lights. It would be chaos. You couldn't read the signs or drive safely.
+
+Coding standards are the traffic laws of a codebase. When everyone agrees to use `snake_case` for variables, spaces instead of tabs, and standard docstrings, the brain stops wasting energy trying to *read* the code and starts focusing on what the code *does*.
+
+---
+
+# 3. Concept Explanation
+
+In Python, the official coding standard is **PEP 8**. It dictates how to name variables, how many blank lines to use, and how to format imports.
+
+However, modern engineering teams take this further. They don't just "try" to follow PEP 8; they enforce it strictly using automated tools (like `Ruff`, `Black`, and `mypy`). A coding standard is only as good as the CI/CD pipeline enforcing it.
+
+Use it when:
+- Always. There is zero excuse to not use coding standards.
+
+Don't use it when:
+- You are competing in a 5-minute code golf challenge.
+
+---
+
+<LearningFlow
+  title="The Modern Python Linting Pipeline"
+  nodes={[
+    { id: '1', type: 'data', position: { x: 0, y: 150 }, data: { label: 'Raw Developer Code' } },
+    { id: '2', type: 'process', position: { x: 250, y: 50 }, data: { label: 'Black (Formatter)' } },
+    { id: '3', type: 'process', position: { x: 250, y: 150 }, data: { label: 'Ruff (Linter)' } },
+    { id: '4', type: 'process', position: { x: 250, y: 250 }, data: { label: 'Mypy (Type Checker)' } },
+    { id: '5', type: 'core', position: { x: 500, y: 150 }, data: { label: 'CI/CD Pass/Fail' } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'Formats syntax' },
+    { id: 'e1-3', source: '1', target: '3', label: 'Finds logic bugs' },
+    { id: 'e1-4', source: '1', target: '4', label: 'Checks types' },
+    { id: 'e2-5', source: '2', target: '5', label: 'All must pass' },
+    { id: 'e3-5', source: '3', target: '5', label: 'All must pass' },
+    { id: 'e4-5', source: '4', target: '5', label: 'All must pass' }
+  ]}
+/>
+
+---
+
+# 4. Syntax Table
+
+Here are the absolute basics of PEP 8 naming conventions:
+
+| Entity | Convention | Example |
+|---|---|---|
+| Variable | `snake_case` | `user_name` |
+| Function | `snake_case` | `def calculate_total():` |
+| Class | `PascalCase` | `class DatabaseConnection:` |
+| Constant | `UPPER_SNAKE_CASE`| `MAX_RETRIES = 3` |
+| Module | `short_lowercase` | `utils.py` |
+
+---
+
+# 5. Beginner Example
+
+Let's look at a script that violates almost every PEP 8 rule.
+
+**Dirty (Anti-pattern):**
+```python
+class user_manager:
+  def __init__(self,Name):
+    self.Name=Name
+  def GetName( self ):
+      return self.Name
+
+MyUser = user_manager("Alice")
+print( MyUser.GetName() )
+```
+
+**Clean (PEP 8 Compliant):**
+```python
+class UserManager:
+    def __init__(self, name: str):
+        self.name = name
+
+    def get_name(self) -> str:
+        return self.name
+
+my_user = UserManager("Alice")
+print(my_user.get_name())
+```
+
+Bro, notice the 4-space indentation, the lack of spaces inside parentheses, and the proper naming cases. It just looks like Python now.
+
+---
+
+# 6. Real-World Engineering Example
+
+In a production repo, you don't memorize PEP 8. You use a `pyproject.toml` file to configure tools that enforce the standards automatically.
+
+```toml
+# pyproject.toml
+
+[tool.black]
+line-length = 88
+target-version = ['py310']
+
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "I"] # Enforce errors, pyflakes, and isort (imports)
+
+[tool.mypy]
+strict = true
+ignore_missing_imports = true
+```
+
+When an engineer tries to commit messy code, a pre-commit hook runs:
+```bash
+ruff check . --fix
+black .
+mypy .
+```
+If `mypy` or `ruff` fail, the commit is blocked. No human arguments in PRs required.
+
+---
+
+# 7. Internal Working
+
+Why are standards strictly enforced by tools instead of humans?
+
+Humans suffer from fatigue. If a Senior Engineer has to spend 20 minutes in a Code Review commenting on missing blank lines, bad variable cases, and unused imports, they aren't looking for *actual* logical bugs.
+
+By offloading formatting to tools like `Black` (an uncompromising formatter), you eliminate syntax debates entirely. The code always looks exactly the same, no matter who wrote it.
+
+---
+
+# 8. Performance Table
+
+| Tool | Speed | Purpose |
+|---|---|---|
+| Black | Fast | Auto-formats code spacing and line lengths. |
+| Ruff | Extremely Fast (Rust) | Replaces Flake8/isort. Finds unused imports and bad syntax. |
+| Mypy | Moderate | Static type checking (catches `NoneType` bugs before runtime). |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is PEP 8? | The official style guide for Python code, detailing naming conventions, indentation, and formatting. |
+| What is the difference between a Linter and a Formatter? | A Formatter (like Black) rewrites your code to fix spacing. A Linter (like Ruff) analyzes your code to find logical errors (like an unused import or an undefined variable). |
+| How do you enforce coding standards on a team? | Using pre-commit hooks and CI/CD pipelines (GitHub Actions) that run linters and block merges if the code fails. |
+| Why use Type Hints if Python is dynamically typed? | Type hints act as documentation and allow static analysis tools (like mypy) to catch bugs before the code runs. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Look at this common linting issue:
+
+```python
+def process_data(data, timeout=None):
+    if timeout is None:
+        timeout = 30
+
+    import json  # Wait, an import inside a function?
+    return json.loads(data)
+```
+
+**The Trap:**
+PEP 8 says imports should always be at the top of the file. A linter will flag this.
+
+**The Fix:**
+99% of the time, move `import json` to the top. The *only* edge case where inline imports are acceptable (and you might need to add a `# noqa` comment to silence the linter) is to prevent a **Circular Import** or to speed up script boot time if the import is incredibly heavy and rarely used.
+
+---
+
+# 11. Real-World Usage
+
+How do major teams handle this?
+
+- **FastAPI / Pydantic:** Heavily rely on type hints and strict mypy configurations to ensure developers don't pass bad data into internal functions.
+- **Enterprise Startups:** Use `pre-commit` framework to run Ruff, Black, and trailing-whitespace fixers on the developer's laptop before the code even reaches GitHub.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Automate formatting with `Black` and `Ruff`. | Manually fix indentation and spaces yourself. |
+| Sort your imports (Standard library -> Third party -> Local). | Mix your `import os` and `import fastapi` statements randomly. |
+| Use clear, descriptive variable names. | Use `a`, `b`, or `temp_dict`. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+> **Stop arguing about style.** If you join a new team and they use 120-character line limits instead of 88, just accept it. The goal of a coding standard is *consistency*, not personal preference. Configure your IDE (VS Code / PyCharm) to "Format on Save" using the team's config file, and never think about formatting again.
+
+---
+
+# 14. Common Mistakes
+
+- **Ignoring the Linter:** Seeing 40 Ruff warnings in your terminal and pushing the code anyway. The CI pipeline will fail, and everyone will know.
+- **Overusing `# noqa`:** Adding `# type: ignore` or `# noqa` to every line that fails a linter check instead of actually fixing the underlying bad code.
+- **Inconsistent Docstrings:** Writing one docstring in Google style, another in Sphinx style, and leaving the third function completely undocumented.
+
+---
+
+# 15. Related Topics
+
+- Clean Code
+- Project Structure
+- Engineering Principles
+- Type Hinting

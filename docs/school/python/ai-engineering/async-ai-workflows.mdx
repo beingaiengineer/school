@@ -2,6 +2,271 @@
 sidebar_position: 8
 ---
 
-# Async Ai Workflows
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Async Ai Workflows.
+# Async AI Workflows
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Async AI Workflows |
+| Difficulty | Advanced |
+| Used For | Handling slow LLM API calls without blocking the system |
+| Common Mistake | Using synchronous calls in web servers, freezing all other requests |
+| Performance | Massive throughput improvement (I/O bound efficiency) |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, imagine you are a chef in a busy kitchen.
+
+If you work **synchronously**, you put a turkey in the oven, stand there staring at it for 4 hours until it's done, and *then* start chopping onions for the next dish. That's a disaster.
+
+If you work **asynchronously**, you put the turkey in the oven, set a timer, and immediately start chopping onions, making sauce, and plating other dishes. When the timer goes off, you take the turkey out.
+
+LLM API calls are the turkey. They take 5 to 30 seconds. You cannot stand there waiting. Your Python code needs to do other things while the API thinks.
+
+---
+
+# 3. Concept Explanation
+
+Async AI Workflows use Python's `asyncio` to run non-blocking network requests. When you call an LLM (like OpenAI or Anthropic), your code sends the request over the network and then immediately yields control back to the event loop. The event loop can serve other users or process other data while waiting for the LLM to respond.
+
+Use it when:
+- Building AI web apps (FastAPI, Starlette).
+- Batch processing thousands of prompts.
+- Running multi-agent systems where agents think in parallel.
+
+Don't use it when:
+- You are just running a quick, local script for yourself.
+- You are using local models that block the CPU anyway (unless you farm them out to workers).
+
+---
+
+<LearningFlow
+  title="Sync vs Async LLM Calls"
+  nodes={[
+    { id: '1', type: 'data', position: { x: 0, y: 0 }, data: { label: 'Prompt 1' } },
+    { id: '2', type: 'data', position: { x: 0, y: 150 }, data: { label: 'Prompt 2' } },
+
+    { id: '3', type: 'process', position: { x: 200, y: 0 }, data: { label: 'Sync Wait (5s)' } },
+    { id: '4', type: 'process', position: { x: 400, y: 150 }, data: { label: 'Sync Wait (5s)' } },
+
+    { id: '5', type: 'core', position: { x: 200, y: 300 }, data: { label: 'Async Fire 1 & 2' } },
+    { id: '6', type: 'output', position: { x: 500, y: 300 }, data: { label: 'Both done in 5s!' } }
+  ]}
+  edges={[
+    { id: 'e1-3', source: '1', target: '3', label: 'Blocks thread' },
+    { id: 'e3-4', source: '3', target: '4', label: 'Starts after 1 finishes' },
+
+    { id: 'e1-5', source: '1', target: '5', label: 'Non-blocking' },
+    { id: 'e2-5', source: '2', target: '5', label: 'Non-blocking' },
+    { id: 'e5-6', source: '5', target: '6', label: 'Awaits together' }
+  ]}
+/>
+
+---
+
+# 4. Syntax Table
+
+Here is the difference between the standard and async OpenAI client:
+
+| Operation | Sync Example | Async Example |
+|---|---|---|
+| Initialize | `client = OpenAI()` | `client = AsyncOpenAI()` |
+| Call | `res = client.chat.completions.create(...)` | `res = await client.chat.completions.create(...)` |
+| Gather | `[call(p) for p in prompts]` | `await asyncio.gather(*[call(p) for p in prompts])` |
+
+---
+
+# 5. Beginner Example
+
+Let's look at how to batch process multiple prompts at the exact same time.
+
+```python
+import asyncio
+from openai import AsyncOpenAI
+import time
+
+client = AsyncOpenAI(api_key="your-key")
+
+async def get_joke(topic):
+    print(f"Requesting joke about {topic}...")
+    response = await client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": f"Tell a short joke about {topic}"}]
+    )
+    return response.choices[0].message.content
+
+async def main():
+    start_time = time.time()
+
+    # Run 3 LLM calls concurrently
+    topics = ["cats", "programmers", "coffee"]
+
+    # asyncio.gather fires them all at once and waits for all to finish
+    results = await asyncio.gather(
+        get_joke(topics[0]),
+        get_joke(topics[1]),
+        get_joke(topics[2])
+    )
+
+    for topic, result in zip(topics, results):
+        print(f"\n{topic.upper()}:\n{result}")
+
+    print(f"\nTotal time: {time.time() - start_time:.2f} seconds")
+
+# Run it
+# asyncio.run(main())
+```
+
+Bro, if each call takes 3 seconds, the sync version takes 9 seconds. The async version takes exactly 3 seconds for all of them.
+
+---
+
+# 6. Real-World Engineering Example
+
+In production, you often use FastAPI to stream LLM responses back to the frontend (like ChatGPT does). Streaming is inherently asynchronous.
+
+```python
+from fastapi import FastAPI
+from fastapi.responses import StreamingResponse
+from openai import AsyncOpenAI
+
+app = FastAPI()
+client = AsyncOpenAI()
+
+async def llm_generator(prompt: str):
+    # The stream=True flag tells OpenAI to send chunks as they are generated
+    stream = await client.chat.completions.create(
+        model="gpt-4",
+        messages=[{"role": "user", "content": prompt}],
+        stream=True
+    )
+
+    # Asynchronously iterate over the stream
+    async for chunk in stream:
+        if chunk.choices[0].delta.content is not None:
+            yield chunk.choices[0].delta.content
+
+@app.get("/chat")
+async def chat_endpoint(prompt: str):
+    # Returns a stream to the client, pushing chunks as they arrive
+    return StreamingResponse(
+        llm_generator(prompt),
+        media_type="text/event-stream"
+    )
+```
+
+---
+
+# 7. Internal Working
+
+Why is `asyncio` perfect for LLMs?
+
+Python's GIL (Global Interpreter Lock) prevents multiple threads from executing Python bytecodes at once. But `asyncio` isn't using multiple threads for CPU work.
+
+When you `await` an OpenAI network request, Python relies on the OS (via `select` or `epoll`). The OS handles the socket connection waiting for HTTP bytes. Python's event loop just says, "Cool, OS, let me know when those bytes arrive," and immediately moves on to execute other Python code.
+
+Because LLM generation is 99% waiting on network I/O, you can handle thousands of concurrent LLM requests on a single CPU core.
+
+---
+
+# 8. Performance Table
+
+| Strategy | Speed for 100 Prompts (Avg 5s each) | CPU Usage |
+|---|---|---|
+| Synchronous loop | ~500 seconds | Very Low (mostly sleeping) |
+| ThreadPoolExecutor | ~5-10 seconds | Moderate (context switching overhead) |
+| Asyncio (`async/await`) | ~5-10 seconds | Very Low (most efficient for I/O) |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why use `AsyncOpenAI` instead of standard `OpenAI` in FastAPI? | FastAPI is an async framework. If you use synchronous `OpenAI`, you block the event loop, causing all other users on the server to hang until the LLM finishes. |
+| What is the difference between `asyncio.gather` and a regular `for` loop? | A `for` loop with `await` processes sequentially. `asyncio.gather` schedules all tasks concurrently on the event loop. |
+| Does `asyncio` bypass API rate limits? | No. In fact, firing 100 concurrent requests will likely trigger an HTTP 429 Too Many Requests error faster. You need concurrency limiters (like Semaphores). |
+| How do you limit concurrency in asyncio? | You use `asyncio.Semaphore(10)` to ensure only 10 coroutines are executing the network request at any given time. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Look at this trap when batch processing:
+
+```python
+results = await asyncio.gather(*tasks)
+```
+
+**The Trap:**
+If you pass 1,000 tasks to `gather`, OpenAI will immediately return a `429 Rate Limit Exceeded` error for 950 of them, and your entire script will crash.
+
+**The Fix:**
+You must implement a Semaphore and a retry mechanism (like `tenacity`).
+
+```python
+from tenacity import retry, wait_exponential
+
+sem = asyncio.Semaphore(20) # Max 20 concurrent requests
+
+@retry(wait=wait_exponential(multiplier=1, min=2, max=10))
+async def safe_api_call(prompt):
+    async with sem:
+        return await client.chat.completions.create(...)
+```
+
+---
+
+# 11. Real-World Usage
+
+Where is async AI used?
+
+- **Chat Interfaces:** Streaming tokens back to the user via WebSockets or Server-Sent Events (SSE).
+- **Data Enrichment Pipelines:** Given a database of 100,000 products, writing a description for all of them concurrently in a background worker (like Celery or Temporal).
+- **Multi-Agent Systems:** Letting 5 different agents independently search the web, compile data, and report back to a master agent at the same time.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `StreamingResponse` in FastAPI to reduce perceived latency for the user. | Make the user wait 15 seconds for a massive JSON block to arrive all at once. |
+| Wrap async LLM calls with robust retry logic (e.g., `tenacity`) for transient API errors. | Assume the network call will always succeed. |
+| Use `asyncio.Semaphore` to respect provider rate limits (Tokens Per Minute / Requests Per Minute). | Spam the API with 10,000 concurrent requests. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+> **Timeouts are critical.** LLM APIs occasionally hang. They might just spin forever without returning an error. If you are awaiting a request, always wrap it in `asyncio.wait_for`.
+> ```python
+> try:
+>     result = await asyncio.wait_for(api_call(), timeout=30.0)
+> except asyncio.TimeoutError:
+>     return "LLM timed out."
+> ```
+> Without this, a hanging API request will sit in memory forever, eventually causing memory leaks or locking up background workers.
+
+---
+
+# 14. Common Mistakes
+
+- **Blocking the Loop:** Accidentally calling a synchronous function (like `requests.get()` or a heavy CPU computation) inside an `async def`. It freezes the entire event loop.
+- **Fire and Forget:** Launching background tasks using `asyncio.create_task()` but not keeping a reference to them. The garbage collector might destroy them mid-flight.
+- **Ignoring Token Limits in Concurrency:** You might have a 50 RPM (Requests Per Minute) limit, but also a 40k TPM (Tokens Per Minute) limit. 10 huge concurrent requests might pass the RPM limit but instantly blow out the TPM limit.
+
+---
+
+# 15. Related Topics
+
+- FastAPI
+- Asyncio & Async/Await
+- AI Agents
+- Concurrency vs Parallelism

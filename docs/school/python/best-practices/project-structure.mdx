@@ -2,6 +2,218 @@
 sidebar_position: 2
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Project Structure
 
-Placeholder: introduce Project Structure.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Python Project Structure |
+| Difficulty | Intermediate |
+| Used For | Organizing code so teams can scale and deploy it |
+| Common Mistake | Dumping 50 random `.py` files in the root folder |
+| Performance | No runtime cost, huge impact on import speeds and maintainability |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, think of project structure like organizing a giant warehouse.
+
+If you throw electronics, frozen food, and clothes into one massive pile in the center of the warehouse, finding anything takes hours.
+
+If you create clear aisles—"Aisle 1: Electronics", "Aisle 2: Frozen Foods"—new employees can find exactly what they need on day one. A Python project structure is just building the aisles (`src/`, `tests/`, `docs/`) so other engineers don't lose their minds navigating your code.
+
+---
+
+# 3. Concept Explanation
+
+Project Structure defines where files, configurations, tests, and source code live in a repository. Python doesn't strictly enforce a specific layout (unlike Java or Go), which means beginners often create terrible, messy structures.
+
+A professional layout separates source code from configuration, makes the app installable as a package, and isolates tests.
+
+Use it when:
+- Starting any project meant for production, open-source, or team collaboration.
+
+Don't use it when:
+- You are just writing a quick 20-line Jupyter Notebook for personal use.
+
+---
+
+<LearningFlow
+  title="Standard Python Project Layout"
+  nodes={[
+    { id: '1', type: 'core', position: { x: 250, y: 0 }, data: { label: 'my_project/ (Root)' } },
+    { id: '2', type: 'process', position: { x: 50, y: 150 }, data: { label: 'src/my_package/' } },
+    { id: '3', type: 'process', position: { x: 250, y: 150 }, data: { label: 'tests/' } },
+    { id: '4', type: 'data', position: { x: 450, y: 150 }, data: { label: 'pyproject.toml' } },
+    { id: '5', type: 'data', position: { x: 50, y: 250 }, data: { label: '__init__.py, main.py' } },
+    { id: '6', type: 'data', position: { x: 250, y: 250 }, data: { label: 'test_main.py' } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'Source Code' },
+    { id: 'e1-3', source: '1', target: '3', label: 'Testing' },
+    { id: 'e1-4', source: '1', target: '4', label: 'Config' },
+    { id: 'e2-5', source: '2', target: '5', label: 'contains' },
+    { id: 'e3-6', source: '3', target: '6', label: 'contains' }
+  ]}
+/>
+
+---
+
+# 4. Syntax Table
+
+Here are the essential files every real Python project should have:
+
+| File / Folder | Purpose |
+|---|---|
+| `src/package_name/` | Where all your actual Python code lives. |
+| `tests/` | Unit and integration tests (outside of `src`). |
+| `pyproject.toml` | Modern configuration for dependencies, build tools, and linters. |
+| `.gitignore` | Tells Git what NOT to upload (like `.env` or `__pycache__`). |
+| `README.md` | Explains what the project does and how to run it. |
+| `requirements.txt` | (Legacy but common) List of pip dependencies. |
+
+---
+
+# 5. Beginner Example
+
+A beginner often does this (Anti-pattern):
+
+```text
+my_app/
+├── main.py
+├── database.py
+├── utils.py
+├── test_main.py
+├── venv/
+└── secret_keys.txt
+```
+
+This is bad because tests are mixed with code, the virtual environment is sitting in the open, and there's no clear entry point.
+
+---
+
+# 6. Real-World Engineering Example
+
+Here is the industry-standard **"src-layout"** used by modern Python teams.
+
+```text
+my_awesome_project/
+├── .github/                   # CI/CD workflows (GitHub Actions)
+├── src/
+│   └── my_package/            # Your actual code
+│       ├── __init__.py        # Makes it a module
+│       ├── core/              # Business logic
+│       ├── api/               # FastAPI/Flask endpoints
+│       └── utils/             # Helpers
+├── tests/
+│   ├── conftest.py            # Pytest fixtures
+│   ├── test_core.py
+│   └── test_api.py
+├── docs/                      # Sphinx or MkDocs documentation
+├── .gitignore                 # Ignores venv, pycache, .env
+├── .env.example               # Template for environment variables
+├── pyproject.toml             # Dependencies (Ruff, Pytest, Black config)
+└── README.md                  # Setup instructions
+```
+
+Bro, notice how clean the root folder is? All the actual code is hidden safely inside `src/`.
+
+---
+
+# 7. Internal Working
+
+Why do we put code inside a `src/` folder instead of the root directory?
+
+If your code is in the root directory (e.g., `my_package/` right next to `tests/`), Python's import system gets confused. When you run Pytest, it might import the local `my_package` folder directly instead of the installed version of your package. This causes false positives in testing (your tests pass locally but fail in production).
+
+Using a `src/` layout forces you to actually install your package (via `pip install -e .`) to test it. It guarantees that the code you are testing is exactly how the code will behave when deployed.
+
+---
+
+# 8. Performance Table
+
+| Layout Choice | Impact on Imports | Maintainability |
+|---|---|---|
+| Flat (Root) Layout | Susceptible to path resolution bugs | Degrades quickly as files grow |
+| `src/` Layout | Requires `pip install -e .`, extremely safe | High (Clear separation of concerns) |
+| Monorepo | Slower IDE indexing | Great for coordinating multiple microservices |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why should you use a `src/` directory? | It prevents accidental local imports during testing and forces the developer to test the installed version of the package. |
+| What is the purpose of `pyproject.toml`? | It is the modern standard (PEP 518) for defining build system requirements, dependencies, and configurations for tools like Pytest and Black in one file. |
+| Should you commit `.env` files to Git? | Never. `.env` files contain secrets. Commit a `.env.example` file instead with fake dummy values. |
+| What goes in the `tests/` folder? | Automated tests. It is kept separate from `src/` so that tests aren't accidentally packaged and shipped to production servers. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Look at this common import nightmare:
+
+```python
+# Inside src/my_package/api/routes.py
+from src.my_package.core.database import get_db
+```
+
+**The Trap:**
+Hardcoding `src.` in your imports is a massive mistake. When you package the app, the `src/` folder disappears, and the package becomes just `my_package`. This code will instantly crash in production.
+
+**The Fix:**
+Always import relative to the package name, ignoring the `src/` folder.
+
+```python
+# Correct
+from my_package.core.database import get_db
+```
+
+---
+
+# 11. Real-World Usage
+
+Where is this layout used?
+
+- **Open Source Libraries:** Look at the GitHub repos for `pytest`, `cryptography`, or `pydantic`. They almost all use the `src/` layout.
+- **Enterprise Microservices:** Backend teams building FastAPI apps isolate their domain logic, database models, and API routers into sub-folders inside `src/` so multiple developers can work without merge conflicts.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Put a clear `README.md` explaining how to set up the project locally. | Assume the next developer magically knows how to run the app. |
+| Use `pyproject.toml` to centralize your tool configurations. | Scatter `.flake8`, `pytest.ini`, and `setup.py` files everywhere. |
+| Keep your root directory clean and minimal. | Put bash scripts, CSV data dumps, and random notes in the root folder. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+> **Configuration belongs in the environment, not in code.** (The Twelve-Factor App methodology). Your project structure should heavily rely on `.env` files for local dev, and environment variables in production. Never hardcode database URLs or API keys in your `config.py` files. Your project structure must support easy loading of these variables (e.g., using `pydantic-settings`).
+
+---
+
+# 14. Common Mistakes
+
+- **Committing the `venv/` folder:** Virtual environments contain thousands of files. Pushing them to Git inflates the repo size and breaks when someone clones it on a different OS. Always add `venv/` to `.gitignore`.
+- **Missing `__init__.py`:** Forgetting to add `__init__.py` (even if empty) to your folders means Python won't treat them as packages, breaking your imports.
+- **Circular Imports:** Organizing your files poorly so that `A.py` imports `B.py`, but `B.py` imports `A.py`. Group related logic cleanly to avoid this.
+
+---
+
+# 15. Related Topics
+
+- Modules & Packages
+- Pyproject.toml
+- Dependency Management
+- Clean Code

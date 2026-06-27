@@ -2,6 +2,254 @@
 sidebar_position: 7
 ---
 
-# Ai Agents
+import LearningFlow from '@site/src/components/LearningFlow';
 
-Placeholder: introduce Ai Agents.
+# AI Agents
+
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | AI Agents |
+| Difficulty | Advanced |
+| Used For | Autonomous task execution, reasoning, and tool use |
+| Common Mistake | Giving them too much freedom without guardrails |
+| Performance | High latency due to multiple LLM reasoning cycles |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, think of an LLM alone as a really smart encyclopedia. You ask it a question, it prints an answer, and goes back to sleep.
+
+An **AI Agent** is like giving that encyclopedia hands, a phone, and a credit card. It's an LLM wrapped in a control loop that can say, "To answer this, I first need to Google the weather, then call the booking API, then write a summary." It breaks a big goal into steps and uses tools to execute them.
+
+---
+
+# 3. Concept Explanation
+
+An AI Agent is a system where an LLM is the "brain" that controls a workflow. Instead of just generating text, the Agent loops through a process of:
+1. **Thought:** "What should I do next?"
+2. **Action:** "I will use the `search_web` tool."
+3. **Observation:** "Here are the search results."
+*(Loops until the goal is met)*
+
+Use it when:
+- Tasks require multiple steps and dynamic decision-making.
+- The system needs to interact with the outside world (APIs, databases).
+- You want autonomous problem solving.
+
+Don't use it when:
+- A simple linear script will do.
+- Speed is critical (agents are slow).
+- Deterministic, 100% predictable output is required.
+
+---
+
+<LearningFlow
+  title="The ReAct (Reasoning and Acting) Agent Loop"
+  nodes={[
+    { id: '1', type: 'data', position: { x: 250, y: 0 }, data: { label: 'User Goal' } },
+    { id: '2', type: 'core', position: { x: 250, y: 150 }, data: { label: 'Agent Brain (LLM)' } },
+    { id: '3', type: 'process', position: { x: 50, y: 150 }, data: { label: 'Thought: "I need data"' } },
+    { id: '4', type: 'tool', position: { x: 50, y: 300 }, data: { label: 'Tool: search_api()' } },
+    { id: '5', type: 'data', position: { x: 250, y: 300 }, data: { label: 'Observation (Result)' } },
+    { id: '6', type: 'output', position: { x: 450, y: 150 }, data: { label: 'Final Answer' } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'trigger' },
+    { id: 'e2-3', source: '2', target: '3', label: 'reasons' },
+    { id: 'e3-4', source: '3', target: '4', label: 'executes' },
+    { id: 'e4-5', source: '4', target: '5', label: 'returns' },
+    { id: 'e5-2', source: '5', target: '2', label: 'feeds back' },
+    { id: 'e2-6', source: '2', target: '6', label: 'if goal met' }
+  ]}
+/>
+
+---
+
+# 4. Syntax Table
+
+Here's how agent frameworks (like LangChain or crewAI) generally define things:
+
+| Concept | Example |
+|---|---|
+| Define Tool | `@tool def search_web(query: str): ...` |
+| Create Agent | `agent = Agent(llm=llm, tools=[search_web])` |
+| Run Agent | `agent.invoke({"input": "Who won the game?"})` |
+
+---
+
+# 5. Beginner Example
+
+Let's build a microscopic agent using pure Python (no frameworks).
+
+```python
+def calculator(expression: str):
+    """A tool to evaluate math."""
+    return eval(expression) # Unsafe in prod, fine for demo!
+
+def simple_agent(prompt: str):
+    print(f"Goal: {prompt}")
+
+    # 1. Fake LLM 'Thought' (hardcoded for demo)
+    print("Thought: I need to calculate 10 + 5.")
+
+    # 2. Action (Agent decides to use a tool)
+    action_input = "10 + 5"
+    print(f"Action: calculator('{action_input}')")
+
+    # 3. Observation
+    result = calculator(action_input)
+    print(f"Observation: {result}")
+
+    # 4. Final output
+    print(f"Final Answer: The result is {result}")
+
+simple_agent("What is 10 plus 5?")
+```
+
+Bro, a real agent just asks an LLM for steps 1 and 2, parses the JSON it spits out, runs the Python function, and feeds the result back into the LLM.
+
+---
+
+# 6. Real-World Engineering Example
+
+In production, you use frameworks like LangChain to hook up real tools.
+
+```python
+from langchain_openai import ChatOpenAI
+from langchain.agents import initialize_agent, Tool
+import requests
+
+llm = ChatOpenAI(temperature=0)
+
+# 1. Define a tool
+def get_weather(city: str) -> str:
+    # Fake API call
+    return f"It is 75 degrees and sunny in {city}."
+
+weather_tool = Tool(
+    name="WeatherFetcher",
+    func=get_weather,
+    description="Useful for finding the weather in a specific city."
+)
+
+# 2. Initialize the agent
+agent = initialize_agent(
+    tools=[weather_tool],
+    llm=llm,
+    agent="zero-shot-react-description",
+    verbose=True
+)
+
+# 3. Run it
+agent.run("What should I wear today in Miami?")
+# The agent will:
+# 1. Reason it needs Miami's weather.
+# 2. Call the WeatherFetcher tool with "Miami".
+# 3. Read "75 degrees and sunny".
+# 4. Reason that shorts and a t-shirt are good.
+# 5. Return the final answer.
+```
+
+---
+
+# 7. Internal Working
+
+How does the LLM actually "know" how to use a tool?
+
+It's all about **prompt engineering and JSON**. The framework secretly wraps your prompt with massive instructions like this:
+
+> "You are an AI assistant. You have access to the following tools:
+> 1. WeatherFetcher: Useful for finding weather.
+>
+> To use a tool, respond EXACTLY in this JSON format:
+> \{"action": "tool_name", "input": "tool_input"\}
+>
+> If you have the final answer, respond EXACTLY in this JSON format:
+> \{"final_answer": "your answer"\}"
+
+When the LLM outputs the JSON, your Python code parses it, runs the real `WeatherFetcher` function, appends the result to the chat history, and sends it *back* to the LLM to continue.
+
+---
+
+# 8. Performance Table
+
+| Operation | Latency | Note |
+|---|---|---|
+| Single LLM Call | 1-3 seconds | Standard completion |
+| Agent Loop (3 steps)| 5-15 seconds | Every thought/action cycle requires a full LLM call |
+| Tool Execution | Varies | Depends entirely on the API (e.g., scraping a website is slow) |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the ReAct framework? | "Reasoning and Acting". A paradigm where agents interleave generating thoughts (reasoning) with taking actions (tools). |
+| Why are agents slow? | Because they require multiple sequential network calls to the LLM. Step 2 cannot start until the LLM finishes reasoning about Step 1's results. |
+| What happens if an agent gets stuck in a loop? | This is common. You must implement `max_iterations` limits so the loop forces a stop and returns a failure or best-guess response. |
+| What are Multi-Agent systems? | Systems where specialized agents talk to each other (e.g., a "Coder Agent" writes code, a "Reviewer Agent" checks it). See: crewAI or AutoGen. |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Look at this failure mode:
+
+```python
+# Agent has a tool: delete_database_record(id)
+agent.run("Clean up user ID 55, wait, actually I meant 56.")
+```
+
+**The Trap:**
+LLMs are probabilistic. The agent might parse that sentence and instantly execute `delete_database_record(55)`.
+
+**The Fix:**
+For destructive actions (writes, deletes, emails), you **must** implement a "Human in the Loop" (HITL) step. The agent should pause execution, alert a human via CLI or UI, and wait for a `y/n` confirmation before executing the tool.
+
+---
+
+# 11. Real-World Usage
+
+Where are AI Agents actually used?
+
+- **Customer Support:** Agents that can read a ticket, look up the user in Stripe, issue a refund, and reply to the email.
+- **Coding Assistants (Devin/Cursor):** Agents that read a Jira ticket, navigate the codebase, write code, run tests, and open PRs.
+- **Data Analysts:** Agents that take a natural language question, write a SQL query, run it against BigQuery, and plot a chart in matplotlib.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Write extremely clear, concise descriptions for your tools so the LLM knows exactly when to use them. | Give the agent 50 different tools. It will get confused. Keep toolsets small and focused. |
+| Use highly capable models (GPT-4, Claude 3.5 Sonnet) for the agent's brain. | Try to build autonomous agents with small 7B parameter local models; their reasoning usually collapses. |
+| Implement `max_iterations` to prevent infinite loops. | Let agents run unmonitored with write access to production databases. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+> **Observability is mandatory for agents.** Because the execution path is non-deterministic (it might take 2 steps today, and 5 steps tomorrow for the same question), you *must* log every single thought, action, and observation. Use tools like LangSmith or generic OpenTelemetry tracing. If an agent fails in production, you need the trace to see *which tool* it failed on or *what hallucination* caused the loop.
+
+---
+
+# 14. Common Mistakes
+
+- **Assuming Determinism:** Expecting the agent to solve a problem the exact same way twice.
+- **Brittle Parsing:** The agent outputs `{"Action": "weather"}` instead of `{"action": "weather"}` and your JSON parser crashes. Always use robust output parsers with auto-retry mechanisms.
+- **Ignoring Context Windows:** If an agent's observation tool returns a 100-page PDF string, the next LLM call will blow past the token limit and crash. Summarize observations before feeding them back.
+
+---
+
+# 15. Related Topics
+
+- LLM Basics
+- Async AI Workflows
+- AI Observability
+- Python for AI
