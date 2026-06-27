@@ -246,10 +246,10 @@ Before deleting files:
 - `performance`: all topics (profiling, memory-optimization, caching, lazy-loading, vectorization, numpy-performance, performance-best-practices)
 - `system-design`: all topics (python-architecture, scalable-python, event-driven-systems, queue-systems, distributed-systems, microservices, production-patterns)
 - `ai-engineering`: all topics (python-for-ai, numpy, pandas, llm-basics, rag-pipelines, vector-databases, ai-agents, async-ai-workflows, ai-observability)
-- `best-practices`: partial (clean-code, project-structure, coding-standards, security-best-practices, production-checklists, scalability-guidelines)
+- `best-practices`: all topics (clean-code, project-structure, coding-standards, security-best-practices, production-checklists, scalability-guidelines, engineering-principles)
 
 **Pending Topics (Next Up):**
-- `best-practices`: partial (engineering-principles)
+None
 
 ## Current User Preferences
 

@@ -2,6 +2,216 @@
 sidebar_position: 7
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Engineering Principles
 
-Placeholder: introduce Engineering Principles.
+# 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Engineering Principles |
+| Difficulty | Intermediate to Senior |
+| Used For | Designing maintainable, scalable, and robust systems |
+| Common Mistake | Treating principles as absolute rules rather than guidelines |
+| Impact | Higher code quality and easier team collaboration |
+
+---
+
+# 2. Real-World Analogy
+
+Bro, think of Engineering Principles like the foundation of a skyscraper. You can decorate the interior however you want (your specific code), but if the foundation is weak, the whole building collapses when a storm hits (production traffic). Following good principles ensures your structure can handle the weight, scale up, and be maintained by other contractors later.
+
+---
+
+# 3. Concept Explanation
+
+Engineering Principles are fundamental rules and guidelines that help developers write clean, maintainable, and scalable software. They are not strict laws but rather proven strategies that guide decision-making during the design and implementation phases. They help answer the "why" behind architectural choices.
+
+---
+
+# 4. Syntax Table
+
+While principles aren't syntax, here are the core concepts and their primary focus:
+
+| Principle | Focus Area |
+|---|---|
+| DRY (Don't Repeat Yourself) | Code reuse and reducing duplication |
+| KISS (Keep It Simple, Stupid) | Avoiding unnecessary complexity |
+| YAGNI (You Aren't Gonna Need It) | Not building features until they are needed |
+| SOLID | Object-oriented design and maintainability |
+| Separation of Concerns | Dividing a program into distinct sections |
+
+---
+
+# 5. Beginner Example
+
+A simple example of applying the DRY principle.
+
+**Bad (Repeating yourself):**
+
+```python
+def calculate_tax_ny(amount):
+    return amount * 0.0887
+
+def calculate_tax_ca(amount):
+    return amount * 0.0725
+
+print(calculate_tax_ny(100))
+print(calculate_tax_ca(100))
+```
+
+**Good (DRY applied):**
+
+```python
+TAX_RATES = {
+    'NY': 0.0887,
+    'CA': 0.0725
+}
+
+def calculate_tax(amount, state):
+    rate = TAX_RATES.get(state, 0)
+    return amount * rate
+
+print(calculate_tax(100, 'NY'))
+print(calculate_tax(100, 'CA'))
+```
+
+---
+
+# 6. Real-World Engineering Example
+
+Applying Separation of Concerns in a real-world API structure.
+
+```python
+# data_access.py - Only handles database operations
+def get_user_from_db(user_id):
+    # Imagine SQL query here
+    return {"id": user_id, "name": "Alice", "role": "admin"}
+
+# business_logic.py - Only handles rules
+def is_user_eligible_for_discount(user):
+    return user.get("role") == "admin"
+
+# api.py - Only handles HTTP requests and responses
+def handle_discount_request(user_id):
+    user = get_user_from_db(user_id)
+    if not user:
+        return {"status": 404, "message": "User not found"}
+
+    eligible = is_user_eligible_for_discount(user)
+    return {"status": 200, "eligible": eligible}
+```
+
+---
+
+# 7. Internal Working
+
+<LearningFlow
+  diagramId="engineering-principles-flow"
+  title="Engineering Principles Flow"
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Requirements' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'KISS (Simple Design)' }, position: { x: 100, y: 100 } },
+    { id: '3', type: 'process', data: { label: 'YAGNI (Build What Needed)' }, position: { x: 400, y: 100 } },
+    { id: '4', type: 'process', data: { label: 'DRY (Refactor Duplication)' }, position: { x: 250, y: 200 } },
+    { id: '5', type: 'output', data: { label: 'Maintainable System' }, position: { x: 250, y: 300 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', type: 'smoothstep', label: 'Design Phase' },
+    { id: 'e1-3', source: '1', target: '3', type: 'smoothstep', label: 'Scope Phase' },
+    { id: 'e2-4', source: '2', target: '4', type: 'smoothstep', label: 'Implementation' },
+    { id: 'e3-4', source: '3', target: '4', type: 'smoothstep', label: 'Refinement' },
+    { id: 'e4-5', source: '4', target: '5', type: 'straight', label: 'Outcome' }
+  ]}
+/>
+
+Bro, internally, applying principles means changing how you approach problem-solving. Instead of just writing code that works, you write code that is modular, testable, and adaptable. It's about optimizing for the *reader* of the code, not just the compiler.
+
+---
+
+# 8. Performance Table
+
+Principles impact long-term performance and maintainability rather than immediate execution speed.
+
+| Principle | Performance Impact | Maintainability Impact |
+|---|---|---|
+| DRY | Neutral (sometimes slight overhead for abstractions) | High (less code to update) |
+| KISS | Positive (less code means fewer bottlenecks) | High (easier to read and debug) |
+| YAGNI | Positive (avoids bloat and unnecessary execution) | High (smaller codebase) |
+
+---
+
+# 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between DRY and WET code? | DRY is "Don't Repeat Yourself". WET is "Write Everything Twice" (or We Enjoy Typing), representing duplicated logic. |
+| When should you violate the DRY principle? | When abstracting causes more complexity than duplicating a small, distinct piece of logic (avoiding premature abstraction). |
+| Explain YAGNI. | "You Aren't Gonna Need It" - don't add features, abstraction, or flexibility until it is actually required by current requirements. |
+| How does KISS differ from YAGNI? | KISS focuses on keeping the *design* simple. YAGNI focuses on not building *features* you don't need yet. |
+| What is Separation of Concerns? | Designing software where different components have distinct, independent responsibilities (e.g., UI, logic, data access). |
+
+---
+
+# 10. Tricky Questions & Edge Cases
+
+Bro, a common trap is "Premature Abstraction" in the name of DRY.
+
+```python
+# Trying too hard to be DRY can create a monster function
+def process_data(data, is_user=False, is_admin=False, is_product=False, skip_validation=False):
+    if is_user:
+        # 50 lines of user logic
+        pass
+    elif is_admin:
+        # 50 lines of admin logic
+        pass
+    # ...
+```
+
+**Why it's bad:** The function now has multiple responsibilities and is hard to test. Sometimes it is better to have three slightly similar functions than one complex, heavily-parameterized function. This is often called the "Rule of Three" - wait until you see duplication three times before abstracting.
+
+---
+
+# 11. Real-World Usage
+
+Companies use these principles to guide their engineering culture:
+
+- **Netflix:** Emphasizes Separation of Concerns in their microservices architecture.
+- **Google:** Focuses heavily on KISS to ensure large teams can understand and maintain sprawling codebases.
+- **Startups:** Heavily rely on YAGNI to ship MVPs quickly without over-engineering features that users might not even want.
+
+---
+
+# 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Apply the "Rule of Three" before extracting duplicate code. | Don't build generic frameworks when a simple script suffices. |
+| Keep functions focused on a single task (Single Responsibility). | Don't add speculative features "just in case" (violates YAGNI). |
+| Prioritize readability over clever, complex one-liners. | Don't treat principles as dogmatic laws; use pragmatism. |
+
+---
+
+# 13. Production Notes
+
+> ⚠ Production Note:
+Bro, in a large production system, violating Separation of Concerns often leads to a "Big Ball of Mud" architecture. If your database queries, business logic, and API formatting are all tangled in one file, writing unit tests becomes impossible, and scaling specific parts of the system is a nightmare. Always isolate your layers.
+
+---
+
+# 14. Common Mistakes
+
+- **Over-engineering:** Building a massive, scalable, generic system for a feature that only 10 users will use.
+- **Ignoring YAGNI:** Adding unnecessary abstractions "for the future".
+- **Wrong Abstractions:** Forcing code to be DRY when the underlying business rules are actually different and just happen to look similar right now.
+
+---
+
+# 15. Related Topics
+
+- SOLID Principles
+- Clean Code
+- Design Patterns
+- Code Reviews
