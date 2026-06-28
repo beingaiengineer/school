@@ -2,6 +2,8 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Type Conversion
 
 ## 1. Quick Summary
@@ -70,6 +72,27 @@ print(f"Starting server on port {port}")
 ```
 
 ## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'Implicit vs explicit type conversion',
+    height: 380,
+    nodes: [
+      {id: 'value', title: 'Original Value', detail: '"42" (a string from user input)', x: 40, y: 140, kind: 'data'},
+      {id: 'explicit', title: 'Explicit Cast', detail: 'int("42") calls int constructor', x: 280, y: 40, kind: 'process'},
+      {id: 'implicit', title: 'Implicit Coercion', detail: '1 + 2.0 — Python widens int to float', x: 280, y: 260, kind: 'tool'},
+      {id: 'success', title: 'New Object', detail: '42 (int) or 3.0 (float) returned', x: 520, y: 40, kind: 'output'},
+      {id: 'error', title: 'ValueError', detail: 'int("abc") fails at runtime', x: 520, y: 260, kind: 'warning'},
+    ],
+    edges: [
+      {source: 'value', target: 'explicit', label: 'developer calls'},
+      {source: 'value', target: 'implicit', label: 'Python decides'},
+      {source: 'explicit', target: 'success', label: 'valid'},
+      {source: 'explicit', target: 'error', label: 'invalid', animated: true, type: 'step'},
+      {source: 'implicit', target: 'success', label: 'widened'},
+    ],
+  }}
+/>
 
 When you call `int("42")`, Python doesn't just change a label. It parses the string character by character, calculates the numeric value, and allocates a brand new integer object in memory.
 

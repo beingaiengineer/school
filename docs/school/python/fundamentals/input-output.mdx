@@ -2,6 +2,8 @@
 sidebar_position: 4
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Input and Output
 
 ## 1. Quick Summary
@@ -68,6 +70,26 @@ else:
 ```
 
 ## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'Input/Output data flow',
+    height: 340,
+    nodes: [
+      {id: 'user', title: 'User / Stdin', detail: 'Keyboard input or piped data', x: 40, y: 110, kind: 'tool'},
+      {id: 'input', title: 'input()', detail: 'Blocks execution, reads one line as str', x: 260, y: 40, kind: 'process'},
+      {id: 'program', title: 'Python Program', detail: 'Processes, transforms, computes', x: 260, y: 220, kind: 'core'},
+      {id: 'print', title: 'print()', detail: 'Converts to str, writes to stdout', x: 480, y: 110, kind: 'process'},
+      {id: 'stdout', title: 'Stdout / Terminal', detail: 'Output displayed to user or piped', x: 680, y: 110, kind: 'output'},
+    ],
+    edges: [
+      {source: 'user', target: 'input', label: 'types'},
+      {source: 'input', target: 'program', label: 'str value'},
+      {source: 'program', target: 'print', label: 'result'},
+      {source: 'print', target: 'stdout', label: 'writes'},
+    ],
+  }}
+/>
 
 When `input()` is called, Python pauses the main execution thread and waits for the standard input stream (`stdin`) to receive a newline character (when the user presses Enter).
 

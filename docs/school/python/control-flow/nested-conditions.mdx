@@ -2,6 +2,8 @@
 sidebar_position: 2
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Nested Conditions
 
 ## 1. Quick Summary
@@ -81,6 +83,28 @@ def process_checkout(user, cart):
 While this works, it's considered **bad practice** because of the deep indentation. Let's fix it in the Best Practices section below using "Guard Clauses".
 
 ## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'Nested condition evaluation depth',
+    height: 400,
+    nodes: [
+      {id: 'outer', title: 'Outer if', detail: 'First condition checked', x: 40, y: 120, kind: 'core'},
+      {id: 'inner1', title: 'Inner if', detail: 'Checked only if outer is True', x: 280, y: 40, kind: 'process'},
+      {id: 'inner2', title: 'Inner else', detail: 'Fallback within outer block', x: 280, y: 200, kind: 'tool'},
+      {id: 'outer_else', title: 'Outer else', detail: 'Runs when outer is False', x: 40, y: 280, kind: 'warning'},
+      {id: 'result', title: 'Result', detail: 'One branch executes, rest skipped', x: 520, y: 140, kind: 'output'},
+    ],
+    edges: [
+      {source: 'outer', target: 'inner1', label: 'True'},
+      {source: 'outer', target: 'outer_else', label: 'False'},
+      {source: 'inner1', target: 'result', label: 'True'},
+      {source: 'inner1', target: 'inner2', label: 'False', type: 'step'},
+      {source: 'inner2', target: 'result', label: 'fallback'},
+      {source: 'outer_else', target: 'result', label: 'done', type: 'step'},
+    ],
+  }}
+/>
 
 Python evaluates the outer `if` condition. If it's `False`, Python skips the entire block, meaning the inner `if` is never even looked at.
 If the outer `if` is `True`, Python enters the block and evaluates the inner `if` normally.

@@ -2,6 +2,8 @@
 sidebar_position: 3
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Operators
 
 ## 1. Quick Summary
@@ -79,6 +81,26 @@ print(can_ship)
 This kind of expression appears in checkout, auth, and workflow systems.
 
 ## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'How operators become method calls',
+    height: 360,
+    nodes: [
+      {id: 'expr', title: 'Expression', detail: 'a + b written in source code', x: 40, y: 120, kind: 'data'},
+      {id: 'lookup', title: 'Method Lookup', detail: 'Python finds __add__ on type(a)', x: 280, y: 40, kind: 'process'},
+      {id: 'call', title: '__add__(a, b)', detail: 'Dunder method is called internally', x: 280, y: 220, kind: 'core'},
+      {id: 'result', title: 'Result Object', detail: 'New object returned to caller', x: 520, y: 120, kind: 'output'},
+      {id: 'fallback', title: 'TypeError', detail: 'Raised if no matching method found', x: 520, y: 260, kind: 'warning'},
+    ],
+    edges: [
+      {source: 'expr', target: 'lookup', label: 'triggers'},
+      {source: 'lookup', target: 'call', label: 'found'},
+      {source: 'call', target: 'result', label: 'returns'},
+      {source: 'lookup', target: 'fallback', label: 'not found', animated: true, type: 'step'},
+    ],
+  }}
+/>
 
 Operators call behavior on objects.
 

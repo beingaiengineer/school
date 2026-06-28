@@ -2,6 +2,8 @@
 sidebar_position: 1
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # If Else
 
 ## 1. Quick Summary
@@ -82,6 +84,28 @@ def process_payment(amount, user_status):
 Notice how we use `if` to fail early. We don't wrap the whole success logic in an `else`. This is called the "Guard Clause" pattern.
 
 ## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'If-else decision branching',
+    height: 400,
+    nodes: [
+      {id: 'condition', title: 'Condition', detail: 'Expression evaluated to True or False', x: 260, y: 20, kind: 'core'},
+      {id: 'true', title: 'if block', detail: 'Runs when condition is truthy', x: 80, y: 160, kind: 'process'},
+      {id: 'elif', title: 'elif check', detail: 'Additional conditions tested in order', x: 260, y: 160, kind: 'tool'},
+      {id: 'false', title: 'else block', detail: 'Runs when all conditions are falsy', x: 440, y: 160, kind: 'warning'},
+      {id: 'continue', title: 'Next Statement', detail: 'Execution resumes after the block', x: 260, y: 300, kind: 'output'},
+    ],
+    edges: [
+      {source: 'condition', target: 'true', label: 'True'},
+      {source: 'condition', target: 'elif', label: 'False, check next'},
+      {source: 'elif', target: 'false', label: 'all False'},
+      {source: 'true', target: 'continue', label: 'done', type: 'step'},
+      {source: 'false', target: 'continue', label: 'done', type: 'step'},
+      {source: 'elif', target: 'continue', label: 'matched', type: 'step'},
+    ],
+  }}
+/>
 
 When Python sees an `if`, it evaluates the expression using the object's `__bool__` method. It doesn't have to be explicitly `True` or `False`.
 

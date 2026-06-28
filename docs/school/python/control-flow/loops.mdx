@@ -2,6 +2,8 @@
 sidebar_position: 3
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Loops (`for` and `while`)
 
 ## 1. Quick Summary
@@ -94,6 +96,29 @@ def process_emails(email_list):
 This processes a list of emails one by one and safely skips the ones that fail.
 
 ## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'for vs while loop execution',
+    height: 400,
+    nodes: [
+      {id: 'for', title: 'for loop', detail: 'Iterates over an iterable object', x: 40, y: 40, kind: 'core'},
+      {id: 'iter', title: 'Iterator', detail: '__iter__() creates it, __next__() gets items', x: 280, y: 40, kind: 'process'},
+      {id: 'body', title: 'Loop Body', detail: 'Executes per item until StopIteration', x: 520, y: 40, kind: 'output'},
+      {id: 'while', title: 'while loop', detail: 'Repeats while condition is True', x: 40, y: 220, kind: 'core'},
+      {id: 'check', title: 'Condition Check', detail: 'Evaluated before each iteration', x: 280, y: 220, kind: 'tool'},
+      {id: 'exit', title: 'Loop Exit', detail: 'Condition False or break hit', x: 520, y: 220, kind: 'warning'},
+    ],
+    edges: [
+      {source: 'for', target: 'iter', label: 'creates'},
+      {source: 'iter', target: 'body', label: '__next__()'},
+      {source: 'body', target: 'iter', label: 'next item', animated: true, type: 'step'},
+      {source: 'while', target: 'check', label: 'evaluate'},
+      {source: 'check', target: 'exit', label: 'False'},
+      {source: 'check', target: 'while', label: 'True, run body', animated: true, type: 'step'},
+    ],
+  }}
+/>
 
 When you write `for item in list:`, Python actually asks the list for an `Iterator` object.
 The loop repeatedly calls a hidden `__next__()` method on the iterator to get the next item. When the list is empty, it raises a hidden `StopIteration` error, which Python catches quietly to end the loop.

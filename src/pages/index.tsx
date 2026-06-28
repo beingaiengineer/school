@@ -6,60 +6,274 @@ import Heading from '@theme/Heading';
 
 import styles from './index.module.css';
 
-function HomepageHeader() {
+/* ------------------------------------------------------------------ */
+/*  Course catalog - Bento layout matching the Stitch Design          */
+/* ------------------------------------------------------------------ */
+interface Course {
+  emoji: string;
+  title: string;
+  description: string;
+  topicCount: string;
+  href: string;
+  accent: string;
+  available: boolean;
+  featured?: boolean;
+}
+
+const courses: Course[] = [
+  {
+    emoji: '🐍',
+    title: 'Backend Engineering with Python',
+    description:
+      'Master practical backend engineering. Build scalable APIs, handle background processing, manage databases, and deploy production-ready systems using FastAPI and Django.',
+    topicCount: '120+ lessons',
+    href: '/docs/school/python/intro/what-is-python',
+    accent: 'var(--course-python)',
+    available: true,
+    featured: true,
+  },
+  {
+    emoji: '🟨',
+    title: 'Modern JavaScript',
+    description:
+      'Advanced ES6+, async programming, and engine internals.',
+    topicCount: 'Coming soon',
+    href: '#',
+    accent: 'var(--course-coming-soon)',
+    available: false,
+  },
+  {
+    emoji: '⚛️',
+    title: 'React Architecture',
+    description:
+      'Building scalable frontends with Next.js and state management.',
+    topicCount: 'Coming soon',
+    href: '#',
+    accent: 'var(--course-coming-soon)',
+    available: false,
+  },
+  {
+    emoji: '🐳',
+    title: 'DevOps & Cloud',
+    description:
+      'Docker, Kubernetes, CI/CD, and AWS infrastructure.',
+    topicCount: 'Coming soon',
+    href: '#',
+    accent: 'var(--course-coming-soon)',
+    available: false,
+  },
+  {
+    emoji: '🤖',
+    title: 'AI / ML Engineering',
+    description:
+      'Machine learning fundamentals, deep learning, LLMs, RAG, agents, and MLOps.',
+    topicCount: 'Coming soon',
+    href: '#',
+    accent: 'var(--course-coming-soon)',
+    available: false,
+  },
+  {
+    emoji: '🏗️',
+    title: 'System Design',
+    description:
+      'Designing large-scale distributed systems and microservices.',
+    topicCount: 'Coming soon',
+    href: '#',
+    accent: 'var(--course-coming-soon)',
+    available: false,
+  },
+];
+
+/* ------------------------------------------------------------------ */
+/*  Value propositions                                                 */
+/* ------------------------------------------------------------------ */
+interface ValueProp {
+  icon: string;
+  title: string;
+  text: string;
+}
+
+const valueProps: ValueProp[] = [
+  {
+    icon: '⚙️',
+    title: 'Real-world Projects',
+    text: 'Build complex, portfolio-ready applications that solve actual engineering problems, not toy examples.',
+  },
+  {
+    icon: '✅',
+    title: 'Production Standards',
+    text: 'Learn CI/CD, testing, logging, and monitoring from day one. Code like you are already on a senior team.',
+  },
+  {
+    icon: '💬',
+    title: 'Mentor Support',
+    text: 'Get code reviews and architecture feedback from engineers who have shipped products at scale.',
+  },
+  {
+    icon: '🚀',
+    title: 'Career Outcomes',
+    text: 'Our curriculum is reverse-engineered from the technical interviews of top-tier tech companies.',
+  },
+];
+
+/* ------------------------------------------------------------------ */
+/*  Components                                                         */
+/* ------------------------------------------------------------------ */
+
+function HeroBanner() {
   return (
-    <header className={styles.heroBanner}>
-      <div className="container">
-        <Heading as="h1" className="hero__title">
-          Python School
+    <header className={styles.hero}>
+      <div className={styles.heroGlow} />
+      <div className={styles.heroPattern} />
+      <div className="container relative z-10">
+        <div className={styles.cohortBadge}>
+          <span className={styles.badgePulse}></span>
+          <span>Winter 2024 Cohort Open</span>
+        </div>
+        <Heading as="h1" className={styles.heroTitle}>
+          <span className={styles.titleSub}>BAE School</span>
+          <span className={styles.textGradient}>Practical Engineering.</span>
         </Heading>
-        <p className={styles.subtitle}>
-          Practical Python learning for engineers who want clear concepts,
-          production thinking, and interview readiness.
+        <p className={styles.heroSubtitle}>
+          <strong>Learn</strong> the theory. <strong>Build</strong> the systems. <strong>Ship</strong> to production. We forge software engineers, not just coders.
         </p>
-        <div className={styles.buttons}>
+        <div className={styles.heroCta}>
           <Link
             className="button button--primary button--lg"
             to="/docs/school/python/intro/what-is-python">
-            Start Python School
+            Join the Lab
           </Link>
           <Link
-            className="button button--secondary button--lg"
+            className={`button button--outline button--lg ${styles.heroCtaSecondary}`}
             to="/docs/school/python/interview-prep/top-python-interview-questions">
-            Interview Prep
+            View Curriculum
           </Link>
+        </div>
+        
+        {/* Stats Grid */}
+        <div className={styles.statsGrid}>
+          <div className={styles.statCard}>
+            <span className={styles.statValue}>120+</span>
+            <span className={styles.statLabel}>Lessons</span>
+          </div>
+          <div className={styles.statCard}>
+            <span className={styles.statValue}>20</span>
+            <span className={styles.statLabel}>Sections</span>
+          </div>
+          <div className={styles.statCard}>
+            <span className={styles.statValue}>10k+</span>
+            <span className={styles.statLabel}>Students</span>
+          </div>
+          <div className={styles.statCard}>
+            <span className={styles.statValue}>98%</span>
+            <span className={styles.statLabel}>Placement</span>
+          </div>
         </div>
       </div>
     </header>
   );
 }
 
+function CourseCard({course}: {course: Course}) {
+  const inner = (
+    <div
+      className={`${styles.courseCard} ${course.featured ? styles.courseCardFeatured : ''} ${!course.available ? styles.courseCardDisabled : ''}`}
+      style={{'--card-accent': course.accent} as React.CSSProperties}>
+      <div className={styles.cardHeader}>
+        <div className={styles.courseEmoji}>{course.emoji}</div>
+        {course.available ? (
+          <div className={styles.liveBadge}>
+            <span className={styles.livePulse}></span>
+            <span>Live Now</span>
+          </div>
+        ) : (
+          <div className={styles.soonBadge}>Coming Soon</div>
+        )}
+      </div>
+      <div className={styles.cardBody}>
+        <h3 className={styles.courseTitle}>{course.title}</h3>
+        <p className={styles.courseDesc}>{course.description}</p>
+      </div>
+      <div className={styles.cardFooter}>
+        <span className={styles.courseMeta}>
+          {course.available ? '📚 ' : '🕐 '}
+          {course.topicCount}
+        </span>
+        {course.available && (
+          <span className={styles.courseCtaArrow}>Start Track →</span>
+        )}
+      </div>
+    </div>
+  );
+
+  if (course.available) {
+    return (
+      <Link to={course.href} className={`${styles.courseLink} ${course.featured ? styles.gridColSpan2 : ''}`}>
+        {inner}
+      </Link>
+    );
+  }
+  return inner;
+}
+
+function CourseCatalog() {
+  return (
+    <section className={styles.section} id="courses">
+      <div className="container">
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>Engineering Tracks</h2>
+          <p className={styles.sectionSubtitle}>
+            Master the core stack required for modern production systems.
+          </p>
+        </div>
+        <div className={styles.courseGrid}>
+          {courses.map((course) => (
+            <CourseCard key={course.title} course={course} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function WhySection() {
+  return (
+    <section className={`${styles.section} ${styles.sectionAlt}`}>
+      <div className="container">
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>Why BAE School?</h2>
+          <p className={styles.sectionSubtitle}>
+            We don't teach syntax. We teach you how to build real systems that scale.
+          </p>
+        </div>
+        <div className={styles.valueGrid}>
+          {valueProps.map((v) => (
+            <div key={v.title} className={styles.valueCard}>
+              <span className={styles.valueIcon}>{v.icon}</span>
+              <h3 className={styles.valueTitle}>{v.title}</h3>
+              <p className={styles.valueText}>{v.text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Page                                                               */
+/* ------------------------------------------------------------------ */
+
 export default function Home(): ReactNode {
   const {siteConfig} = useDocusaurusContext();
   return (
     <Layout
       title={siteConfig.title}
-      description="Practical Python school for production engineering and interviews.">
-      <HomepageHeader />
+      description="BAE School — a practical engineering school for Python, JavaScript, DevOps, AI, and more.">
+      <HeroBanner />
       <main>
-        <section className={styles.section}>
-          <div className="container">
-            <div className={styles.grid}>
-              <Link className={styles.card} to="/docs/school/python/intro/setup-python">
-                <h2>Learn The Foundation</h2>
-                <p>Start with setup, execution flow, and your first Python program.</p>
-              </Link>
-              <Link className={styles.card} to="/docs/school/python/collections/lists">
-                <h2>Build Core Skills</h2>
-                <p>Move through fundamentals, control flow, functions, and collections.</p>
-              </Link>
-              <Link className={styles.card} to="/docs/school/python/interview-prep/top-python-interview-questions">
-                <h2>Practice Interviews</h2>
-                <p>Use code-heavy cheat sheets and quizzes to validate your answers.</p>
-              </Link>
-            </div>
-          </div>
-        </section>
+        <CourseCatalog />
+        <WhySection />
       </main>
     </Layout>
   );

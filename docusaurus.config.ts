@@ -3,15 +3,15 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
-  title: 'Python School',
-  tagline: 'Practical Python for production engineers',
+  title: 'BAE School',
+  tagline: 'Learn engineering, one topic at a time',
   favicon: 'img/favicon.ico',
 
   future: {
     v4: true,
   },
 
-  url: 'https://python-school.example.com',
+  url: 'https://school.beingaiengineer.com',
   baseUrl: '/',
   organizationName: 'being-ai-engineer',
   projectName: 'playbook',
@@ -44,17 +44,23 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'Python School',
+      title: 'BAE School',
       logo: {
-        alt: 'Python School Logo',
+        alt: 'BAE School Logo',
         src: 'img/logo.svg',
       },
       items: [
         {
-          type: 'docSidebar',
-          sidebarId: 'pythonSidebar',
+          type: 'dropdown',
+          label: 'Courses',
           position: 'left',
-          label: 'Docs',
+          items: [
+            {
+              type: 'docSidebar',
+              sidebarId: 'pythonSidebar',
+              label: '🐍 Python',
+            },
+          ],
         },
         {
           to: '/docs/school/python/interview-prep/top-python-interview-questions',
@@ -67,20 +73,16 @@ const config: Config = {
       style: 'dark',
       links: [
         {
-          title: 'Python School',
+          title: 'Courses',
           items: [
             {
-              label: 'Start Here',
+              label: '🐍 Python',
               to: '/docs/school/python/intro/what-is-python',
-            },
-            {
-              label: 'Interview Prep',
-              to: '/docs/school/python/interview-prep/top-python-interview-questions',
             },
           ],
         },
         {
-          title: 'Core Tracks',
+          title: 'Python Tracks',
           items: [
             {
               label: 'Fundamentals',
@@ -96,8 +98,17 @@ const config: Config = {
             },
           ],
         },
+        {
+          title: 'Resources',
+          items: [
+            {
+              label: 'Interview Prep',
+              to: '/docs/school/python/interview-prep/top-python-interview-questions',
+            },
+          ],
+        },
       ],
-      copyright: `Copyright (c) ${new Date().getFullYear()} Python School.`,
+      copyright: `Copyright © ${new Date().getFullYear()} BAE School. Built with ❤️ by Being AI Engineer.`,
     },
     prism: {
       theme: prismThemes.github,

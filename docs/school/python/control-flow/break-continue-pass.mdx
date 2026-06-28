@@ -2,6 +2,8 @@
 sidebar_position: 4
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Break, Continue, Pass
 
 ## 1. Quick Summary
@@ -87,6 +89,29 @@ def process_uploads(files):
 ```
 
 ## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'break, continue, and pass in a loop',
+    height: 380,
+    nodes: [
+      {id: 'loop', title: 'Loop Start', detail: 'for or while iteration begins', x: 40, y: 140, kind: 'core'},
+      {id: 'body', title: 'Loop Body', detail: 'Statements execute each iteration', x: 260, y: 40, kind: 'process'},
+      {id: 'break', title: 'break', detail: 'Exit the entire loop immediately', x: 480, y: 40, kind: 'warning'},
+      {id: 'continue', title: 'continue', detail: 'Skip to the next iteration', x: 480, y: 140, kind: 'tool'},
+      {id: 'pass', title: 'pass', detail: 'Do nothing — placeholder statement', x: 480, y: 260, kind: 'data'},
+      {id: 'after', title: 'After Loop', detail: 'Code after the loop runs', x: 260, y: 280, kind: 'output'},
+    ],
+    edges: [
+      {source: 'loop', target: 'body', label: 'each iteration'},
+      {source: 'body', target: 'break', label: 'exit now'},
+      {source: 'body', target: 'continue', label: 'skip rest'},
+      {source: 'body', target: 'pass', label: 'no-op'},
+      {source: 'break', target: 'after', label: 'jumps out', animated: true},
+      {source: 'continue', target: 'loop', label: 'restart', animated: true, type: 'step'},
+    ],
+  }}
+/>
 
 These statements compile down to absolute jump instructions in Python's bytecode.
 - `break` tells the interpreter to jump the instruction pointer to the end of the loop structure.

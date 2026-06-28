@@ -2,6 +2,8 @@
 sidebar_position: 2
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Data Types
 
 ## 1. Quick Summary
@@ -84,6 +86,30 @@ print(order["amount"])
 APIs often pass mixed data types inside dictionaries.
 
 ## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'Python type hierarchy',
+    height: 400,
+    nodes: [
+      {id: 'object', title: 'object', detail: 'Base of all Python types', x: 300, y: 20, kind: 'core'},
+      {id: 'numeric', title: 'Numeric', detail: 'int, float, complex, bool', x: 80, y: 140, kind: 'data'},
+      {id: 'sequence', title: 'Sequence', detail: 'str, list, tuple, range', x: 300, y: 140, kind: 'process'},
+      {id: 'mapping', title: 'Mapping', detail: 'dict — key-value pairs', x: 520, y: 140, kind: 'tool'},
+      {id: 'settype', title: 'Set', detail: 'set, frozenset — unique values', x: 80, y: 280, kind: 'output'},
+      {id: 'none', title: 'NoneType', detail: 'Singleton for missing values', x: 300, y: 280, kind: 'warning'},
+      {id: 'bool', title: 'bool', detail: 'Subclass of int: True=1, False=0', x: 520, y: 280, kind: 'data'},
+    ],
+    edges: [
+      {source: 'object', target: 'numeric', label: 'inherits'},
+      {source: 'object', target: 'sequence', label: 'inherits'},
+      {source: 'object', target: 'mapping', label: 'inherits'},
+      {source: 'numeric', target: 'settype', label: 'hashable', type: 'step'},
+      {source: 'object', target: 'none', label: 'singleton', type: 'step'},
+      {source: 'numeric', target: 'bool', label: 'subclass', animated: true},
+    ],
+  }}
+/>
 
 Every value in Python is an object. Objects carry:
 

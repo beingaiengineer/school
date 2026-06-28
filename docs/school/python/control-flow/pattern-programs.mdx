@@ -2,6 +2,8 @@
 sidebar_position: 5
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Pattern Programs
 
 ## 1. Quick Summary
@@ -83,6 +85,28 @@ for row in range(grid_size):
 ```
 
 ## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'Nested loop pattern generation',
+    height: 360,
+    nodes: [
+      {id: 'outer', title: 'Outer Loop (rows)', detail: 'Controls number of rows', x: 40, y: 120, kind: 'core'},
+      {id: 'inner', title: 'Inner Loop (cols)', detail: 'Controls characters per row', x: 280, y: 40, kind: 'process'},
+      {id: 'char', title: 'Print Character', detail: 'Star, number, or space', x: 280, y: 220, kind: 'data'},
+      {id: 'newline', title: 'Newline', detail: 'print() moves to next row', x: 520, y: 120, kind: 'tool'},
+      {id: 'pattern', title: 'Complete Pattern', detail: 'Triangle, diamond, or pyramid', x: 520, y: 260, kind: 'output'},
+    ],
+    edges: [
+      {source: 'outer', target: 'inner', label: 'for each row'},
+      {source: 'inner', target: 'char', label: 'for each col'},
+      {source: 'char', target: 'inner', label: 'next col', animated: true, type: 'step'},
+      {source: 'inner', target: 'newline', label: 'row done'},
+      {source: 'newline', target: 'outer', label: 'next row', type: 'step'},
+      {source: 'outer', target: 'pattern', label: 'all rows done'},
+    ],
+  }}
+/>
 
 Python is just executing bytecode sequentially. The inner loop must complete *all* of its iterations before the outer loop can move to its next iteration.
 

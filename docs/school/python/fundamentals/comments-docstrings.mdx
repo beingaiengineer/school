@@ -2,6 +2,8 @@
 sidebar_position: 6
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Comments & Docstrings
 
 ## 1. Quick Summary
@@ -80,6 +82,26 @@ def process_refund(payment_id):
 Notice how the comment explains *why* the `sleep` is there. Without it, another engineer would delete it.
 
 ## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'Comments vs docstrings in Python',
+    height: 360,
+    nodes: [
+      {id: 'source', title: 'Source Code', detail: '.py file with comments and docstrings', x: 40, y: 140, kind: 'data'},
+      {id: 'comment', title: '# Comment', detail: 'Ignored by parser — for humans only', x: 280, y: 40, kind: 'tool'},
+      {id: 'docstring', title: 'Docstring', detail: 'Triple-quoted string stored in __doc__', x: 280, y: 260, kind: 'process'},
+      {id: 'discarded', title: 'Discarded', detail: 'Not in bytecode or runtime', x: 520, y: 40, kind: 'warning'},
+      {id: 'accessible', title: '__doc__ Attribute', detail: 'Available via help() and tooling', x: 520, y: 260, kind: 'output'},
+    ],
+    edges: [
+      {source: 'source', target: 'comment', label: '# lines'},
+      {source: 'source', target: 'docstring', label: 'first string'},
+      {source: 'comment', target: 'discarded', label: 'stripped by parser'},
+      {source: 'docstring', target: 'accessible', label: 'stored as attribute'},
+    ],
+  }}
+/>
 
 When Python parses your file, it literally throws away `#` comments before compiling to bytecode. They do not use runtime memory.
 

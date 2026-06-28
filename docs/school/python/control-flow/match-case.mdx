@@ -2,6 +2,8 @@
 sidebar_position: 6
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Match Case
 
 ## 1. Quick Summary
@@ -89,6 +91,28 @@ match event:
 Notice how we simultaneously check the dictionary keys *and* extract the `amt` and `curr` variables? That's structural pattern matching!
 
 ## 7. Internal Working
+
+<LearningFlow
+  diagram={{
+    title: 'match-case structural pattern matching',
+    height: 380,
+    nodes: [
+      {id: 'subject', title: 'Subject Value', detail: 'The value being matched against', x: 40, y: 140, kind: 'data'},
+      {id: 'case1', title: 'case pattern_1', detail: 'First pattern checked', x: 280, y: 20, kind: 'process'},
+      {id: 'case2', title: 'case pattern_2', detail: 'Checked only if case_1 fails', x: 280, y: 140, kind: 'process'},
+      {id: 'wildcard', title: 'case _', detail: 'Wildcard — matches anything', x: 280, y: 260, kind: 'warning'},
+      {id: 'body', title: 'Matched Body', detail: 'Only the first matching case runs', x: 520, y: 140, kind: 'output'},
+    ],
+    edges: [
+      {source: 'subject', target: 'case1', label: 'try match'},
+      {source: 'case1', target: 'body', label: 'matched'},
+      {source: 'case1', target: 'case2', label: 'no match', type: 'step'},
+      {source: 'case2', target: 'body', label: 'matched'},
+      {source: 'case2', target: 'wildcard', label: 'no match', type: 'step'},
+      {source: 'wildcard', target: 'body', label: 'always matches'},
+    ],
+  }}
+/>
 
 When Python compiles `match-case`, it doesn't just build a giant `if-elif` chain. The CPython compiler analyzes the patterns and creates an optimized sequence of type checks, length checks, and equality checks.
 
