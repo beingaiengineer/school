@@ -22,6 +22,7 @@ The content should teach technology topics (starting with Python) in a practical
 
 Before writing Python school content, read:
 - [JULES.md](../../../JULES.md) — autonomous session workflow (for Jules sessions)
+- [soul.md](../../../soul.md) — core BAE School teaching voice and tone
 - [design.md](../../../design.md)
 - [CLAUDE.md](../../../CLAUDE.md)
 - [python-agent.md](../../agents/python-agent.md)
@@ -398,7 +399,8 @@ Before deleting files:
 - [ ] `review-143` | Audit `best-practices/engineering-principles.mdx` | Branch: `jules/review-engineering-principles`
 
 ### Completed This Cycle
-_(Jules appends completed tasks here)_
+| BAE ID | What's Done (High Level) |
+|---|---|
 
 ---
 
@@ -588,3 +590,4 @@ This checklist tracks the implementation of BAE School playbook topics. Complete
 - [x] Production Checklists (best-practices/production-checklists.mdx)
 - [x] Scalability Guidelines (best-practices/scalability-guidelines.mdx)
 - [x] Engineering Principles (best-practices/engineering-principles.mdx)
+

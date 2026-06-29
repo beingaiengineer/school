@@ -7,22 +7,24 @@
 ## Step 1: Read Instructions
 
 Read these files in order before doing anything:
-1. `CLAUDE.md` — global BAE School guidelines, 15-section template, diagram rules
-2. Check the `## Task Queue` in the relevant agent memory file (see Step 2) to identify your course
-3. Read the course-specific agent file under `.claude/agents/`
-4. Read the course-specific memory file fully
+1. [soul.md](./soul.md) — **The core BAE School teaching voice and tone**. Internalize it. Every page you write must sound like a senior engineer mentor talking to a junior dev over chai, not a textbook.
+2. [CLAUDE.md](./CLAUDE.md) — global BAE School guidelines, 15-section template, diagram rules
+3. Check the `## Task Queue` in the relevant agent memory file (see Step 2) to identify your course
+4. Read the course-specific agent file under `.claude/agents/` — it has course-specific tone examples and content rules
+5. Read the course-specific memory file fully
 
 ---
 
 ## Step 2: Find Your Task
 
-Open the relevant agent memory file:
-- Python course: `.claude/agent-memory/python-agent/MEMORY.md`
-- Agentic Frameworks course: `.claude/agent-memory/agentic-frameworks-agent/MEMORY.md`
+Scan the subdirectories inside `.claude/agent-memory/` and check the `MEMORY.md` files. 
+Find the **first** `MEMORY.md` file that still has unchecked `- [ ]` items under its `### Next Task` or `### Backlog` section. That course is your target for this session.
 
-Scroll to `## Task Queue`.
+Open that specific `MEMORY.md` file and scroll to `## Task Queue`.
 
 Pick **up to 10** consecutive `- [ ]` items starting from `### Next Task`. These are your jobs for this session.
+
+Task file paths are relative to the `**Course Path:**` declared in the relevant `MEMORY.md`. For example, if the course path is `docs/school/app-security/`, then `security-mindset.mdx` means `docs/school/app-security/security-mindset.mdx`.
 
 If `### Next Task` has fewer than 10 items, promote items from `### Backlog` to fill up to 10.
 
@@ -32,8 +34,9 @@ If both are empty, stop and report: "All tasks complete. No pending work."
 
 ## Step 3: Execute
 
-1. **Create a single branch** using the batch name (e.g., `jules/batch-001-intro` or `jules/batch-015-concurrency`)
-2. **Implement all assigned topics** (up to 10 per session)
+1. **Calculate the session ID**: Look at the `### Completed This Cycle` table in your current `MEMORY.md`. Count only completed data rows, not the header. If there are 0 rows, your ID is 1; if there are 2 rows, your ID is 3. Prefix it with the course code (e.g., `[BAE-INC-3]`).
+2. **Create a single branch** using the batch name and ID (e.g., `jules/BAE-INC-3-intro` or `jules/BAE-FAST-12-concurrency`)
+3. **Implement all assigned topics** (up to 10 per session)
 3. For each topic page, ensure it has all **15 mandatory sections** from CLAUDE.md:
    - Quick Summary table
    - Real-World Analogy
@@ -70,20 +73,27 @@ If the build fails, fix the errors and rebuild. Do not raise a PR with a broken 
 ## Step 5: Update Memory
 
 In the relevant agent memory file:
-1. Mark all completed tasks as `- [x]`
-2. Move completed tasks to `### Completed This Cycle` (append them)
-3. Promote the next batch of `- [ ]` items from `### Backlog` into `### Next Task` (up to 10)
+1. Mark the completed tasks in the `### Next Task` checklist as `- [x]`. Leave them in the list.
+2. In the `### Completed This Cycle` section, append a new row to the session tracking table. The table should only track the BAE ID and a High-Level Summary.
+   - Example format:
+     | BAE ID | What's Done (High Level) |
+     |---|---|
+     | `[BAE-INC-3]` | Created intro to incidents, covered severity levels, and on-call culture |
+3. Promote the next batch of `- [ ]` items from `### Backlog` into `### Next Task` (up to 10).
 
 ---
 
 ## Step 6: Commit & PR
 
-1. Stage all changed files (content files + MEMORY.md)
-2. Commit with message: `feat(<course>): <batch description>`
-3. Push the branch
+1. Stage all changed files (content files and MEMORY.md).
+2. Commit with message: `feat(<course>): [BAE-X] <batch description>`
+3. Push the branch.
 4. Raise a PR with:
-   - Title: batch description (e.g., "Agentic Frameworks: Intro batch — 10 topics")
-   - Body: list of topics created/fixed, build status confirmation
+   - **Title**: `[BAE-X] <Course Name>: <Batch Description>` (e.g., "[BAE-INC-3] Incident Management: Intro batch — 10 topics")
+   - **Body**: 
+     - **High-Level Summary**: A clear description of the concepts covered in this batch.
+     - **What's Done**: A detailed list of the exact files created/modified and the topics covered.
+     - **Build Status**: Confirmation that `npm run typecheck` and `npm run build` passed locally.
 
 ---
 

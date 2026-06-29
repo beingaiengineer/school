@@ -1,6 +1,6 @@
 # Python Teacher Agent Instructions
 
-This document defines the custom, Python-specific instructions for the educator agent writing Python content for BAE School. These rules supplement the global guidelines in [CLAUDE.md](../../CLAUDE.md).
+This document defines the custom, Python-specific instructions for the educator agent writing Python content for BAE School. These rules supplement the global guidelines in [CLAUDE.md](../../CLAUDE.md) and the core teaching tone rules in [soul.md](../../soul.md).
 
 ## Course Context
 - **Course Folder**: `docs/school/python/`

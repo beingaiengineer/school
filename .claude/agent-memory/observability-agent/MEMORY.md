@@ -1,0 +1,76 @@
+# Project Memory — Observability Course
+
+This file captures the working agreements, implementation habits, course design, and task queue for the Observability course.
+
+## Project Goal
+
+Create a real-world, journey-based course covering **Logs, metrics, traces, Prometheus, Grafana, OpenTelemetry**. This course simulates a new graduate's or fresher's experience in a real corporate environment.
+
+---
+
+## Must-Read Instructions
+
+**CRITICAL:** Before starting any new task, you MUST read:
+- [MEMORY.md](./MEMORY.md) — this file, fully
+- [JULES.md](../../../JULES.md) — autonomous session workflow
+- [soul.md](../../../soul.md) — core BAE School teaching voice and tone
+- [design.md](../../../docs/school/observability/design.md) — course outline and folder structure
+- [CLAUDE.md](../../../CLAUDE.md) — global BAE School guidelines
+- [observability-agent.md](../../agents/observability-agent.md) — course-specific rules
+
+---
+
+## Content Workflow
+
+1. Work in batches of up to 10 topics per session.
+2. If a folder doesn't exist, create it along with a `_category_.json` file.
+3. Every page must follow the 15-section template from CLAUDE.md + Section 16 (Top GitHub Repos).
+4. Run `npm run typecheck` and `npm run build` after every batch to ensure the site compiles.
+5. Update this file's checklists and task queue immediately after finishing a task.
+
+---
+
+## Course Design & Outline
+
+Below are the topics that make up this course. This list serves as the structural design spec.
+
+**Course Path:** `docs/school/observability/`
+
+### Topics
+- what-is-observability.mdx
+- structured-logging.mdx
+- centralized-logging.mdx
+- metrics-and-dashboards.mdx
+- prometheus-grafana.mdx
+- distributed-tracing.mdx
+- opentelemetry.mdx
+- alerting-rules.mdx
+- health-checks.mdx
+- golden-signals.mdx
+
+---
+
+## Task Queue
+
+> **Jules: Pick the first batch of `- [ ]` items (up to 10) under `### Next Task`. If fewer than 10, promote from `### Backlog`.**
+
+### Next Task
+- [ ] `obs-001` | Create `what-is-observability.mdx` | Branch: `jules/observability-batch`
+- [ ] `obs-002` | Create `structured-logging.mdx` | Branch: `jules/observability-batch`
+- [ ] `obs-003` | Create `centralized-logging.mdx` | Branch: `jules/observability-batch`
+- [ ] `obs-004` | Create `metrics-and-dashboards.mdx` | Branch: `jules/observability-batch`
+- [ ] `obs-005` | Create `prometheus-grafana.mdx` | Branch: `jules/observability-batch`
+- [ ] `obs-006` | Create `distributed-tracing.mdx` | Branch: `jules/observability-batch`
+- [ ] `obs-007` | Create `opentelemetry.mdx` | Branch: `jules/observability-batch`
+- [ ] `obs-008` | Create `alerting-rules.mdx` | Branch: `jules/observability-batch`
+- [ ] `obs-009` | Create `health-checks.mdx` | Branch: `jules/observability-batch`
+- [ ] `obs-010` | Create `golden-signals.mdx` | Branch: `jules/observability-batch`
+
+### Backlog
+_Empty_
+
+### Completed This Cycle
+| BAE ID | What's Done (High Level) |
+|---|---|
+
+
