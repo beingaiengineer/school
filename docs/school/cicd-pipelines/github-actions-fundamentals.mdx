@@ -1,0 +1,216 @@
+---
+sidebar_position: 2
+sidebar_label: "GitHub Actions Fundamentals"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# GitHub Actions Fundamentals
+
+### 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | GitHub Actions Fundamentals |
+| Difficulty | Beginner |
+| Used For | Running automated tasks (CI/CD) directly within GitHub repositories. |
+| Common Mistake | Using bad indentation in YAML files causing parsing errors. |
+| Performance | Fast spin-up for Linux runners, Windows/macOS runners take longer to boot. |
+
+### 2. Real-World Analogy
+
+Bro, think of a Swiggy delivery kitchen.
+
+| Swiggy Kitchen | GitHub Actions |
+|---|---|
+| Order received sound ("Ting!") | Event Trigger (`on: push`) |
+| The Head Chef looking at the receipt | Workflow (`.yml` file) |
+| Different stations (Pizza, Burger, Drink) | Jobs (`build`, `test`, `deploy`) |
+| The cooks chopping, frying, and packing | Steps (`run: npm run build`) |
+| The kitchen counter where tools are kept | Runner Virtual Machine |
+
+Just like a Swiggy kitchen doesn't start cooking until an order is placed, GitHub Actions doesn't spin up a runner until a specific event (like a push or pull request) happens.
+
+### 3. Concept Explanation
+
+GitHub Actions is a CI/CD platform deeply integrated into GitHub. Instead of running a separate server like Jenkins, GitHub lets you define your automation directly in your repository using YAML files placed in the `.github/workflows/` directory.
+
+A **Workflow** is the entire process. It is triggered by an **Event** (like pushing to `main`).
+Inside a Workflow, you have **Jobs**. Jobs run in parallel by default, but can be made sequential. Each Job runs on a fresh virtual machine called a **Runner**.
+Inside a Job, you have **Steps**. Steps run sequentially on that same Runner. A step can either run a shell command (`run: echo "Hello"`) or use a pre-built **Action** (`uses: actions/checkout@v4`).
+
+Bro, this is why Actions is so powerful: You don't have to reinvent the wheel. Need to install Node? There's an Action for it. Need to deploy to AWS? There's an Action for it. It's like npm or pip, but for CI/CD tasks.
+
+### 4. Syntax Table
+
+Here are the critical YAML blocks you will use 99% of the time.
+
+| YAML Block | Purpose | Example |
+|---|---|---|
+| `name` | The name of the workflow displayed on GitHub. | `name: Production Build` |
+| `on` | The event that triggers the workflow. | `on: [push, pull_request]` |
+| `jobs` | The container for all the tasks. | `jobs: build-test:` |
+| `runs-on` | The OS the job will execute on. | `runs-on: ubuntu-latest` |
+| `steps` | A list of commands or Actions to execute. | `steps: - uses: actions/checkout@v4` |
+| `env` | Environment variables accessible to steps. | `env: NODE_ENV: production` |
+
+### 5. Beginner Example
+
+This is the "Hello World" of GitHub Actions. It runs whenever someone pushes code.
+
+```yaml
+name: Hello Bro Pipeline
+
+on: [push]
+
+jobs:
+  say-hello:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v4
+
+      - name: Print a message
+        run: echo "Hello bro, welcome to GitHub Actions!"
+
+      - name: Show the current directory files
+        run: ls -la
+```
+
+### 6. Real-World Engineering Example
+
+Bro, let's look at how a real engineering team lints and tests a Python application across multiple versions simultaneously using a matrix strategy.
+
+```yaml
+name: Python Matrix Testing
+
+on:
+  pull_request:
+    branches: [ "main", "develop" ]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    # The senior move: Test against multiple Python versions at once
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11"]
+
+    steps:
+      - name: Get source code
+        uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip' # Speeds up installation!
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install flake8 pytest
+
+      - name: Lint with flake8
+        run: |
+          # stop the build if there are Python syntax errors
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      - name: Test with pytest
+        env:
+          SECRET_KEY: ${{ secrets.TEST_SECRET_KEY }}
+        run: pytest
+```
+
+### 7. Internal Working
+
+When you push code, GitHub's internal event bus detects the `push` event. It scans your `.github/workflows` folder. If it finds a YAML file matching the event, it queues the workflow. GitHub then provisions an ephemeral (temporary) virtual machine (a Runner). The runner executes the steps, streams the console logs back to the GitHub UI in real-time, and then destroys itself when finished.
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'data', position: { x: 50, y: 150 }, data: { label: 'Git Push Event' }},
+    { id: '2', type: 'process', position: { x: 250, y: 150 }, data: { label: 'GitHub Event Bus' }},
+    { id: '3', type: 'core', position: { x: 450, y: 150 }, data: { label: 'Workflow Queue' }},
+    { id: '4', type: 'tool', position: { x: 650, y: 50 }, data: { label: 'Runner 1 (Node 18)' }},
+    { id: '5', type: 'tool', position: { x: 650, y: 250 }, data: { label: 'Runner 2 (Node 20)' }},
+    { id: '6', type: 'output', position: { x: 850, y: 150 }, data: { label: 'UI Log Stream & Status Checks' }},
+
+    { id: 'e1-2', source: '1', target: '2', animated: true },
+    { id: 'e2-3', source: '2', target: '3' },
+    { id: 'e3-4', source: '3', target: '4', label: 'Matrix spawn' },
+    { id: 'e3-5', source: '3', target: '5', label: 'Matrix spawn' },
+    { id: 'e4-6', source: '4', target: '6' },
+    { id: 'e5-6', source: '5', target: '6' }
+  ]}
+/>
+
+### 8. Performance Table
+
+| Resource | Limits (GitHub Hosted Free Tier) | Implications |
+|---|---|---|
+| Max Execution Time | 6 hours per job | Long-running E2E tests will timeout. |
+| Concurrent Jobs | 20 max | Matrix builds might queue if you have too many combinations. |
+| Runner Specs | 2-core CPU, 7GB RAM | Memory-heavy Java/Webpack builds might crash. |
+| Cache Size | 10GB per repo | Old caches are evicted; manage cache keys carefully. |
+
+### 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between a Job and a Step? | A Job runs on a specific Runner VM. A Step is an individual command or Action executed *inside* that Job's VM. |
+| How do you pass data between Jobs? | By default, Jobs are isolated. You must use `actions/upload-artifact` in Job A to save a file, and `actions/download-artifact` in Job B to retrieve it. |
+| What does `needs:` do in GitHub Actions? | It defines job dependencies. E.g., `deploy-job` needs `test-job`. If `test-job` fails, `deploy-job` is skipped. |
+| What is the `secrets` context? | It is a secure way to access encrypted variables stored in repository settings (e.g., $\\\{\\\{ secrets.AWS_KEY \\\}\\\}). They are masked in logs. |
+| What is the `GITHUB_TOKEN`? | An automatically generated token provided by GitHub Actions to authenticate API calls against the repository (like creating a release or commenting on a PR). |
+
+### 10. Tricky Questions & Edge Cases
+
+**The "Pull Request Target" Trap:**
+Bro, there are two events for PRs: `pull_request` and `pull_request_target`. `pull_request` runs the code *from the contributor's fork*, which is safe but doesn't have access to your repository secrets. `pull_request_target` runs the code *from your base branch* but gives access to secrets.
+*The Danger:* If you use `pull_request_target` and blindly run `npm install` on an attacker's code, they can steal your secrets. Always use `pull_request` unless you strictly know what you are doing.
+
+**Mutable vs Immutable Actions:**
+When using an action, e.g., `uses: actions/checkout@v4`, you are pulling a branch/tag. If the author of that Action pushes malicious code to the `v4` tag, your pipeline is compromised. In highly secure environments, pin the exact commit SHA: `uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11`.
+
+### 11. Real-World Usage
+
+Almost every modern open-source project (like React, Tailwind, Vite) uses GitHub Actions for CI. Stripe uses it to run linting and security scans on pull requests before human review. It is the de-facto standard because it lives exactly where the code lives, reducing context switching for developers.
+
+### 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use precise caching keys (`hashFiles('package-lock.json')`) | Use generic cache keys that never invalidate. |
+| Pin Action versions using SHAs for security-critical pipelines. | Blindly use `uses: some-random-dev/action@master`. |
+| Add a `concurrency` block to cancel outdated pipeline runs on the same PR. | Let 5 obsolete pipelines run and eat up your free minutes when you rapidly push commits. |
+
+### 13. Production Notes
+
+> **Warning: Runner IP Blacklisting**
+> GitHub-hosted runners share IP addresses. If your pipeline runs integration tests against a third-party API (like a payment gateway sandbox) 50 times an hour, the third party might rate-limit or IP ban the GitHub runner, causing random pipeline failures. You may need to mock external APIs or use Self-Hosted Runners with static IPs.
+
+### 14. Common Mistakes
+
+| Mistake | Consequence | The Fix |
+|---|---|---|
+| Invalid YAML indentation | `Workflow invalid: unexpected mapping` | Use a YAML linter extension in VS Code. Indentation in YAML is life or death, bro. |
+| Forgetting `actions/checkout` | Job fails saying "file not found" | You must explicitly check out your code as the first step in almost every job. |
+| Storing secrets in plain text YAML | Anyone can read your database password | Use `${{ secrets.MY_SECRET }}` and configure it in Repo Settings. |
+
+### 15. Related Topics
+- Building Your First Pipeline
+- Artifact Management
+- Pipeline Optimization
+- Docker Compose in CI
+
+### Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [actions/setup-node](https://github.com/actions/setup-node) | ⭐ 3.5k+ | Official Action to setup Node.js | It sets up the environment, but more importantly, handles npm/yarn caching efficiently. |
+| [actions/cache](https://github.com/actions/cache) | ⭐ 4.1k+ | Cache dependencies and build outputs | The most important action for speeding up pipeline execution times. |
+| [actions/upload-artifact](https://github.com/actions/upload-artifact) | ⭐ 3.2k+ | Upload pipeline artifacts | Required to pass compiled code or test coverage reports between jobs. |
+| [peter-evans/create-pull-request](https://github.com/peter-evans/create-pull-request) | ⭐ 4.5k+ | Auto-create PRs from pipelines | Amazing for bots that auto-update dependencies and open PRs. |
+| [github/super-linter](https://github.com/github/super-linter) | ⭐ 10k+ | Combination of multiple linters | A heavy but thorough way to lint codebases across multiple languages at once. |

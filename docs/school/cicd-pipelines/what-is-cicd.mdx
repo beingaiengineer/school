@@ -1,0 +1,233 @@
+---
+sidebar_position: 1
+sidebar_label: "What is CI/CD?"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# What is CI/CD?
+
+### 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Continuous Integration and Continuous Deployment (CI/CD) |
+| Difficulty | Beginner |
+| Used For | Automating the testing, building, and deployment of software to production securely and reliably. |
+| Common Mistake | Treating CI/CD as an afterthought rather than integrating it from day one of a project. |
+| Performance | Reduces deployment time from days/weeks to minutes; enables hundreds of safe deployments per day. |
+
+### 2. Real-World Analogy
+
+Bro, think about an automated Amul milk packaging line.
+
+| Milk Factory Instruction | CI/CD Equivalent |
+|---|---|
+| Farmers bring raw milk to the factory. | Developers push raw code to a Git repository. |
+| The milk is pasteurized and checked for purity (no bacteria). | CI automatically runs unit tests and code quality gates to find bugs. |
+| The pure milk is filled into standard packets. | CI builds a standard artifact (like a Docker container). |
+| The packets are loaded into delivery trucks automatically. | CD automatically deploys the containers to production servers. |
+
+If you rely on humans to test the milk, pack it, and put it on the trucks manually, they will eventually make a mistake or drop a packet. CI/CD removes human error by fully automating the pipeline.
+
+### 3. Concept Explanation
+
+CI/CD stands for Continuous Integration and Continuous Deployment (or Delivery).
+
+**Continuous Integration (CI)** is the process where every time a developer commits code, an automated server (like GitHub Actions or Jenkins) downloads the code, runs all unit tests, checks for linting errors, and ensures the new code hasn't broken the existing app.
+
+**Continuous Deployment (CD)** takes over right after CI finishes successfully. It takes the successfully built code, creates a deployable artifact (like a ZIP file or a Docker image), and automatically pushes it to live production servers without manual human intervention.
+
+Why does it exist? Because manual deployments are terrifying, bro. You don't want a single point of failure where only one senior engineer knows the "magic commands" to deploy a service on Friday night. CI/CD democratizes and standardizes the deployment process.
+
+### 4. Syntax Table
+
+Here is a quick look at the core concepts across different CI/CD platforms.
+
+| Concept | GitHub Actions | Jenkins | GitLab CI | Description |
+|---|---|---|---|---|
+| The Pipeline File | `.github/workflows/*.yml` | `Jenkinsfile` | `.gitlab-ci.yml` | The blueprint file telling the server what to do. |
+| Execution Unit | `jobs` | `stages` | `jobs` | A group of steps that run together on one machine. |
+| Commands | `steps` | `steps` | `script` | The actual bash commands to run (e.g., `npm install`). |
+| When to Run | `on: push` | `triggers` | `rules` / `only` | The event that starts the pipeline (like a push to `main`). |
+
+### 5. Beginner Example
+
+A simple GitHub Actions pipeline to test a Node.js app when someone pushes code.
+
+```yaml
+name: Simple Node CI
+
+# When should this run?
+on: [push]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Tests
+        run: npm test
+```
+
+### 6. Real-World Engineering Example
+
+Bro, in a real startup, your pipeline doesn't just run tests. It sets up a database, caches dependencies, runs integration tests, builds a Docker image, and alerts Slack if it fails.
+
+```yaml
+name: Production Deployment Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  ci-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: secretpassword
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      # The senior move: Use caching to speed up the pipeline
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: $\{runner.os\}-go-${{ hashFiles('**/go.sum') }}
+
+      - name: Run Tests with DB
+        env:
+          DATABASE_URL: postgres://postgres:secretpassword@localhost:5432/postgres
+        run: go test -v ./...
+
+  cd-deploy:
+    needs: ci-tests # Wait for tests to pass!
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        run: docker build -t myapp:${{ github.sha }} .
+
+      - name: Push to AWS ECR
+        run: |
+          # Hypothetical deploy script
+          ./deploy-to-prod.sh myapp:${{ github.sha }}
+```
+
+### 7. Internal Working
+
+How does a CI server actually execute your code? When you push to GitHub, a webhook is fired. The CI system reads your YAML file and requests a fresh Virtual Machine (a "Runner"). The Runner pulls your code, executes the bash commands defined in your YAML line by line, captures the exit codes (0 for success, non-zero for failure), and reports back.
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'data', position: { x: 50, y: 50 }, data: { label: 'Developer Push (Git)' }},
+    { id: '2', type: 'process', position: { x: 300, y: 50 }, data: { label: 'GitHub Webhook Fires' }},
+    { id: '3', type: 'core', position: { x: 300, y: 150 }, data: { label: 'CI/CD Controller reads YAML' }},
+    { id: '4', type: 'tool', position: { x: 300, y: 250 }, data: { label: 'Provisions Fresh Ubuntu VM (Runner)' }},
+    { id: '5', type: 'process', position: { x: 100, y: 350 }, data: { label: 'Run Tests (npm test)' }},
+    { id: '6', type: 'process', position: { x: 500, y: 350 }, data: { label: 'Build Docker Image' }},
+    { id: '7', type: 'output', position: { x: 300, y: 450 }, data: { label: 'Deploy to AWS' }},
+
+    { id: 'e1-2', source: '1', target: '2', animated: true, label: 'trigger' },
+    { id: 'e2-3', source: '2', target: '3' },
+    { id: 'e3-4', source: '3', target: '4' },
+    { id: 'e4-5', source: '4', target: '5', label: 'CI Stage' },
+    { id: 'e5-6', source: '5', target: '6', label: 'If success' },
+    { id: 'e6-7', source: '6', target: '7', label: 'CD Stage', animated: true }
+  ]}
+/>
+
+### 8. Performance Table
+
+| Metric | Bad Pipeline | Excellent Pipeline |
+|---|---|---|
+| Build Time | 25+ minutes | Under 5 minutes |
+| Test Execution | Sequential (Slow) | Parallelized across multiple VMs |
+| Dependency Resolution | Downloads the internet every run | Aggressive caching (`actions/cache`) |
+| Feedback Loop | "I'll check it tomorrow" | Notifies Slack in 2 minutes |
+
+### 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between Continuous Delivery and Continuous Deployment? | Continuous *Delivery* means the code is ready to deploy anytime, but a human must click a "Deploy" button. Continuous *Deployment* means the deployment to production happens automatically with no human intervention. |
+| If a test fails in the CI pipeline, what happens to the CD pipeline? | The CD pipeline should be configured to immediately halt. You never deploy a failing build. (`needs: ci-tests` in GitHub Actions). |
+| What is a "Runner" or "Agent"? | A fresh virtual machine or container spun up by the CI system specifically to execute your pipeline jobs, which is then destroyed afterward. |
+| Why should pipelines be treated as "Infrastructure as Code"? | So the deployment process is version-controlled alongside the application code. If the code rolls back, the deployment logic rolls back with it. |
+| How do you handle database passwords in a pipeline? | Never hardcode them. Use CI/CD secrets management (like GitHub Secrets or AWS Parameter Store) to inject them as environment variables at runtime. |
+
+### 10. Tricky Questions & Edge Cases
+
+**The "Flaky Test" Trap:**
+Imagine your CI pipeline passes 80% of the time, but randomly fails 20% of the time because a test relies on the network or time of day.
+*Why it's dangerous:* Developers lose trust in the pipeline. They start saying, "Oh, it failed? Just re-run it." Bro, once you start ignoring the red X, your CI pipeline is dead. Fix or delete flaky tests immediately.
+
+**The Dependency Poisoning Attack:**
+If your pipeline runs `npm install` directly on production without a lockfile (`package-lock.json`), a malicious package published 5 minutes ago could be pulled into your build, bypassing human review. Always use `npm ci` (which strictly obeys the lockfile) in pipelines.
+
+### 11. Real-World Usage
+
+Companies like **Netflix** deploy thousands of times a day using internal CD tools like Spinnaker. At **Uber**, a developer merging a PR triggers a massive CI matrix that runs thousands of tests on different mobile architectures in parallel. Without CI/CD, managing thousands of microservices is literally impossible.
+
+### 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Run tests automatically on every PR. | Let developers merge code without tests passing. |
+| Use caching for dependencies to keep pipelines under 5 mins. | Redownload 2GB of Node modules on every commit. |
+| Make pipelines ephemeral (fresh VM every time). | Run Jenkins on an old laptop under a desk that accumulates state. |
+
+### 13. Production Notes
+
+> **Warning: Secrets Spillage**
+> A common disaster is a developer writing `echo ${{ secrets.PROD_DB_PASSWORD }}` to debug a pipeline, accidentally printing the production password into the public CI logs. Most modern CI tools mask secrets with `***`, but complex scripts can still leak them if written to files. Never log secrets.
+
+### 14. Common Mistakes
+
+| Mistake | Consequence | The Fix |
+|---|---|---|
+| Hardcoding environment variables | Different environments (Staging/Prod) use the same database. | Use pipeline variables/secrets injected at runtime. |
+| Not caching dependencies | 10-minute wait just to run a 5-second test. | Use the platform's cache action/step. |
+| Monolithic pipelines | A tiny frontend typo triggers a 30-minute backend compilation. | Split pipelines by directory (e.g., `paths: ['frontend/**']`). |
+
+### 15. Related Topics
+- GitHub Actions Fundamentals
+- Automated Testing in CI
+- Code Quality Gates
+- Artifact Management
+
+### Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [actions/checkout](https://github.com/actions/checkout) | ⭐ 4.5k+ | Official GitHub Action for checking out a repo | The foundation of 99% of GitHub Actions pipelines. |
+| [jenkinsci/jenkins](https://github.com/jenkinsci/jenkins) | ⭐ 22k+ | The grandfather of open source automation servers | Essential historical context and still heavily used in enterprise. |
+| [nektos/act](https://github.com/nektos/act) | ⭐ 48k+ | Run your GitHub Actions locally | Lets you debug pipelines on your laptop instead of pushing 50 "fix yaml" commits. |
+| [drone/drone](https://github.com/drone/drone) | ⭐ 30k+ | Container-Native CI/CD | A modern, clean alternative to heavy CI systems. |
+| [tektoncd/pipeline](https://github.com/tektoncd/pipeline) | ⭐ 9k+ | Kubernetes-native CI/CD | Represents the future of pipelines running entirely within K8s clusters. |

@@ -1,0 +1,232 @@
+---
+sidebar_position: 9
+sidebar_label: "Pipeline Security"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Pipeline Security
+
+### 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Pipeline Security and DevSecOps |
+| Difficulty | Advanced |
+| Used For | Preventing leaked secrets, supply chain attacks, and malicious code execution inside your CI/CD pipelines. |
+| Common Mistake | Giving a CI/CD token "Admin" access to AWS instead of using the principle of least privilege. |
+| Performance | Deep security scans (SAST/SCA) add significant time (5-20 minutes) to the pipeline. |
+
+### 2. Real-World Analogy
+
+Bro, think about a highly secure bank vault (Production).
+
+| Bank Vault Security | Pipeline Security Equivalent |
+|---|---|
+| The armored truck that carries the cash to the bank. | The CI/CD Pipeline |
+| Guards checking the IDs of the truck drivers. | OIDC (OpenID Connect) Authentication |
+| X-Raying the bags of cash for hidden explosives. | SAST & Dependency Scanning (Snyk) |
+| Giving the driver a key that only opens one specific door. | Principle of Least Privilege / Scoped IAM Roles |
+| Writing the vault combination on a sticky note. | Hardcoding AWS keys in `github_actions.yml` |
+
+If the armored truck (your pipeline) is compromised, the hackers don't need to break into the bank vault. They just ride the truck straight in. Your CI/CD pipeline has keys to production; if it gets hacked, your whole company gets hacked.
+
+### 3. Concept Explanation
+
+**Pipeline Security** (often called DevSecOps) focuses on securing the automation servers that build and deploy your code.
+
+Because CI/CD pipelines have the authority to push code to production servers, publish npm packages, and modify cloud infrastructure, they are prime targets for hackers. A "Supply Chain Attack" happens when an attacker compromises the build system rather than the app itself. (e.g., The famous SolarWinds hack).
+
+There are two main areas of pipeline security:
+1. **Securing the Pipeline Environment:** How does the runner authenticate with AWS? Who is allowed to trigger a deployment? Are secrets masked?
+2. **Securing the Artifact (Scanning):** Is the code we are building safe? Does the `package.json` contain malicious libraries? Do the Docker images have known CVE vulnerabilities?
+
+Bro, the most critical shift in modern CI/CD security is moving from long-lived passwords (like an AWS Access Key that lasts 5 years) to short-lived, identity-based tokens using **OIDC (OpenID Connect)**.
+
+### 4. Syntax Table
+
+Here are the key tools and concepts used to secure pipelines.
+
+| Security Tool / Concept | Purpose | Example |
+|---|---|---|
+| **SAST** (Static Scans) | Scans your own source code for vulnerabilities (SQLi, XSS). | `github/codeql-action` |
+| **SCA** (Dependency Scans) | Checks third-party libraries for known CVEs. | `snyk test` |
+| **Container Scanning** | Checks the Docker Image OS for outdated/vulnerable packages. | `trivy image myapp:latest` |
+| **Secrets Management** | Storing passwords securely, injecting them at runtime. | `${{ secrets.DB_PASS }}` |
+| **OIDC** | Cloud authentication without long-lived passwords. | `aws-actions/configure-aws-credentials` |
+
+### 5. Beginner Example
+
+The absolute basics: Storing a secret correctly and scanning your Node.js dependencies for known vulnerabilities before building.
+
+```yaml
+name: Basic Secure Build
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+
+      - run: npm ci
+
+      # 1. Dependency Scanning (SCA) - Fails build if critical CVEs found
+      - name: Run npm audit
+        run: npm audit --audit-level=critical
+
+      # 2. Proper Secret usage - NEVER hardcode this in the YAML
+      - name: Deploy
+        env:
+          PROD_API_KEY: ${{ secrets.PROD_API_KEY }}
+        run: ./deploy.sh
+```
+
+### 6. Real-World Engineering Example
+
+Bro, here is a senior-level, highly secure AWS deployment pipeline. Notice that there are **no AWS Access Keys stored in GitHub Secrets**. Instead, we use OIDC. GitHub securely proves its identity to AWS, and AWS issues a temporary token that expires in 1 hour.
+
+```yaml
+name: Secure OIDC Deployment
+
+on:
+  push:
+    branches: [ "main" ]
+
+# Required to allow GitHub to request an OIDC JWT token
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-to-aws:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The senior move: Passwordless Authentication
+      - name: Configure AWS Credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          # We tell AWS: "I am GitHub repo my-org/my-app"
+          role-to-assume: arn:aws:iam::111122223333:role/github-actions-deploy-role
+          aws-region: us-east-1
+
+      # Scan the Dockerfile for bad practices
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+
+      - name: Build Image
+        run: docker build -t myapp:latest .
+
+      # Scan the compiled Docker image for OS vulnerabilities using Trivy
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'myapp:latest'
+          format: 'table'
+          exit-code: '1' # Fails the build if vulnerabilities are found
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
+
+      # Only if all scans pass do we push to AWS
+      - name: Push to ECR
+        run: |
+          aws ecr get-login-password | docker login --username AWS --password-stdin 111122223333.dkr.ecr.us-east-1.amazonaws.com
+          docker push myapp:latest
+```
+
+### 7. Internal Working
+
+How does OIDC (OpenID Connect) actually work between GitHub and AWS?
+GitHub acts as an Identity Provider (like Google Login). When the pipeline runs, GitHub generates a signed JSON Web Token (JWT) containing the repo name and branch. The runner sends this JWT to AWS. AWS validates the cryptographic signature. If it matches the rules defined in AWS IAM (e.g., "Only allow the `main` branch of `my-org/my-app`"), AWS replies with short-lived, temporary session keys.
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', position: { x: 50, y: 150 }, data: { label: 'GitHub Actions Runner' }},
+    { id: '2', type: 'process', position: { x: 300, y: 50 }, data: { label: 'Requests JWT Token' }},
+    { id: '3', type: 'data', position: { x: 550, y: 50 }, data: { label: 'GitHub OIDC Provider (Signs Token)' }},
+    { id: '4', type: 'process', position: { x: 300, y: 250 }, data: { label: 'Sends JWT to AWS STS' }},
+    { id: '5', type: 'core', position: { x: 550, y: 250 }, data: { label: 'AWS IAM (Validates Signature)' }},
+    { id: '6', type: 'output', position: { x: 800, y: 150 }, data: { label: 'Returns Temporary AWS Keys (1hr TTL)' }},
+
+    { id: 'e1-2', source: '1', target: '2' },
+    { id: 'e2-3', source: '2', target: '3' },
+    { id: 'e3-4', source: '3', target: '4', label: 'Token received' },
+    { id: 'e4-5', source: '4', target: '5' },
+    { id: 'e5-6', source: '5', target: '6', label: 'If repo/branch matches', animated: true }
+  ]}
+/>
+
+### 8. Performance Table
+
+| Security Check | Execution Time | Frequency Recommendation |
+|---|---|---|
+| Secret Scanning (Regex) | < 10 seconds | Every push (Pre-commit hook preferred). |
+| Dependency Audit (`npm audit`) | ~5 seconds | Every Pull Request. |
+| Container Scanning (Trivy) | ~1-3 minutes | Every PR that modifies `Dockerfile` or dependencies. |
+| Deep SAST Scan (CodeQL) | ~5-15 minutes | Nightly scheduled build or strictly on PRs to `main`. |
+
+### 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is a Supply Chain Attack? | When a hacker injects malicious code into a third-party library you use (like an npm package) or compromises your CI server, allowing them to backdoor your software without hacking your app directly. |
+| Why is OIDC better than storing AWS Access Keys in GitHub Secrets? | AWS Access Keys are long-lived. If they leak, the hacker has permanent access until you revoke them. OIDC tokens are temporary (expire in an hour) and require no permanent passwords to be stored anywhere. |
+| How do you prevent developers from printing secrets in the pipeline logs? | Most modern CI tools auto-mask known secrets with `***`. However, you must also strictly audit pipeline code to ensure developers don't write scripts that export secrets to files or external endpoints. |
+| What is the difference between SAST and DAST? | **SAST** (Static) scans your source code without running it to find bad patterns. **DAST** (Dynamic) attacks your running application from the outside (like a simulated hacker) to find live vulnerabilities. |
+| What happens if a third-party GitHub Action is compromised? | If you used `uses: random/action@v1`, the pipeline pulls the malicious code and executes it with access to your secrets. You should pin actions to specific SHA hashes (e.g., `uses: random/action@f4c...`) to prevent this. |
+
+### 10. Tricky Questions & Edge Cases
+
+**The "Malicious Pull Request" Trap:**
+Bro, imagine your pipeline automatically runs tests and builds the code whenever a PR is opened. A hacker forks your public repo, modifies `package.json` to include a script that sends all environment variables to their server, and opens a PR. If your pipeline blindly executes `npm install` on their code with production secrets injected, you are hacked.
+*The Fix:* Require manual approval from maintainers to run pipelines on PRs from first-time contributors, and never expose production secrets to the `pull_request` event (use `pull_request_target` carefully or keep dev/prod secrets isolated).
+
+**The Base Image Vulnerability:**
+You scan your Python code, and it's perfect. But your Dockerfile starts with `FROM python:3.6`. That OS image hasn't been updated in years and has 500 known Linux vulnerabilities.
+*The Fix:* Always scan the final Docker image (using Trivy/Grype), not just the application code.
+
+### 11. Real-World Usage
+
+At strict tech companies, developers have zero direct access to production servers (No SSH). The CI/CD pipeline is the *only* entity allowed to modify production. Therefore, the pipeline's security posture must be identical to the production database's security posture. Every deployment is cryptographically signed, and every dependency is scanned.
+
+### 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use OIDC for cloud authentication. | Store long-lived `AWS_SECRET_ACCESS_KEY` in repo settings. |
+| Run fast SCA tools (`npm audit`, Snyk) on every PR. | Wait until the night before release to run security scans. |
+| Isolate environments. Dev pipelines should only have Dev secrets. | Let a staging pipeline read the production database password. |
+
+### 13. Production Notes
+
+> **Warning: The "Ignore Unfixed" Dilemma**
+> When you introduce container scanning (like Trivy), it will likely find 100 vulnerabilities in your base Ubuntu image that have no patch available yet. If you set the scanner to fail the build on *any* vulnerability, your pipeline will be permanently blocked. Configure your scanners to only fail on "Fixable" or "Critical" CVEs, or establish an allowed baseline.
+
+### 14. Common Mistakes
+
+| Mistake | Consequence | The Fix |
+|---|---|---|
+| Over-privileged CI roles | If hacked, the CI runner can delete your entire AWS account. | The CI IAM role should only have permissions to do exactly what it needs (e.g., `s3:PutObject` on one specific bucket). |
+| Hardcoded secrets in code | Git history permanently records the password. | Use a tool like `git-secrets` or `trufflehog` to scan for secrets before commits. |
+| Blindly trusting third-party actions | Malicious code runs inside your CI environment. | Pin third-party GitHub Actions to specific commit SHAs, not mutable tags like `@v2`. |
+
+### 15. Related Topics
+- Code Quality Gates
+- Dockerfile Fundamentals
+- Artifact Management
+
+### Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [aquasecurity/trivy](https://github.com/aquasecurity/trivy) | ⭐ 20k+ | Comprehensive security scanner | The absolute best tool for scanning container images, file systems, and Git repos for vulnerabilities. |
+| [aws-actions/configure-aws-credentials](https://github.com/aws-actions/configure-aws-credentials) | ⭐ 4.1k+ | AWS authentication action | Crucial for implementing passwordless OIDC authentication in GitHub Actions. |
+| [trufflesecurity/trufflehog](https://github.com/trufflesecurity/trufflehog) | ⭐ 14k+ | Find leaked credentials | Deeply scans git history and pipeline outputs to ensure no secrets have been accidentally committed. |
+| [github/codeql-action](https://github.com/github/codeql-action) | ⭐ 3.5k+ | Run GitHub CodeQL SAST | The easiest way to integrate deep semantic code security scanning into your PRs. |
+| [snyk/cli](https://github.com/snyk/cli) | ⭐ 6k+ | Snyk vulnerability scanner CLI | Industry standard for Software Composition Analysis (finding vulnerabilities in open-source dependencies). |

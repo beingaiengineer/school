@@ -1,0 +1,221 @@
+---
+sidebar_position: 6
+sidebar_label: "Artifact Management"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Artifact Management
+
+### 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Artifact Management in CI/CD |
+| Difficulty | Intermediate |
+| Used For | Storing, versioning, and passing compiled code, binaries, or test reports between pipeline jobs or to production. |
+| Common Mistake | Building code from source on production servers instead of deploying a pre-built artifact. |
+| Performance | Downloading a 50MB artifact takes seconds; recompiling source code takes minutes. |
+
+### 2. Real-World Analogy
+
+Bro, think of a large Indian wedding catering operation.
+
+| Catering Process | CI/CD Equivalent |
+|---|---|
+| The raw ingredients (vegetables, spices, raw rice). | The Source Code (`.ts`, `.go`, `.java`) |
+| The kitchen chopping and cooking the food. | The CI Build Job (`npm run build`) |
+| **Packing the cooked biryani into sealed aluminum containers.** | **Creating the Artifact (A ZIP file or Docker Image)** |
+| Storing the containers in the delivery van. | Pushing to an Artifact Registry (JFrog / AWS S3) |
+| Opening the container at the wedding venue and serving. | Deploying the Artifact to Production |
+
+You do not take raw vegetables to the wedding hall and cook there. That is slow, messy, and risky. You cook it in the kitchen, seal it in a container (artifact), and deliver it. Never compile code on production servers, bro.
+
+### 3. Concept Explanation
+
+An **Artifact** is any file or collection of files produced during a CI/CD pipeline.
+
+There are two main types of artifacts:
+1. **Pipeline Artifacts:** Temporary files passed between jobs. For example, Job 1 runs tests and generates a `coverage.xml` file. Job 2 needs that file to send to SonarQube. Job 1 "uploads" the artifact, and Job 2 "downloads" it.
+2. **Release Artifacts:** The final, compiled, ready-to-run version of your application. This could be a `.jar` file (Java), a zipped `dist/` folder (React frontend), an `.apk` (Android app), or a Docker container image.
+
+**Artifact Registries** (like JFrog Artifactory, Nexus, AWS ECR, or GitHub Packages) are secure storage systems designed specifically to hold these Release Artifacts. They version them (e.g., `myapp-v1.2.zip`) so you can easily deploy them, or roll back to an older version if the new one crashes.
+
+### 4. Syntax Table
+
+Here is how you handle pipeline artifacts in GitHub Actions.
+
+| Action | Description | Example Usage |
+|---|---|---|
+| `actions/upload-artifact` | Uploads a file/folder from the runner to GitHub storage. | `uses: actions/upload-artifact@v4` |
+| `name` (upload) | The ID used to reference the artifact later. | `name: test-coverage-report` |
+| `path` (upload) | The file or directory to upload. | `path: ./coverage/` |
+| `actions/download-artifact` | Downloads a previously uploaded artifact into a new job runner. | `uses: actions/download-artifact@v4` |
+| `retention-days` | How long GitHub stores the temporary file before deleting it. | `retention-days: 5` |
+
+### 5. Beginner Example
+
+Passing a text file between two completely isolated jobs using pipeline artifacts.
+
+```yaml
+name: Artifact Passing Demo
+
+on: [push]
+
+jobs:
+  job-one-create:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create a file
+        run: echo "Hello from Job 1" > my-message.txt
+
+      - name: Upload the file as an artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: secret-message
+          path: my-message.txt
+
+  job-two-read:
+    needs: job-one-create # Must wait for Job 1 to finish!
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download the artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: secret-message
+
+      - name: Read the file
+        run: cat my-message.txt
+```
+
+### 6. Real-World Engineering Example
+
+Bro, here is a real production workflow. We build a React Single Page Application (SPA), zip the `dist` folder into a release artifact, and upload it to an AWS S3 bucket for deployment.
+
+```yaml
+name: React Production Build
+
+on:
+  push:
+    tags:
+      - 'v*' # Trigger only when a version tag is pushed (e.g., v1.0.0)
+
+jobs:
+  build-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      # Generates the minified, production-ready 'dist/' folder
+      - run: npm run build
+
+      # Package it into a single artifact
+      - name: Zip the build
+        run: zip -r frontend-release-${{ github.ref_name }}.zip dist/
+
+      # Real-world deployment: Push the artifact to AWS S3
+      - name: Upload to AWS S3 (Artifact Registry)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          aws s3 cp frontend-release-${{ github.ref_name }}.zip s3://my-company-artifacts/frontend/
+```
+
+### 7. Internal Working
+
+Why do we need to upload and download files? Because Jobs in GitHub Actions run on entirely separate virtual machines. Job 1 runs on Runner A. Job 2 runs on Runner B. They do not share a hard drive. To pass data, Runner A uploads the file to GitHub's internal blob storage via an API. Runner B then queries that API and downloads the file to its own local disk.
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', position: { x: 50, y: 150 }, data: { label: 'Runner A (Build Job)' }},
+    { id: '2', type: 'process', position: { x: 50, y: 50 }, data: { label: 'Compiles code to ./dist' }},
+    { id: '3', type: 'data', position: { x: 400, y: 150 }, data: { label: 'GitHub Internal Blob Storage' }},
+    { id: '4', type: 'core', position: { x: 750, y: 150 }, data: { label: 'Runner B (Deploy Job)' }},
+    { id: '5', type: 'process', position: { x: 750, y: 250 }, data: { label: 'Pushes ./dist to Prod' }},
+    { id: '6', type: 'output', position: { x: 1000, y: 150 }, data: { label: 'Production Server' }},
+
+    { id: 'e2-1', source: '2', target: '1' },
+    { id: 'e1-3', source: '1', target: '3', label: 'upload-artifact', animated: true },
+    { id: 'e3-4', source: '3', target: '4', label: 'download-artifact', animated: true },
+    { id: 'e4-5', source: '4', target: '5' },
+    { id: 'e5-6', source: '5', target: '6', label: 'rsync / SCP' }
+  ]}
+/>
+
+### 8. Performance Table
+
+| Storage Location | Speed | Best Used For |
+|---|---|---|
+| Runner Disk (No artifact) | Milliseconds | Files needed only within the same Job. |
+| GitHub Pipeline Artifacts | ~5-15 seconds | Passing coverage reports, logs, or zipped builds between jobs. |
+| External Artifact Registry (AWS S3, JFrog) | Varies by network | Storing final production releases long-term. |
+
+### 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why not just commit the compiled `dist/` folder back into Git? | Git is designed for tracking human-readable text changes (source code), not massive binary files or minified code. Committing binaries bloats the repository size dramatically and causes merge conflicts. |
+| How do Jobs share data in a CI pipeline? | Since Jobs run on separate, isolated runners, they must share data by uploading files to a central artifact storage, and the subsequent job must download them. |
+| What is the difference between Cache and Artifacts in CI? | Caches (like `node_modules`) are used to speed up subsequent pipeline runs by saving dependencies. Artifacts are specific files generated by the code (like a build or report) meant to be passed to other jobs or stored as a release. |
+| Why must you build an artifact ONCE and promote it? | If you rebuild the code in staging and rebuild it again in production, differences in the runner environment might cause the production build to behave differently. Build once, test that artifact, deploy that exact artifact. |
+| What is an Artifact Registry? | A centralized server (like JFrog Artifactory or AWS ECR) designed to store, version, and secure compiled binaries and Docker images. |
+
+### 10. Tricky Questions & Edge Cases
+
+**The "Path Mismatch" Trap:**
+Bro, when you upload an artifact from `path: src/build/`, and download it in the next job, the runner recreates that folder structure. If you just run `ls`, you won't see your files. You have to `cd src/build/` to find them.
+*The Fix:* Use the `path` argument in the download step to explicitly tell it where to unpack the files.
+
+**The "Build Promotion" Rule:**
+A junior engineer creates a pipeline that runs `npm run build` and deploys to Staging. If it looks good, they run `npm run build` *again* to deploy to Production.
+Bro, this is a fatal flaw. What if a library updated its minor version between the two builds? Staging and Prod are now running different code!
+*The Senior Way:* Build the artifact once, save it to S3. Deploy that exact zip file to Staging. If approved, take that *exact same zip file* and push it to Prod.
+
+### 11. Real-World Usage
+
+At enterprises, nothing goes to production without being securely stored in a registry like JFrog Artifactory. Before a Docker image (a type of artifact) is pushed to the production Kubernetes cluster, the registry scans the image for vulnerabilities. If a critical CVE (Common Vulnerabilities and Exposures) is found, the registry automatically blocks the deployment.
+
+### 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use clear versioning for release artifacts (e.g., `app-v1.4.2-gitsha.zip`). | Name every artifact `latest.zip`, overwriting the previous one and destroying rollback capability. |
+| Reduce artifact retention days (e.g., 5 days) for temporary pipeline logs to save money. | Store millions of useless test logs forever. |
+| Build your artifact once and deploy it to all environments. | Recompile your code for every environment. |
+
+### 13. Production Notes
+
+> **Warning: Artifact Size Limits**
+> GitHub Actions has storage limits for artifacts (e.g., 500MB per artifact, and total repo storage limits). If you try to upload a 5GB database dump as an artifact, your pipeline will fail, and you might get billed for storage overages. For massive files, upload directly to AWS S3 or Google Cloud Storage using their CLIs.
+
+### 14. Common Mistakes
+
+| Mistake | Consequence | The Fix |
+|---|---|---|
+| Forgetting `needs: job1` | Job 2 tries to download the artifact before Job 1 has finished creating it. | Explicitly define Job dependencies using `needs`. |
+| Uploading `node_modules` | Pipeline artifact size explodes to 800MB and slows down the pipeline. | Exclude `node_modules` from zip files. Use `actions/cache` for dependencies instead. |
+| Hardcoding paths | Scripts fail on Windows runners because they use `\` instead of `/`. | Use relative paths and let the action handle cross-OS path translation. |
+
+### 15. Related Topics
+- Building Your First Pipeline
+- Pipeline Optimization
+- Dockerfile Fundamentals
+- Docker Compose in CI
+
+### Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [actions/upload-artifact](https://github.com/actions/upload-artifact) | ⭐ 3.2k+ | Official GitHub Action for uploading | The core tool for saving temporary pipeline data. |
+| [actions/download-artifact](https://github.com/actions/download-artifact) | ⭐ 1.8k+ | Official GitHub Action for downloading | The core tool for retrieving temporary pipeline data. |
+| [aws-actions/configure-aws-credentials](https://github.com/aws-actions/configure-aws-credentials) | ⭐ 4.1k+ | Auth with AWS in GitHub Actions | Required before you can upload artifacts directly to an AWS S3 bucket. |
+| [jfrog/setup-jfrog-cli](https://github.com/jfrog/setup-jfrog-cli) | ⭐ 200+ | Official JFrog CLI setup | Used by enterprises to push massive Java/C++ binaries to Artifactory. |
+| [docker/build-push-action](https://github.com/docker/build-push-action) | ⭐ 4.5k+ | Build and push Docker images | Docker images are the most common modern artifacts; this action pushes them to registries automatically. |
