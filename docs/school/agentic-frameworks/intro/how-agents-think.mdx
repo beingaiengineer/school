@@ -1,0 +1,213 @@
+---
+sidebar_position: 5
+sidebar_label: "How Agents Think"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# How Agents Think
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | LLM Reasoning & Planning |
+| Difficulty | Intermediate |
+| Used For | Understanding the cognitive loop that allows an LLM to act autonomously |
+| Common Mistake | Treating the LLM as a magical brain instead of a text-prediction engine forced into a loop |
+| Performance | Deep reasoning requires high token consumption; complex thoughts = slower execution |
+
+## 2. Real-World Analogy
+
+| Human World (Solving a Math Problem) | AI Agent Equivalent |
+|---|---|
+| Looking at the equation on the board | **Observation (Input State)** |
+| Talking to yourself: "I need to isolate X first." | **Chain of Thought (Reasoning)** |
+| Realizing: "Wait, I don't know 15 * 42 off the top of my head." | **Identifying Tool Need** |
+| Reaching for the calculator and typing it in | **Function Calling (Action)** |
+| Reading the calculator screen (630) | **Observation (Feedback)** |
+| Writing down the final answer on the test | **Final Generation** |
+
+Bro, have you ever lost your keys? You don't just magically *know* where they are. You stand in the hallway and say out loud: "Okay, I came in through the back door. Then I went to the kitchen. Let me check the counter." That internal monologue—talking to yourself to figure out the next step—is exactly how an AI agent thinks. We literally force the LLM to write out its thoughts before it takes an action.
+
+## 3. Concept Explanation
+
+LLMs are not sentient; they are next-token predictors. If you ask an LLM a complex question, and it tries to answer immediately in the very next token, it often fails. It hasn't given itself "space" to process.
+
+Agents "think" using a prompting strategy called **ReAct (Reason + Act)** or **Chain of Thought (CoT)**.
+Instead of answering immediately, the system prompt forces the LLM to output a specific structure:
+1. **Thought:** The LLM generates text explaining its logic.
+2. **Action:** The LLM generates a JSON block requesting a tool.
+3. **Observation:** The system executes the tool and pastes the result back into the prompt.
+4. **Repeat:** The LLM reads the new prompt (now containing the observation) and generates a new Thought.
+
+This loop continues until the LLM decides no more tools are needed and outputs the final answer.
+
+## 4. Syntax Table
+
+*The core structure of a ReAct prompt.*
+
+| Phase | What the LLM sees / generates |
+|---|---|
+| **System Prompt** | `Use this format: Thought -> Action -> Observation` |
+| **Thought (LLM)** | `Thought: I need to find the user's ID before I can query their billing history.` |
+| **Action (LLM)** | `Action: {"name": "search_user", "args": {"name": "Alice"}}` |
+| **Observation (System)**| `Observation: {"user_id": 992}` |
+| **Final (LLM)** | `Final Answer: Alice's ID is 992. I will now check billing...` |
+
+## 5. Beginner Example
+
+Let's look at the raw text of an agent's "internal monologue" during a loop. You don't write this code; this is what the LLM generates under the hood.
+
+```text
+User: How many days until Christmas? Today is Oct 15, 2023.
+
+Thought: I know today's date. I know Christmas is Dec 25. I need to calculate the days between Oct 15, 2023, and Dec 25, 2023. I will use the date_calculator tool.
+Action:
+{
+  "tool": "date_calculator",
+  "start": "2023-10-15",
+  "end": "2023-12-25"
+}
+
+Observation: 71 days
+
+Thought: I have the answer from the calculator. I can now respond to the user.
+Final Answer: There are 71 days until Christmas!
+```
+
+## 6. Real-World Engineering Example
+
+Bro, in production, you don't parse raw text for actions anymore. You use **Function Calling** (or Tool Calling) APIs provided by OpenAI, Anthropic, or Gemini. The model is fine-tuned to emit structured JSON when it "thinks" it needs a tool.
+
+Here is how you handle the "thinking" loop in Python using the OpenAI SDK.
+
+```python
+import json
+from openai import OpenAI
+
+client = OpenAI()
+
+def run_agent_loop(user_query, tools_list):
+    messages = [{"role": "user", "content": user_query}]
+
+    while True:
+        # 1. The LLM thinks and decides
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=messages,
+            tools=tools_list
+        )
+
+        message = response.choices[0].message
+        messages.append(message) # Save the thought to memory
+
+        # 2. Did the LLM decide to take an action?
+        if not message.tool_calls:
+            # No action needed, the thought loop is complete
+            return message.content
+
+        # 3. Execute the actions (Observations)
+        for tool_call in message.tool_calls:
+            print(f"Agent thinking: Using tool {tool_call.function.name}")
+            args = json.loads(tool_call.function.arguments)
+
+            # Execute actual python function here
+            result = execute_my_tool(tool_call.function.name, args)
+
+            # 4. Feed the Observation back into the LLM's brain
+            messages.append({
+                "role": "tool",
+                "tool_call_id": tool_call.id,
+                "content": str(result)
+            })
+
+        # The loop restarts, allowing the LLM to think about the new Observation
+```
+
+## 7. Internal Working
+
+This flowchart shows the cognitive loop. Notice how the LLM doesn't actually "execute" anything; it just generates text or JSON, and the *host system* executes the tool and feeds the data back.
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'LLM Generates Token' }, position: { x: 250, y: 50 } },
+    { id: '2', type: 'process', data: { label: 'Is it a Tool Call?' }, position: { x: 250, y: 150 } },
+
+    // Yes Path
+    { id: '3', type: 'tool', data: { label: 'Host System Executes API' }, position: { x: 100, y: 250 } },
+    { id: '4', type: 'data', data: { label: 'Append Result to Context' }, position: { x: 100, y: 350 } },
+
+    // No Path
+    { id: '5', type: 'output', data: { label: 'Stream to User' }, position: { x: 400, y: 250 } },
+
+    { id: 'e1', source: '1', target: '2', animated: true },
+    { id: 'e2-yes', source: '2', target: '3', animated: true, label: 'Yes (Action)' },
+    { id: 'e3', source: '3', target: '4', animated: true },
+    { id: 'e4-1', source: '4', target: '1', animated: true, type: 'smoothstep', label: 'Trigger next thought' },
+    { id: 'e2-no', source: '2', target: '5', animated: true, label: 'No (Final Answer)' },
+  ]}
+/>
+
+## 8. Performance Table
+
+| Cognitive Step | Time Cost | Token Cost |
+|---|---|---|
+| **Generating "Thought" Text** | High (streaming text) | High (output tokens are expensive) |
+| **Generating JSON Tool Call** | Low | Low |
+| **Ingesting Tool Observation** | Very Low | High (context window grows) |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why do we force the LLM to write out a "Thought" before the "Action"? | By generating tokens representing its reasoning, the LLM creates context for itself. It calculates the logic step-by-step, significantly reducing hallucinations and bad tool choices. |
+| What is "Function Calling" and how does it relate to agent thinking? | Function Calling is a native capability of modern LLMs where they are fine-tuned to output strict JSON matching a schema, rather than relying on raw text parsing for tools. |
+| How do models like OpenAI's `o1` change agent thinking? | `o1` models handle the "Chain of Thought" internally and invisibly. You don't need to prompt them to use ReAct; they reason in a hidden loop before outputting the final tool call or answer. |
+| What causes an agent to get stuck in an infinite reasoning loop? | Usually, a tool returns an unhelpful error (e.g., `500 Server Error`). The LLM sees the error, tries the exact same tool again, gets the same error, and loops forever because it lacks the capacity to try a new strategy. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, what if you give the agent a tool that returns 10 megabytes of JSON data?
+The LLM will try to "think" about that observation, but it will blow out the context window limit (e.g., 128k tokens) and crash.
+**The Edge Case Fix:** The host system must intercept large tool observations and truncate, summarize, or chunk them before feeding them back into the LLM's context. The agent can only think about what fits in its short-term memory.
+
+## 11. Real-World Usage
+
+- **Self-Correction:** An agent writes a SQL query, runs it, gets a syntax error, *reads the error*, and rewrites the query perfectly on the second loop.
+- **Multi-step Planning:** An agent is asked to "Deploy this code to AWS." It thinks: "First, I need to lint it. Second, I need to build the Docker image. Third, I need to push to ECR." It executes these one by one.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use models fine-tuned for tool use and structured output (GPT-4o, Claude 3.5 Sonnet). | Don't try to build complex agents with older/smaller models that struggle with JSON formatting. |
+| Provide explicit error messages back to the LLM so it can learn why a tool failed. | Don't just return `False` when a tool fails; return `"Error: user ID not found, try searching by email."` |
+
+## 13. Production Notes
+
+:::caution Production Warning
+Bro, thinking takes time. If an agent loops 5 times before finding the answer, the user is staring at a loading spinner for 15 seconds. You MUST implement UI patterns like streaming the agent's internal "Thoughts" to the frontend (e.g., "Agent is checking the database...", "Agent is calculating...") so the user doesn't bounce.
+:::
+
+## 14. Common Mistakes
+
+| Mistake | Why it's bad | The Fix |
+|---|---|---|
+| Hiding tool execution errors from the LLM | The LLM doesn't know *why* it didn't get data, so it hallucinates an answer. | Catch exceptions in python and append them to the message array as a `tool` role message. |
+| Assuming the LLM will follow a 20-step plan perfectly | LLMs have short attention spans. By step 5, it forgets the overall goal. | Break tasks down using a Supervisor agent, or force the agent to re-read the original goal every 3 loops. |
+
+## 15. Related Topics
+- Anatomy of an Agent
+- Prompt Engineering for Agents
+- Tools & Actions Overview
+
+## 16. Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [hwchase17/react](https://github.com/ysymyth/ReAct) | ⭐ 2k+ | Original ReAct Paper Repo | The foundational academic concept of Reason + Act that defines how all agents think today. |
+| [openai/openai-python](https://github.com/openai/openai-python) | ⭐ 20k+ | OpenAI SDK | Contains the exact API definitions for Function Calling, which powers modern agent thought. |
+| [anthropics/anthropic-cookbook](https://github.com/anthropics/anthropic-cookbook) | ⭐ 4k+ | Claude Examples | Excellent examples of how to prompt Claude for complex Chain of Thought reasoning. |
+| [langchain-ai/langsmith-cookbook](https://github.com/langchain-ai/langsmith-cookbook) | ⭐ 1k+ | Tracing Examples | Shows how to visually trace and debug the internal thought loops of an agent in production. |
+| [bclavie/RAGatouille](https://github.com/bclavie/RAGatouille) | ⭐ 2k+ | Advanced RAG | Sometimes agents need to "think" about large documents; this repo shows how to compress that knowledge. |

@@ -1,0 +1,232 @@
+---
+sidebar_position: 1
+sidebar_label: "ReAct Pattern"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# The ReAct Pattern
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Core Agent Cognitive Architecture |
+| Difficulty | Intermediate |
+| Used For | Forcing an LLM to think step-by-step and interleave reasoning with taking actions |
+| Common Mistake | Assuming ReAct means the React.js frontend framework. It means Reason + Act. |
+| Performance | High token cost and high latency, as it requires multiple LLM round-trips to complete a single task |
+
+## 2. Real-World Analogy
+
+| Human World (Detective Investigating a Crime) | ReAct Equivalent |
+|---|---|
+| Looking at a footprint | **Observation** |
+| Thinking: "The suspect has large feet. I should check the shoe store." | **Reason (Thought)** |
+| Going to the shoe store and asking the clerk | **Act (Action)** |
+| The clerk says: "Yes, a tall man bought those." | **Observation (Feedback)** |
+| Thinking: "Okay, now I need to check security cameras." | **Reason (Next Thought)** |
+
+Bro, ReAct is exactly how a detective works. You don't just blindly arrest someone based on a footprint. You observe a clue, you *reason* about what it means, you take an *action* to get more info, and then you observe the result. ReAct forces the LLM to be a detective, not just a guesser.
+
+## 3. Concept Explanation
+
+ReAct (Reasoning and Acting) is a foundational prompt engineering pattern introduced in a 2022 Princeton/Google paper.
+
+Before ReAct, we either had:
+1. **Chain of Thought (CoT):** The model reasons step-by-step but has no tools. It's stuck in a box.
+2. **Action-Only (Function Calling):** The model immediately picks a tool without explaining why. If it guesses wrong, it fails.
+
+ReAct combines them. The system prompt forces the LLM into a strict output format:
+- `Thought:` (The reasoning phase)
+- `Action:` (The tool invocation)
+- `Observation:` (Provided by the external system)
+
+By writing out its `Thought` first, the LLM creates a scratchpad for itself. It processes the logic *before* committing to an `Action`, drastically reducing errors and hallucinations.
+
+## 4. Syntax Table
+
+| Phase | Description | Example |
+|---|---|---|
+| **Thought** | The LLM's internal monologue | `Thought: I need to find the user's IP address.` |
+| **Action** | The tool name and arguments | `Action: lookup_ip {"user_id": "123"}` |
+| **Observation** | The result returned by the tool | `Observation: {"ip": "192.168.1.1"}` |
+| **Final Answer**| The end of the ReAct loop | `Final Answer: The user is on a local network.` |
+
+## 5. Beginner Example
+
+Here is a classic LangChain implementation of the ReAct pattern. Notice how we explicitly use the `create_react_agent` function, which injects the ReAct formatting instructions into the system prompt under the hood.
+
+```python
+from langchain.agents import create_react_agent, AgentExecutor
+from langchain.prompts import PromptTemplate
+from langchain_openai import ChatOpenAI
+from my_tools import web_search, calculator
+
+llm = ChatOpenAI(temperature=0)
+tools = [web_search, calculator]
+
+# The ReAct prompt MUST include specific instructions on the format
+prompt_template = """
+Answer the following questions as best you can. You have access to the following tools:
+{tools}
+
+Use the following format:
+Question: the input question you must answer
+Thought: you should always think about what to do
+Action: the action to take, should be one of [{tool_names}]
+Action Input: the input to the action
+Observation: the result of the action
+... (this Thought/Action/Action Input/Observation can repeat N times)
+Thought: I now know the final answer
+Final Answer: the final answer to the original input question
+
+Question: {input}
+{agent_scratchpad}
+"""
+
+prompt = PromptTemplate.from_template(prompt_template)
+
+# Create the agent
+agent = create_react_agent(llm, tools, prompt)
+agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+
+# Run the ReAct loop
+agent_executor.invoke({"input": "What is 20% of the current stock price of Tesla?"})
+```
+
+## 6. Real-World Engineering Example
+
+Bro, in modern production systems (2024+), we often don't use raw text-based ReAct parsing anymore because it's brittle (the LLM might misspell `Action:`). Instead, we use **Tool Calling ReAct**.
+
+The LLM still outputs a "Thought" (as text), but the "Action" is a native JSON tool call. Here is how you build a robust Tool-Calling ReAct loop using LangGraph.
+
+```python
+from langgraph.prebuilt import create_react_agent
+from langchain_openai import ChatOpenAI
+from langchain_core.tools import tool
+
+@tool
+def get_weather(city: str):
+    """Returns the weather for a city."""
+    return f"The weather in {city} is sunny."
+
+@tool
+def send_email(to: str, subject: str):
+    """Sends an email."""
+    return "Email sent successfully."
+
+tools = [get_weather, send_email]
+model = ChatOpenAI(model="gpt-4o")
+
+# LangGraph has a pre-built React Agent that handles the state graph perfectly
+app = create_react_agent(model, tools)
+
+# The agent will:
+# 1. Think: "I need to get the weather for NYC"
+# 2. Act: get_weather("NYC")
+# 3. Observe: "Sunny"
+# 4. Think: "Now I need to email Bob"
+# 5. Act: send_email("bob@example.com", "Weather is sunny")
+# 6. Output Final Answer
+
+messages = app.invoke({"messages": [("user", "Check NYC weather and email it to bob@example.com")]})
+
+for m in messages['messages']:
+    m.pretty_print()
+```
+
+## 7. Internal Working
+
+The ReAct loop is a cycle. The system must manage the `agent_scratchpad` (the memory of previous thoughts and observations) so the agent doesn't repeat itself.
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'User Query' }, position: { x: 250, y: 0 } },
+
+    { id: '2', type: 'process', data: { label: 'THOUGHT (Reason)' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'output', data: { label: 'ACTION (Tool + Args)' }, position: { x: 250, y: 200 } },
+    { id: '4', type: 'tool', data: { label: 'Execute Tool' }, position: { x: 250, y: 300 } },
+    { id: '5', type: 'data', data: { label: 'OBSERVATION (Result)' }, position: { x: 250, y: 400 } },
+
+    { id: '6', type: 'process', data: { label: 'Final Answer' }, position: { x: 500, y: 150 } },
+
+    { id: 'e1-2', source: '1', target: '2', animated: true },
+    { id: 'e2-3', source: '2', target: '3', animated: true },
+    { id: 'e3-4', source: '3', target: '4', animated: true },
+    { id: 'e4-5', source: '4', target: '5', animated: true },
+
+    // The ReAct Loop back to Thought
+    { id: 'e5-2', source: '5', target: '2', animated: true, type: 'step', label: 'Append to Scratchpad' },
+
+    // The exit condition
+    { id: 'e2-6', source: '2', target: '6', animated: true, label: 'Task Complete' },
+  ]}
+/>
+
+## 8. Performance Table
+
+| Phase | Time Latency | Token Consumption |
+|---|---|---|
+| **Thought Generation** | High (Streaming output) | Medium (Usually 20-50 tokens) |
+| **Action Generation** | Low | Low (JSON object) |
+| **Observation** | Varies by Tool (API speed) | High (Data is appended to context) |
+| **Total ReAct Loop** | **High** (3-15 seconds) | **High** (Context grows linearly) |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why is ReAct better than zero-shot tool calling? | Zero-shot forces the LLM to guess the tool immediately. ReAct forces it to write out its logic first. This "scratchpad" acts as active working memory, drastically improving accuracy for complex, multi-step problems. |
+| What is the "agent scratchpad"? | It's the string (or message array) containing all previous Thoughts, Actions, and Observations from the current loop. The LLM needs this so it doesn't get stuck in an infinite loop doing the same thing. |
+| How do you prevent a ReAct agent from looping forever? | You must set a `max_iterations` limit in your orchestration code (e.g., limit to 5 loops). If it hits the limit, force it to return a `Final Answer` stating it failed. |
+| Why is text-based ReAct deprecated in favor of Tool-Calling ReAct? | Text-based ReAct relies on regex parsing (e.g., looking for the word "Action:"). If the LLM formats it slightly wrong, the parser crashes. Native Tool Calling guarantees valid JSON. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, what happens when an Observation contradicts the agent's initial Thought?
+Imagine the agent thinks: "I need to get Bob's ID, which is 1."
+Action: `get_user(1)`.
+Observation: `User Not Found`.
+If the LLM isn't smart enough, it might just retry `get_user(1)` forever.
+**The Fix:** You need a high-quality model (like GPT-4o) that can *reason about failures*. The next Thought should be: "Ah, ID 1 failed. Let me try searching by name instead."
+
+## 11. Real-World Usage
+
+- **Customer Support Triage:** Thought: "User is asking about a refund." Action: `check_policy()`. Observation: "Refunds allowed within 30 days." Thought: "I need to check when they bought it." Action: `check_order()`.
+- **Data Engineering:** Thought: "I need to join table A and B." Action: `execute_sql()`. Observation: "Error: Column 'user_id' is ambiguous." Thought: "I need to specify the table alias." Action: `execute_sql_fixed()`.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use native Tool Calling APIs (like OpenAI's) alongside the ReAct methodology for maximum stability. | Don't rely on raw Regex parsing for `Action: ` unless you are using an older, open-source model that lacks tool support. |
+| Stream the "Thoughts" to the frontend UI so the user knows the bot isn't frozen. | Don't hide the reasoning process from the user if the task takes more than 3 seconds. |
+
+## 13. Production Notes
+
+:::caution Production Warning
+Bro, the ReAct scratchpad grows with every loop. If your agent executes a DB query and the Observation is 10,000 rows of JSON, the scratchpad will blow past the token limit instantly, and the next API call will fail. You MUST implement observation truncation (e.g., only return the first 500 characters of a tool result).
+:::
+
+## 14. Common Mistakes
+
+| Mistake | Why it's bad | The Fix |
+|---|---|---|
+| Forgetting to append the Observation to the memory array | The LLM will think its tool call was ignored, and will just issue the exact same tool call again. | Ensure your orchestration loop properly saves state. |
+| Prompting an agent without explicitly asking for a "Thought" | The LLM will skip reasoning, act impulsively, and make logic errors. | Ensure your system prompt mandates step-by-step thinking before tool usage. |
+
+## 15. Related Topics
+- How Agents Think
+- Plan and Execute Pattern
+- Choosing a Framework
+
+## 16. Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [ysymyth/ReAct](https://github.com/ysymyth/ReAct) | ⭐ 2k+ | The Original Paper Repo | The foundational code that introduced the ReAct pattern to the world. |
+| [langchain-ai/langchain](https://github.com/langchain-ai/langchain) | ⭐ 90k+ | LangChain | Popularized the `create_react_agent` abstraction that most developers use today. |
+| [langchain-ai/langgraph](https://github.com/langchain-ai/langgraph) | ⭐ 6k+ | LangGraph | The modern, state-machine approach to building robust ReAct loops. |
+| [Significant-Gravitas/AutoGPT](https://github.com/Significant-Gravitas/AutoGPT) | ⭐ 160k+ | AutoGPT | One of the earliest massive implementations of a ReAct-style loop running autonomously. |
+| [anthropics/anthropic-cookbook](https://github.com/anthropics/anthropic-cookbook) | ⭐ 4k+ | Claude Tool Use | Shows how to properly implement ReAct thinking with Claude's XML and Tool features. |

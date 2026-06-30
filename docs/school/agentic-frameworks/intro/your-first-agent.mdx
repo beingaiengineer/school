@@ -1,0 +1,238 @@
+---
+sidebar_position: 8
+sidebar_label: "Your First Agent"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Your First Agent (Build a Weather Bot)
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Building a Basic Agent |
+| Difficulty | Beginner |
+| Used For | Writing your first agentic loop from scratch to understand the mechanics |
+| Common Mistake | Using a massive framework for your first agent, hiding all the actual learning |
+| Performance | Lightweight, runs entirely in a single Python script |
+
+## 2. Real-World Analogy
+
+| Human World (Learning to drive) | AI Agent Equivalent |
+|---|---|
+| Understanding the gas and brake | **Calling the LLM API** |
+| Checking the mirrors | **Passing the System Prompt** |
+| Steering the wheel | **Providing a Tool** |
+| Driving in an empty parking lot | **Building an agent with no framework** |
+
+Bro, you don't learn to drive by hopping into a self-driving Tesla. You learn on a manual transmission in an empty lot. If you build your first agent using CrewAI or LangGraph, you won't actually know how it works. Today, we are building an agent using just the raw OpenAI SDK. We are building the engine from scratch.
+
+## 3. Concept Explanation
+
+To build your first agent, we need to assemble the core anatomy we discussed previously:
+1. **The Brain:** The OpenAI API.
+2. **The Tool:** A simple Python function that returns the weather.
+3. **The Memory:** A Python list containing the conversation history.
+4. **The Loop:** A `while` loop that passes the memory to the brain, checks if it wants to use the tool, executes it, and repeats until finished.
+
+By doing this without abstractions, you will understand exactly what "Function Calling" actually looks like under the hood.
+
+## 4. Syntax Table
+
+| Step | Code |
+|---|---|
+| **1. Define Tool Schema** | `tools = [{"type": "function", "function": {"name": "get_weather", ...}}]` |
+| **2. Pass to LLM** | `client.chat.completions.create(..., tools=tools)` |
+| **3. Check for Action** | `if response.tool_calls: ...` |
+| **4. Append Result** | `messages.append({"role": "tool", "content": result})` |
+
+## 5. Beginner Example
+
+Before the full engineering example, here is the tool we will give the agent. It's just a dummy python function.
+
+```python
+def get_weather(location: str):
+    """Returns the weather for a given location."""
+    # In a real app, this hits the OpenWeather API
+    if "chicago" in location.lower():
+        return "Windy and 40 degrees."
+    return "Sunny and 75 degrees."
+```
+
+## 6. Real-World Engineering Example
+
+Bro, here is the complete, runnable code for an agent from scratch. Copy this, put in your OpenAI API key, and run it.
+
+```python
+import json
+import os
+from openai import OpenAI
+
+# 1. Setup
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
+# 2. Define the actual Python function (The Actuator)
+def get_weather(location: str):
+    print(f"\n[TOOL EXECUTED] Fetching weather for {location}...")
+    if "chicago" in location.lower():
+        return "Windy and 40 degrees."
+    return "Sunny and 75 degrees."
+
+# 3. Define the JSON Schema so the LLM knows how to call it
+tools = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_weather",
+            "description": "Get the current weather in a given location",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "The city and state, e.g. Chicago, IL"
+                    }
+                },
+                "required": ["location"]
+            }
+        }
+    }
+]
+
+# 4. Initialize Memory
+messages = [
+    {"role": "system", "content": "You are a helpful weather assistant."},
+    {"role": "user", "content": "Should I wear a jacket in Chicago today?"}
+]
+
+# 5. The Orchestration Loop
+print("Agent: Thinking...")
+while True:
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=messages,
+        tools=tools
+    )
+
+    response_msg = response.choices[0].message
+    messages.append(response_msg) # Save the thought to memory
+
+    # Did the LLM decide to call a tool?
+    if not response_msg.tool_calls:
+        # No tool called, we have our final answer!
+        print(f"\nAgent Final Answer: {response_msg.content}")
+        break
+
+    # Yes, it called a tool. Execute it.
+    for tool_call in response_msg.tool_calls:
+        # Parse the JSON arguments the LLM generated
+        args = json.loads(tool_call.function.arguments)
+
+        # Route to our python function
+        if tool_call.function.name == "get_weather":
+            result = get_weather(args["location"])
+
+            # Feed the observation back to the LLM
+            messages.append({
+                "tool_call_id": tool_call.id,
+                "role": "tool",
+                "name": "get_weather",
+                "content": result
+            })
+
+    print("Agent: Thinking about the tool result...")
+```
+
+## 7. Internal Working
+
+This diagram traces the exact execution path of the code above.
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'User: "Jacket in Chicago?"' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'LLM API Call 1' }, position: { x: 250, y: 100 } },
+
+    { id: '3', type: 'output', data: { label: 'Returns ToolCall: get_weather("Chicago")' }, position: { x: 250, y: 200 } },
+
+    { id: '4', type: 'tool', data: { label: 'Python get_weather() executes' }, position: { x: 250, y: 300 } },
+
+    { id: '5', type: 'data', data: { label: 'Append "Windy and 40" to Memory' }, position: { x: 250, y: 400 } },
+
+    { id: '6', type: 'process', data: { label: 'LLM API Call 2' }, position: { x: 500, y: 250 } },
+
+    { id: '7', type: 'output', data: { label: 'Final Answer: "Yes, wear a jacket!"' }, position: { x: 500, y: 350 } },
+
+    { id: 'e1-2', source: '1', target: '2', animated: true },
+    { id: 'e2-3', source: '2', target: '3', animated: true },
+    { id: 'e3-4', source: '3', target: '4', animated: true },
+    { id: 'e4-5', source: '4', target: '5', animated: true },
+    { id: 'e5-6', source: '5', target: '6', animated: true, type: 'smoothstep' },
+    { id: 'e6-7', source: '6', target: '7', animated: true },
+  ]}
+/>
+
+## 8. Performance Table
+
+| Component of our script | Time taken | Notes |
+|---|---|---|
+| API Call 1 (Thinking) | ~800ms | The LLM deciding to use the weather tool |
+| Python execution | ~1ms | Instantaneous in our mock, but an actual HTTP API would take ~500ms |
+| API Call 2 (Formatting) | ~1.5s | Generating the final text answer based on the weather data |
+| **Total Turnaround** | **~2.3s** | |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why do we append the `response_msg` to `messages` before executing the tool? | The LLM needs the full context. If you don't save its decision to use the tool, when you pass the tool result back, the LLM won't remember asking for it and will throw an error. |
+| What happens if `json.loads(tool_call.function.arguments)` fails? | The agent crashes. In a robust system, you would wrap that in a `try/except` block, catch the `JSONDecodeError`, and pass the error string back to the LLM as a tool result so it can try again. |
+| Why is `tool_call.id` required when passing the observation back? | OpenAI allows parallel tool calling (calling 3 tools at once). The ID maps the specific tool result to the specific tool request so the LLM doesn't get confused. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, what if the user says: "What's the weather in Chicago and Miami?"
+With standard function calling, the LLM might generate *two* `tool_calls` in a single response array.
+Our `for tool_call in response_msg.tool_calls:` loop handles this beautifully! It will execute both, append two tool results to the memory, and only then loop back to the LLM.
+**Edge case warning:** If your loop just executes `tool_calls[0]` and ignores the rest, your agent will silently fail to check Miami.
+
+## 11. Real-World Usage
+
+This exact raw SDK loop is used in production by teams who are allergic to framework bloat.
+- Vercel AI SDK uses a very similar raw loop under the hood for their TS/JS implementations.
+- Teams building high-throughput data extraction agents often stick to the raw SDK to minimize latency.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Print `[TOOL EXECUTED]` logs to your terminal so you can see exactly when the agent is acting vs thinking. | Don't assume the LLM will always return valid JSON in the arguments. Always handle parse errors. |
+| Give your tools highly descriptive `description` fields. This is how the LLM knows when to use it. | Don't write descriptions like "Does a thing." Write "Calculates the exact weather for a given US city." |
+
+## 13. Production Notes
+
+:::caution Production Warning
+Bro, this script loops `while True`. If you give the agent a bad tool that always returns an error, the LLM will just keep trying to call it forever, draining your API credits. In production, always implement a `loop_count` variable and break if `loop_count > 5`.
+:::
+
+## 14. Common Mistakes
+
+| Mistake | Why it's bad | The Fix |
+|---|---|---|
+| Forgetting the `"role": "tool"` message format | The OpenAI API will reject your request with a 400 error because the message history is malformed. | Strictly follow the `{"tool_call_id": id, "role": "tool", "name": name, "content": result}` schema. |
+| Returning a Python dictionary directly as `content` | The API expects the tool `content` to be a string. | Always cast your tool results using `str(result)` or `json.dumps(result)` before appending. |
+
+## 15. Related Topics
+- Anatomy of an Agent
+- How Agents Think
+- Choosing a Framework
+
+## 16. Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [openai/openai-cookbook](https://github.com/openai/openai-cookbook) | ⭐ 60k+ | Official OpenAI Examples | The absolute best place to find raw SDK examples for function calling and agents without frameworks. |
+| [anthropics/anthropic-cookbook](https://github.com/anthropics/anthropic-cookbook) | ⭐ 4k+ | Claude Tool Use Examples | Same as above, but for Claude. Crucial for understanding how different providers handle tool schemas. |
+| [langchain-ai/langgraph](https://github.com/langchain-ai/langgraph) | ⭐ 6k+ | State Graph Framework | Once you outgrow the `while True` loop, this is where you go next to make it robust. |
+| [ShreyaR/guardrails](https://github.com/guardrails-ai/guardrails) | ⭐ 3k+ | LLM Validation | A great repo to look at when you realize your raw `json.loads()` keeps breaking. |
+| [microsoft/autogen](https://github.com/microsoft/autogen) | ⭐ 25k+ | Multi-agent framework | See how complex the raw SDK loops get when you have 5 agents talking to each other. |
