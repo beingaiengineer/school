@@ -70,20 +70,16 @@ For agentic framework topics, diagrams should focus on:
 > **Jules: Pick the first batch of `- [ ]` items (up to 10) under `### Next Task`. If fewer than 10, promote from `### Backlog`.**
 
 ### Next Task
-- [ ] `af-001` | Create `_category_.json` files for all 17 categories | Branch: `jules/af-batch-001-setup`
-- [ ] `af-002` | Create `intro/what-are-ai-agents.mdx` | Branch: `jules/af-batch-001-setup`
-- [ ] `af-003` | Create `intro/agent-vs-chatbot-vs-rag.mdx` | Branch: `jules/af-batch-001-setup`
-- [ ] `af-004` | Create `intro/anatomy-of-an-agent.mdx` | Branch: `jules/af-batch-001-setup`
-- [ ] `af-005` | Create `intro/agent-types-and-taxonomies.mdx` | Branch: `jules/af-batch-001-setup`
-- [ ] `af-006` | Create `intro/how-agents-think.mdx` | Branch: `jules/af-batch-001-setup`
-- [ ] `af-007` | Create `intro/agent-ecosystem-landscape-2026.mdx` | Branch: `jules/af-batch-001-setup`
-- [ ] `af-008` | Create `intro/choosing-a-framework.mdx` | Branch: `jules/af-batch-001-setup`
-- [ ] `af-009` | Create `intro/your-first-agent.mdx` | Branch: `jules/af-batch-001-setup`
-- [ ] `af-010` | Create `architecture-patterns/react-pattern.mdx` | Branch: `jules/af-batch-001-setup`
-
-### Backlog
-
-#### Batch 2 — Architecture Patterns
+- [x] `af-001` | Create `_category_.json` files for all 17 categories | Branch: `jules/af-batch-001-setup`
+- [x] `af-002` | Create `intro/what-are-ai-agents.mdx` | Branch: `jules/af-batch-001-setup`
+- [x] `af-003` | Create `intro/agent-vs-chatbot-vs-rag.mdx` | Branch: `jules/af-batch-001-setup`
+- [x] `af-004` | Create `intro/anatomy-of-an-agent.mdx` | Branch: `jules/af-batch-001-setup`
+- [x] `af-005` | Create `intro/agent-types-and-taxonomies.mdx` | Branch: `jules/af-batch-001-setup`
+- [x] `af-006` | Create `intro/how-agents-think.mdx` | Branch: `jules/af-batch-001-setup`
+- [x] `af-007` | Create `intro/agent-ecosystem-landscape-2026.mdx` | Branch: `jules/af-batch-001-setup`
+- [x] `af-008` | Create `intro/choosing-a-framework.mdx` | Branch: `jules/af-batch-001-setup`
+- [x] `af-009` | Create `intro/your-first-agent.mdx` | Branch: `jules/af-batch-001-setup`
+- [x] `af-010` | Create `architecture-patterns/react-pattern.mdx` | Branch: `jules/af-batch-001-setup`
 - [ ] `af-011` | Create `architecture-patterns/plan-and-execute.mdx` | Branch: `jules/af-batch-002-patterns`
 - [ ] `af-012` | Create `architecture-patterns/reflection-and-reflexion.mdx` | Branch: `jules/af-batch-002-patterns`
 - [ ] `af-013` | Create `architecture-patterns/tool-use-pattern.mdx` | Branch: `jules/af-batch-002-patterns`
@@ -94,6 +90,8 @@ For agentic framework topics, diagrams should focus on:
 - [ ] `af-018` | Create `langchain-langgraph/langchain-fundamentals.mdx` | Branch: `jules/af-batch-002-patterns`
 - [ ] `af-019` | Create `langchain-langgraph/langgraph-intro.mdx` | Branch: `jules/af-batch-002-patterns`
 - [ ] `af-020` | Create `langchain-langgraph/langgraph-state-machines.mdx` | Branch: `jules/af-batch-002-patterns`
+
+### Backlog
 
 #### Batch 3 — LangGraph Deep Dive
 - [ ] `af-021` | Create `langchain-langgraph/langgraph-memory.mdx` | Branch: `jules/af-batch-003-langgraph`
@@ -203,6 +201,7 @@ For agentic framework topics, diagrams should focus on:
 ### Completed This Cycle
 | BAE ID | What's Done (High Level) |
 |---|---|
+| `[BAE-AF-1]` | Created intro categories and first 9 concepts including ReAct pattern. |
 
 ---
 
