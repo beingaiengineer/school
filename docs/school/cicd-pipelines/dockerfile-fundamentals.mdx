@@ -1,0 +1,218 @@
+---
+sidebar_position: 7
+sidebar_label: "Dockerfile Fundamentals"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Dockerfile Fundamentals
+
+### 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Dockerfile Fundamentals in CI/CD |
+| Difficulty | Beginner |
+| Used For | Packaging an application and all its dependencies into a single, portable, standard image. |
+| Common Mistake | Copying everything (`COPY . .`) without a `.dockerignore` file, bloating the image with `node_modules` and secrets. |
+| Performance | Optimized Dockerfiles leverage caching, building in seconds instead of minutes. |
+
+### 2. Real-World Analogy
+
+Bro, think about packing a specialized Mumbai Dabbawala tiffin box (dabba).
+
+| Tiffin Preparation | Dockerfile Equivalent |
+|---|---|
+| Getting a clean, empty steel dabba | `FROM ubuntu:22.04` (The base image) |
+| Adding the base rice | `RUN apt-get install python3` (System dependencies) |
+| Placing the dal and sabzi inside | `COPY ./src /app` (Adding your code) |
+| Putting the lid on and sealing it | `docker build -t my-dabba .` (Creating the Image) |
+| The Dabbawala delivering it anywhere | Deploying the container to AWS, GCP, or a laptop |
+
+A Dockerfile is just a recipe. It tells the kitchen exactly how to pack the dabba. Because the dabba is a standard size, it doesn't matter if you eat it in Mumbai, Delhi, or New York; the food inside (the app) works exactly the same.
+
+### 3. Concept Explanation
+
+A **Dockerfile** is a plain text file containing a list of instructions that the Docker daemon reads to automatically build a **Docker Image**.
+
+A Docker Image is the ultimate artifact in modern CI/CD. It is a read-only template that contains your source code, the runtime (like Node.js or Python), the system libraries, and the environment variables needed to run the app.
+
+When you run a Docker Image, it becomes a **Container**.
+
+Why do we use Dockerfiles? Because of the classic "It works on my machine" problem. If your app works on your Mac but fails on the Linux production server, it's usually because of missing system libraries or different Node versions. A Dockerfile packages the *entire operating system environment* alongside your code.
+
+Bro, in modern engineering, your CI pipeline doesn't upload zip files anymore. It runs `docker build`, creates an image, and pushes that image to a registry.
+
+### 4. Syntax Table
+
+Here are the essential Dockerfile commands you need to know.
+
+| Command | Description | Example |
+|---|---|---|
+| `FROM` | Defines the base OS/Runtime to start from. Always the first line. | `FROM node:20-alpine` |
+| `WORKDIR` | Sets the working directory inside the container. | `WORKDIR /app` |
+| `COPY` | Copies files from your laptop/CI runner into the container. | `COPY package.json .` |
+| `RUN` | Executes a shell command *during the build process*. | `RUN npm install` |
+| `ENV` | Sets a default environment variable. | `ENV PORT=3000` |
+| `EXPOSE` | Documents which port the app listens on (doesn't actually publish it). | `EXPOSE 3000` |
+| `CMD` | The command that runs *when the container starts*. | `CMD ["npm", "start"]` |
+
+### 5. Beginner Example
+
+A simple Dockerfile for a basic Node.js Express server.
+
+```dockerfile
+# Step 1: Start with an OS that already has Node 20 installed
+FROM node:20-alpine
+
+# Step 2: Create a folder inside the container
+WORKDIR /app
+
+# Step 3: Copy all your code into the container
+COPY . .
+
+# Step 4: Install dependencies
+RUN npm install
+
+# Step 5: Tell Docker the app runs on port 8080
+EXPOSE 8080
+
+# Step 6: Define how to start the app
+CMD ["node", "server.js"]
+```
+
+### 6. Real-World Engineering Example
+
+Bro, the beginner example above is terrible for production. It copies everything (including local `node_modules`), doesn't use caching efficiently, and runs as the root user.
+
+Here is a production-grade **Multi-Stage Dockerfile** for a React frontend. It builds the app using a heavy Node image, but serves it using a tiny, ultra-fast Nginx image.
+
+```dockerfile
+# ==========================================
+# Stage 1: Build the App
+# ==========================================
+# We name this stage 'builder'
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# The senior move: Copy ONLY package files first to leverage Docker layer caching
+COPY package.json package-lock.json ./
+
+# Install dependencies exactly as locked
+RUN npm ci
+
+# Now copy the rest of the source code
+COPY . .
+
+# Build the production static files (creates /app/dist)
+RUN npm run build
+
+# ==========================================
+# Stage 2: Serve the App
+# ==========================================
+# Start fresh with a tiny, secure Nginx web server
+FROM nginx:alpine
+
+# Copy ONLY the compiled files from the 'builder' stage
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Expose port 80
+EXPOSE 80
+
+# Nginx starts automatically, no CMD needed
+```
+
+### 7. Internal Working
+
+How does Docker process this file? Docker builds images in **Layers**. Every `RUN`, `COPY`, and `ADD` command creates a new read-only layer on top of the previous one. Docker caches these layers locally.
+
+If you change your `server.js` file, Docker knows `package.json` didn't change. It uses the cached layer for `npm install` and only recreates the `COPY . .` layer. This drops build times from 2 minutes to 2 seconds.
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', position: { x: 300, y: 50 }, data: { label: 'Layer 1: FROM node:20-alpine (150MB)' }},
+    { id: '2', type: 'core', position: { x: 300, y: 150 }, data: { label: 'Layer 2: COPY package.json (2KB)' }},
+    { id: '3', type: 'core', position: { x: 300, y: 250 }, data: { label: 'Layer 3: RUN npm install (80MB)' }},
+    { id: '4', type: 'core', position: { x: 300, y: 350 }, data: { label: 'Layer 4: COPY src/ (5MB)' }},
+    { id: '5', type: 'data', position: { x: 50, y: 350 }, data: { label: 'Developer edits src/index.js' }},
+    { id: '6', type: 'process', position: { x: 600, y: 250 }, data: { label: 'Cache Hit! (Skipped)' }},
+    { id: '7', type: 'process', position: { x: 600, y: 350 }, data: { label: 'Cache Miss! (Rebuilds this layer)' }},
+
+    { id: 'e1-2', source: '1', target: '2' },
+    { id: 'e2-3', source: '2', target: '3' },
+    { id: 'e3-4', source: '3', target: '4' },
+    { id: 'e5-4', source: '5', target: '4', animated: true },
+    { id: 'e3-6', source: '3', target: '6', animated: true },
+    { id: 'e4-7', source: '4', target: '7', animated: true }
+  ]}
+/>
+
+### 8. Performance Table
+
+| Practice | Bad Performance | Excellent Performance |
+|---|---|---|
+| Base Image | `FROM ubuntu` (1GB) | `FROM alpine` (5MB) |
+| Layer Caching | `COPY . .` before `RUN npm install` (breaks cache) | `COPY package.json` then `RUN npm install` |
+| Artifact Size | Shipping compilers (gcc/python) to Prod | Multi-stage builds (ship only compiled binaries) |
+| `.dockerignore` | Missing (Copies massive `.git` and `node_modules`) | Present (Excludes local garbage) |
+
+### 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between `RUN` and `CMD`? | `RUN` executes commands *during the image build process* (like installing packages). `CMD` executes the command *when the container starts running* (like starting the web server). |
+| Why should you put `COPY package.json` before `COPY . .`? | To leverage Docker layer caching. If you copy all code first, any change to any file invalidates the cache, forcing `npm install` to run every time. Copying `package.json` first ensures `npm install` only runs if dependencies change. |
+| What is a `.dockerignore` file? | It tells Docker which files and folders to ignore when running the `COPY . .` command, preventing local files (like `.env`, `.git`, or `node_modules`) from bloating the image or leaking secrets. |
+| What is a Multi-Stage Dockerfile? | A Dockerfile with multiple `FROM` statements. It allows you to use a heavy image with compilers to build the code, and then copy only the final artifact into a tiny, secure production image. |
+| Why use Alpine images (e.g., `node:alpine`)? | Alpine Linux is a security-oriented, lightweight Linux distribution (~5MB). It dramatically reduces the final image size and minimizes the attack surface area for hackers. |
+
+### 10. Tricky Questions & Edge Cases
+
+**The Root User Trap:**
+By default, Docker containers run as the `root` user. If an attacker finds a vulnerability in your Node.js app, they gain root access inside the container, making it easier to break out into the host server.
+*The Fix:* Always create and switch to a non-root user at the end of your Dockerfile: `USER node`.
+
+**The Zombie Process (PID 1) Problem:**
+If you start your app with `CMD ["npm", "start"]`, npm runs as Process ID (PID) 1. npm does not pass system termination signals (like `SIGTERM`) to your Node app. When Kubernetes tries to shut down your container, it won't die cleanly, resulting in 30-second delays and dropped HTTP requests.
+*The Fix:* Use `CMD ["node", "server.js"]` directly, or use an init system like `dumb-init`.
+
+### 11. Real-World Usage
+
+Companies like Swiggy and Uber run tens of thousands of containers orchestrated by Kubernetes. Every single microservice they deploy begins its life as a Dockerfile. The CI pipeline builds the Dockerfile, tags it with the Git commit hash (e.g., `uber/rides:abc1234`), and pushes it to an internal registry. Kubernetes then pulls that exact image to scale up the service.
+
+### 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use specific version tags (`node:20.5.0-alpine`). | Use the `:latest` tag (it changes unpredictably and breaks builds). |
+| Group related `RUN` commands with `&&` to reduce layer count. | Write 10 different `RUN apt-get install` lines. |
+| Create a `.dockerignore` file immediately. | Copy your `.env` file containing local database passwords into the image. |
+
+### 13. Production Notes
+
+> **Warning: Hardcoded Secrets in Dockerfiles**
+> Bro, never put `ENV DB_PASSWORD=secret` in a Dockerfile. Anyone who downloads the image can run `docker inspect` and see the password in plain text. Docker images are easily reverse-engineered. Always pass secrets at *runtime* using container orchestration tools (like Docker Compose or Kubernetes Secrets).
+
+### 14. Common Mistakes
+
+| Mistake | Consequence | The Fix |
+|---|---|---|
+| Missing `.dockerignore` | Image is 2GB instead of 50MB. | Create `.dockerignore` and add `node_modules`, `.git`, and build folders. |
+| Running `apt-get upgrade` | Builds become unpredictable and break randomly. | Pin specific package versions; never upgrade the whole OS blindly in a Dockerfile. |
+| Listening on localhost (`127.0.0.1`) | The container runs, but you can't reach it from your browser. | Bind your server to `0.0.0.0` inside the container so traffic can route into it. |
+
+### 15. Related Topics
+- Artifact Management
+- Docker Compose in CI
+- Pipeline Security
+
+### Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [moby/moby](https://github.com/moby/moby) | ⭐ 67k+ | The open-source core of Docker | Essential to understand how the container engine actually works under the hood. |
+| [nodejs/docker-node](https://github.com/nodejs/docker-node) | ⭐ 8k+ | Official Node.js Docker Images | Learn how the masters write Dockerfiles by reading the source of the `node:alpine` image. |
+| [hadolint/hadolint](https://github.com/hadolint/hadolint) | ⭐ 9.5k+ | Dockerfile linter | Enforces best practices and catches common Dockerfile errors before you build. |
+| [GoogleContainerTools/distroless](https://github.com/GoogleContainerTools/distroless) | ⭐ 17k+ | Language-focused docker images | Extremely secure images that contain *only* your application and its runtime dependencies—no shell, no bash, no package managers. |
+| [wagoodman/dive](https://github.com/wagoodman/dive) | ⭐ 41k+ | Tool for exploring Docker image layers | Visually inspects your Docker images to see exactly which files are wasting space in each layer. |

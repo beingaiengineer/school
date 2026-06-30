@@ -1,0 +1,208 @@
+---
+sidebar_position: 5
+sidebar_label: "Code Quality Gates"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Code Quality Gates
+
+### 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Code Quality Gates in CI/CD |
+| Difficulty | Intermediate |
+| Used For | Automatically enforcing code style, security, and test coverage thresholds before allowing code to merge. |
+| Common Mistake | Introducing strict gates to a massive legacy codebase all at once, blocking all development. |
+| Performance | Fast for linters (seconds); can be slow for deep static analysis tools (minutes). |
+
+### 2. Real-World Analogy
+
+Bro, think of the immigration check at Delhi Airport (IGI).
+
+| Airport Immigration | CI Quality Gate |
+|---|---|
+| Handing over your passport | Submitting a Pull Request |
+| Officer checks if passport is expired | Linter checks for syntax/style errors |
+| Officer scans your face against databases | Static Application Security Testing (SAST) |
+| Officer checks if you have a valid visa | Coverage check (Do you have 80% tests?) |
+| Stamping the passport to let you in | Passing the Quality Gate to merge into `main` |
+
+If your face doesn't match, or your visa is fake, the officer rejects you immediately. A Code Quality Gate acts exactly like this officer—emotionless and strict—ensuring no garbage code enters the production server.
+
+### 3. Concept Explanation
+
+A **Quality Gate** is a milestone in your CI pipeline. It defines a set of boolean (pass/fail) conditions that the code must meet. If the code fails any condition, the pipeline stops, and the Pull Request is blocked from merging.
+
+Quality gates remove human subjectivity from code reviews. Instead of a senior developer saying, "Bro, your indentation is weird," or "You forgot to write tests," the robot fails the build and says, "Linting failed on line 42" or "Code coverage is 75%, but the gate requires 80%."
+
+Typically, a gate includes:
+1. **Formatting & Linting:** (Prettier, ESLint, Flake8, Ruff) Is the code styled correctly?
+2. **Static Analysis (Code Smells):** (SonarQube) Is the code overly complex or duplicated?
+3. **Security Scans (SAST):** (Bandit, Snyk, CodeQL) Did you hardcode a password or leave an SQL injection vulnerability?
+4. **Coverage Thresholds:** Did you write tests for the new lines of code you added?
+
+### 4. Syntax Table
+
+Here are common tools used to establish gates in a pipeline.
+
+| Gate Type | Tool Example | Pipeline Command |
+|---|---|---|
+| Linter (JS/TS) | ESLint | `npm run lint` |
+| Linter (Python) | Ruff / Flake8 | `ruff check .` |
+| Deep Analysis | SonarQube / SonarCloud | `sonar-scanner -Dsonar.projectKey=my-app` |
+| Security (SAST) | GitHub CodeQL | `uses: github/codeql-action/analyze@v3` |
+| Dependencies | Snyk | `snyk test` |
+
+### 5. Beginner Example
+
+A simple GitHub Actions step that acts as a quality gate by failing if the code isn't formatted with Prettier.
+
+```yaml
+name: Formatting Gate
+
+on: [pull_request]
+
+jobs:
+  check-format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+
+      - run: npm ci
+
+      # This acts as a gate. If prettier finds unformatted files,
+      # it returns exit code 1, and the pipeline fails.
+      - name: Gate - Enforce Prettier
+        run: npx prettier --check "src/**/*.js"
+```
+
+### 6. Real-World Engineering Example
+
+Bro, here is a professional quality gate using SonarCloud. It checks for bugs, vulnerabilities, and enforces that test coverage must be > 80%.
+
+```yaml
+name: Enterprise Quality Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  sonarcloud-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # SonarCloud needs full history for blame info
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+
+      - name: Install and Test (Generate Coverage)
+        run: |
+          npm ci
+          # Generates lcov.info file needed by Sonar
+          npm run test -- --coverage
+
+      # The actual Quality Gate integration
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to post PR comments
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}    # Needed to auth with Sonar
+```
+
+### 7. Internal Working
+
+How does a tool like SonarQube block a PR?
+1. The CI runner executes tests and generates a coverage report (e.g., XML/LCOV).
+2. The CI runner sends the source code and the coverage report to the SonarQube server.
+3. SonarQube parses the code, calculates complexity, checks rules, and computes a pass/fail status based on your defined "Gate Rules" (e.g., `coverage > 80%`).
+4. SonarQube sends a webhook back to GitHub with a "Success" or "Failed" status, which locks or unlocks the Merge button.
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'data', position: { x: 50, y: 150 }, data: { label: 'Developer opens PR' }},
+    { id: '2', type: 'tool', position: { x: 250, y: 150 }, data: { label: 'CI Runner generates Coverage XML' }},
+    { id: '3', type: 'core', position: { x: 500, y: 150 }, data: { label: 'SonarQube Analysis Engine' }},
+    { id: '4', type: 'process', position: { x: 750, y: 50 }, data: { label: 'Check: Coverage > 80% (Pass)' }},
+    { id: '5', type: 'warning', position: { x: 750, y: 250 }, data: { label: 'Check: No Critical Bugs (FAIL)' }},
+    { id: '6', type: 'output', position: { x: 1000, y: 150 }, data: { label: 'GitHub PR Blocked' }},
+
+    { id: 'e1-2', source: '1', target: '2' },
+    { id: 'e2-3', source: '2', target: '3', label: 'Sends code + XML' },
+    { id: 'e3-4', source: '3', target: '4' },
+    { id: 'e3-5', source: '3', target: '5' },
+    { id: 'e5-6', source: '5', target: '6', animated: true, label: 'Gate Failed' }
+  ]}
+/>
+
+### 8. Performance Table
+
+| Scan Type | Time Cost | Impact on Pipeline |
+|---|---|---|
+| Linter (ESLint/Ruff) | 5 - 30 seconds | Very low. Should run on every commit. |
+| Deep Static Analysis (Sonar) | 2 - 10 minutes | Moderate. Often run only on PRs, not every push. |
+| SAST (CodeQL) | 5 - 20 minutes | High. Heavy computation. Often run asynchronously. |
+
+### 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is a Code Quality Gate? | A set of automated rules (linting, coverage, security) in a CI pipeline that code must pass before it can be merged into production branches. |
+| How do you enforce a Quality Gate in GitHub? | Use Branch Protection Rules to require specific CI status checks (like "SonarCloud Code Analysis") to pass before the "Merge" button becomes clickable. |
+| What is the difference between Linting and Static Analysis (SAST)? | Linting checks for syntax errors, styling, and basic bad practices. SAST deeply analyzes the execution flow to find security vulnerabilities (like SQL injection paths). |
+| What is Code Coverage? | The percentage of your application's source code lines that are executed during automated tests. |
+| Why shouldn't you enforce 100% test coverage? | Chasing 100% coverage leads to developers writing useless, low-quality tests just to satisfy the robot, ignoring edge cases. 80% is the industry standard sweet spot. |
+
+### 10. Tricky Questions & Edge Cases
+
+**The Legacy Codebase Trap:**
+Bro, imagine taking a 5-year-old React codebase with 0 tests and suddenly adding a SonarQube quality gate demanding 80% coverage. Nobody will be able to merge a PR ever again!
+*The Fix:* Use "Clean as You Code". Set the Quality Gate to only enforce 80% coverage on **New Code** added in the PR, ignoring the legacy mess until you have time to refactor it.
+
+**The False Positive Danger:**
+SAST tools (like security scanners) often flag false positives (e.g., flagging a dummy test password as a leaked production secret). If your gate is too strict, developers will get frustrated. You must establish a workflow for human reviewers to mark certain findings as "Won't Fix" or "False Positive" to unblock the pipeline.
+
+### 11. Real-World Usage
+
+Financial tech companies (like Stripe, Razorpay, or banks) cannot afford security vulnerabilities. They use extremely strict quality gates. A developer cannot merge code unless it passes ESLint, Type checking, 85% test coverage, Snyk dependency vulnerability checks, and Veracode/CodeQL SAST scans. It sounds annoying, but it prevents massive financial disasters.
+
+### 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Enforce gates on **New Code** to gradually improve legacy codebases. | Enforce gates on the entire project overnight, blocking all work. |
+| Auto-format code (`prettier --write`) locally using Git pre-commit hooks (Husky) before pushing to CI. | Make developers manually fix 50 space/tab errors found by the CI linter. |
+| Fail fast! Run the 5-second linter before the 5-minute Sonar scan. | Run the 5-minute scan first and fail later. |
+
+### 13. Production Notes
+
+> **Warning: Token Expiry and Third-Party Downtime**
+> If your pipeline relies on SonarCloud or Snyk, and those services go down (or your API token expires), your Quality Gate will fail, blocking all deployments. Have an emergency "break-glass" procedure (like Admin override for Branch Protection) to push critical hotfixes if the analysis tool is offline.
+
+### 14. Common Mistakes
+
+| Mistake | Consequence | The Fix |
+|---|---|---|
+| Shallow git clones with Sonar | Sonar flags all files as "New Code" | Ensure `fetch-depth: 0` in `actions/checkout` so Sonar has git blame history. |
+| Not integrating with GitHub PRs | Developers have to dig through terminal logs to find lint errors | Use tools like `reviewdog` to post lint errors as inline PR comments. |
+| Ignoring vulnerable dependencies | Shipping an old log4j version to prod | Use `npm audit` or `snyk` as a blocking gate. |
+
+### 15. Related Topics
+- Automated Testing in CI
+- Pipeline Security
+- Pipeline Optimization
+
+### Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [github/codeql](https://github.com/github/codeql) | ⭐ 8k+ | GitHub's semantic code analysis engine | The industry standard for finding security vulnerabilities automatically in CI. |
+| [reviewdog/reviewdog](https://github.com/reviewdog/reviewdog) | ⭐ 6.5k+ | Automated code review tool | Posts linting and analysis errors directly as comments on GitHub PRs. |
+| [astral-sh/ruff](https://github.com/astral-sh/ruff) | ⭐ 32k+ | Extremely fast Python linter | Replacing Flake8/Black because it runs in milliseconds, speeding up CI gates. |
+| [SonarSource/sonarcloud-github-action](https://github.com/SonarSource/sonarcloud-github-action) | ⭐ 1k+ | Official SonarCloud Action | The easiest way to integrate enterprise-grade quality gates into GitHub Actions. |
+| [typicode/husky](https://github.com/typicode/husky) | ⭐ 32k+ | Git hooks made easy | Prevents developers from pushing code that will fail the CI gate by checking it locally first. |

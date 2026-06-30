@@ -1,0 +1,228 @@
+---
+sidebar_position: 3
+sidebar_label: "Building Your First Pipeline"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Building Your First Pipeline
+
+### 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Building Your First CI Pipeline |
+| Difficulty | Beginner |
+| Used For | Taking the theory of CI/CD and writing actual YAML code to build and test an app. |
+| Common Mistake | Copy-pasting massive pipelines from Stack Overflow without understanding what each step does. |
+| Performance | Start simple. A basic test pipeline should run in under 2 minutes. |
+
+### 2. Real-World Analogy
+
+Bro, building your first pipeline is like teaching a new assistant how to open your shop every morning.
+
+| Shop Assistant Instructions | Pipeline Equivalents |
+|---|---|
+| When you arrive at 8 AM... | Trigger (`on: push`) |
+| Go to the main counter... | Runner setup (`runs-on: ubuntu-latest`) |
+| Take the keys and open the door... | Get code (`uses: actions/checkout`) |
+| Turn on the coffee machine and prep milk... | Setup environment (`uses: actions/setup-node`) |
+| Check if the cash register works... | Run tests (`npm test`) |
+
+You write the instructions once, and the assistant (GitHub Actions) follows them flawlessly every single time. If the cash register is broken (tests fail), they call you immediately instead of opening the shop.
+
+### 3. Concept Explanation
+
+Building a pipeline is simply translating developer commands into a structured YAML file.
+
+When you build an app locally, you probably do this:
+1. `git pull`
+2. `npm install`
+3. `npm run lint`
+4. `npm test`
+5. `npm run build`
+
+A CI pipeline is just a robot doing exactly those five steps in an isolated virtual machine every time you push code. The goal of your first pipeline is to establish a **"Quality Gate."** If any of those steps fail, the robot throws a red error, preventing bad code from merging into your `main` branch.
+
+Bro, you don't need to learn every YAML feature on day one. Start by just making the pipeline checkout your code and print "Hello World." Then add dependency installation. Then add tests. Build it incrementally.
+
+### 4. Syntax Table
+
+Here are the core properties you need to structure your first pipeline.
+
+| YAML Key | Description | Example Usage |
+|---|---|---|
+| `name:` | Title of the pipeline. | `name: Node.js CI` |
+| `on: push:` | Trigger the pipeline when code is pushed. | `branches: [ "main" ]` |
+| `jobs:` | The work to be done. | `build:` |
+| `runs-on:` | The OS of the virtual machine. | `runs-on: ubuntu-latest` |
+| `steps:` | The exact sequence of tasks. | `- uses: actions/checkout@v4` |
+| `run:` | A raw shell command. | `run: npm run test` |
+
+### 5. Beginner Example
+
+Let's build a minimalist pipeline that just checks out the code and lists the files. It's the best way to verify your YAML syntax is correct.
+
+Create a file at `.github/workflows/first-pipeline.yml`:
+
+```yaml
+name: My First Pipeline
+
+# 1. When does this run?
+on:
+  push:
+    branches: [ "main" ]
+
+# 2. What jobs should it do?
+jobs:
+  explore-runner:
+    # 3. Where does it run?
+    runs-on: ubuntu-latest
+
+    # 4. What are the steps?
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: List Files
+        run: ls -la
+
+      - name: Print OS info
+        run: cat /etc/os-release
+```
+
+### 6. Real-World Engineering Example
+
+Bro, now let's build a real pipeline for a standard TypeScript/Node.js application. This pipeline installs dependencies, checks formatting, checks types, and runs tests.
+
+```yaml
+name: Backend CI
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  quality-gate:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Get the code
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Step 2: Install the correct Node.js version
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm' # Senior move: Auto-cache ~/.npm
+
+      # Step 3: Install dependencies EXACTLY as in package-lock.json
+      - name: Install Dependencies
+        run: npm ci
+
+      # Step 4: Code Quality Checks
+      - name: Check Formatting (Prettier)
+        run: npm run format:check
+
+      - name: Linting (ESLint)
+        run: npm run lint
+
+      - name: Type Checking (TypeScript)
+        run: npm run typecheck
+
+      # Step 5: Unit Tests
+      - name: Run Tests
+        run: npm run test:coverage
+```
+
+### 7. Internal Working
+
+How does the runner process this file? It reads top-to-bottom. If Step 3 (`npm ci`) fails because the lockfile is corrupt, the runner immediately stops execution. Steps 4 and 5 are completely skipped, the job is marked as "Failed," and the GitHub Pull Request gets a giant red 'X'.
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'data', position: { x: 50, y: 150 }, data: { label: 'PR Opened' }},
+    { id: '2', type: 'core', position: { x: 250, y: 150 }, data: { label: 'Runner Boots' }},
+    { id: '3', type: 'process', position: { x: 450, y: 50 }, data: { label: 'npm ci (Success)' }},
+    { id: '4', type: 'process', position: { x: 650, y: 50 }, data: { label: 'npm run lint (Success)' }},
+    { id: '5', type: 'warning', position: { x: 850, y: 150 }, data: { label: 'npm run test (FAILED!)' }},
+    { id: '6', type: 'output', position: { x: 850, y: 250 }, data: { label: 'Pipeline Aborted. PR Blocked.' }},
+    { id: '7', type: 'process', position: { x: 1050, y: 150 }, data: { label: 'Deploy (Skipped)' }},
+
+    { id: 'e1-2', source: '1', target: '2' },
+    { id: 'e2-3', source: '2', target: '3' },
+    { id: 'e3-4', source: '3', target: '4' },
+    { id: 'e4-5', source: '4', target: '5', label: 'runs next' },
+    { id: 'e5-6', source: '5', target: '6', animated: true },
+    { id: 'e5-7', source: '5', target: '7', label: 'Never executes' }
+  ]}
+/>
+
+### 8. Performance Table
+
+| Action | Time Cost | Why? |
+|---|---|---|
+| Spin up Ubuntu runner | ~5-10 seconds | Containers are pre-warmed by GitHub. |
+| `actions/checkout` | ~2-5 seconds | Pulls only the necessary git history (shallow clone). |
+| `npm install` (No Cache) | ~40-120 seconds | Downloading megabytes of JS over the internet. |
+| `npm ci` (With Cache) | ~10-20 seconds | Restores from local disk, skips resolution. |
+
+### 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why should you use `npm ci` instead of `npm install` in a CI pipeline? | `npm ci` strictly follows the `package-lock.json`, ensuring exact version deterministic builds. `npm install` might update the lockfile and download newer, untested minor versions. |
+| What does `actions/checkout` actually do? | It authenticates with the repository and runs `git fetch` and `git checkout` to place your source code into the runner's workspace directory. |
+| How do you prevent a pipeline from running on doc changes (like editing README.md)? | Use the `paths-ignore` filter under the `on: push` trigger (e.g., `paths-ignore: ['**/*.md']`). |
+| If a step fails, how can you force the next step to run anyway? | You can use `if: always()` on the subsequent step, often used to upload failure logs or send a Slack alert even if tests fail. |
+| How do you test a pipeline without pushing 100 commits to GitHub? | Use local tools like `act` (nektos/act) which runs GitHub Actions locally using Docker. |
+
+### 10. Tricky Questions & Edge Cases
+
+**The "Phantom Dependency" Trap:**
+Bro, your code works locally but fails in the pipeline saying `Module not found`. Why? Because you installed the module locally but forgot to save it to `package.json`. The pipeline runner is a completely clean computer. It only knows what is in the repository. If it's not tracked in Git, it doesn't exist.
+
+**The Case Sensitive File System:**
+You import `import User from './components/user.js'` (lowercase 'u'). Locally on macOS or Windows, it works because their file systems are mostly case-insensitive. But the GitHub runner is Linux (case-sensitive). The pipeline will crash with a `File not found` error. Always respect case sensitivity!
+
+### 11. Real-World Usage
+
+When you join a company like Swiggy, the first thing you'll do on a new microservice is establish the CI pipeline. Without it, you cannot merge PRs, because the repository is protected. The pipeline acts as the objective, emotionless judge of your code's quality.
+
+### 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Name your steps clearly (e.g., "Run Unit Tests"). | Leave step names blank (shows up as generic `Run npm test` in logs). |
+| Fail fast. Put fast checks (linting/types) before slow checks (e2e tests). | Run 20 minutes of UI tests only to fail at the end because of a missing semicolon. |
+| Use branch protection rules to enforce that the pipeline MUST pass before merging. | Make the pipeline optional. |
+
+### 13. Production Notes
+
+> **Warning: Runner OS Mismatch**
+> Be careful if you build native binaries (like C++ extensions, Rust wrappers, or certain Python ML libraries). If your runner is `ubuntu-latest`, the compiled binary is for Linux. If you try to take that artifact and run it on a Windows server, it will fail. Always match the `runs-on` OS to your target deployment OS.
+
+### 14. Common Mistakes
+
+| Mistake | Consequence | The Fix |
+|---|---|---|
+| YAML Tab Indentation | YAML parser throws a fatal syntax error. | YAML strictly forbids tabs. Use spaces (usually 2 spaces per level). |
+| Forgetting Node setup | `npm: command not found` | Always use `actions/setup-node` before running npm commands. |
+| Committing `node_modules` | Pipeline takes 10 minutes to checkout code. | Ensure `node_modules` is in your `.gitignore` file. |
+
+### 15. Related Topics
+- GitHub Actions Fundamentals
+- Automated Testing in CI
+- Code Quality Gates
+
+### Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [actions/starter-workflows](https://github.com/actions/starter-workflows) | ⭐ 8k+ | Official GitHub starter templates | Great place to find the standard pipeline structure for almost any language. |
+| [actions/setup-python](https://github.com/actions/setup-python) | ⭐ 3.8k+ | Official Python setup action | The standard way to configure Python environments in a pipeline. |
+| [actions/setup-go](https://github.com/actions/setup-go) | ⭐ 3.1k+ | Official Go setup action | The standard way to configure Golang environments in a pipeline. |
+| [nektos/act](https://github.com/nektos/act) | ⭐ 48k+ | Run GitHub Actions locally | Essential tool so you don't clutter your git history with "fix yaml again" commits. |
+| [reviewdog/reviewdog](https://github.com/reviewdog/reviewdog) | ⭐ 6k+ | Automated code review tool | Integrates directly into pipelines to post linting errors as inline comments on PRs. |
