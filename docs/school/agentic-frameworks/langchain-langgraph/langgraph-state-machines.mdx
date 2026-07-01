@@ -1,0 +1,253 @@
+---
+sidebar_position: 3
+sidebar_label: "LangGraph State Machines"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# LangGraph State Machines
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| **Topic** | State Management in LangGraph |
+| **Difficulty** | Intermediate |
+| **Used For** | Sharing context, memory, and task variables across multiple agent nodes |
+| **Common Mistake** | Overwriting lists instead of appending to them because a reducer was forgotten |
+| **Performance** | Context size grows rapidly if state isn't pruned, leading to high token costs |
+
+## 2. Real-World Analogy
+
+Bro, imagine a restaurant kitchen. The **State** is the literal paper ticket order that the waiter hangs on the rail.
+
+- The Grill Chef takes the ticket, sees "Burger", cooks it, and writes "Grill: Done" on the ticket.
+- They slide the ticket down the rail to the Fry Chef.
+- The Fry Chef reads the same ticket, sees "Fries", cooks them, and writes "Fries: Done" on the ticket.
+- Finally, the Expediter reads the ticket, sees both are done, and rings the bell.
+
+If the Grill Chef threw away the original ticket and wrote a brand new one that just said "Grill: Done", the Fry Chef wouldn't know what to do.
+
+In LangGraph, the `TypedDict` State is the paper ticket. Every Node (Chef) reads the current state, does their specific job, and then *updates* the ticket before sliding it down the Edge to the next Node.
+
+| Kitchen Component | LangGraph Equivalent |
+|---|---|
+| The paper ticket | The `State` (TypedDict) |
+| Reading the ticket | A Node reading `state['messages']` |
+| Writing "Done" on the ticket | A Node returning `{"status": "done"}` |
+| The rule that you only add to the ticket, not erase it | A State Reducer (`operator.add`) |
+
+## 3. Concept Explanation
+
+State is the backbone of any agentic system. Without State, your LLM has amnesia—it forgets what happened one second ago.
+
+In LangGraph, the State is usually a Python `TypedDict` (or a Pydantic model). When the graph starts, it creates a dictionary based on this type. Every time a Node executes, it receives this dictionary. The Node then returns a new dictionary containing only the keys it wants to update. LangGraph takes this return value and merges it into the global State.
+
+The magic is in **Reducers**. If you return `{"status": "finished"}`, LangGraph overwrites the old status. But if your state defines `messages` with a reducer like `operator.add`, returning `{"messages": ["Hello"]}` will *append* "Hello" to the existing list instead of deleting the previous conversation.
+
+## 4. Syntax Table
+
+Here are the key syntaxes for defining State in LangGraph.
+
+| Syntax | Type | Purpose |
+|---|---|---|
+| `class MyState(TypedDict):` | Definition | Defines the schema of the global dictionary. |
+| `name: str` | Standard Key | A key that will be overwritten by whatever the node returns. |
+| `messages: Annotated[list, add_messages]` | Reducer Key | A key that will append new values using the specified function. |
+| `state["name"]` | Access | How a node reads the current value. |
+| `return {"name": "Jules"}` | Update | How a node modifies the state. |
+
+## 5. Beginner Example
+
+Here is a basic example showing the difference between standard keys and reducer keys.
+
+```python
+import operator
+from typing import Annotated, TypedDict
+from langgraph.graph import StateGraph, START, END
+
+# 1. Define State with one standard key and one reducer key
+class SimpleState(TypedDict):
+    counter: int
+    history: Annotated[list[str], operator.add]
+
+# 2. Node that updates state
+def update_node(state: SimpleState):
+    # We overwrite the counter, but we append to the history
+    new_count = state["counter"] + 1
+    return {
+        "counter": new_count,
+        "history": [f"Counted to {new_count}"]
+    }
+
+builder = StateGraph(SimpleState)
+builder.add_node("updater", update_node)
+builder.add_edge(START, "updater")
+builder.add_edge("updater", END)
+graph = builder.compile()
+
+# 3. Run it
+initial_state = {"counter": 0, "history": ["Started"]}
+result = graph.invoke(initial_state)
+
+# Result: {'counter': 1, 'history': ['Started', 'Counted to 1']}
+```
+
+## 6. Real-World Engineering Example
+
+Bro, let's look at a production scenario: A Document Review system where multiple reviewers (agents) need to leave comments on a document. We need to track the document, the list of comments, and how many times we've looped.
+
+```python
+import operator
+from typing import Annotated, TypedDict, List
+from langgraph.graph import StateGraph, START, END
+from pydantic import BaseModel
+
+# 1. Define the exact State
+class ReviewState(TypedDict):
+    document_text: str           # Standard key: overwritten if updated
+    comments: Annotated[List[str], operator.add]  # Reducer: appends
+    loop_count: int              # Standard key: overwritten
+
+def reviewer_a_node(state: ReviewState):
+    """Adds a stylistic comment."""
+    doc = state["document_text"]
+    comment = llm.invoke(f"Review style for: {doc}")
+
+    # We only return the keys we want to update!
+    # Because 'comments' has operator.add, this appends to the list.
+    return {
+        "comments": [f"Reviewer A: {comment}"],
+        "loop_count": state["loop_count"] + 1
+    }
+
+def reviewer_b_node(state: ReviewState):
+    """Adds a technical comment."""
+    doc = state["document_text"]
+    comment = llm.invoke(f"Review technical facts for: {doc}")
+
+    return {
+        "comments": [f"Reviewer B: {comment}"],
+        "loop_count": state["loop_count"] + 1
+    }
+
+def router_node(state: ReviewState):
+    """Stops the loop after 2 reviews."""
+    if state["loop_count"] >= 2:
+        return "end"
+    return "reviewer_b"
+
+# Build the graph
+builder = StateGraph(ReviewState)
+builder.add_node("rev_a", reviewer_a_node)
+builder.add_node("rev_b", reviewer_b_node)
+
+builder.add_edge(START, "rev_a")
+builder.add_conditional_edges("rev_a", router_node, {"end": END, "reviewer_b": "rev_b"})
+builder.add_edge("rev_b", END)
+
+graph = builder.compile()
+
+# Execute
+initial = {"document_text": "The earth is flat and big.", "comments": [], "loop_count": 0}
+final_state = graph.invoke(initial)
+print(final_state["comments"])
+# ['Reviewer A: Too informal', 'Reviewer B: Factually incorrect']
+```
+
+## 7. Internal Working
+
+LangGraph's execution engine is fundamentally a loop that manages a global dictionary.
+
+When a node returns a dictionary, the engine iterates over the keys. If a key has no reducer annotation, the engine does `global_state[key] = node_return[key]`. If a key *does* have a reducer annotation (like `operator.add`), the engine does `global_state[key] = reducer_function(global_state[key], node_return[key])`.
+
+This channel architecture ensures that nodes are completely decoupled. Node B doesn't care if Node A exists; it only cares that the State dictionary contains the data it needs.
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'Initial State dict' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Node 1 Execution' }, position: { x: 250, y: 150 } },
+    { id: '3', type: 'data', data: { label: 'Returns: {"msg": ["A"]}' }, position: { x: 250, y: 250 } },
+    { id: '4', type: 'tool', data: { label: 'State Reducer (operator.add)' }, position: { x: 500, y: 250 } },
+    { id: '5', type: 'core', data: { label: 'Global State: ["A"]' }, position: { x: 250, y: 350 } },
+    { id: '6', type: 'process', data: { label: 'Node 2 Execution' }, position: { x: 250, y: 450 } },
+    { id: '7', type: 'data', data: { label: 'Returns: {"msg": ["B"]}' }, position: { x: 250, y: 550 } },
+    { id: '8', type: 'core', data: { label: 'Global State: ["A", "B"]' }, position: { x: 250, y: 650 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'passes copy' },
+    { id: 'e2-3', source: '2', target: '3', label: 'emits update' },
+    { id: 'e3-4', source: '3', target: '4', label: 'intercepted by' },
+    { id: 'e4-5', source: '4', target: '5', label: 'merges into' },
+    { id: 'e5-6', source: '5', target: '6', label: 'passes copy' },
+    { id: 'e6-7', source: '6', target: '7', label: 'emits update' },
+    { id: 'e7-4', source: '7', target: '4', label: 'intercepted by', type: 'step' },
+    { id: 'e4-8', source: '4', target: '8', label: 'merges into', type: 'step' }
+  ]}
+/>
+
+## 8. Performance Table
+
+| Metric | Characteristic | Why |
+|---|---|---|
+| **Memory Usage** | Scales Linearly | The State dictionary lives in RAM. Appending to lists continuously will bloat memory. |
+| **Token Cost** | Very High Risk | If you blindly pass the entire `state["messages"]` list to the LLM on every loop, costs explode exponentially. |
+| **Concurrency** | Safe | Reducers handle Fan-In scenarios gracefully when multiple parallel nodes update the same list. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| **What happens if two parallel nodes return a value for a standard key (no reducer)?** | LangGraph will raise an `InvalidUpdateError`. You cannot have two nodes concurrently overwrite the same standard key because the result is non-deterministic. You must use a reducer. |
+| **What is `add_messages`?** | It is a built-in LangGraph reducer specifically for the `messages` key. Instead of blindly appending, it checks message IDs to prevent duplicates and handles complex message merging. |
+| **Does a Node have to return the entire State?** | No. A node only returns a dictionary of the specific keys it wants to update. If State has 10 keys and the node only touches 1, it returns a dict with 1 key. |
+| **Can you write custom reducers?** | Yes. A reducer is just a Python function that takes `(existing_value, new_value)` and returns the combined value. You can write custom logic to sort lists, drop old data, or merge dictionaries. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, what happens if your agent has been chatting for 50 turns? The `state["messages"]` array now has 100 messages in it.
+
+If you pass that state into `llm.invoke()`, you will hit the `TokenLimitExceeded` error and crash.
+
+The edge case is **State Bloat**. You cannot rely on infinite reducers. The fix is to add a specific node (or logic inside a node) to prune the state. You must inspect `state["messages"]`, drop the oldest 80 messages, or summarize them, and return a *command* to overwrite the message list. *(Note: LangGraph handles explicit message deletion via `RemoveMessage` objects).*
+
+## 11. Real-World Usage
+
+- **Multi-Agent Debates**: Two agents debating a topic. The State holds a list of `arguments`. Agent A appends an argument, Agent B reads it and appends a counter-argument.
+- **Coding Assistants (Devin Clones)**: The state tracks `current_code` (standard key), `test_results` (standard key), and `iteration_count` (standard key).
+- **Plan and Execute**: The state tracks `plan` (List[str]). When the executor finishes a step, a custom reducer removes that step from the list.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| **DO** use `Annotated[list, operator.add]` for any data that is generated incrementally (logs, errors, sub-answers). | **DON'T** rely on global Python variables (`global my_list = []`) across nodes. It destroys LangGraph's ability to checkpoint and parallelize. |
+| **DO** keep your state schema as lean as possible. Only track data that multiple nodes need to share. | **DON'T** return `{"messages": state["messages"] + [new_msg]}` if you have a reducer. The reducer adds it automatically; you will end up with duplicates. Just return `{"messages": [new_msg]}`. |
+
+## 13. Production Notes
+
+> ⚠️ **State Serialization**
+> If you are using a Checkpointer (like PostgreSQL) to save your graph state, every single item in your `TypedDict` MUST be serializable (usually to JSON or Pickle).
+> **Production Fix**: Do not put raw database connection pools, un-serializable HTTP clients, or weird Python thread objects into the State. The checkpointer will crash the graph. Only store raw data (strings, dicts, Pydantic objects).
+
+## 14. Common Mistakes
+
+| Mistake | Impact | The Fix (Code) |
+|---|---|---|
+| Forgetting `operator.add` | `{"history": ["B"]}` overwrites `["A"]` instead of appending | `history: Annotated[list, operator.add]` |
+| Returning the whole state | Duplicates data if reducers are present | `return {"only_changed_key": "value"}` |
+| Un-serializable state | Graph crashes when hitting a Checkpointer | Keep state simple: Strings, Ints, Dicts, Lists. |
+
+## 15. Related Topics
+- [LangGraph Intro](./langgraph-intro.mdx)
+- [Parallelization Pattern](../architecture-patterns/parallelization-pattern.mdx)
+- [Agent Memory Types](#)
+
+## 16. Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [langchain-ai/langgraph](https://github.com/langchain-ai/langgraph) | ⭐ 8k+ | Build resilient language agents as graphs. | The core framework that defines the State Machine and Reducer concepts. |
+| [pydantic/pydantic](https://github.com/pydantic/pydantic) | ⭐ 19k+ | Data validation using Python type hints. | Often used instead of `TypedDict` to enforce strict validation rules on the Graph State as it mutates. |
+| [langchain-ai/langgraph-example](https://github.com/langchain-ai/langgraph/tree/main/examples) | N/A | Official examples directory. | Look here for advanced examples of custom State Reducers and state-trimming logic. |
+| [microsoft/autogen](https://github.com/microsoft/autogen) | ⭐ 35k+ | Programming framework for agentic AI. | An alternative approach where state is implicitly managed via conversation history between agents rather than an explicit central dict. |

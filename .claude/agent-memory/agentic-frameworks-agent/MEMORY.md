@@ -80,20 +80,16 @@ For agentic framework topics, diagrams should focus on:
 - [x] `af-008` | Create `intro/choosing-a-framework.mdx` | Branch: `jules/af-batch-001-setup`
 - [x] `af-009` | Create `intro/your-first-agent.mdx` | Branch: `jules/af-batch-001-setup`
 - [x] `af-010` | Create `architecture-patterns/react-pattern.mdx` | Branch: `jules/af-batch-001-setup`
-- [ ] `af-011` | Create `architecture-patterns/plan-and-execute.mdx` | Branch: `jules/af-batch-002-patterns`
-- [ ] `af-012` | Create `architecture-patterns/reflection-and-reflexion.mdx` | Branch: `jules/af-batch-002-patterns`
-- [ ] `af-013` | Create `architecture-patterns/tool-use-pattern.mdx` | Branch: `jules/af-batch-002-patterns`
-- [ ] `af-014` | Create `architecture-patterns/routing-pattern.mdx` | Branch: `jules/af-batch-002-patterns`
-- [ ] `af-015` | Create `architecture-patterns/parallelization-pattern.mdx` | Branch: `jules/af-batch-002-patterns`
-- [ ] `af-016` | Create `architecture-patterns/human-in-the-loop.mdx` | Branch: `jules/af-batch-002-patterns`
-- [ ] `af-017` | Create `architecture-patterns/agent-architectures-compared.mdx` | Branch: `jules/af-batch-002-patterns`
-- [ ] `af-018` | Create `langchain-langgraph/langchain-fundamentals.mdx` | Branch: `jules/af-batch-002-patterns`
-- [ ] `af-019` | Create `langchain-langgraph/langgraph-intro.mdx` | Branch: `jules/af-batch-002-patterns`
-- [ ] `af-020` | Create `langchain-langgraph/langgraph-state-machines.mdx` | Branch: `jules/af-batch-002-patterns`
-
-### Backlog
-
-#### Batch 3 — LangGraph Deep Dive
+- [x] `af-011` | Create `architecture-patterns/plan-and-execute.mdx` | Branch: `jules/af-batch-002-patterns`
+- [x] `af-012` | Create `architecture-patterns/reflection-and-reflexion.mdx` | Branch: `jules/af-batch-002-patterns`
+- [x] `af-013` | Create `architecture-patterns/tool-use-pattern.mdx` | Branch: `jules/af-batch-002-patterns`
+- [x] `af-014` | Create `architecture-patterns/routing-pattern.mdx` | Branch: `jules/af-batch-002-patterns`
+- [x] `af-015` | Create `architecture-patterns/parallelization-pattern.mdx` | Branch: `jules/af-batch-002-patterns`
+- [x] `af-016` | Create `architecture-patterns/human-in-the-loop.mdx` | Branch: `jules/af-batch-002-patterns`
+- [x] `af-017` | Create `architecture-patterns/agent-architectures-compared.mdx` | Branch: `jules/af-batch-002-patterns`
+- [x] `af-018` | Create `langchain-langgraph/langchain-fundamentals.mdx` | Branch: `jules/af-batch-002-patterns`
+- [x] `af-019` | Create `langchain-langgraph/langgraph-intro.mdx` | Branch: `jules/af-batch-002-patterns`
+- [x] `af-020` | Create `langchain-langgraph/langgraph-state-machines.mdx` | Branch: `jules/af-batch-002-patterns`
 - [ ] `af-021` | Create `langchain-langgraph/langgraph-memory.mdx` | Branch: `jules/af-batch-003-langgraph`
 - [ ] `af-022` | Create `langchain-langgraph/langgraph-human-in-loop.mdx` | Branch: `jules/af-batch-003-langgraph`
 - [ ] `af-023` | Create `langchain-langgraph/langgraph-multi-agent.mdx` | Branch: `jules/af-batch-003-langgraph`
@@ -104,6 +100,8 @@ For agentic framework topics, diagrams should focus on:
 - [ ] `af-028` | Create `crewai/crewai-tasks-and-processes.mdx` | Branch: `jules/af-batch-003-langgraph`
 - [ ] `af-029` | Create `crewai/crewai-flows-and-pipelines.mdx` | Branch: `jules/af-batch-003-langgraph`
 - [ ] `af-030` | Create `crewai/crewai-memory-system.mdx` | Branch: `jules/af-batch-003-langgraph`
+
+### Backlog
 
 #### Batch 4 — CrewAI + OpenAI SDK
 - [ ] `af-031` | Create `crewai/crewai-multi-agent-crews.mdx` | Branch: `jules/af-batch-004-crewai-openai`
@@ -202,6 +200,7 @@ For agentic framework topics, diagrams should focus on:
 | BAE ID | What's Done (High Level) |
 |---|---|
 | `[BAE-AF-1]` | Created intro categories and first 9 concepts including ReAct pattern. |
+| `[BAE-AF-2]` | Created 10 architecture patterns and LangGraph fundamentals concepts. |
 
 ---
 

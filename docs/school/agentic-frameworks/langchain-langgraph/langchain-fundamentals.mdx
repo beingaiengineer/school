@@ -1,0 +1,210 @@
+---
+sidebar_position: 1
+sidebar_label: "LangChain Fundamentals"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# LangChain Fundamentals
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| **Topic** | LangChain Core Concepts and LCEL |
+| **Difficulty** | Beginner |
+| **Used For** | Building standard linear LLM workflows, integrations, and wrappers |
+| **Common Mistake** | Using LangChain for complex, multi-step agent loops instead of LangGraph |
+| **Performance** | Adds minimal Python overhead; performance is bottlenecked by the LLM API |
+
+## 2. Real-World Analogy
+
+Bro, think of LangChain like a set of universal adapters and pipes for a kitchen.
+
+You have a sink from one brand, a dishwasher from another, and a water main from the city. If you try to connect them all yourself, you have to custom-build every pipe fitting.
+
+**LangChain** provides the standard pipes (LCEL), the standard adapters (Model Wrappers), and the standard filters (Output Parsers). You can easily snap an OpenAI model into an Anthropic workflow without rewriting your whole application.
+
+| Plumbing Component | LangChain Equivalent |
+|---|---|
+| The raw water supply | The LLM API (OpenAI, Anthropic, local) |
+| Standardized pipe fittings | Model/LLM wrapper classes |
+| Connecting pipes together | LangChain Expression Language (LCEL) `\|` operator |
+| Water filters | Output Parsers formatting the text into JSON |
+
+## 3. Concept Explanation
+
+LangChain started as a framework to make working with LLMs easier. Its core value proposition is **standardization**. Every LLM provider has a different API, different parameters, and different message formats. LangChain provides a unified interface so you can write your code once and swap models instantly.
+
+The most important concept in modern LangChain is **LCEL (LangChain Expression Language)**. It is a declarative way to compose chains together using the pipe `|` operator (just like bash). It automatically handles asynchronous execution, streaming, and batching.
+
+**Important:** LangChain is for *Chains* (linear workflows). If you need *Agents* (cyclical, stateful, decision-making workflows), you must use LangGraph. LangChain's legacy `AgentExecutor` is deprecated.
+
+## 4. Syntax Table
+
+Here are the core components you will use daily in LangChain.
+
+| Component | Example | Purpose |
+|---|---|---|
+| **ChatModel** | `ChatOpenAI(model="gpt-4o")` | The standardized wrapper for communicating with an LLM. |
+| **PromptTemplate** | `PromptTemplate.from_template("Tell me a {topic}")` | Manages variable injection into prompts cleanly. |
+| **OutputParser** | `StrOutputParser()` | Extracts the clean string or JSON from the raw LLM API response object. |
+| **Runnable / LCEL** | `chain = prompt \| model \| parser` | The declarative syntax to pipe components together. |
+
+## 5. Beginner Example
+
+Here is the most basic LCEL chain. Notice how clean it is to connect the prompt, the model, and the parser.
+
+```python
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+
+# 1. Initialize components
+model = ChatOpenAI(model="gpt-4o-mini")
+prompt = PromptTemplate.from_template("Explain {concept} in one sentence.")
+parser = StrOutputParser()
+
+# 2. Build the chain using LCEL
+chain = prompt | model | parser
+
+# 3. Execute
+result = chain.invoke({"concept": "LangChain"})
+print(result)
+```
+
+## 6. Real-World Engineering Example
+
+Bro, let's look at a production scenario: forcing the LLM to return structured JSON so our downstream application doesn't crash.
+
+We use Pydantic for validation and LangChain's `with_structured_output` to handle the dirty work of passing JSON schemas to the model.
+
+```python
+from pydantic import BaseModel, Field
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
+
+# 1. Define exactly what data we need extracted
+class UserProfile(BaseModel):
+    name: str = Field(description="The user's full name")
+    age: int = Field(description="The user's age in years")
+    hobbies: list[str] = Field(description="List of the user's hobbies")
+
+# 2. Setup the model and bind the schema
+model = ChatOpenAI(model="gpt-4o", temperature=0)
+structured_model = model.with_structured_output(UserProfile)
+
+# 3. Create a system prompt
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "Extract the user profile from the following text."),
+    ("user", "{text}")
+])
+
+# 4. Build the chain
+extractor_chain = prompt | structured_model
+
+# 5. Execute with real data
+user_input = "Hi, I'm Rahul. I just turned 28. I love playing cricket and coding."
+
+try:
+    # This returns a validated Pydantic object, not a raw string!
+    profile = extractor_chain.invoke({"text": user_input})
+    print(f"Name: {profile.name}, Hobbies: {profile.hobbies}")
+except Exception as e:
+    print(f"Bro, validation failed: {e}")
+```
+
+## 7. Internal Working
+
+When you use the LCEL `|` operator, you aren't just passing data. Under the hood, LangChain wraps your components in a `RunnableSequence`.
+
+This sequence automatically implements standard methods: `invoke()`, `batch()`, `stream()`, `ainvoke()`, etc. When you call `stream()`, LangChain ensures that the output from the prompt is streamed to the model, and the model's chunks are immediately yielded to the parser, and the parser yields them to the user. You get streaming for free without writing complex asyncio generators.
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'data', data: { label: 'Input Dictionary {"concept": "AI"}' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'PromptTemplate' }, position: { x: 250, y: 150 } },
+    { id: '3', type: 'data', data: { label: 'Formatted String' }, position: { x: 250, y: 250 } },
+    { id: '4', type: 'tool', data: { label: 'ChatModel (LLM API)' }, position: { x: 250, y: 350 } },
+    { id: '5', type: 'data', data: { label: 'AIMessage Object' }, position: { x: 250, y: 450 } },
+    { id: '6', type: 'process', data: { label: 'StrOutputParser' }, position: { x: 250, y: 550 } },
+    { id: '7', type: 'output', data: { label: 'Final Output String' }, position: { x: 250, y: 650 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'invoke()' },
+    { id: 'e2-3', source: '2', target: '3', label: 'injects vars' },
+    { id: 'e3-4', source: '3', target: '4', label: 'pipes to model', animated: true },
+    { id: 'e4-5', source: '4', target: '5', label: 'returns raw obj' },
+    { id: 'e5-6', source: '5', target: '6', label: 'pipes to parser', animated: true },
+    { id: 'e6-7', source: '6', target: '7', label: 'extracts text' }
+  ]}
+/>
+
+## 8. Performance Table
+
+| Metric | Characteristic | Why |
+|---|---|---|
+| **Code Footprint** | Low | LCEL allows you to define complex workflows in a few lines of code. |
+| **Execution Latency** | Near Zero | The framework overhead is negligible compared to the LLM network request. |
+| **Flexibility** | High | Every component implements the `Runnable` protocol, meaning they can all be hot-swapped. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| **What is LCEL and why was it introduced?** | LangChain Expression Language. It provides a declarative syntax (using `|`) to build chains. It was introduced to standardize the interface (`invoke`, `stream`, `batch`) across all components automatically. |
+| **What is the difference between LangChain and LangGraph?** | LangChain is for building linear pipelines (DAGs) and wrapping model APIs. LangGraph is for building cyclical, stateful, multi-agent systems. |
+| **How does LangChain handle streaming?** | Through the `Runnable` protocol. If you build a chain with LCEL, you can call `.stream()` on the whole chain, and LangChain manages the underlying generator pipeline automatically. |
+| **Why should you avoid LangChain's legacy `AgentExecutor`?** | It is essentially a black box. Debugging a failed tool call or modifying the internal routing logic of `AgentExecutor` is incredibly difficult. LangGraph solves this by making the control flow explicit. |
+| **How do you pass variables deeply into an LCEL chain?** | Using `RunnablePassthrough`. It allows you to pass the initial input dictionary through intermediate steps unchanged so later components can access it. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, what happens if your LCEL chain expects a string, but the previous component returned a dictionary?
+
+```python
+chain = prompt | model | parser
+chain.invoke("LangChain") # Wait, this crashes!
+```
+
+The edge case is **Input Schema Mismatches**. The `prompt` component usually expects a dictionary (e.g., `{"concept": "LangChain"}`). If you pass a raw string, the prompt template fails to find the key it needs to format the text. You must ensure the output type of Component A matches the expected input type of Component B.
+
+## 11. Real-World Usage
+
+- **RAG Pipelines**: LangChain is the industry standard for connecting Document Loaders -> Text Splitters -> Vector Stores -> Prompts -> LLMs.
+- **Model Agnosticism**: Enterprise teams use LangChain so they aren't locked into OpenAI. If Azure goes down, they change one line of code from `ChatOpenAI` to `ChatAnthropic` and the rest of the chain works perfectly.
+- **Data Extraction**: Using `with_structured_output` to scrape messy text from PDFs and enforce clean JSON responses for databases.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| **DO** use LCEL (`|`) instead of the legacy `LLMChain` class. It is the modern standard. | **DON'T** use LangChain for complex state machines. Move to LangGraph as soon as you need loops. |
+| **DO** use Pydantic models with `with_structured_output` to guarantee data types. | **DON'T** manually parse JSON strings using regex. Let LangChain's output parsers handle the errors. |
+
+## 13. Production Notes
+
+> ⚠️ **The Wrapper Trap**
+> LangChain has hundreds of integrations (loaders, tools, vectorstores). Often, these wrappers obscure the underlying library's features or introduce bugs.
+> **Production Fix**: If a LangChain wrapper is missing a feature (e.g., a specific metadata filter for Pinecone), don't hack around it. Just write a custom Python function using the native Pinecone SDK and wrap it in a LangChain `@tool`.
+
+## 14. Common Mistakes
+
+| Mistake | Impact | The Fix (Code) |
+|---|---|---|
+| Passing strings to Prompts | `KeyError` during formatting | `chain.invoke({"topic": "AI"})` |
+| Using legacy chains | Deprecation warnings, no streaming support | Refactor to LCEL syntax (`prompt | model | parser`) |
+| Forgetting Output Parsers | Returning raw AIMessage objects to the frontend | Always end text chains with `StrOutputParser()` |
+
+## 15. Related Topics
+- [LangGraph Intro](./langgraph-intro.mdx)
+- [Tool Use Pattern](../architecture-patterns/tool-use-pattern.mdx)
+
+## 16. Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [langchain-ai/langchain](https://github.com/langchain-ai/langchain) | ⭐ 90k+ | Building applications with LLMs through composability. | The core framework defining LCEL and all the standard integrations. |
+| [langchain-ai/langchain-experimental](https://github.com/langchain-ai/langchain/tree/master/libs/experimental) | N/A | Experimental components and architectures. | Where cutting-edge patterns are tested before graduating to the main library. |
+| [run-llama/llama_index](https://github.com/run-llama/llama_index) | ⭐ 35k+ | Data framework for LLM apps. | The primary competitor to LangChain, focusing specifically on RAG and data indexing. |
+| [jxnl/instructor](https://github.com/jxnl/instructor) | ⭐ 6k+ | Structured outputs for LLMs. | A great alternative if you only need structured output and find LangChain too heavy. |
