@@ -1,0 +1,242 @@
+---
+sidebar_position: 2
+sidebar_label: "LangGraph Intro"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Introduction to LangGraph
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| **Topic** | LangGraph Framework Overview |
+| **Difficulty** | Intermediate |
+| **Used For** | Building stateful, cyclical, multi-actor AI agent systems |
+| **Common Mistake** | Trying to build linear RAG pipelines with LangGraph instead of standard LangChain LCEL |
+| **Performance** | Adds state-management overhead, but enables infinite-loop resilience |
+
+## 2. Real-World Analogy
+
+Bro, standard LangChain (LCEL) is like an assembly line. A car frame goes in, a machine paints it, another attaches the wheels, and a finished car rolls out the back. It goes in one direction.
+
+But an Agent is not an assembly line. It is like a **Mumbai Dabbawala Delivery Network**.
+A dabbawala picks up a lunchbox. They take it to a sorting station (Node). A supervisor checks the address (State). Depending on the address, the box is routed to train A, train B, or sent back if the label is missing (Conditional Edge). It loops through different handlers until it reaches the exact destination.
+
+LangGraph is the framework that lets you build this complex, looping, decision-based network.
+
+| Network Role | LangGraph Equivalent |
+|---|---|
+| The Dabbawala Stations | Nodes (Python functions) |
+| The Train Tracks | Edges (Routing between functions) |
+| The Supervisor's clipboard | The State (TypedDict tracking data) |
+| The lunchbox | The user's goal being passed through the graph |
+
+## 3. Concept Explanation
+
+LangGraph is an extension of LangChain designed specifically for building robust, stateful, multi-actor applications with LLMs.
+
+If you want to build a simple Q&A bot, use LangChain. If you want to build an autonomous software engineer that writes code, runs tests, reads the error logs, and rewrites the code in a loop until it passes... you MUST use LangGraph.
+
+Standard LangChain DAGs (Directed Acyclic Graphs) cannot loop. LangGraph introduces cycles, persistent state memory, and explicit control flow. It forces you to define exactly what your agent can do (Nodes) and the strict rules for how it decides what to do next (Conditional Edges).
+
+## 4. Syntax Table
+
+Here are the core primitives of LangGraph you need to memorize.
+
+| Component | Class/Method | Purpose |
+|---|---|---|
+| **State** | `TypedDict` | The central data structure passed between all nodes. |
+| **Graph Builder** | `StateGraph` | The class used to construct the network. |
+| **Nodes** | `builder.add_node()` | The actual Python functions that do the work (LLM calls, tools). |
+| **Edges** | `builder.add_edge()` | Hardcoded transitions from Node A to Node B. |
+| **Conditional Edges** | `builder.add_conditional_edges()` | Logic that decides where to go next based on the current State. |
+
+## 5. Beginner Example
+
+Here is the "Hello World" of LangGraph: a simple graph that just modifies state and ends.
+
+```python
+from typing import TypedDict
+from langgraph.graph import StateGraph, START, END
+
+# 1. Define the State
+class GraphState(TypedDict):
+    message: str
+
+# 2. Define a Node function
+def uppercase_node(state: GraphState):
+    # Reads state, returns an update to the state
+    return {"message": state["message"].upper()}
+
+# 3. Build the Graph
+builder = StateGraph(GraphState)
+builder.add_node("upper", uppercase_node)
+
+# 4. Connect the Edges
+builder.add_edge(START, "upper")
+builder.add_edge("upper", END)
+
+# 5. Compile and Run
+graph = builder.compile()
+result = graph.invoke({"message": "hello bro"})
+print(result) # {'message': 'HELLO BRO'}
+```
+
+## 6. Real-World Engineering Example
+
+Bro, let's build a real ReAct Agent. It needs a Reasoning Node (the LLM) and a Tool Execution Node. It will loop between them until the LLM decides it is finished.
+
+```python
+from typing import Annotated, TypedDict
+from langchain_openai import ChatOpenAI
+from langgraph.graph import StateGraph, START, END
+from langgraph.graph.message import add_messages
+from langchain_core.messages import ToolMessage
+
+# 1. State: We use 'add_messages' to append new messages instead of overwriting
+class AgentState(TypedDict):
+    messages: Annotated[list, add_messages]
+
+# 2. Setup Tools and LLM
+# Assume 'search_web' is a valid @tool
+tools = [search_web]
+llm = ChatOpenAI(model="gpt-4o")
+llm_with_tools = llm.bind_tools(tools)
+
+# 3. Define the Nodes
+def reasoning_node(state: AgentState):
+    """The Brain: Reads messages and decides to use a tool or reply to user."""
+    response = llm_with_tools.invoke(state["messages"])
+    return {"messages": [response]}
+
+def tool_node(state: AgentState):
+    """The Hands: Executes the tool requested by the LLM."""
+    last_message = state["messages"][-1]
+
+    # Extract the tool call details
+    tool_call = last_message.tool_calls[0]
+
+    # Execute it (hardcoded for brevity)
+    if tool_call["name"] == "search_web":
+        result = search_web.invoke(tool_call["args"])
+
+    # Return the result as a ToolMessage
+    return {"messages": [ToolMessage(content=result, tool_call_id=tool_call["id"])]}
+
+# 4. Define the Router (Conditional Edge)
+def should_continue(state: AgentState):
+    """Decides if we loop to tools or end the graph."""
+    last_message = state["messages"][-1]
+    if last_message.tool_calls:
+        return "tools"
+    return "end"
+
+# 5. Assemble the Graph
+builder = StateGraph(AgentState)
+builder.add_node("agent", reasoning_node)
+builder.add_node("tools", tool_node)
+
+builder.add_edge(START, "agent")
+# If the agent wants tools, go to tools. Otherwise, end.
+builder.add_conditional_edges("agent", should_continue, {"tools": "tools", "end": END})
+# After running a tool, ALWAYS go back to the agent to read the result
+builder.add_edge("tools", "agent")
+
+graph = builder.compile()
+```
+
+## 7. Internal Working
+
+When you call `graph.compile()`, LangGraph validates all your nodes and edges to ensure there are no dead ends.
+
+When you call `graph.invoke()`, the execution engine initializes the `State` dictionary. It passes this dictionary into the `START` node, then follows the edges. Every time a node returns a dictionary, LangGraph updates the global State. If it hits a `conditional_edge`, it runs the router function, reads the returned string, and moves to the corresponding node.
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'START' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'data', data: { label: 'State Initialization' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'process', data: { label: 'Node A (Reasoning)' }, position: { x: 250, y: 250 } },
+    { id: '4', type: 'warning', data: { label: 'Conditional Edge' }, position: { x: 250, y: 350 } },
+    { id: '5', type: 'tool', data: { label: 'Node B (Tool Execution)' }, position: { x: 500, y: 350 } },
+    { id: '6', type: 'output', data: { label: 'END' }, position: { x: 250, y: 500 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2' },
+    { id: 'e2-3', source: '2', target: '3' },
+    { id: 'e3-4', source: '3', target: '4' },
+    { id: 'e4-5', source: '4', target: '5', label: 'needs tool' },
+    { id: 'e5-3', source: '5', target: '3', label: 'updates state', type: 'step', targetHandle: 'right', sourceHandle: 'top' },
+    { id: 'e4-6', source: '4', target: '6', label: 'done' }
+  ]}
+/>
+
+## 8. Performance Table
+
+| Metric | Characteristic | Why |
+|---|---|---|
+| **Latency Overhead** | Negligible | The graph engine itself executes in milliseconds. The LLM APIs are the bottleneck. |
+| **Memory Footprint** | Scales with State | If you store 10MB of documents in your `TypedDict`, the memory footprint grows accordingly. |
+| **Resilience** | Very High | By splitting logic into explicit nodes, failures are isolated and easier to retry. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| **Why was LangGraph created if LangChain already existed?** | LangChain uses LCEL, which forms Directed Acyclic Graphs (DAGs). DAGs cannot loop. Agents require loops (think -> act -> think). LangGraph was built to support cyclic execution. |
+| **What does a Node actually return in LangGraph?** | It returns a dictionary representing an *update* to the State. It does not return the full modified state, only the keys it wishes to alter or append to. |
+| **What happens if a Node returns a key that isn't in the TypedDict?** | Python will raise a KeyError/TypeError. The State schema is strictly enforced. |
+| **How does LangGraph handle infinite loops?** | By default, compiled graphs have a `recursion_limit` (usually 25). If the graph loops between nodes 25 times without hitting `END`, it raises a `GraphRecursionError`. |
+| **Can you stream intermediate steps from a LangGraph execution?** | Yes, using `graph.stream()`. It will yield the State updates emitted by each node as they complete, allowing you to build real-time UIs showing the agent's thought process. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, what happens if Node A returns `{"messages": ["Hello"]}` and then Node B returns `{"messages": ["World"]}`? Does "World" overwrite "Hello"?
+
+Yes, by default, LangGraph overwrites state keys.
+
+The edge case is **State Reducers**. If you want a list to append rather than overwrite, you must explicitly tell LangGraph how to handle that key using Python's `Annotated` type.
+
+You must define the state like this: `messages: Annotated[list, operator.add]`. Now, when Node B returns "World", LangGraph uses `operator.add` to append it, resulting in `["Hello", "World"]`. If you forget the reducer, your agent will have amnesia.
+
+## 11. Real-World Usage
+
+- **Software Engineering Agents (Devin Clones)**: Using LangGraph to loop between a Coder node, a Testing node, and a Reviewer node until tests pass.
+- **Customer Support Automation**: A routing node checks the ticket type, sends it to a specific sub-graph (Refunds vs Tech Support), and ensures the state is tracked the whole way.
+- **Human-in-the-Loop Systems**: Pausing a LangGraph execution right before sending an email, letting a human review the draft, and then resuming the graph.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| **DO** keep your Node functions small and focused on one specific task. | **DON'T** write massive 100-line Node functions that contain complex `if/else` logic. Move that logic into Conditional Edges. |
+| **DO** use `Annotated` reducers for lists that need to grow over time (like message history). | **DON'T** let your state dictionary grow infinitely; implement logic to trim old messages to save tokens. |
+
+## 13. Production Notes
+
+> ⚠️ **Debugging Graph State**
+> Debugging a 15-node cyclical graph using print statements is miserable.
+> **Production Fix**: LangGraph integrates natively with LangSmith. Always wrap your LangGraph execution in a LangSmith trace. It gives you a visual UI showing the exact path the graph took and the exact state payload at every node transition.
+
+## 14. Common Mistakes
+
+| Mistake | Impact | The Fix (Code) |
+|---|---|---|
+| Forgetting to compile the graph | App crashes: `StateGraph has no attribute 'invoke'` | `graph = builder.compile()` |
+| Returning the wrong state key | The reducer fails or state is ignored | Ensure node return dicts match the `TypedDict` keys exactly. |
+| Routing to a non-existent node | `ValueError: Node 'wrong_name' not present` | Double check the string labels in your `add_conditional_edges` map. |
+
+## 15. Related Topics
+- [LangChain Fundamentals](./langchain-fundamentals.mdx)
+- [LangGraph State Machines](./langgraph-state-machines.mdx)
+- [ReAct Pattern](../architecture-patterns/react-pattern.mdx)
+
+## 16. Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [langchain-ai/langgraph](https://github.com/langchain-ai/langgraph) | ⭐ 8k+ | Build resilient language agents as graphs. | The official framework repository. |
+| [langchain-ai/langgraph-example](https://github.com/langchain-ai/langgraph/tree/main/examples) | N/A | Official examples directory. | The best place to find production-grade patterns for Plan-and-Execute, Reflection, and HITL. |
+| [langchain-ai/langgraph-studio](https://github.com/langchain-ai/langgraph-studio) | ⭐ 1k+ | Desktop IDE for LangGraph. | Essential tool for visualizing your graph architecture and debugging state transitions locally. |
+| [langchain-ai/open-canvas](https://github.com/langchain-ai/open-canvas) | ⭐ 2k+ | Open-source alternative to ChatGPT Canvas. | A masterclass in building complex, production-ready React applications powered by a LangGraph backend. |

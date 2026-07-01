@@ -1,0 +1,211 @@
+---
+sidebar_position: 4
+sidebar_label: "Tool Use Pattern"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Tool Use Pattern
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| **Topic** | Tool Use Pattern (Function Calling) |
+| **Difficulty** | Beginner |
+| **Used For** | Giving LLMs the ability to affect the outside world (APIs, databases, bash) |
+| **Common Mistake** | Giving the agent too many tools at once, causing hallucinated arguments |
+| **Performance** | Adds network latency for tool execution; context bloats with large tool schemas |
+
+## 2. Real-World Analogy
+
+Bro, imagine a Master Chef in a kitchen. The Chef (the LLM) has the intelligence and the recipes, but they can't actually chop an onion with their bare hands.
+
+To cook a meal, they need tools: a knife, a blender, an oven. When the recipe calls for diced onions, the Chef selects the "Knife" tool, provides the "onion" as the target, and executes the action.
+
+If you give the Chef 50 appliances at once, they might get confused and try to blend the steak. That's why you only provide the tools necessary for the specific meal.
+
+| Kitchen Role | Agent Equivalent |
+|---|---|
+| The Master Chef | The LLM Reasoning Engine |
+| The Kitchen Appliances | Defined Tools (Functions) |
+| Picking the blender and adding ice | The LLM emitting a tool call with JSON arguments |
+| The blended smoothie | The Tool Execution Result returned to the LLM |
+
+## 3. Concept Explanation
+
+The Tool Use pattern (often powered by Function Calling under the hood) is what turns a passive chatbot into an active Agent.
+
+An LLM on its own is just a text-prediction engine trapped in a box. It cannot search the web, it cannot read your database, and it cannot send an email. By defining a "Tool" (a Python function with a strict schema description), you tell the LLM, "If you need to do X, output a specific JSON block. I will pause you, run the Python code, and feed the result back to you."
+
+Use this pattern literally anytime your agent needs real-time data or needs to mutate state in the real world. Don't use it if the answer is purely conceptual and already exists in the LLM's pre-training data.
+
+## 4. Syntax Table
+
+Here is how tool schemas are generally structured across modern frameworks (OpenAI, LangChain, Anthropic).
+
+| Field | Type | Purpose |
+|---|---|---|
+| `name` | `str` | The unique identifier for the tool (e.g., `get_weather`). |
+| `description` | `str` | CRITICAL: This is how the LLM knows *when* to use it. Must be detailed. |
+| `parameters` | `dict` | JSON Schema defining the expected arguments (e.g., `location: string`). |
+| `required` | `list` | Which arguments the LLM absolutely must provide. |
+
+## 5. Beginner Example
+
+Here is a minimal example using LangChain's `@tool` decorator.
+
+```python
+from langchain_core.tools import tool
+
+# The docstring is literally the prompt the LLM reads to understand the tool!
+@tool
+def get_weather(location: str) -> str:
+    """Returns the current weather for a given city or location."""
+    # In reality, this hits a weather API
+    if "Mumbai" in location:
+        return "Heavy rain, bro."
+    return "Sunny, 25C"
+
+tools = [get_weather]
+agent = llm.bind_tools(tools)
+
+# The agent decides to use the tool based on the user prompt
+response = agent.invoke("Do I need an umbrella in Mumbai?")
+print(response.tool_calls)
+# [{'name': 'get_weather', 'args': {'location': 'Mumbai'}}]
+```
+
+## 6. Real-World Engineering Example
+
+Bro, let's look at a production scenario. You are building a Customer Support Agent that needs to look up order statuses and issue refunds via an internal API.
+
+The senior move here is explicit error handling *inside* the tool, so if the API fails, the LLM gets a graceful error string it can explain to the user, instead of a Python stack trace blowing up your server.
+
+```python
+import requests
+from pydantic import BaseModel, Field
+from typing import Dict, Any
+
+class OrderLookupInput(BaseModel):
+    order_id: str = Field(description="The 6-digit alphanumeric order ID (e.g. A1B2C3)")
+
+def lookup_order_tool(input_data: OrderLookupInput) -> str:
+    """Use this to check the shipping status or details of a customer order."""
+    order_id = input_data.order_id
+
+    # 1. Input Validation
+    if len(order_id) != 6:
+        return f"Error: The order ID '{order_id}' is invalid. It must be exactly 6 characters. Ask the user to verify."
+
+    try:
+        # 2. Real world API call
+        response = requests.get(f"https://internal-api.baeschool.com/orders/{order_id}", timeout=5)
+        response.raise_for_status()
+
+        data = response.json()
+        return f"Order {order_id} status: {data['status']}. Expected delivery: {data['delivery_date']}."
+
+    except requests.exceptions.HTTPError as e:
+        if response.status_code == 404:
+            return f"Order {order_id} not found in the database. Ask if they ordered under a different email."
+        return f"API Error: {str(e)}. Tell the user our systems are temporarily down."
+    except requests.exceptions.Timeout:
+        return "Error: Database timeout. We will try again later."
+```
+
+## 7. Internal Working
+
+When you provide tools to an LLM, the framework injects the JSON schemas of those tools into the system prompt. The LLM processes the user prompt, realizes it needs outside info, and instead of generating text, it generates a structured `tool_call` object.
+
+The framework intercepts this `tool_call`, pauses the LLM, executes the local Python function, wraps the result in a `ToolMessage`, and sends it back to the LLM. The LLM then resumes its thinking and generates the final text.
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'User Request' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'LLM Reasoning Engine' }, position: { x: 250, y: 150 } },
+    { id: '3', type: 'data', data: { label: 'System Prompt (Tool Schemas)' }, position: { x: 500, y: 150 } },
+    { id: '4', type: 'data', data: { label: 'JSON Tool Call (e.g. get_weather)' }, position: { x: 250, y: 300 } },
+    { id: '5', type: 'tool', data: { label: 'Local Python Function execution' }, position: { x: 250, y: 450 } },
+    { id: '6', type: 'data', data: { label: 'Execution Result (String/JSON)' }, position: { x: -50, y: 300 } },
+    { id: '7', type: 'output', data: { label: 'Final Text Response' }, position: { x: 250, y: 600 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'asks question' },
+    { id: 'e3-2', source: '3', target: '2', label: 'defines capabilities', style: { strokeDasharray: '5,5' } },
+    { id: 'e2-4', source: '2', target: '4', label: 'decides to use tool' },
+    { id: 'e4-5', source: '4', target: '5', label: 'framework triggers' },
+    { id: 'e5-6', source: '5', target: '6', label: 'returns data' },
+    { id: 'e6-2', source: '6', target: '2', label: 'fed back as ToolMessage', type: 'step', targetHandle: 'left', sourceHandle: 'top' },
+    { id: 'e2-7', source: '2', target: '7', label: 'synthesizes answer' }
+  ]}
+/>
+
+## 8. Performance Table
+
+| Metric | Characteristic | Why |
+|---|---|---|
+| **Latency** | Medium to High | You incur the network cost of the LLM call, PLUS the execution time of your tool, PLUS a second LLM call to read the result. |
+| **Token Usage** | Variable | Passing 50 complex tool schemas into the system prompt consumes thousands of input tokens on *every* request. |
+| **Reliability** | Framework Dependent | Strong models (GPT-4) respect complex schemas. Weaker models might hallucinate arguments or ignore required fields. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| **How does the LLM know which tool to pick?** | It reads the `description` string provided in the tool's schema. If your descriptions overlap or are vague, the LLM will pick the wrong one. |
+| **What happens if a tool returns a massive 5MB JSON payload?** | The framework will feed it back to the LLM, exceeding the context window and crashing the application. You must filter or summarize tool outputs before returning them. |
+| **Can you force an LLM to use a specific tool?** | Yes, most APIs (OpenAI, Anthropic) have a `tool_choice` parameter where you can specify `"required"` or mandate a specific function name. |
+| **How do you handle authentication in tools?** | You do NOT pass API keys through the LLM prompt. The LLM only provides the arguments (e.g., `user_id`). The Python function running locally injects the secure API key into the request header. |
+| **What is a "ToolMessage"?** | It is a specific message type in the LLM conversation history that indicates the content is the result of a previously requested tool call. It must contain the matching `tool_call_id`. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, what happens if the LLM hallucinates an argument that isn't in your schema? Let's say your schema requires an `integer`, but the LLM passes `"five"`.
+
+If you just pass that straight to your Python code, your app crashes with a `TypeError`.
+
+The edge case is **Validation Failures**. You must use something like Pydantic to strictly validate the LLM's JSON *before* your business logic runs. If validation fails, you catch the `ValidationError` and send a `ToolMessage` back to the LLM saying, "Hey, you gave me a string but I need an integer. Try again." Let the agent fix its own mistake.
+
+## 11. Real-World Usage
+
+- **Customer Support Dashboards (Intercom/Zendesk)**: Agents use tools to `fetch_ticket_history`, `issue_refund`, and `update_address`.
+- **Data Engineering Agents**: Agents use tools to `query_sql_database`, `generate_matplotlib_chart`, and `save_to_s3`.
+- **RAG Systems**: Retrieval is literally just a tool call. The agent uses a `search_vector_db` tool to find documents before answering.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| **DO** write extremely clear, distinct descriptions for each tool. Include examples of when to use it in the docstring. | **DON'T** give the agent 30 tools at once. Route to specific sub-agents that have a curated set of 3-5 relevant tools. |
+| **DO** return string-based error messages from your tools so the LLM can understand why it failed. | **DON'T** let your Python function throw unhandled exceptions that crash the orchestrator. |
+| **DO** type-hint your tool arguments heavily (using Pydantic models). | **DON'T** trust the LLM's output blindly. Sanitize inputs before hitting databases. |
+
+## 13. Production Notes
+
+> ⚠️ **Context Window Blowouts from Search Tools**
+> The most common production crash is an agent using a `search_web` tool, and the tool returning the entire raw HTML of Wikipedia.
+> **Production Fix**: Your tool implementation MUST truncate, summarize, or parse the data. Never return more than ~1000 tokens of text from a single tool call back to the LLM.
+
+## 14. Common Mistakes
+
+| Mistake | Impact | The Fix (Code) |
+|---|---|---|
+| Overlapping descriptions | LLM uses the `update_user` tool when it should have used `create_user` | "Use this ONLY to update existing users. If the user is new, use `create_user`." |
+| Returning raw JSON blobs | Wastes tokens and confuses the LLM | Format the return: `f"User Name: {data['name']}, Status: {data['status']}"` |
+| Forgetting `tool_call_id` | OpenAI API throws an error: "Invalid message sequence" | Ensure your framework properly matches the tool execution result with the LLM's generated ID. |
+
+## 15. Related Topics
+- [ReAct Pattern](./react-pattern.mdx)
+- [Function Calling Deep Dive](#)
+- [API Tools](#)
+
+## 16. Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [langchain-ai/langchain](https://github.com/langchain-ai/langchain) | ⭐ 90k+ | Building applications with LLMs through composability. | Standardized the `@tool` decorator pattern for Python functions. |
+| [instructor-ai/instructor](https://github.com/jxnl/instructor) | ⭐ 6k+ | Structured outputs for LLMs. | The best library for forcing LLMs to output validated Pydantic models (which is what tool calling is under the hood). |
+| [Significant-Gravitas/AutoGPT](https://github.com/Significant-Gravitas/AutoGPT) | ⭐ 165k+ | Autonomous GPT-4 experiment. | Famous for giving the agent access to dangerous tools (bash, file system) to accomplish goals. |
+| [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers) | ⭐ 5k+ | MCP reference servers. | The new industry standard for defining and exposing tools over a standardized protocol. |
+| [bclavie/RAGatouille](https://github.com/bclavie/RAGatouille) | ⭐ 2k+ | Fast RAG pipelines. | A perfect example of a complex pipeline wrapped into a single tool for an agent to use. |

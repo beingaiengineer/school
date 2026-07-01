@@ -1,0 +1,242 @@
+---
+sidebar_position: 5
+sidebar_label: "Routing Pattern"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Routing Pattern
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| **Topic** | Routing Architecture Pattern |
+| **Difficulty** | Beginner |
+| **Used For** | Directing user queries to specialized agents, tools, or workflows |
+| **Common Mistake** | Using a massive LLM to do simple semantic routing, wasting money |
+| **Performance** | Adds one hop of latency, but massively improves downstream accuracy |
+
+## 2. Real-World Analogy
+
+Bro, think about calling a massive telecom company's customer support line.
+
+You don't immediately talk to a network engineer. You first talk to the **IVR System (The Router)**. It says, "Press 1 for Billing, Press 2 for Tech Support, Press 3 for Sales."
+
+If you press 1, you are routed to the Billing Team. That team ONLY has tools for billing. They don't know how to fix a router. This is exactly how the Routing pattern works in Agent architectures. A cheap, fast Router looks at the user's intent and sends them to a highly specialized workflow.
+
+| Call Center Role | Agent Equivalent |
+|---|---|
+| The IVR menu / Receptionist | The Router Agent (or semantic router) |
+| The Customer's problem | The User Prompt |
+| The specialized support desks | Sub-agents or specific tool-chains |
+| Transferring the call | Graph edge transitions |
+
+## 3. Concept Explanation
+
+The Routing pattern is the foundation of multi-agent systems and complex workflows. Instead of having one massive "God Agent" with 50 tools trying to solve everything (which leads to hallucinations and context blowouts), you use a Router.
+
+The Router takes the user input and classifies it. Based on that classification, the system routes the request to a specific sub-graph, sub-agent, or RAG pipeline.
+
+You can implement routing in three ways:
+1. **LLM Router**: Ask a fast model (like Haiku or GPT-4o-mini) to categorize the text.
+2. **Semantic Router**: Use embeddings to measure vector similarity against known query types (cheaper and faster than LLM calls).
+3. **Keyword Router**: Simple regex or keyword matching (free, but rigid).
+
+Use routing whenever your application has distinct "modes" or domains of operation.
+
+## 4. Syntax Table
+
+Here is how you typically define a routing condition in LangGraph.
+
+| Component | Type | Purpose |
+|---|---|---|
+| `state` | `dict` | Contains the user query and the current classification. |
+| `router_function` | `Callable` | Analyzes state, returns a string literal matching a node name. |
+| `add_conditional_edges` | `Graph Method` | Maps the router function's output to actual nodes in the graph. |
+
+## 5. Beginner Example
+
+Here is a basic LLM-based router in plain Python.
+
+```python
+from pydantic import BaseModel, Field
+
+class RouteClassification(BaseModel):
+    category: str = Field(description="Must be 'billing', 'technical', or 'general'")
+
+def route_query(user_query: str) -> str:
+    """The Router: Classifies the query."""
+    router_llm = llm.with_structured_output(RouteClassification)
+
+    prompt = f"Classify this user query: '{user_query}'"
+    result = router_llm.invoke(prompt)
+
+    if result.category == 'billing':
+        return execute_billing_agent(user_query)
+    elif result.category == 'technical':
+        return execute_tech_agent(user_query)
+    else:
+        return standard_rag_pipeline(user_query)
+```
+
+## 6. Real-World Engineering Example
+
+Bro, let's look at a production setup using LangGraph's conditional edges. We want to route between a specialized Math Expert, a Search Expert, and a General Chatbot.
+
+We use a fast, cheap model (GPT-4o-mini) to make the routing decision to save money.
+
+```python
+from typing import Literal
+from pydantic import BaseModel
+from langgraph.graph import StateGraph, START, END
+
+# 1. Define the routing schema
+class RouteDecision(BaseModel):
+    """Decide which expert to route the user to."""
+    expert: Literal["math", "search", "general"]
+
+# 2. Define the routing function
+def routing_node(state: dict):
+    """Analyzes the user's input and returns the next node to visit."""
+    user_input = state["messages"][-1].content
+
+    # Use a cheap, fast model for routing
+    fast_llm = llm_mini.with_structured_output(RouteDecision)
+    decision = fast_llm.invoke(
+        f"Route this query to the right expert: {user_input}"
+    )
+
+    # We store the decision in state, but also return it for LangGraph's conditional edge
+    return {"route": decision.expert}
+
+def conditional_edge(state: dict):
+    """LangGraph calls this to figure out where to go next."""
+    return state["route"] # returns 'math', 'search', or 'general'
+
+# 3. Build the graph
+builder = StateGraph(dict)
+
+# Add our specialized nodes
+builder.add_node("router", routing_node)
+builder.add_node("math", math_agent_node)
+builder.add_node("search", search_agent_node)
+builder.add_node("general", general_chat_node)
+
+builder.add_edge(START, "router")
+
+# This is the magic. The output of 'conditional_edge' dictates the path.
+builder.add_conditional_edges(
+    "router",
+    conditional_edge,
+    {
+        "math": "math",       # If edge returns 'math', go to math node
+        "search": "search",
+        "general": "general"
+    }
+)
+
+builder.add_edge("math", END)
+builder.add_edge("search", END)
+builder.add_edge("general", END)
+
+graph = builder.compile()
+```
+
+## 7. Internal Working
+
+Under the hood, a semantic router works by taking the user's string, embedding it into a vector, and comparing it against pre-computed vectors of "example queries" for each route. An LLM router works by generating a structured JSON object containing an Enum.
+
+In a graph framework, the Router is just a node that executes, modifies the state, and then a framework-level `conditional_edge` function reads that state and dynamically chooses the target of the next edge.
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'User Query' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Router Node (Fast LLM)' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'warning', data: { label: 'Conditional Edge' }, position: { x: 250, y: 200 } },
+    { id: '4', type: 'process', data: { label: 'Billing Agent' }, position: { x: 0, y: 350 } },
+    { id: '5', type: 'process', data: { label: 'Tech Support Agent' }, position: { x: 250, y: 350 } },
+    { id: '6', type: 'process', data: { label: 'General RAG' }, position: { x: 500, y: 350 } },
+    { id: '7', type: 'tool', data: { label: 'Billing DB' }, position: { x: 0, y: 500 } },
+    { id: '8', type: 'tool', data: { label: 'Jira API' }, position: { x: 250, y: 500 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'input' },
+    { id: 'e2-3', source: '2', target: '3', label: 'returns literal' },
+    { id: 'e3-4', source: '3', target: '4', label: '"billing"', type: 'step', animated: true },
+    { id: 'e3-5', source: '3', target: '5', label: '"tech"', type: 'step' },
+    { id: 'e3-6', source: '3', target: '6', label: '"general"', type: 'step' },
+    { id: 'e4-7', source: '4', target: '7', label: 'safe access' },
+    { id: 'e5-8', source: '5', target: '8', label: 'safe access' }
+  ]}
+/>
+
+## 8. Performance Table
+
+| Metric | Characteristic | Why |
+|---|---|---|
+| **Latency** | +500ms to 1s | An LLM router adds a network hop before the real work begins. Semantic routers add &lt;50ms. |
+| **Token Usage** | Very Low | The router prompt is usually tiny (just the query and the category definitions). |
+| **Scalability** | Excellent | You can add 50 new routes without modifying existing downstream agents. |
+| **Reliability** | High | Specialized agents with 3 tools hallucinate far less than one agent with 30 tools. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| **Why use a Router instead of one big agent with many tools?** | To prevent "tool sprawl." A single agent with 20 tools will struggle to pick the right one and will waste tokens loading 20 schemas. Routing isolates context. |
+| **What is Semantic Routing and when should you use it?** | Semantic routing uses vector embeddings instead of an LLM call to classify intent. Use it when you have high traffic, need ultra-low latency, and have clear, distinct categories. |
+| **How do you handle ambiguous queries in a Router?** | Include a "fallback" or "general" category. If the router's confidence is low, send it to a general chatbot that can ask clarifying questions. |
+| **Can a Router route to another Router?** | Yes. This is a Hierarchical Architecture. A master router splits B2B vs B2C, and the B2B router splits Sales vs Support. |
+| **What is the difference between a Router and a Supervisor?** | A Router fires once and hands off control completely. A Supervisor acts as a manager, handing off tasks to workers but taking control back after they finish to review the work. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, what happens if the user query asks for two things at once? "Can you refund my last order, and also tell me how to reset my router?"
+
+A standard Router forces a single path. It might pick Billing and ignore the tech support question entirely.
+
+The fix is **Multi-Routing or Plan-and-Execute integration**. Instead of returning a single literal string, the Router returns a `List[str]` of required sub-agents. The graph then spins up parallel branches (Parallelization Pattern) to handle both requests, and synthesizes the answers at the end.
+
+## 11. Real-World Usage
+
+- **Customer Support Triage (Klarna/Zendesk)**: Every inbound ticket hits a router. "Refunds" go to an automated agent. "Fraud" goes immediately to a human.
+- **Enterprise Search (Glean/Perplexity)**: When you type a query, a router decides if it should search the Web, search internal Google Drive, or just do pure math calculation.
+- **Voice Assistants (Siri/Alexa)**: The intent recognition layer is a massive semantic router directing your voice to the "Weather skill" vs the "Spotify skill".
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| **DO** use fast, cheap models (GPT-4o-mini, Claude Haiku) for LLM routing. You don't need Opus to categorize an email. | **DON'T** let the router generate the final answer. Its only job is to return a classification label. |
+| **DO** use structured outputs (Enums) so your router guarantees a valid edge name. | **DON'T** rely on regex parsing of a generic text response to determine the route. |
+| **DO** define clear, mutually exclusive categories in your routing prompt. | **DON'T** create overlapping categories (e.g., "Tech Support" and "IT Help"). The model will guess randomly. |
+
+## 13. Production Notes
+
+> ⚠️ **Semantic Routing Drift**
+> If you use Semantic Routing (embeddings), be aware that user language changes. If users start calling a "refund" a "chargeback," your vector similarity might fail.
+> **Production Fix**: Maintain an active evaluation dataset of real user queries and periodically update the example vectors in your semantic router.
+
+## 14. Common Mistakes
+
+| Mistake | Impact | The Fix (Code) |
+|---|---|---|
+| Using a heavy LLM for routing | High latency (2s+) just to figure out what to do | Switch to `gpt-4o-mini` or use a library like `semantic-router`. |
+| Missing a fallback route | Graph crashes when it encounters a string it doesn't recognize | `expert: Literal["math", "search", "fallback"]` |
+| Routing on massive documents | Token limits hit, router gets distracted | Route based on the *summary* or the first 500 characters of the document. |
+
+## 15. Related Topics
+- [Supervisor Pattern](#)
+- [Parallelization Pattern](./parallelization-pattern.mdx)
+- [LangGraph State Machines](../langchain-langgraph/langgraph-state-machines.mdx)
+
+## 16. Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [aurelio-labs/semantic-router](https://github.com/aurelio-labs/semantic-router) | ⭐ 3k+ | Superfast decision-making layer for LLMs and agents. | The industry standard for embedding-based (non-LLM) semantic routing. |
+| [langchain-ai/langgraph](https://github.com/langchain-ai/langgraph) | ⭐ 8k+ | Build resilient language agents as graphs. | The `add_conditional_edges` method is the gold standard for stateful routing. |
+| [run-llama/llama_index](https://github.com/run-llama/llama_index) | ⭐ 35k+ | Data framework for LLM applications. | Contains excellent built-in abstractions for Query Routers (routing between different RAG indices). |
+| [microsoft/autogen](https://github.com/microsoft/autogen) | ⭐ 35k+ | Programming framework for agentic AI. | Uses routing extensively in its GroupChat implementations to decide who speaks next. |
+| [haystack/haystack](https://github.com/deepset-ai/haystack) | ⭐ 14k+ | LLM orchestration framework. | Features robust conditional routing pipelines for document processing and RAG. |

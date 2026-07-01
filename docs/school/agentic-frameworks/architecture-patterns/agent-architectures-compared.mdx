@@ -1,0 +1,219 @@
+---
+sidebar_position: 8
+sidebar_label: "Architectures Compared"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Agent Architectures Compared
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| **Topic** | Comparison of Core Agent Architecture Patterns |
+| **Difficulty** | Intermediate |
+| **Used For** | Deciding which pattern to use based on latency, complexity, and task requirements |
+| **Common Mistake** | Using a heavy Plan-and-Execute pattern for a simple 1-step retrieval task |
+| **Performance** | Varies wildly from 500ms (Routing) to 30s+ (Plan-and-Execute) |
+
+## 2. Real-World Analogy
+
+Bro, imagine you are a general contractor building a house. How you manage your team depends entirely on the task at hand.
+
+- **Routing**: A customer calls asking for an electrician. You don't try to solve their problem; you just look at your directory and transfer the call to the electrician. Fast, simple, done.
+- **ReAct**: You are fixing a leaky pipe. You look at the pipe (Observe), realize you need a wrench (Thought), grab the wrench (Action), and look at the pipe again (Observe). You do it all yourself in a tight loop.
+- **Plan & Execute**: You are building the entire foundation. You don't just start digging. You sit down, draw the blueprints (Plan), list the 5 steps, and hand them to your workers one by one (Execute).
+- **Reflection**: You write an important contract. You draft it, give it to a lawyer to review, fix the mistakes they found, and then finalize it.
+
+| Contractor Workflow | Agent Pattern | When to use it |
+|---|---|---|
+| Transferring the call | **Routing** | Directing specific queries to specific workflows |
+| Fixing a pipe dynamically | **ReAct** | General problem solving with a few tools |
+| Drawing blueprints first | **Plan-and-Execute** | Long, complex, multi-step processes |
+| Reviewing a contract draft | **Reflection** | Writing code, creative writing, high-accuracy tasks |
+
+## 3. Concept Explanation
+
+Choosing the right architecture is the most important decision in agent engineering.
+
+If you use ReAct for a 20-step data analysis task, the agent will get confused, bloat its context window, and drift off topic by step 14. If you use Plan-and-Execute to check the weather, you will waste 10 seconds and $0.05 on API calls just to write a "plan" for a 1-step task.
+
+You must fit the pattern to the problem.
+
+**ReAct** is the default for generic tool use. **Plan-and-Execute** is for long-horizon goals. **Reflection** is for quality assurance. **Routing** is for scaling up to many capabilities without confusing the model. **Parallelization** is for speed when steps are independent.
+
+## 4. Syntax Table
+
+Here is a conceptual table summarizing when to use each pattern based on system requirements.
+
+| Pattern | Best For | Typical Latency | Risk |
+|---|---|---|---|
+| **ReAct** | General chat, 1-3 tool calls | Medium (2-5s) | Context drift on long tasks, infinite loops |
+| **Plan-and-Execute** | Long-horizon, multi-step tasks | High (10-30s) | Inflexible if the environment changes drastically |
+| **Reflection** | Code generation, writing | High (10-20s) | Infinite review loops if the model can't fix the flaw |
+| **Routing** | Front-door dispatching | Very Low (&lt;1s) | Misclassification sending user to wrong agent |
+| **Parallelization** | Independent data processing | Low (Time of slowest task) | Hitting API rate limits (429 errors) |
+
+## 5. Beginner Example
+
+Bro, the easiest way to understand the difference is to see how the prompt changes.
+
+```python
+# ReAct Prompt
+"You have tools. Think about what to do, use a tool, observe the result, and repeat until done."
+
+# Plan-and-Execute Prompts
+planner = "Break the user's goal into 5 sequential steps."
+executor = "Execute this specific step: {step}. Do not worry about the final goal."
+
+# Reflection Prompts
+generator = "Write a python script to {task}."
+reviewer = "Find the bugs in this script: {script}."
+```
+
+## 6. Real-World Engineering Example
+
+Let's look at how a Senior Engineer might combine these patterns into a **Compound AI System**. You rarely use just one pattern in production.
+
+Imagine a "Code Migration Bot" that converts Python 2 code to Python 3.
+
+```python
+def process_migration(user_request: str, repo_path: str):
+    """A compound agent combining Routing, Plan-and-Execute, and Reflection."""
+
+    # 1. ROUTING: Check if this is a migration request or just a chat question
+    route = router_agent.invoke(user_request)
+    if route != "migration":
+        return general_chat.invoke(user_request)
+
+    # 2. PLAN & EXECUTE: Break the migration into steps
+    # E.g. [1. Migrate syntax, 2. Update dependencies, 3. Run tests]
+    plan = planner_agent.invoke({"repo": repo_path})
+
+    for step in plan:
+        # 3. REFLECTION (inside the execution loop)
+        # For the "Migrate syntax" step, we draft it, test it, and reflect if it fails
+        max_retries = 3
+        current_code = repo_path.read()
+
+        for _ in range(max_retries):
+            # Generate
+            draft_code = worker_agent.invoke(f"Do step: {step} on {current_code}")
+
+            # Evaluate (Environment Reflection)
+            test_results = run_unit_tests(draft_code)
+            if test_results.passed:
+                current_code = draft_code
+                break # Success, move to next step in the Plan
+
+            # Reflect
+            critique = f"Tests failed: {test_results.errors}. Fix the code."
+            current_code = worker_agent.invoke(critique + draft_code)
+
+    return current_code
+```
+
+## 7. Internal Working
+
+The core difference between these architectures is how they manage the **State** and the **Control Flow**.
+
+- ReAct keeps everything in one massive `messages` array.
+- Plan-and-Execute keeps a `List[str]` of pending tasks.
+- Reflection keeps a `List[str]` of previous flaws and drafts.
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'ReAct' }, position: { x: 0, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Think -> Act -> Observe Loop' }, position: { x: 0, y: 100 } },
+
+    { id: '3', type: 'core', data: { label: 'Plan & Execute' }, position: { x: 250, y: 0 } },
+    { id: '4', type: 'process', data: { label: 'Plan' }, position: { x: 250, y: 100 } },
+    { id: '5', type: 'tool', data: { label: 'Execute Step 1' }, position: { x: 250, y: 200 } },
+    { id: '6', type: 'tool', data: { label: 'Execute Step 2' }, position: { x: 250, y: 300 } },
+
+    { id: '7', type: 'core', data: { label: 'Reflection' }, position: { x: 500, y: 0 } },
+    { id: '8', type: 'process', data: { label: 'Draft' }, position: { x: 500, y: 100 } },
+    { id: '9', type: 'warning', data: { label: 'Critique' }, position: { x: 500, y: 200 } },
+    { id: '10', type: 'process', data: { label: 'Rewrite' }, position: { x: 500, y: 300 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2' },
+    { id: 'e2-2', source: '2', target: '2', label: 'loops', type: 'step', targetHandle: 'right', sourceHandle: 'right' },
+
+    { id: 'e3-4', source: '3', target: '4' },
+    { id: 'e4-5', source: '4', target: '5' },
+    { id: 'e5-6', source: '5', target: '6' },
+
+    { id: 'e7-8', source: '7', target: '8' },
+    { id: 'e8-9', source: '8', target: '9' },
+    { id: 'e9-10', source: '9', target: '10' },
+    { id: 'e10-9', source: '10', target: '9', label: 'loops', type: 'step', targetHandle: 'left', sourceHandle: 'left' }
+  ]}
+/>
+
+## 8. Performance Table
+
+| Architecture | Setup Complexity | Token Cost | Reliability on Complex Tasks |
+|---|---|---|---|
+| **Routing** | Low | Very Low | N/A (Just dispatches) |
+| **ReAct** | Low | Medium | Low (Drifts easily) |
+| **Reflection** | Medium | High | Very High (Self-corrects) |
+| **Plan-and-Execute** | High | Very High | High (Stays focused) |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| **If you had to build an agent to write a 50-page ebook, which pattern do you use?** | Plan-and-Execute. ReAct would lose context by page 3. You need a Planner to write the 50-chapter outline, and an Executor to write one chapter at a time. |
+| **Why is ReAct considered brittle for production?** | Because the "Think" and "Act" logic is entirely dependent on the LLM's prompt adherence. If it gets confused by a tool output, the single loop breaks. Structured patterns (like graphs) force the control flow explicitly. |
+| **What is a "Compound AI System"?** | It is a system that uses multiple models, tools, and architecture patterns together (e.g., a fast model for Routing, a smart model for Planning, and an environment-driven Reflection loop for coding). |
+| **Which pattern generates the highest API costs?** | Plan-and-Execute combined with Reflection. You are making an LLM call for the plan, an LLM call for the execution of step 1, an LLM call for the critique of step 1, an LLM call for the rewrite... it adds up fast. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, what if you use a Router, but the user's query requires *both* the Math agent and the Web Search agent?
+
+If your router only returns a single string, the system fails.
+
+The edge case is **Multi-intent Routing**. You must design your router to return an array of routes (e.g., `["math", "search"]`), and then transition into a **Parallelization** pattern to run both agents at the same time, followed by a Synthesizer node to combine their answers.
+
+## 11. Real-World Usage
+
+- **ReAct**: Standard ChatGPT UI when using plugins or advanced data analysis.
+- **Routing + Parallelization**: Perplexity AI (Routes between web search, academic papers, and YouTube transcripts, fetches them in parallel).
+- **Reflection**: GitHub Copilot Workspace (Writes code, runs tests, reads errors, fixes code).
+- **Plan-and-Execute**: Devin (Reads issue, creates plan, executes file edits).
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| **DO** start simple. Use a basic ReAct loop or standard sequential chain before jumping into a 10-node Plan-and-Execute graph. | **DON'T** use Reflection if you don't have a reliable, objective way to evaluate the draft. LLMs critiquing themselves subjectively often degrades quality. |
+| **DO** use fast, cheap models for Routing and Planning (if the plan is simple), and reserve your heavy models (Opus, GPT-4o) for Execution and Reflection. | **DON'T** rely on the LLM to figure out the control flow. Hardcode your architecture patterns using graph frameworks. |
+
+## 13. Production Notes
+
+> ⚠️ **The Graph Complexity Trap**
+> Bro, do not build a 50-node graph with dynamic routing, nested reflection loops, and parallel execution right out of the gate.
+> **Production Fix**: Debugging a massive state machine where an LLM controls the edges is a nightmare. Build your agent iteratively. Start with a Router. Ensure it works 99% of the time. Then add a simple Executor. Only add Reflection when you prove the Executor is making mistakes.
+
+## 14. Common Mistakes
+
+| Mistake | Impact | The Fix (Code) |
+|---|---|---|
+| Using ReAct for data extraction | Wastes 5 seconds "thinking" about extracting an email | Just use standard `with_structured_output` (no agent needed). |
+| Hardcoding logic in prompts | Prompt fragility; system breaks if the LLM slightly changes its wording | Enforce architecture through code (e.g., LangGraph state transitions). |
+
+## 15. Related Topics
+- [ReAct Pattern](./react-pattern.mdx)
+- [Plan and Execute](./plan-and-execute.mdx)
+- [Reflection Pattern](./reflection-and-reflexion.mdx)
+
+## 16. Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [langchain-ai/langgraph](https://github.com/langchain-ai/langgraph) | ⭐ 8k+ | Build resilient language agents as graphs. | The best framework for explicitly coding these different architectures as State Machines. |
+| [microsoft/autogen](https://github.com/microsoft/autogen) | ⭐ 35k+ | Multi-agent framework. | Excellent for building Reflection and Routing architectures using conversational Group Chats. |
+| [crewAIInc/crewAI](https://github.com/joaomdmoura/crewAI) | ⭐ 18k+ | Framework for orchestrating role-playing autonomous agents. | Native support for Sequential and Hierarchical (Plan-and-Execute style) architectures. |
