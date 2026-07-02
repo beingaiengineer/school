@@ -54,15 +54,15 @@ Below are the topics that make up this course. This list serves as the structura
 > **Jules: Pick the first batch of `- [ ]` items (up to 10) under `### Next Task`. If fewer than 10, promote from `### Backlog`.**
 
 ### Next Task
-- [ ] `inc-001` | Create `what-is-an-incident.mdx` | Branch: `jules/incident-management-batch`
-- [ ] `inc-002` | Create `severity-levels.mdx` | Branch: `jules/incident-management-batch`
-- [ ] `inc-003` | Create `on-call-culture.mdx` | Branch: `jules/incident-management-batch`
-- [ ] `inc-004` | Create `incident-response-process.mdx` | Branch: `jules/incident-management-batch`
-- [ ] `inc-005` | Create `incident-commander-role.mdx` | Branch: `jules/incident-management-batch`
-- [ ] `inc-006` | Create `runbooks.mdx` | Branch: `jules/incident-management-batch`
-- [ ] `inc-007` | Create `blameless-postmortems.mdx` | Branch: `jules/incident-management-batch`
-- [ ] `inc-008` | Create `incident-communication.mdx` | Branch: `jules/incident-management-batch`
-- [ ] `inc-009` | Create `incident-tools.mdx` | Branch: `jules/incident-management-batch`
+- [x] `inc-001` | Create `what-is-an-incident.mdx` | Branch: `jules/incident-management-batch`
+- [x] `inc-002` | Create `severity-levels.mdx` | Branch: `jules/incident-management-batch`
+- [x] `inc-003` | Create `on-call-culture.mdx` | Branch: `jules/incident-management-batch`
+- [x] `inc-004` | Create `incident-response-process.mdx` | Branch: `jules/incident-management-batch`
+- [x] `inc-005` | Create `incident-commander-role.mdx` | Branch: `jules/incident-management-batch`
+- [x] `inc-006` | Create `runbooks.mdx` | Branch: `jules/incident-management-batch`
+- [x] `inc-007` | Create `blameless-postmortems.mdx` | Branch: `jules/incident-management-batch`
+- [x] `inc-008` | Create `incident-communication.mdx` | Branch: `jules/incident-management-batch`
+- [x] `inc-009` | Create `incident-tools.mdx` | Branch: `jules/incident-management-batch`
 
 ### Backlog
 _Empty_
@@ -70,5 +70,6 @@ _Empty_
 ### Completed This Cycle
 | BAE ID | What's Done (High Level) |
 |---|---|
+| `[BAE-INC-1]` | Created 9 incident management core topic pages |
 
 
