@@ -1,0 +1,205 @@
+---
+sidebar_position: 3
+sidebar_label: "OWASP Top 10"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# OWASP Top 10 Vulnerabilities
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | OWASP Top 10 |
+| Difficulty | Intermediate |
+| Used For | Understanding and mitigating the most critical web application security risks |
+| Common Mistake | Assuming a WAF (Web Application Firewall) will magically fix all these issues |
+| Performance | Checking for these issues requires robust validation logic, adding minimal CPU overhead |
+
+## 2. Real-World Analogy
+
+| Physical World | Software Equivalent |
+|---|---|
+| Serving adulterated street food | Injection Flaws (SQLi) |
+| Leaving the master key on the reception desk | Broken Access Control |
+| Using an easily guessable locker password | Identification and Authentication Failures |
+| Using expired medicines from the cabinet | Vulnerable and Outdated Components |
+
+Bro, think about a busy street food vendor in Mumbai. If the vendor doesn't check where their ingredients come from, they might serve adulterated food (Injection). If they leave the cash box open while cooking, anyone can take money (Broken Access Control). The OWASP Top 10 is basically the health and safety checklist for your web applications, highlighting the 10 most common ways people get sick (hacked) on the internet.
+
+## 3. Concept Explanation
+
+The Open Worldwide Application Security Project (OWASP) Top 10 is a standard awareness document for developers and web application security. It represents a broad consensus about the most critical security risks to web applications.
+
+Why does it exist? Because developers were making the exact same mistakes over and over again. The list categorizes these mistakes so teams can focus their security testing and code reviews on the highest-impact areas.
+
+When to use it? The OWASP Top 10 should be the baseline for your secure coding standards, your automated security scanning (SAST/DAST), and your penetration testing requirements.
+
+## 4. Syntax Table
+
+Here is a quick look at some key OWASP categories and their primary mitigations:
+
+| OWASP Category | Example Vulnerability | Primary Mitigation |
+|---|---|---|
+| **A01: Broken Access Control** | User A viewing User B's profile via ID tampering in URL | Implement strict server-side RBAC/ABAC |
+| **A02: Cryptographic Failures** | Storing passwords in plaintext or MD5 | Use Argon2 or bcrypt for passwords; TLS for transit |
+| **A03: Injection** | SQL Injection via a login form | Parameterized Queries (Prepared Statements) |
+| **A04: Insecure Design** | Lacking business logic rate limiting (e.g., infinite coupon usage) | Threat modeling and secure architecture reviews |
+| **A06: Vulnerable Components** | Using an old version of Log4j | Automated dependency scanning (Dependabot/Snyk) |
+
+## 5. Beginner Example
+
+Let's look at a classic A03: Injection vulnerability.
+
+```javascript
+// DON'T: Vulnerable to SQL Injection
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+  // An attacker sends username: "admin' --"
+  const query = `SELECT * FROM users WHERE username='${username}' AND password='${password}'`;
+  const result = await db.execute(query);
+  // The query becomes: SELECT * FROM users WHERE username='admin' --' AND password='...'
+  // The comment '--' ignores the password check. Attacker logs in as admin.
+});
+
+// DO: Parameterized Query
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+  const query = `SELECT * FROM users WHERE username = ? AND password = ?`;
+  // The DB driver safely escapes the inputs.
+  const result = await db.execute(query, [username, password]);
+});
+```
+
+## 6. Real-World Engineering Example
+
+Bro, let's look at A01: Broken Access Control, currently the #1 vulnerability on the list. Imagine an API for a SaaS application.
+
+```javascript
+const express = require('express');
+const app = express();
+
+// A vulnerable endpoint
+app.get('/api/invoices/:id', authenticateToken, async (req, res) => {
+  const invoiceId = req.params.id;
+
+  // DON'T do this! We fetched the invoice, but we NEVER checked if the logged-in user owns it!
+  // User ID 5 could pass invoice ID 999 (which belongs to User 2) and read it.
+  const invoice = await db.Invoice.findByPk(invoiceId);
+  return res.json(invoice);
+});
+
+// A secure endpoint implementing Access Control
+app.get('/api/secure/invoices/:id', authenticateToken, async (req, res) => {
+  const invoiceId = req.params.id;
+  const loggedInUserId = req.user.id; // Extracted from JWT by authenticateToken middleware
+
+  // DO this! Query the database ensuring the invoice belongs to the requesting user.
+  const invoice = await db.Invoice.findOne({
+    where: {
+      id: invoiceId,
+      userId: loggedInUserId // Crucial authorization check
+    }
+  });
+
+  if (!invoice) {
+    return res.status(404).send('Invoice not found or access denied');
+  }
+
+  return res.json(invoice);
+});
+```
+This is how you enforce access control at the data layer, ensuring users can only touch their own resources.
+
+## 7. Internal Working
+
+How does an Injection attack actually bypass the database engine? Let's trace it.
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'tool', data: { label: 'Attacker Input ("admin\' --")' }, position: { x: 50, y: 50 } },
+    { id: '2', type: 'process', data: { label: 'String Concatenation in Code' }, position: { x: 50, y: 150 } },
+    { id: '3', type: 'warning', data: { label: 'Malformed SQL String Generated' }, position: { x: 50, y: 250 } },
+    { id: '4', type: 'core', data: { label: 'DB Query Parser' }, position: { x: 50, y: 350 } },
+    { id: '5', type: 'output', data: { label: 'Parser treats "--" as a comment, dropping auth logic' }, position: { x: 50, y: 450 } },
+    { id: '6', type: 'data', data: { label: 'Admin Access Granted' }, position: { x: 50, y: 550 } },
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true },
+    { id: 'e2-3', source: '2', target: '3', animated: true },
+    { id: 'e3-4', source: '3', target: '4', animated: true },
+    { id: 'e4-5', source: '4', target: '5', animated: true },
+    { id: 'e5-6', source: '5', target: '6', animated: true, style: { stroke: 'red' } },
+  ]}
+/>
+
+## 8. Performance Table
+
+Implementing mitigations for OWASP Top 10 involves runtime checks.
+
+| Mitigation | Performance Impact | Note |
+|---|---|---|
+| Parameterized Queries | Extremely Low | Actually improves DB performance via query plan caching. |
+| Role/Access Checks | Low | Usually a fast DB index hit or in-memory JWT claim check. |
+| Software Composition Analysis (SCA) | Zero (Runtime) | Scans run in the CI/CD pipeline, not in production. |
+| Strong Cryptography | Low/Medium | TLS termination is often offloaded to Load Balancers. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between Authentication and Authorization? | Authentication is proving who you are (login). Authorization is verifying what you are allowed to do (access control). |
+| How do you prevent SQL Injection? | Always use parameterized queries (prepared statements) or an ORM. Never concatenate user input into SQL strings. |
+| What is Cross-Site Scripting (XSS)? | An injection attack where malicious scripts are injected into trusted websites, executing in the victim's browser. |
+| How do you mitigate Vulnerable Components? | Use dependency scanning tools (Dependabot, Snyk) and regularly update third-party libraries. |
+| What is a Cryptographic Failure? | Storing passwords in plaintext, using weak hashing algorithms like MD5, or transmitting sensitive data over HTTP instead of HTTPS. |
+
+## 10. Tricky Questions & Edge Cases
+
+**Question:** We use a modern ORM (like Prisma or Entity Framework). Are we completely immune to SQL Injection?
+**Answer:** Mostly, but not entirely, bro! ORMs handle standard queries safely. However, most ORMs provide a `rawQuery` or `executeRaw` escape hatch for complex queries. If developers concatenate strings inside those raw queries, you are wide open to SQL injection again.
+
+**Question:** If we sanitize all HTML input, are we safe from XSS?
+**Answer:** Sanitizing HTML is hard. Attackers can use bizarre encodings, SVG tags, or obfuscated JavaScript to bypass simple regex filters. The safest approach is context-aware output encoding (which modern frameworks like React do by default) and implementing a strong Content Security Policy (CSP) header.
+
+## 11. Real-World Usage
+
+Every major tech company uses the OWASP Top 10 to calibrate their security tooling. When Netflix or Uber set up their CI/CD pipelines, they integrate Static Application Security Testing (SAST) tools specifically configured to flag code patterns that lead to OWASP Top 10 vulnerabilities before the code can be merged into the `main` branch.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Enforce access control checks on every single API endpoint that touches data. | Assume that hiding a UI button prevents an attacker from calling the underlying API. |
+| Use strong, salted hashes (bcrypt, Argon2) for passwords. | Use MD5 or SHA1 for anything security-related. |
+| Automate dependency scanning in your CI/CD pipeline. | Manually track library versions in a spreadsheet. |
+| Train developers on the OWASP Top 10 during onboarding. | Assume developers naturally know secure coding practices. |
+
+## 13. Production Notes
+
+> ⚠️ **Warning on Logging**
+> A4: Insecure Design often manifests as Security Misconfiguration (A05). A classic production failure is leaving debug modes or stack traces enabled in the production environment. This provides attackers with a roadmap of your system architecture and database schema. Always set `NODE_ENV=production` (or equivalent) and ensure global error handlers return generic messages.
+
+## 14. Common Mistakes
+
+| Mistake | Why it's bad | How to fix it |
+|---|---|---|
+| Trusting Client-Side State | Attackers can modify cookies, JWT payloads (if you don't verify the signature), and hidden form fields. | Never trust the client. Re-verify all business logic and access control on the backend. |
+| Default Passwords | Leaving admin interfaces (like database admin tools or routers) with default credentials is an instant breach. | Enforce forced password changes on first login and disable default accounts. |
+| Missing Rate Limiting | Allows attackers to brute-force logins or cause Denial of Service. | Implement IP and user-based rate limiting on sensitive endpoints. |
+
+## 15. Related Topics
+- [Security Mindset](./security-mindset.mdx)
+- [Authentication Deep Dive](./authentication-deep-dive.mdx)
+- [Authorization & RBAC](./authorization-rbac-abac.mdx)
+
+## 16. Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [OWASP/Top10](https://github.com/OWASP/Top10) | ⭐ 4k+ | The official OWASP Top 10 repository. | The source of truth for the list, including methodology and data. |
+| [OWASP/NodeGoat](https://github.com/OWASP/NodeGoat) | ⭐ 3.5k+ | A deliberately insecure Node.js application. | Great for hands-on learning. It contains examples of all the Top 10 vulnerabilities for you to exploit and fix. |
+| [OWASP/JuiceShop](https://github.com/OWASP/NodeGoat) | ⭐ 10k+ | The most modern and sophisticated insecure web application. | Another fantastic training ground for finding OWASP vulnerabilities. |
+| [sqlmapproject/sqlmap](https://github.com/sqlmapproject/sqlmap) | ⭐ 30k+ | Automatic SQL injection and database takeover tool. | Shows how easily A03 (Injection) can be exploited using automated tools. |
+| [dependabot/dependabot-core](https://github.com/dependabot/dependabot-core) | ⭐ 4k+ | Automated dependency updates. | The core engine behind GitHub's built-in defense against A06 (Vulnerable Components). |

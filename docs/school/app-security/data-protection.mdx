@@ -1,0 +1,218 @@
+---
+sidebar_position: 10
+sidebar_label: "Data Protection"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Data Protection and Privacy
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Data Protection |
+| Difficulty | Intermediate |
+| Used For | Securing sensitive user data at rest, in transit, and in use |
+| Common Mistake | Logging PII (Personally Identifiable Information) in plaintext |
+| Performance | Encryption introduces minor CPU overhead; poorly optimized database encryption can cause latency |
+
+## 2. Real-World Analogy
+
+| Physical World | Software Equivalent |
+|---|---|
+| An armored truck transporting cash | Data in Transit (TLS/HTTPS) |
+| Storing gold in a heavy, locked bank vault | Data at Rest (Disk/Database Encryption) |
+| A doctor keeping patient files confidential while reading them | Data in Use (Secure Enclaves / Masking) |
+| Blacking out names on a public document | Data Masking / Redaction |
+
+Bro, imagine you are running a hospital in Mumbai. When you move patient files from one clinic to another, you put them in a locked briefcase (Data in Transit). When you store them at the clinic overnight, you lock them in a fireproof safe (Data at Rest). When the receptionist looks at the computer screen while patients are standing nearby, the software hides the medical history and only shows the name (Data Masking). This is exactly how we must treat digital PII.
+
+## 3. Concept Explanation
+
+Data Protection is the holistic practice of securing information from corruption, compromise, or loss, while ensuring compliance with privacy regulations (like GDPR, HIPAA, or India's DPDP Act).
+
+Why does it exist? Because data is the most valuable asset a company holds. If application servers crash, they can be rebooted. If a database is stolen and published on the dark web, the company faces massive fines, lawsuits, and permanent loss of customer trust.
+
+When to use it? Data protection must be applied universally across the architecture. Any system that touches PII, financial data, or health records must implement strict data protection controls.
+
+## 4. Syntax Table
+
+Data protection is conceptually divided into three states of data:
+
+| State of Data | Threat Vector | Standard Mitigation |
+|---|---|---|
+| **Data in Transit** | Network sniffing, Man-in-the-Middle | Enforce TLS 1.2 or 1.3 everywhere. |
+| **Data at Rest** | Stolen hard drives, DB snapshots leaked | AES-256 encryption on EBS volumes, RDS, and S3. |
+| **Data in Use** | Memory dumps, accidental logging | Data masking, tokenization, scrubbing logs. |
+| **Data Lifecycle** | Hoarding old data forever | Automated data retention policies (TTL). |
+
+## 5. Beginner Example
+
+Let's look at a common mistake: logging sensitive data.
+
+```javascript
+// DON'T: Logging PII and Secrets
+app.post('/api/checkout', (req, res) => {
+  const { creditCard, cvv, email } = req.body;
+
+  // If your logs are pushed to Datadog/Splunk, anyone with access can read the credit cards!
+  console.log(`Processing payment for payload: ${JSON.stringify(req.body)}`);
+
+  processPayment(creditCard, cvv);
+});
+
+// DO: Masking sensitive data before logging
+app.post('/api/checkout', (req, res) => {
+  const { creditCard, cvv, email } = req.body;
+
+  const maskedCard = creditCard.substring(0, 4) + ' **** **** ' + creditCard.slice(-4);
+
+  // Log securely. We know WHO did it, but the sensitive data is hidden.
+  console.log(`Processing payment for user: ${email}, card: ${maskedCard}`);
+
+  processPayment(creditCard, cvv);
+});
+```
+
+## 6. Real-World Engineering Example
+
+Bro, in a real production system, you don't just encrypt the whole hard drive (though you should do that too). For highly sensitive data (like Aadhaar numbers or SSNs), you do **Application-Level Encryption**. You encrypt the data in the backend code *before* sending it to the database. Even if a rogue DBA dumps the database, they only see ciphertext.
+
+```javascript
+const crypto = require('crypto');
+// Retrieve this from a Secrets Manager, NEVER hardcode it.
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+const ALGORITHM = 'aes-256-gcm';
+
+// 1. Encrypting data before saving to DB
+function encryptPII(text) {
+  // Initialization Vector provides randomness to the cipher
+  const iv = crypto.randomBytes(16);
+  const cipher = crypto.createCipheriv(ALGORITHM, Buffer.from(ENCRYPTION_KEY, 'hex'), iv);
+
+  let encrypted = cipher.update(text, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+
+  // GCM provides an auth tag to ensure the data wasn't tampered with
+  const authTag = cipher.getAuthTag().toString('hex');
+
+  // Store the IV and AuthTag alongside the encrypted data
+  return `${iv.toString('hex')}:${encrypted}:${authTag}`;
+}
+
+// 2. Decrypting data when needed by authorized services
+function decryptPII(encryptedText) {
+  const [ivHex, encryptedHex, authTagHex] = encryptedText.split(':');
+
+  const decipher = crypto.createDecipheriv(
+    ALGORITHM,
+    Buffer.from(ENCRYPTION_KEY, 'hex'),
+    Buffer.from(ivHex, 'hex')
+  );
+  decipher.setAuthTag(Buffer.from(authTagHex, 'hex'));
+
+  let decrypted = decipher.update(encryptedHex, 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
+
+  return decrypted;
+}
+
+// Usage in an API route
+app.post('/user', async (req, res) => {
+  const encryptedSSN = encryptPII(req.body.ssn);
+  await db.User.create({ name: req.body.name, ssn: encryptedSSN });
+});
+```
+
+## 7. Internal Working
+
+How does a Tokenization service protect credit cards in an e-commerce architecture? Let's trace it.
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'tool', data: { label: 'User Enters Credit Card' }, position: { x: 50, y: 50 } },
+    { id: '2', type: 'process', data: { label: 'Tokenization Service (PCI Compliant)' }, position: { x: 50, y: 150 } },
+    { id: '3', type: 'core', data: { label: 'Secure Vault (Stores Real CC)' }, position: { x: 300, y: 150 } },
+    { id: '4', type: 'data', data: { label: 'Returns safe Token (tok_123)' }, position: { x: 50, y: 250 } },
+    { id: '5', type: 'process', data: { label: 'E-commerce Backend' }, position: { x: 50, y: 350 } },
+    { id: '6', type: 'output', data: { label: 'DB Stores Token (NO PCI Scope)' }, position: { x: 50, y: 450 } },
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true },
+    { id: 'e2-3', source: '2', target: '3', animated: true, label: 'Saves Card' },
+    { id: 'e3-4', source: '3', target: '4', animated: true, label: 'Generates Token' },
+    { id: 'e4-5', source: '4', target: '5', animated: true },
+    { id: 'e5-6', source: '5', target: '6', animated: true },
+  ]}
+/>
+
+## 8. Performance Table
+
+| Encryption Strategy | Performance Impact | Effort to Implement |
+|---|---|---|
+| Disk-level Encryption (AWS EBS/RDS) | Zero (Handled by hardware) | Very Low (Just check a box) |
+| TLS/HTTPS | Low | Low (Handled by Load Balancers) |
+| Application-level Encryption | Medium (CPU overhead on every query) | High (Requires code changes) |
+| Tokenization via external API | High (Network latency) | Medium |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is PII? | Personally Identifiable Information. Data that can identify an individual (Name, Email, SSN, Biometrics). |
+| What is the difference between Encryption and Hashing? | Encryption is two-way (can be decrypted with a key). Hashing is a one-way mathematical function used for passwords or integrity checks. |
+| What is Tokenization? | Replacing sensitive data (like a credit card number) with a non-sensitive equivalent (a token) that has no extrinsic meaning. The real data is stored in a highly secure vault. |
+| Why is "Data at Rest" encryption not enough to stop application hacks? | Because the database automatically decrypts data for the application. If the application has a SQL Injection flaw, the database happily serves the decrypted data to the attacker. |
+| What is Data Minimization? | A privacy principle stating you should only collect and store the absolute minimum data required to provide the service, and delete it when no longer needed. |
+
+## 10. Tricky Questions & Edge Cases
+
+**Question:** We need to allow users to search for other users by their SSN or Phone Number. If we use Application-level encryption, how do we search the database? We can't use `LIKE %search%` on ciphertext!
+**Answer:** This is a classic engineering tradeoff, bro. You cannot do partial matching (LIKE) on strong ciphertext. You have two options:
+1. Use Deterministic Encryption (the same plaintext always results in the same ciphertext) allowing for exact match queries (`WHERE encrypted_ssn = ?`).
+2. Use a Blind Index (a securely hashed version of the SSN) as a secondary column purely for exact-match searching.
+
+**Question:** Is it safe to store encryption keys in the database next to the encrypted data?
+**Answer:** Never. If an attacker steals the database, they get the data AND the key to unlock it. Keys must be stored in a completely separate system (like AWS KMS) and ideally, the database should never even see the key.
+
+## 11. Real-World Usage
+
+Companies dealing with payments (Stripe, Razorpay) use intense Tokenization. When you enter a card on a checkout page, it doesn't go to the merchant's server. It goes directly to Stripe's highly secure, PCI-compliant vault. Stripe gives the merchant a token (e.g., `tok_123xyz`). The merchant stores the token. If the merchant's database is hacked, the attacker just gets useless tokens, keeping the users' credit cards perfectly safe.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Encrypt all databases and storage buckets (S3) at rest by default. | Store plaintext PII in databases without evaluating the risk. |
+| Scrub and mask sensitive data before pushing it to central logging systems. | Rely on developers to remember not to `console.log(userObject)`. |
+| Implement strict retention policies. Automatically delete PII after X years. | Hoard user data indefinitely "just in case we need it." |
+| Use established cryptographic libraries (e.g., Node's `crypto`, libsodium). | Try to invent a "custom" encryption algorithm to be clever. |
+
+## 13. Production Notes
+
+> ⚠️ **Warning on Backups and Snapshots**
+> A common way companies leak data is by securing their primary database but ignoring their backups. If you take a daily snapshot of an encrypted RDS instance, but export that snapshot unencrypted to an S3 bucket that isn't locked down, you have failed. Ensure Data Protection policies apply equally to production DBs, read replicas, backups, and data warehouse exports.
+
+## 14. Common Mistakes
+
+| Mistake | Why it's bad | How to fix it |
+|---|---|---|
+| Using ECB Mode in AES | Electronic Codebook (ECB) encrypts identical plaintext blocks into identical ciphertext blocks, revealing data patterns (the famous "ECB Penguin"). | Always use authenticated encryption modes like AES-GCM or AES-CBC with a unique Initialization Vector (IV). |
+| Hardcoding IVs (Initialization Vectors) | Reusing an IV with the same key breaks the security of the encryption. | Always generate a cryptographically secure, random IV for *every single encryption operation*. |
+| Failing to scrub Analytics data | Pushing URLs that contain sensitive data (e.g., `/reset-password?token=123`) to Google Analytics leaks secrets to third parties. | Ensure frontend analytics SDKs strip query parameters and sensitive URL paths before sending data. |
+
+## 15. Related Topics
+- [Security Mindset](./security-mindset.mdx)
+- [Secrets Management](./secrets-management.mdx)
+- [API Security](./api-security.mdx)
+
+## 16. Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [awslabs/aws-encryption-sdk-javascript](https://github.com/awslabs/aws-encryption-sdk-javascript) | ⭐ 300+ | AWS Encryption SDK for JavaScript. | A client-side encryption library that helps you implement envelope encryption properly without cryptography mistakes. |
+| [jedisct1/libsodium](https://github.com/jedisct1/libsodium) | ⭐ 11k+ | A modern, portable, easy to use crypto library. | If you need to do crypto, libsodium provides high-level APIs that prevent you from shooting yourself in the foot. |
+| [Tink](https://github.com/tink-crypto/tink-js) | ⭐ 15k+ | A multi-language, cross-platform, open-source library by Google. | Provides cryptographic APIs that are secure, easy to use correctly, and hard(er) to misuse. |
+| [dpkp/kafka-python](https://github.com/dpkp/kafka-python) (Data Streaming context) | ⭐ 5k+ | Python client for Apache Kafka. | Relevant because securing data in transit across internal Kafka pipelines (often forgotten) is crucial for data protection. |
+| [pangeacyber/pangea-javascript](https://github.com/pangeacyber/pangea-javascript) | ⭐ 100+ | Security services for developers. | Examples of API-driven redaction, masking, and vaulting services. |
