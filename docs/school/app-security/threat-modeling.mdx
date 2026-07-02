@@ -1,0 +1,172 @@
+---
+sidebar_position: 2
+sidebar_label: "Threat Modeling"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Threat Modeling in Software Engineering
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Threat Modeling |
+| Difficulty | Intermediate |
+| Used For | Identifying structural security flaws during the design phase |
+| Common Mistake | Doing it after the code is fully written |
+| Performance | Zero runtime impact; it is a design-time process |
+
+## 2. Real-World Analogy
+
+| Physical World | Software Equivalent |
+|---|---|
+| Securing a bank branch | Designing secure system architecture |
+| Asking "How could someone rob us?" | Identifying threats (Spoofing, Tampering, etc.) |
+| Deciding to hire a security guard | Implementing mitigations |
+| Reviewing the CCTV camera blind spots | Validating the threat model |
+
+Bro, imagine you are opening a new jewelry store in a busy market. You wouldn't just open the doors and hope for the best, right? You'd look around and think: "Someone could break the glass," "Someone could distract the cashier," or "An employee might pocket a ring."
+
+Once you think of these threats, you put mitigations in place: shatterproof glass, CCTV, and inventory checks. Threat modeling in software is exactly this, but for your application architecture.
+
+## 3. Concept Explanation
+
+Threat modeling is a structured process of evaluating a software architecture to identify potential security vulnerabilities and defining countermeasures before a single line of code is written.
+
+Why does it exist? Because fixing a security flaw in the design phase is incredibly cheap. Fixing it in production after a data breach can cost millions.
+
+When to use it? You should perform threat modeling during the system design or architecture phase, especially when introducing new features that handle sensitive data, authentication, or external integrations.
+
+When NOT to use it? Don't do a full threat model for trivial changes, like changing the color of a button or updating documentation. Keep it scoped to architectural changes.
+
+## 4. Syntax Table
+
+Threat modeling is conceptual, but the most popular framework is **STRIDE**. Here is how it maps to threats:
+
+| STRIDE Element | What it stands for | Example Threat | Mitigation Strategy |
+|---|---|---|---|
+| **S** | Spoofing Identity | Attacker logs in as another user | Strong Authentication (MFA) |
+| **T** | Tampering with Data | Attacker changes a product price in transit | TLS / Encryption in transit |
+| **R** | Repudiation | User denies transferring funds | Secure Audit Logging |
+| **I** | Information Disclosure | Attacker reads sensitive DB records | Encryption at rest / RBAC |
+| **D** | Denial of Service | Botnet crashes your API | Rate Limiting / WAF |
+| **E** | Elevation of Privilege | Standard user becomes an admin | Strict Authorization checks |
+
+## 5. Beginner Example
+
+Let's do a mini threat model for a basic login endpoint.
+
+**Scenario**: A user logs into a web application.
+
+**Threats Identified**:
+1. An attacker tries a billion passwords (Brute Force).
+2. An attacker steals the user's password from our database (Information Disclosure).
+
+**Mitigations**:
+1. Implement rate limiting on the `/login` endpoint (e.g., 5 attempts per minute).
+2. Never store plaintext passwords. Hash them using bcrypt or Argon2.
+
+## 6. Real-World Engineering Example
+
+Bro, let's look at a real system design: A microservice that generates PDF invoices and emails them to customers.
+
+**Threat Model for Invoice Generator:**
+1. **Threat (Elevation of Privilege):** The Invoice Service connects to the Database. If compromised, can it drop tables?
+   - *Mitigation:* The Database user assigned to the Invoice Service must have `SELECT` only. No `UPDATE` or `DELETE` permissions.
+2. **Threat (Denial of Service):** Generating PDFs is CPU intensive. An attacker requests 10,000 invoices at once, crashing the service.
+   - *Mitigation:* Decouple the request. The API puts the request in an SQS/RabbitMQ queue, and worker nodes generate the PDFs asynchronously at their own pace.
+3. **Threat (Information Disclosure):** Invoices are stored in an S3 bucket. Are they public?
+   - *Mitigation:* Ensure the S3 bucket is private, and use pre-signed URLs with a 5-minute expiration to serve the PDFs to authenticated users.
+
+## 7. Internal Working
+
+How does a threat modeling process flow in an engineering team? Let's visualize the steps.
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'data', data: { label: 'System Architecture Diagram' }, position: { x: 50, y: 50 } },
+    { id: '2', type: 'process', data: { label: 'Decompose the System (Find Trust Boundaries)' }, position: { x: 50, y: 150 } },
+    { id: '3', type: 'process', data: { label: 'Apply STRIDE Framework' }, position: { x: 50, y: 250 } },
+    { id: '4', type: 'warning', data: { label: 'Identify Threats' }, position: { x: 50, y: 350 } },
+    { id: '5', type: 'core', data: { label: 'Define Mitigations' }, position: { x: 50, y: 450 } },
+    { id: '6', type: 'output', data: { label: 'Jira Tickets for Security Features' }, position: { x: 50, y: 550 } },
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true },
+    { id: 'e2-3', source: '2', target: '3', animated: true },
+    { id: 'e3-4', source: '3', target: '4', animated: true },
+    { id: 'e4-5', source: '4', target: '5', animated: true },
+    { id: 'e5-6', source: '5', target: '6', animated: true, label: 'Actionable Work' },
+  ]}
+/>
+
+## 8. Performance Table
+
+Threat modeling itself has no runtime performance cost, but the *mitigations* you choose will.
+
+| Mitigation | Runtime Impact | Notes |
+|---|---|---|
+| Hashing Passwords | High (CPU) | Bcrypt/Argon2 are designed to be slow to deter brute forcing. |
+| TLS/SSL | Low | Modern CPUs handle encryption overhead easily. |
+| Audit Logging | Low/Medium | Disk I/O or network calls to a log aggregator. Keep it asynchronous. |
+| Role Checks | Low | Usually a fast DB query or JWT claim inspection. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is Threat Modeling? | A process to identify, quantify, and address security risks in a software architecture. |
+| Explain the STRIDE methodology. | It categorizes threats into Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, and Elevation of Privilege. |
+| At what phase of the SDLC should threat modeling occur? | During the Design phase, before implementation begins. |
+| What is a "Trust Boundary"? | A line in an architecture diagram where data changes its level of trust (e.g., from the public internet into a private API). |
+| How do you prioritize threats? | By assessing the risk using frameworks like DREAD (Damage, Reproducibility, Exploitability, Affected users, Discoverability) or a simple High/Medium/Low matrix. |
+
+## 10. Tricky Questions & Edge Cases
+
+**Question:** If we run everything in a managed AWS environment (RDS, API Gateway, Fargate), do we still need to threat model?
+**Answer:** Absolutely, bro. AWS operates on a Shared Responsibility Model. They secure the infrastructure, but *you* are responsible for securing the data, the application logic, and IAM permissions. A misconfigured S3 bucket is your fault, not Amazon's.
+
+**Question:** We found 50 threats during our session. Do we have to fix all of them before launching?
+**Answer:** No. You have to *evaluate* all of them. Some threats might have a very low probability or impact, and the business might choose to accept the risk. Threat modeling is about informed decision-making, not aiming for impossible perfect security.
+
+## 11. Real-World Usage
+
+Companies like Microsoft mandate threat modeling as part of their Security Development Lifecycle (SDL). Before a new Azure service or Windows feature is approved for development, engineers must present a threat model showing trust boundaries, data flows, and planned mitigations to a security review board.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Do it early in the design phase. | Wait until code is written to start analyzing threats. |
+| Focus on trust boundaries (e.g., API to Database). | Waste time threat-modeling internal, highly trusted components communicating over secure channels. |
+| Make it a collaborative effort between developers, architects, and product. | Let the security team do it in isolation. |
+| Create actionable engineering tasks (Jira tickets) for mitigations. | Treat the threat model document as a box-checking exercise that sits on a shelf. |
+
+## 13. Production Notes
+
+> ⚠️ **Warning on Scope Creep**
+> A common mistake when threat modeling is getting bogged down in "Hollywood" scenarios (e.g., "What if an advanced persistent threat compromises the CPU microcode on our database server?"). Focus on the most likely attack vectors first: bad authentication, lack of input validation, and overly permissive IAM roles.
+
+## 14. Common Mistakes
+
+| Mistake | Why it's bad | How to fix it |
+|---|---|---|
+| Doing it too late | Mitigations often require architectural changes. Changing architecture after code is written is expensive. | Make a threat model document a required part of every RFC or Design Doc. |
+| Ignoring Insider Threats | Assuming all attacks come from the outside leaves you vulnerable to compromised employee accounts. | Apply Zero Trust principles and strict RBAC even for internal tooling. |
+| Missing Trust Boundaries | If you don't draw clear lines where data enters/exits secure zones, you will miss injection flaws. | explicitly draw trust boundaries on your data flow diagrams (DFDs). |
+
+## 15. Related Topics
+- [Security Mindset](./security-mindset.mdx)
+- [OWASP Top 10](./owasp-top-10.mdx)
+- [Authorization & RBAC](./authorization-rbac-abac.mdx)
+
+## 16. Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [threagile/threagile](https://github.com/threagile/threagile) | ⭐ 1.5k+ | Agile Threat Modeling Toolkit | Allows you to execute threat modeling as code right inside your IDE. |
+| [OWASP/threat-dragon](https://github.com/OWASP/threat-dragon) | ⭐ 3k+ | An open-source threat modeling tool from OWASP. | Provides a great visual UI for drawing data flow diagrams and applying STRIDE. |
+| [microsoft/threat-modeling-template](https://github.com/microsoft/threat-modeling-template) | ⭐ 2k+ | Templates for the Microsoft Threat Modeling Tool. | Industry standard examples of how to model Azure and Windows architectures. |
+| [devslop/ThreatModeling](https://github.com/devslop/ThreatModeling) | ⭐ 500+ | Example threat models and templates. | Good reference material for seeing what a finished threat model looks like. |
+| [izar/pytm](https://github.com/izar/pytm) | ⭐ 2k+ | A Pythonic framework for threat modeling. | Great for Python shops wanting to define their architectures and generate reports programmatically. |

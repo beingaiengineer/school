@@ -55,16 +55,16 @@ Below are the topics that make up this course. This list serves as the structura
 > **Jules: Pick the first batch of `- [ ]` items (up to 10) under `### Next Task`. If fewer than 10, promote from `### Backlog`.**
 
 ### Next Task
-- [ ] `app-001` | Create `security-mindset.mdx` | Branch: `jules/app-security-batch`
-- [ ] `app-002` | Create `threat-modeling.mdx` | Branch: `jules/app-security-batch`
-- [ ] `app-003` | Create `owasp-top-10.mdx` | Branch: `jules/app-security-batch`
-- [ ] `app-004` | Create `authentication-deep-dive.mdx` | Branch: `jules/app-security-batch`
-- [ ] `app-005` | Create `authorization-rbac-abac.mdx` | Branch: `jules/app-security-batch`
-- [ ] `app-006` | Create `secrets-management.mdx` | Branch: `jules/app-security-batch`
-- [ ] `app-007` | Create `api-security.mdx` | Branch: `jules/app-security-batch`
-- [ ] `app-008` | Create `dependency-security.mdx` | Branch: `jules/app-security-batch`
-- [ ] `app-009` | Create `security-in-cicd.mdx` | Branch: `jules/app-security-batch`
-- [ ] `app-010` | Create `data-protection.mdx` | Branch: `jules/app-security-batch`
+- [x] `app-001` | Create `security-mindset.mdx` | Branch: `jules/app-security-batch`
+- [x] `app-002` | Create `threat-modeling.mdx` | Branch: `jules/app-security-batch`
+- [x] `app-003` | Create `owasp-top-10.mdx` | Branch: `jules/app-security-batch`
+- [x] `app-004` | Create `authentication-deep-dive.mdx` | Branch: `jules/app-security-batch`
+- [x] `app-005` | Create `authorization-rbac-abac.mdx` | Branch: `jules/app-security-batch`
+- [x] `app-006` | Create `secrets-management.mdx` | Branch: `jules/app-security-batch`
+- [x] `app-007` | Create `api-security.mdx` | Branch: `jules/app-security-batch`
+- [x] `app-008` | Create `dependency-security.mdx` | Branch: `jules/app-security-batch`
+- [x] `app-009` | Create `security-in-cicd.mdx` | Branch: `jules/app-security-batch`
+- [x] `app-010` | Create `data-protection.mdx` | Branch: `jules/app-security-batch`
 
 ### Backlog
 _Empty_
@@ -72,5 +72,6 @@ _Empty_
 ### Completed This Cycle
 | BAE ID | What's Done (High Level) |
 |---|---|
+| `[BAE-APP-1]` | Created app-security batch topics (mindset through data protection) |
 
 

@@ -1,0 +1,216 @@
+---
+sidebar_position: 4
+sidebar_label: "Authentication Deep Dive"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Authentication Deep Dive
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Authentication (AuthN) |
+| Difficulty | Intermediate |
+| Used For | Verifying the identity of a user or system ("Who are you?") |
+| Common Mistake | Storing plaintext passwords or building custom cryptography |
+| Performance | Medium; requires secure hashing algorithms and network calls |
+
+## 2. Real-World Analogy
+
+| Physical World | Software Equivalent |
+|---|---|
+| Showing your Passport at airport security | Providing a Username and Password |
+| The immigration officer checking the passport's validity | The backend validating credentials against a database |
+| Entering a one-time SMS code at an ATM | Multi-Factor Authentication (MFA) |
+| Getting a wristband to enter the concert after ticket check | Receiving a JWT (JSON Web Token) |
+
+Bro, think about trying to get into an exclusive corporate tech park. You don't just walk in. The security guard stops you and asks, "Who are you?" You show your company ID card. The guard looks at the photo, looks at your face, and checks if the card is valid. That process of proving your identity is Authentication. Once you are inside, what floors you are allowed to visit is Authorization—but Authentication always comes first.
+
+## 3. Concept Explanation
+
+Authentication (often abbreviated as AuthN) is the process of verifying that an entity (a user, a device, or another system) is who they claim to be.
+
+Why does it exist? Because systems hold private data and perform sensitive actions. You must be certain that the person requesting to view a bank balance is actually the owner of that bank account.
+
+When to use it? Any time a system exposes sensitive data or state-changing operations (like creating, updating, or deleting resources) to the internet or an untrusted network.
+
+## 4. Syntax Table
+
+Authentication can be implemented in several ways. Here are the most common patterns:
+
+| Auth Type | How it Works | Best Used For |
+|---|---|---|
+| **Basic Auth** | Client sends `Authorization: Basic base64(user:pass)` | Legacy systems, simple internal APIs over TLS. |
+| **Session-Based** | Server creates a session in DB, returns a Cookie ID | Traditional server-rendered web apps. |
+| **Token-Based (JWT)** | Server signs a JSON token containing user identity | Modern Single Page Apps (React/Vue) and APIs. |
+| **OAuth 2.0 / OIDC** | Delegated auth via a 3rd party (e.g., "Login with Google") | Avoiding building your own identity provider. |
+| **MFA / 2FA** | Requiring a second factor (SMS, Authenticator App) | High-security applications (banking, crypto). |
+
+## 5. Beginner Example
+
+Let's look at the absolute most critical part of authentication: hashing passwords before storing them.
+
+```javascript
+const bcrypt = require('bcrypt');
+
+// DON'T do this!
+async function registerInsecure(username, password) {
+  // Storing the password in plaintext. If the DB is hacked, all passwords are stolen!
+  await db.query('INSERT INTO users (username, password) VALUES (?, ?)', [username, password]);
+}
+
+// DO this instead!
+async function registerSecure(username, plaintextPassword) {
+  const saltRounds = 12; // Define how complex the hashing should be
+  // Hash the password with a salt. It's now safe to store.
+  const hashedPassword = await bcrypt.hash(plaintextPassword, saltRounds);
+
+  await db.query('INSERT INTO users (username, password) VALUES (?, ?)', [username, hashedPassword]);
+}
+```
+
+## 6. Real-World Engineering Example
+
+Bro, in a real system, you often use JSON Web Tokens (JWT) for stateless authentication. Let's look at how a login route verifies a password and issues a token.
+
+```javascript
+const express = require('express');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
+const app = express();
+app.use(express.json());
+
+// Load this from a secure environment variable, NOT source code!
+const JWT_SECRET = process.env.JWT_SECRET;
+
+app.post('/api/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  // 1. Find the user
+  const user = await db.User.findOne({ where: { username } });
+
+  if (!user) {
+    // Fail securely: Don't tell the attacker if the username exists or not.
+    return res.status(401).json({ error: 'Invalid username or password' });
+  }
+
+  // 2. Verify the password against the stored hash
+  const isValidPassword = await bcrypt.compare(password, user.hashedPassword);
+
+  if (!isValidPassword) {
+    return res.status(401).json({ error: 'Invalid username or password' });
+  }
+
+  // 3. User is authenticated! Issue a JWT.
+  // We only put non-sensitive identifier info in the payload.
+  const tokenPayload = {
+    userId: user.id,
+    role: user.role
+  };
+
+  // Sign the token. It expires in 1 hour.
+  const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '1h' });
+
+  // 4. Return the token to the client
+  res.json({
+    message: 'Authentication successful',
+    token: token
+  });
+});
+```
+This is a production pattern: verify the hash, generate a short-lived token, and return it.
+
+## 7. Internal Working
+
+How does Token-Based authentication flow across requests? Let's trace it.
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'tool', data: { label: 'Client (React App)' }, position: { x: 50, y: 50 } },
+    { id: '2', type: 'process', data: { label: 'POST /login (user, pass)' }, position: { x: 50, y: 150 } },
+    { id: '3', type: 'core', data: { label: 'Auth Server (Verifies Hash)' }, position: { x: 50, y: 250 } },
+    { id: '4', type: 'data', data: { label: 'Returns Signed JWT' }, position: { x: 250, y: 150 } },
+    { id: '5', type: 'process', data: { label: 'GET /profile (Header: Bearer JWT)' }, position: { x: 250, y: 50 } },
+    { id: '6', type: 'core', data: { label: 'API Server (Validates Signature)' }, position: { x: 450, y: 50 } },
+    { id: '7', type: 'output', data: { label: 'Returns Profile Data' }, position: { x: 450, y: 150 } },
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true },
+    { id: 'e2-3', source: '2', target: '3', animated: true },
+    { id: 'e3-4', source: '3', target: '4', animated: true, label: 'Success' },
+    { id: 'e4-5', source: '4', target: '5', animated: true, label: 'Client stores token' },
+    { id: 'e5-6', source: '5', target: '6', animated: true },
+    { id: 'e6-7', source: '6', target: '7', animated: true },
+  ]}
+/>
+
+## 8. Performance Table
+
+| Authentication Step | Performance Cost | Why? |
+|---|---|---|
+| Hashing a password (bcrypt) | High (~100-300ms) | Designed to be computationally expensive to thwart brute-forcing. |
+| Verifying a JWT signature | Low (Under 1ms) | Fast cryptographic math (HMAC/RSA). |
+| Session lookup (Redis) | Very Low (Under 1ms) | In-memory key-value read. |
+| Session lookup (RDBMS) | Low (2-10ms) | Requires disk I/O or index traversal. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why should you use `bcrypt` instead of `SHA-256` for passwords? | SHA-256 is too fast. Attackers can compute billions of hashes per second. `bcrypt` has a configurable "work factor" making it intentionally slow. |
+| What is a "salt" in password hashing? | A random string added to the password before hashing. It ensures two users with the same password have different hashes, preventing Rainbow Table attacks. |
+| How does a JWT differ from a Session Cookie? | A session cookie requires the server to look up the session ID in a database. A JWT is stateless; the server verifies its signature mathematically without a DB lookup. |
+| Can you revoke a standard JWT? | Not easily, because it's stateless. You have to wait for it to expire, or implement a "blacklist" in a fast store like Redis, which defeats the purpose of being stateless. |
+| What is OIDC (OpenID Connect)? | An identity layer built on top of the OAuth 2.0 protocol, allowing clients to verify the identity of an end-user based on authentication performed by an Authorization Server (like Google). |
+
+## 10. Tricky Questions & Edge Cases
+
+**Question:** If a JWT contains the user ID, can an attacker decode it and change the user ID to become admin?
+**Answer:** They can decode it, yes (JWT payloads are just base64 encoded). But they cannot *change* it. If they alter the payload, the cryptographic signature will become invalid, and the server will reject the token.
+
+**Question:** We use JWTs and store them in `localStorage`. Is this secure?
+**Answer:** It's risky, bro. Anything in `localStorage` can be read by JavaScript. If your app suffers an XSS (Cross-Site Scripting) attack, the attacker's script can steal the JWT. Storing tokens in `HttpOnly` cookies is generally safer against XSS.
+
+## 11. Real-World Usage
+
+Companies like Auth0, Okta, and AWS Cognito have built massive businesses just by handling Authentication as a Service. Instead of building their own auth flows, modern engineering teams offload user registration, password resets, MFA, and OIDC integration to these providers, receiving a standard JWT back to use in their own APIs.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Hash passwords using bcrypt, Argon2, or PBKDF2. | Try to invent your own cryptography or hashing logic. |
+| Use generic error messages on login ("Invalid credentials"). | Tell the user "Password incorrect" (which confirms the username exists). |
+| Implement rate limiting on login and password reset routes. | Allow unlimited login attempts, enabling brute-force attacks. |
+| Keep JWT expiration times short (e.g., 15-60 mins). | Issue JWTs that never expire. |
+
+## 13. Production Notes
+
+> ⚠️ **Warning on JWT Secrets**
+> If your JWT signing secret (the string used to generate the HMAC signature) is weak or leaked, an attacker can sign their own tokens and impersonate *any* user in the system. Never commit this secret to version control. Generate a strong, random, long string and inject it via secure environment variables or a secrets manager.
+
+## 14. Common Mistakes
+
+| Mistake | Why it's bad | How to fix it |
+|---|---|---|
+| Putting sensitive data in JWTs | JWT payloads are readable by anyone who gets the token. | Never put passwords, SSNs, or PII in a JWT payload. Only put identifiers (user ID). |
+| Not enforcing HTTPS | If authentication happens over HTTP, the password (or token) is sent in plaintext over the network and can be sniffed. | Terminate TLS at your load balancer. Reject all HTTP traffic on auth routes. |
+| Forgetting to hash passwords on update | Developers remember to hash on registration, but forget to hash when the user resets their password. | Centralize hashing logic in a model hook or specific auth service layer. |
+
+## 15. Related Topics
+- [Security Mindset](./security-mindset.mdx)
+- [Authorization & RBAC](./authorization-rbac-abac.mdx)
+- [Secrets Management](./secrets-management.mdx)
+
+## 16. Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [nextauthjs/next-auth](https://github.com/nextauthjs/next-auth) | ⭐ 20k+ | Authentication for Next.js. | The industry standard for handling OIDC, JWTs, and sessions in modern React apps. |
+| [kelektiv/node.bcrypt.js](https://github.com/kelektiv/node.bcrypt.js) | ⭐ 7k+ | bcrypt for Node.js. | The core library you will use to hash and verify passwords securely. |
+| [auth0/node-jsonwebtoken](https://github.com/auth0/node-jsonwebtoken) | ⭐ 21k+ | JSON Web Token implementation for Node.js. | The standard library for creating and verifying JWT signatures. |
+| [ory/kratos](https://github.com/ory/kratos) | ⭐ 10k+ | Cloud Native Identity and User Management. | A robust, open-source alternative to commercial identity providers like Okta. |
+| [dexidp/dex](https://github.com/dexidp/dex) | ⭐ 9k+ | OIDC Identity Provider with Pluggable Connectors. | Great for federating authentication across multiple different systems. |
