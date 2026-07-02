@@ -1,0 +1,156 @@
+---
+sidebar_position: 5
+sidebar_label: "Incident Commander Role"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Incident Commander Role
+
+Bro, if everyone is trying to drive the bus during an emergency, you're going to crash. The Incident Commander is the single person holding the steering wheel.
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Incident Commander (IC) Role |
+| Difficulty | Advanced |
+| Used For | Managing the human response to an incident |
+| Common Mistake | The IC trying to write code or run database queries during the incident |
+| Performance | Prevents duplicate work and miscommunication |
+
+## 2. Real-World Analogy
+
+| Fire Brigade | Incident Equivalent |
+|---|---|
+| Fire Chief | **Incident Commander (IC)** |
+| Firefighters holding the hose | **Subject Matter Experts (SMEs) / Engineers** |
+| Police directing traffic | **Communications Lead** |
+| Medic | **Customer Support** |
+
+Bro, the Fire Chief doesn't hold the hose. They stand back, look at the whole burning building, and tell the firefighters where to aim. The IC must keep their hands off the keyboard.
+
+## 3. Concept Explanation
+
+The Incident Commander (IC) is the single source of truth and authority during a major incident. They do not fix the problem; they coordinate the people who are fixing the problem.
+
+Their job is to maintain situational awareness, delegate tasks, enforce discipline in the war room, make the hard calls (like deciding to take the site completely offline to prevent data corruption), and ensure executive stakeholders are informed.
+
+If you are the IC, your primary tools are your voice, a notebook, and a clock. Not a terminal.
+
+## 4. Syntax Table
+
+| Role | Responsibilities |
+|---|---|
+| **Incident Commander (IC)** | Holds all authority. Delegates tasks. Makes final decisions. Cannot touch code. |
+| **Subject Matter Expert (SME)** | Investigates systems, reads logs, proposes mitigations, executes fixes. |
+| **Scribe** | Takes notes in a document with timestamps. Critical for the postmortem. |
+| **Communications Lead** | Drafts status page updates and emails to executives. |
+
+## 5. Beginner Example
+
+A typical command from an IC in a Slack war room:
+
+```text
+IC: @alice, I need you to check the database replication lag. You have 5 minutes.
+IC: @bob, prepare the rollback script for the auth service but DO NOT execute it yet.
+IC: @charlie, draft a status page update saying we are investigating login issues.
+
+(5 minutes later)
+IC: @alice, status on replication lag?
+Alice: It's at 30 seconds and climbing.
+IC: Copy. @bob, execute the rollback script now.
+```
+
+## 6. Real-World Engineering Example
+
+In a highly mature organization, the IC role can be transferred if the current IC gets overwhelmed or needs a break during a multi-hour incident. This is called a formal handoff.
+
+```text
+Current IC: I am handing over IC responsibilities to @diana.
+Current IC: Diana, the current status is: rollback failed, DB is locked. We are waiting on the DBA team.
+New IC (@diana): I acknowledge. I am now the IC. Everyone, direct updates to me.
+```
+
+## 7. Internal Working
+
+Here is the communication flow managed by the Incident Commander.
+
+<LearningFlow
+  elements={[
+    { id: 'ic', type: 'core', position: { x: 250, y: 150 }, data: { label: 'Incident Commander' } },
+    { id: 'sme1', type: 'tool', position: { x: 50, y: 300 }, data: { label: 'SME (Database)' } },
+    { id: 'sme2', type: 'tool', position: { x: 250, y: 300 }, data: { label: 'SME (Network)' } },
+    { id: 'comm', type: 'process', position: { x: 450, y: 300 }, data: { label: 'Comms Lead' } },
+    { id: 'exec', type: 'warning', position: { x: 250, y: 0 }, data: { label: 'Executives / Stakeholders' } },
+    { id: 'e-ic-exec', source: 'ic', target: 'exec', label: 'Shields team from' },
+    { id: 'e-ic-sme1', source: 'ic', target: 'sme1', label: 'Delegates to', animated: true },
+    { id: 'e-ic-sme2', source: 'ic', target: 'sme2', label: 'Delegates to', animated: true },
+    { id: 'e-ic-comm', source: 'ic', target: 'comm', label: 'Instructs' },
+    { id: 'e-sme1-ic', source: 'sme1', target: 'ic', label: 'Reports status' },
+    { id: 'e-sme2-ic', source: 'sme2', target: 'ic', label: 'Reports status' }
+  ]}
+/>
+
+## 8. Performance Table
+
+| IC Action | Expected Timeframe |
+|---|---|
+| Establish authority | Immediately upon joining the call |
+| Assign a scribe | Within first 5 minutes |
+| Get initial status | Within first 5 minutes |
+| Cycle updates (check-ins) | Every 10-15 minutes |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Can the Incident Commander write code during the incident? | Absolutely not. The IC must maintain a high-level view. If they get into the weeds, the incident loses leadership. |
+| Who has the highest authority during an incident? | The Incident Commander. Even if the CEO joins the call, the IC is in charge of the technical response. |
+| What should the IC do if executives keep asking questions in the war room? | Assign a Communications Lead to handle the executives in a separate channel, keeping the technical war room clear. |
+| What is a "timebox"? | A specific amount of time the IC gives an SME to investigate before they must report back (e.g., "Take 5 minutes to check logs, then report back"). |
+| How do you become an IC? | Through shadowing, training, and practicing in low-severity incidents or game days. |
+
+## 10. Tricky Questions & Edge Cases
+
+- **The Overriding Executive**: The CTO joins the bridge and starts giving direct orders to engineers, bypassing the IC. The IC must firmly but politely assert control: "CTO, I am the IC. Please direct your suggestions to me so we don't have conflicting actions."
+- **The Missing Expertise**: The IC realizes nobody on the call understands the broken system. The IC must aggressively escalate, paging secondary on-calls or managers to find the right SME immediately.
+
+## 11. Real-World Usage
+
+The Incident Command System (ICS) wasn't invented by software engineers. It was invented by firefighters in California in the 1970s to manage massive wildfires where multiple departments had to coordinate. PagerDuty and Google SRE adapted this exact system for software.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Keep your hands off the keyboard. | Try to fix the database yourself. |
+| Use clear, direct language (use people's names). | Ask vague questions to the room ("Can someone check the logs?"). |
+| Regularly summarize the current state for everyone. | Assume everyone knows what is going on. |
+
+## 13. Production Notes
+
+> **Warning**: The IC role requires high psychological safety. An IC must feel empowered to make a potentially expensive call (like failing over a database) without fear of being fired if it turns out to be the wrong choice in hindsight.
+
+## 14. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| The IC gets distracted reading logs. | The IC must step back. Delegate log reading to an SME. |
+| Letting the war room become chaotic with 20 people talking. | The IC must mute everyone except the active SMEs working the problem. |
+| Forgetting to update the status page. | Assign a Communications Lead immediately so the IC doesn't have to worry about external updates. |
+
+## 15. Related Topics
+- Incident Response Process
+- Incident Communication
+- Blameless Postmortems
+
+## 16. Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [PagerDuty/incident-response-docs](https://github.com/PagerDuty/incident-response-docs) | ⭐ 5k+ | PagerDuty's incident response documentation. | Contains the definitive guide on the IC role and training. |
+| [google/sre-book](https://github.com/google/sre-book) | ⭐ 8k+ | The Google SRE book. | Detailed chapters on managing incidents and the command structure. |
+| [dastergon/awesome-sre](https://github.com/dastergon/awesome-sre) | ⭐ 10k+ | Curated list of SRE resources. | Links to various companies' specific IC training materials. |
+| [dispatchrun/dispatch](https://github.com/dispatchrun/dispatch) | ⭐ 4k+ | Netflix's crisis management framework. | Automates the creation of the IC role and war rooms. |
+| [FEMA/ICS](https://training.fema.gov/nims/) | N/A | FEMA's Incident Command System training. | The literal origin of the system. Tech companies still use its principles. |
