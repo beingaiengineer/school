@@ -1,0 +1,169 @@
+---
+sidebar_position: 6
+sidebar_label: "Git Rebase vs Merge"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Git Rebase vs Merge
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Git Rebase vs Merge |
+| Difficulty | Advanced |
+| Used For | Integrating changes from one branch into another. |
+| Common Mistake | Rebasing a public branch that other developers are using. |
+| Performance | Merge is O(1) metadata creation. Rebase rewrites history (O(N) commits). |
+
+## 2. Real-World Analogy
+
+Bro, think of integrating code like writing a book with a co-author.
+
+| Integration Strategy | Real-World Equivalent |
+|---|---|
+| **Merge** | You write chapter 3, your co-author writes chapter 4. You staple the two sets of pages together and add a cover page saying "We combined our work here." (The history is messy but true). |
+| **Rebase** | Your co-author finishes chapter 4. You take your rough notes for chapter 3, erase the dates, and rewrite them *after* reading chapter 4 so it flows perfectly like one person wrote it. (The history is a lie, but it's beautifully clean). |
+
+## 3. Concept Explanation
+
+Both `git merge` and `git rebase` solve the exact same problem: getting changes from one branch into another.
+
+**Merge** takes the two endpoints of the branches and ties them together with a new "Merge Commit". It preserves the exact chronological history of what happened. However, on active teams, this creates a "spaghetti" history graph full of crisscrossing lines.
+
+**Rebase** takes your commits, sets them aside, updates your branch to the tip of `main`, and then replays your commits one by one on top. It creates a perfectly straight, linear history. But it *rewrites* history—the commit hashes change. If you rewrite history on a public branch, you will destroy your teammates' local repos.
+
+## 4. Syntax Table
+
+| Command | What it does |
+|---|---|
+| `git merge main` | Creates a merge commit to tie `main` into your current branch. |
+| `git rebase main` | Replays your current branch's commits on top of `main`. |
+| `git rebase -i HEAD~3` | Interactive rebase. Let's you squash, edit, or drop the last 3 commits. |
+| `git rebase --continue` | Resumes the rebase after you resolve a conflict. |
+| `git rebase --abort` | Panicked? Cancels the rebase entirely. |
+
+## 5. Beginner Example
+
+Let's say you are on `feature-branch` and `main` has moved ahead.
+
+**The Merge Way:**
+```bash
+git checkout feature-branch
+git merge main
+# Resolves conflicts if any, creates a merge commit.
+```
+
+**The Rebase Way:**
+```bash
+git checkout feature-branch
+git rebase main
+# Resolves conflicts per-commit. No merge commit is created.
+git push origin feature-branch --force-with-lease
+```
+
+## 6. Real-World Engineering Example
+
+In top-tier engineering teams, you often use **Interactive Rebase** before opening a PR to clean up your messy local history into one beautiful commit.
+
+```bash
+# You have 5 commits like: "WIP", "fix typo", "oops", "real logic"
+# You want to squash them into 1 clean commit before PR.
+
+git rebase -i HEAD~4
+
+# An editor opens:
+# pick 1a2b3c WIP
+# squash 4d5e6f fix typo
+# squash 7g8h9i oops
+# squash 0j1k2l real logic
+
+# Save and exit. Another editor opens for the new message.
+# You type: "feat: implement shopping cart"
+# Save and exit.
+
+# Force push to update the PR cleanly
+git push origin feature-branch --force-with-lease
+```
+
+## 7. Internal Working
+
+When you run `git rebase main` from your feature branch, Git finds the common ancestor. It saves your feature commits to temporary files. It resets your branch to exactly match `main`. Then, it applies your saved commits one-by-one.
+
+Because the parent commit has changed, the SHA-1 hash of every rebased commit changes. They are literally new commits.
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Base Commit (A)' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'data', data: { label: 'main branch (B, C)' }, position: { x: 100, y: 150 } },
+    { id: '3', type: 'data', data: { label: 'feature branch (D, E)' }, position: { x: 400, y: 150 } },
+    { id: '4', type: 'process', data: { label: 'Rebase Operation' }, position: { x: 250, y: 250 } },
+    { id: '5', type: 'output', data: { label: 'New feature branch (A -> B -> C -> D` -> E`)' }, position: { x: 250, y: 350 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: false, label: 'parent' },
+    { id: 'e1-3', source: '1', target: '3', animated: false, label: 'parent' },
+    { id: 'e2-4', source: '2', target: '4', animated: true, label: 'applies onto' },
+    { id: 'e3-4', source: '3', target: '4', animated: true, label: 'replays' },
+    { id: 'e4-5', source: '4', target: '5', animated: true, label: 'results in linear history' }
+  ]}
+/>
+
+## 8. Performance Table
+
+| Action | Performance | Note |
+|---|---|---|
+| `git merge` | O(1) | Extremely fast. Just creates one new commit pointing to two parents. |
+| `git rebase` | O(N) | Slower. Must re-apply N commits. If N is 100, you might have to resolve conflicts 100 times. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| When should you NEVER use rebase? | Never rebase a public branch that other people have already cloned or pulled. It will destroy their local history. |
+| What does `git push --force-with-lease` do? | It force-pushes a rebased branch safely, ensuring you don't accidentally overwrite a teammate's commit that you haven't fetched yet. |
+| What is the advantage of Rebase over Merge? | It creates a clean, linear, readable Git history without meaningless "Merge branch main into feature" commits. |
+| What is interactive rebasing? | A tool (`git rebase -i`) used to rewrite local history: squashing, dropping, or rewording commits before sharing them. |
+
+## 10. Tricky Questions & Edge Cases
+
+**Bro, I'm stuck in a rebase conflict loop. Every time I fix it, it gives me another conflict!**
+When you merge, you resolve conflicts once for the whole branch. When you rebase, you are applying commits *one by one*. If 5 commits touched the same file, you might have to resolve conflicts 5 times in a row. If it gets too messy, run `git rebase --abort` and just use `git merge` instead!
+
+## 11. Real-World Usage
+
+Many open-source projects (like the Linux Kernel) explicitly ban `git merge` from contributors. They require a perfectly linear history, meaning contributors must `git rebase` their PRs against the latest `main` before the maintainer will accept them. Conversely, inside enterprise corporations with fast CI/CD pipelines, "Squash and Merge" (a GitHub UI feature that combines rebasing and merging) is the standard to keep `main` clean while letting developers do whatever they want locally.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Rebase your local, private branch against `main` to keep it updated. | Don't rebase `main` onto your feature branch. |
+| Use `git pull --rebase` to avoid useless merge commits when updating your local `main`. | Don't use `git push --force`. Always use `--force-with-lease`. |
+
+## 13. Production Notes
+
+> **Warning: The Golden Rule of Rebase**
+> Never, ever, ever rebase commits that exist outside your local repository. If you push a branch, your teammate pulls it, and then you rebase and force push, your teammate's Git tree will violently diverge. They will experience "Git Hell" trying to reconcile their timeline with yours.
+
+## 14. Common Mistakes
+
+| Mistake | Fix |
+|---|---|
+| Rebasing `main` | Just don't. Only rebase feature branches onto `main`. |
+| Panicking during a rebase conflict | Run `git status` to see what file is conflicting, fix it, `git add`, and run `git rebase --continue`. Don't commit! |
+
+## 15. Related Topics
+- merge-conflicts
+- pull-requests
+- conventional-commits
+
+## Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [git/git](https://github.com/git/git) | ⭐ 48k+ | The Git Source | Understand the underlying mechanics of history rewriting. |
+| [thoughtbot/guides](https://github.com/thoughtbot/guides) | ⭐ 8k+ | Thoughtbot's guidelines | Contains excellent real-world advice advocating for a rebase-heavy workflow. |
+| [ohmyzsh/ohmyzsh](https://github.com/ohmyzsh/ohmyzsh) | ⭐ 165k+ | Zsh framework | Provides amazing aliases like `gup` (`git pull --rebase`) to make rebasing a default habit. |
+| [edx/edx-platform](https://github.com/openedx/edx-platform) | ⭐ 7k+ | Open edX platform | A large open-source repo that heavily utilizes rebase/squash workflows for clean history. |

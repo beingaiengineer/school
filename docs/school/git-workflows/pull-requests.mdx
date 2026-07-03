@@ -1,0 +1,176 @@
+---
+sidebar_position: 3
+sidebar_label: "Pull Requests"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Pull Requests
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Pull Requests (Merge Requests) |
+| Difficulty | Beginner |
+| Used For | Proposing changes, code review, and CI validation before merging to main. |
+| Common Mistake | Opening massive PRs with 2,000+ lines of code changes. |
+| Performance | Not a Git command, but a platform feature. Network dependent. |
+
+## 2. Real-World Analogy
+
+Bro, think of a Pull Request (PR) like submitting a draft of an article to your editor.
+
+| Publishing Scenario | PR Equivalent |
+|---|---|
+| You write the draft on your laptop | Developing on a local feature branch |
+| You send the draft to the editor asking them to publish it | Opening the Pull Request |
+| The editor adds red notes ("Fix this paragraph") | Code Review comments |
+| You update the draft and resend it | Pushing new commits to the PR branch |
+| The editor approves and it goes in the magazine | PR is Approved and Merged into `main` |
+
+## 3. Concept Explanation
+
+A Pull Request (known as a Merge Request in GitLab) is NOT a native Git concept. It is a feature provided by hosting platforms like GitHub, GitLab, and Bitbucket.
+
+You use a PR to tell your team: *"Hey, I finished my feature. Can you review it, ensure the automated tests pass, and pull it into the main codebase?"* It acts as a gatekeeper. It is the core collaboration point in modern software engineering where knowledge is shared, bugs are caught, and code quality is enforced.
+
+## 4. Syntax Table
+
+*Note: PRs are primarily UI-driven on GitHub, but you can use the GitHub CLI (`gh`).*
+
+| Command / Action | What it does |
+|---|---|
+| `git push -u origin <branch>` | Uploads your branch to GitHub so you can open a PR. |
+| `gh pr create` | Creates a Pull Request from the CLI. |
+| `gh pr checkout <number>` | Checks out someone else's PR branch to your local machine. |
+| `gh pr status` | Shows the status of your current PRs. |
+
+## 5. Beginner Example
+
+Let's say you just finished styling the footer. Here is the workflow to get a PR up.
+
+```bash
+# 1. You are on your branch and commit your work
+git commit -m "style: update footer colors"
+
+# 2. Push your branch to the remote server
+git push -u origin feat/footer-styles
+
+# 3. GitHub will print a URL in your terminal.
+# Click it to open the PR in your browser!
+# Output looks like:
+# remote: Create a pull request for 'feat/footer-styles' on GitHub by visiting:
+# remote:      https://github.com/org/repo/pull/new/feat/footer-styles
+```
+
+## 6. Real-World Engineering Example
+
+In a corporate setup, PRs trigger CI/CD pipelines automatically.
+
+```yaml
+# A typical GitHub Actions workflow triggered by a PR
+name: CI PR Check
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Linter
+        run: npm run lint
+      - name: Run Unit Tests
+        run: npm run test
+# If this fails, the PR cannot be merged!
+```
+
+## 7. Internal Working
+
+When you open a PR, the platform (GitHub) creates an interface showing the `diff` between your branch and the target branch (`main`). It also creates a temporary, hidden "merge commit" in the background to check if the code can cleanly merge without conflicts.
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Developer (feature branch)' }, position: { x: 100, y: 100 } },
+    { id: '2', type: 'process', data: { label: 'Opens PR' }, position: { x: 300, y: 100 } },
+    { id: '3', type: 'tool', data: { label: 'GitHub (Checks diff, tests conflicts)' }, position: { x: 300, y: 200 } },
+    { id: '4', type: 'tool', data: { label: 'CI/CD Pipeline (Runs Tests)' }, position: { x: 500, y: 200 } },
+    { id: '5', type: 'process', data: { label: 'Reviewers Approve' }, position: { x: 300, y: 300 } },
+    { id: '6', type: 'output', data: { label: 'Merged into main' }, position: { x: 300, y: 400 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true, label: 'pushes' },
+    { id: 'e2-3', source: '2', target: '3', animated: true, label: 'triggers' },
+    { id: 'e3-4', source: '3', target: '4', animated: true, label: 'kicks off' },
+    { id: 'e4-5', source: '4', target: '5', animated: false, label: 'passes' },
+    { id: 'e5-6', source: '5', target: '6', animated: true, label: 'Merge Button Clicked' }
+  ]}
+/>
+
+## 8. Performance Table
+
+| Action | Performance Bottleneck | Note |
+|---|---|---|
+| Creating PR | Network Speed | Fast, mostly just creating a database record on GitHub. |
+| Loading diff | UI Rendering | GitHub truncates PRs with >3,000 changed files to save memory. |
+| CI Pipeline | Server Compute | This is where you wait. Tests can take 5 mins to 1 hour. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between a PR and a Merge Request? | Nothing. GitHub calls it a Pull Request. GitLab calls it a Merge Request. Same concept. |
+| Why did my PR update automatically without me doing anything? | Because you pushed new commits to the branch associated with the PR. The PR auto-updates. |
+| Can a PR be merged if there are conflicts? | No. You must resolve the conflicts locally and push the resolution before the merge button unlocks. |
+| What is a Draft PR? | A PR marked as "WIP" (Work In Progress). It signals to reviewers not to review it yet, but allows CI tests to run. |
+| What does LGTM mean? | "Looks Good To Me". A common approval comment. |
+
+## 10. Tricky Questions & Edge Cases
+
+**What happens to the PR if I force push (`git push -f`) to my branch?**
+Bro, the PR updates to match the new history. If you rebase your branch and force push, GitHub will rewrite the PR's commit history. However, be careful: if a reviewer was in the middle of looking at your old code, you just blew away their context.
+
+**Can I open a PR from a fork?**
+Yes! This is how Open Source works. You fork the repo, push to your fork, and open a PR pointing from your fork's branch to the original repo's `main` branch.
+
+## 11. Real-World Usage
+
+At companies like Spotify or Airbnb, nobody merges to `main` locally via CLI. Every single change, even a 1-line typo fix, must go through a PR. The repo is configured with "Branch Protection Rules". These rules enforce that a PR *must* have at least 1 approving review from a senior engineer, and all CI tests *must* pass before the green "Merge" button is clickable.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Keep PRs small (under 400 lines of code). Reviewers get fatigued on big PRs. | Don't include 5 different unrelated bug fixes in one PR. |
+| Write a descriptive PR body explaining *why* the change was made and *how* to test it. | Don't leave the PR description blank. |
+| Review your own PR diff before requesting a review from others. | Don't leave commented-out code (`// console.log`) in your PR. |
+
+## 13. Production Notes
+
+> **Warning: The +1000 Line PR Trap**
+> There is a famous saying: "A 10-line PR will get 10 comments. A 500-line PR will get 'LGTM'." When you open massive PRs, reviewers cannot physically comprehend the blast radius of the changes. They will skim it and approve it. This is exactly how critical production bugs slip into the codebase. Always break large features down into multiple, smaller, stackable PRs.
+
+## 14. Common Mistakes
+
+| Mistake | Fix |
+|---|---|
+| You opened the PR against `main` but meant `develop` | Use the "Edit" button near the PR title on GitHub to change the base branch. |
+| Reviewer requested changes, but you opened a *new* PR | Don't! Just commit the fixes to the existing branch and `git push`. The original PR updates automatically. |
+
+## 15. Related Topics
+- code-review-culture
+- conventional-commits
+- branching-strategies
+
+## Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [cli/cli](https://github.com/cli/cli) | ⭐ 35k+ | GitHub's official command line tool | Allows you to create and manage PRs directly from the terminal without using the mouse. |
+| [reviewdog/reviewdog](https://github.com/reviewdog/reviewdog) | ⭐ 6k+ | Automated code review tool | Posts linter errors directly as comments on your PRs automatically. |
+| [danger/danger](https://github.com/danger/danger) | ⭐ 6k+ | Automates PR chores | Can automatically fail a PR if the description is empty or if it's too large. |
+| [pullreminders/pull-reminders](https://github.com/pullreminders) | N/A | Slack integration for PRs | Real-world tooling to ping developers in Slack when a PR needs review. |

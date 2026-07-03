@@ -55,16 +55,16 @@ Below are the topics that make up this course. This list serves as the structura
 > **Jules: Pick the first batch of `- [ ]` items (up to 10) under `### Next Task`. If fewer than 10, promote from `### Backlog`.**
 
 ### Next Task
-- [ ] `git-001` | Create `git-fundamentals.mdx` | Branch: `jules/git-workflows-batch`
-- [ ] `git-002` | Create `branching-strategies.mdx` | Branch: `jules/git-workflows-batch`
-- [ ] `git-003` | Create `pull-requests.mdx` | Branch: `jules/git-workflows-batch`
-- [ ] `git-004` | Create `code-review-culture.mdx` | Branch: `jules/git-workflows-batch`
-- [ ] `git-005` | Create `merge-conflicts.mdx` | Branch: `jules/git-workflows-batch`
-- [ ] `git-006` | Create `git-rebase-vs-merge.mdx` | Branch: `jules/git-workflows-batch`
-- [ ] `git-007` | Create `git-hooks-and-automation.mdx` | Branch: `jules/git-workflows-batch`
-- [ ] `git-008` | Create `monorepo-vs-polyrepo.mdx` | Branch: `jules/git-workflows-batch`
-- [ ] `git-009` | Create `git-advanced-operations.mdx` | Branch: `jules/git-workflows-batch`
-- [ ] `git-010` | Create `conventional-commits.mdx` | Branch: `jules/git-workflows-batch`
+- [x] `git-001` | Create `git-fundamentals.mdx` | Branch: `jules/git-workflows-batch`
+- [x] `git-002` | Create `branching-strategies.mdx` | Branch: `jules/git-workflows-batch`
+- [x] `git-003` | Create `pull-requests.mdx` | Branch: `jules/git-workflows-batch`
+- [x] `git-004` | Create `code-review-culture.mdx` | Branch: `jules/git-workflows-batch`
+- [x] `git-005` | Create `merge-conflicts.mdx` | Branch: `jules/git-workflows-batch`
+- [x] `git-006` | Create `git-rebase-vs-merge.mdx` | Branch: `jules/git-workflows-batch`
+- [x] `git-007` | Create `git-hooks-and-automation.mdx` | Branch: `jules/git-workflows-batch`
+- [x] `git-008` | Create `monorepo-vs-polyrepo.mdx` | Branch: `jules/git-workflows-batch`
+- [x] `git-009` | Create `git-advanced-operations.mdx` | Branch: `jules/git-workflows-batch`
+- [x] `git-010` | Create `conventional-commits.mdx` | Branch: `jules/git-workflows-batch`
 
 ### Backlog
 _Empty_
@@ -72,5 +72,6 @@ _Empty_
 ### Completed This Cycle
 | BAE ID | What's Done (High Level) |
 |---|---|
+| `[BAE-GIT-1]` | Created initial 10 topics for Git & Workflows course, covering fundamentals, branching, PRs, and monorepos. |
 
 
