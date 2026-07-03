@@ -1,0 +1,180 @@
+---
+sidebar_position: 2
+sidebar_label: "Branching Strategies"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Branching Strategies
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Git Branching Strategies |
+| Difficulty | Intermediate |
+| Used For | Organizing team workflows, isolating features, and managing releases safely. |
+| Common Mistake | Using long-lived feature branches that become impossible to merge later. |
+| Performance | O(1) for creating branches, as they are just pointers. |
+
+## 2. Real-World Analogy
+
+Bro, think of a branching strategy like managing a restaurant kitchen during a busy dinner service.
+
+| Kitchen Scenario | Git Branching Equivalent |
+|---|---|
+| The main menu that customers are ordering from right now | `main` / `master` branch (Production) |
+| The head chef testing a new soup recipe on the side | `feature/new-soup` branch |
+| The sous chef fixing a burnt steak immediately | `hotfix/steak-burn` branch |
+| Assembling the new menu for next week in a private area | `release/v2.0` branch |
+
+If the head chef threw his experimental soup directly onto a customer's plate (`main`), chaos would happen. Branching gives you safe parallel universes.
+
+## 3. Concept Explanation
+
+A branch in Git is just a lightweight movable pointer to a commit. However, a "Branching Strategy" is a team agreement on *how* to use those pointers. Without a strategy, developers step on each other's toes, overwrite changes, and deploy broken code.
+
+In the corporate world, you rarely push straight to `main`. You follow a workflow. The two most common are **GitFlow** (heavy, structured, good for scheduled releases) and **Trunk-Based Development** (lightweight, fast, good for continuous deployment). As a modern engineer, you will mostly see Trunk-Based Development combined with feature flags.
+
+## 4. Syntax Table
+
+| Command | What it does |
+|---|---|
+| `git branch` | Lists all local branches. |
+| `git branch <name>` | Creates a new branch pointing to the current commit. |
+| `git checkout -b <name>`| Creates a new branch and switches to it immediately. |
+| `git switch <name>` | A modern, safer alternative to `checkout` for changing branches. |
+| `git branch -d <name>` | Deletes a local branch (fails if unmerged). |
+| `git branch -D <name>` | Force deletes a local branch. |
+
+## 5. Beginner Example
+
+Here is how you create an isolated space for your work without touching the main code.
+
+```bash
+# Ensure you are up to date
+git checkout main
+git pull
+
+# Create and switch to a new branch for your work
+git checkout -b feature/login-page
+
+# Do your work, commit it
+echo "code" > login.js
+git add login.js
+git commit -m "feat: add login page UI"
+
+# Push the new branch to GitHub
+git push -u origin feature/login-page
+```
+
+## 6. Real-World Engineering Example
+
+In a production Trunk-Based Development setup, you create short-lived feature branches off `main`, merge them back quickly via PRs, and use hotfix branches for emergencies.
+
+```bash
+# EMERGENCY: Production is down due to a typo
+git checkout main
+git pull origin main
+
+# Create a hotfix branch directly from production
+git checkout -b hotfix/fix-payment-typo
+
+# Fix the bug, commit, and push immediately
+sed -i 's/paymnt/payment/g' payment.js
+git commit -am "fix(payment): correct typo causing checkout crash"
+git push -u origin hotfix/fix-payment-typo
+
+# After the PR is merged, clean up your local machine
+git checkout main
+git pull origin main
+git branch -d hotfix/fix-payment-typo
+```
+
+## 7. Internal Working
+
+When you create a branch, Git does not copy your files. It simply creates a tiny 41-byte text file in `.git/refs/heads/` that contains the SHA-1 hash of the commit you are currently on.
+
+This is why branching in Git is practically instantaneous, unlike older systems like SVN that had to copy the whole directory structure.
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Commit A (SHA: 1a2b3c)' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'core', data: { label: 'Commit B (SHA: 4d5e6f)' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'data', data: { label: 'main branch pointer' }, position: { x: 100, y: 200 } },
+    { id: '4', type: 'data', data: { label: 'feature branch pointer' }, position: { x: 400, y: 200 } },
+    { id: '5', type: 'process', data: { label: 'HEAD pointer' }, position: { x: 400, y: 300 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: false, label: 'parent' },
+    { id: 'e3-2', source: '3', target: '2', animated: true, label: 'points to' },
+    { id: 'e4-2', source: '4', target: '2', animated: true, label: 'points to' },
+    { id: 'e5-4', source: '5', target: '4', animated: true, label: 'active on' }
+  ]}
+/>
+
+## 8. Performance Table
+
+| Action | Time Complexity | Real-World Impact |
+|---|---|---|
+| Creating a branch | O(1) | Sub-millisecond. It just writes a hash to a text file. |
+| Switching branches | O(N) | N = number of files changed between branches. Git updates the working tree. |
+| Deleting a branch | O(1) | Removes the pointer file. Extremely fast. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is GitFlow? | A strict branching model using `master`, `develop`, `feature`, `release`, and `hotfix` branches. Good for boxed software, bad for SaaS. |
+| What is Trunk-Based Development? | A model where developers merge code into `main` (the trunk) at least daily. It relies heavily on automated testing. |
+| How is a branch different from a tag? | A branch pointer moves automatically as you add commits. A tag pointer is frozen on a specific commit forever (like `v1.0.0`). |
+| Why do we use feature branches? | To isolate experimental or incomplete code from the stable production base. |
+| What does `HEAD` mean in Git? | `HEAD` is a special pointer that shows what branch or commit your working directory is currently checked out to. |
+
+## 10. Tricky Questions & Edge Cases
+
+**What happens if you commit while detached from HEAD?**
+Bro, if you `git checkout <commit-hash>` (instead of a branch name) and make commits, you are in a "detached HEAD" state. These commits do not belong to any branch. If you switch to another branch, those commits become orphans and Git will eventually garbage collect and delete them! Always create a branch if you want to save that work.
+
+**Can two branches have the same name?**
+No, branch names must be unique locally. However, you can have a local branch named `feature-x` and a remote branch named `feature-x` that point to completely different commits (though this will cause immense confusion when pushing).
+
+## 11. Real-World Usage
+
+Companies operating massive SaaS platforms (like Stripe or Facebook) generally avoid heavy GitFlow. They use **Trunk-Based Development**. Every engineer creates a short-lived branch, writes a feature behind a Feature Flag, and merges it into `main` within 24 hours. `main` is then deployed to production hundreds of times a day. If the feature breaks, they don't revert the code; they just toggle the Feature Flag off in the dashboard.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Name branches clearly, prefixing with intent (e.g., `feat/login`, `fix/navbar`, `docs/readme`). | Don't name branches after yourself like `jules-work` or vague things like `updates`. |
+| Keep feature branches short-lived (merge within 1-2 days max). | Don't keep a branch alive for a month. You will face "merge conflict hell" later. |
+| Pull from `main` into your feature branch frequently to stay updated. | Don't ignore what others are merging into `main` while you work. |
+
+## 13. Production Notes
+
+> **Warning: Branch Accumulation**
+> In large enterprise repos, stale branches accumulate fast. If your team creates 20 feature branches a week and never deletes them after merging, the repo becomes polluted. This degrades the performance of commands like `git fetch`. Always set GitHub/GitLab to "Automatically delete head branches" after a PR is merged, and run `git fetch -p` (prune) locally to clean up dead remote trackers.
+
+## 14. Common Mistakes
+
+| Mistake | Fix |
+|---|---|
+| Working on `main` instead of a feature branch | Run `git checkout -b new-feature`, then commit. The changes move with you! |
+| Pushing to the wrong branch | `git push origin HEAD:correct-branch-name` |
+| Deleting an unmerged branch by mistake | Find the lost commit hash using `git reflog`, then `git branch <name> <hash>` to resurrect it. |
+
+## 15. Related Topics
+- pull-requests
+- merge-conflicts
+- git-rebase-vs-merge
+
+## Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [nvie/gitflow](https://github.com/nvie/gitflow) | ⭐ 8k+ | Git extensions to provide high-level repository operations for Vincent Driessen's branching model. | The historical standard for the GitFlow model. |
+| [github/flow](https://github.com/github/flow) | N/A | The official GitHub workflow documentation. | A lighter alternative to GitFlow focused on PRs and deployments. |
+| [agilechamps/git-flow-cheatsheet](https://github.com/danielkummer/git-flow-cheatsheet) | ⭐ 12k+ | A quick reference for GitFlow operations. | Essential for teams using the strict GitFlow strategy. |
+| [conventional-changelog/standard-version](https://github.com/conventional-changelog/standard-version) | ⭐ 9k+ | Automates versioning and CHANGELOG generation. | Links branch merging strategies with automated release tagging. |
+| [semantic-release/semantic-release](https://github.com/semantic-release/semantic-release) | ⭐ 19k+ | Fully automated version management and package publishing. | The ultimate tool for CI/CD branching strategies where `main` is always deployed. |

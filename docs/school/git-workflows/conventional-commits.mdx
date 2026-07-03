@@ -1,0 +1,167 @@
+---
+sidebar_position: 10
+sidebar_label: "Conventional Commits"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Conventional Commits
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Conventional Commits |
+| Difficulty | Beginner |
+| Used For | Standardizing commit messages to enable automated releases and changelogs. |
+| Common Mistake | Using the `feat:` prefix for bug fixes, which triggers an incorrect minor version bump. |
+| Performance | Not a code feature, but saves massive hours of manual release notes. |
+
+## 2. Real-World Analogy
+
+Bro, think of Conventional Commits like putting standard category stickers on moving boxes.
+
+| Moving Scenario | Conventional Commit Equivalent |
+|---|---|
+| A box labeled "Kitchen: Plates" | `feat(auth): add google login` |
+| A box labeled "Bedroom: Broken Lamp Repair" | `fix(auth): resolve oauth timeout` |
+| A box labeled "Trash: Old Papers" | `chore: remove deprecated logs` |
+| Handing the movers a list of all "Kitchen" boxes | Automatically generating a Changelog |
+
+If you just label every box "Stuff" (like `git commit -m "updates"`), unpacking the house takes forever.
+
+## 3. Concept Explanation
+
+Conventional Commits is a lightweight specification on top of commit messages. It provides an easy set of rules for creating an explicit commit history.
+
+Why do we care? Because if machines can read your commit messages, machines can automate your job. By structuring your commits (e.g., `type(scope): description`), CI/CD pipelines can automatically bump SemVer (Semantic Versioning) numbers (v1.1.0 to v1.2.0) and auto-generate beautifully formatted `CHANGELOG.md` files for your users.
+
+## 4. Syntax Table
+
+| Type | When to use it | SemVer Impact |
+|---|---|---|
+| `feat:` | Introducing a new feature. | Minor version bump (1.0.0 -> 1.1.0) |
+| `fix:` | Fixing a bug. | Patch version bump (1.0.0 -> 1.0.1) |
+| `docs:` | Changing documentation only (README, etc.). | None |
+| `style:` | Formatting, missing semi-colons (no code logic change). | None |
+| `refactor:`| A code change that neither fixes a bug nor adds a feature. | None |
+| `test:` | Adding or fixing tests. | None |
+| `chore:` | Updating build tasks, package manager configs, etc. | None |
+| `BREAKING CHANGE:` | (In the footer) Changing an API in a non-backwards compatible way. | Major version bump (1.0.0 -> 2.0.0) |
+
+## 5. Beginner Example
+
+Here is a standard, badly formatted commit compared to a Conventional Commit.
+
+**Bad:**
+```bash
+git commit -m "added the login page and also fixed the typo in the header"
+```
+
+**Good (Conventional):**
+```bash
+# We split it into two logical commits
+git commit -m "feat(ui): implement user login page"
+git commit -m "fix(header): correct spelling of 'Dashboard'"
+```
+
+## 6. Real-World Engineering Example
+
+When a PR is squash-merged, the title of the PR usually becomes the single commit on `main`. A production-ready PR title looks like this:
+
+```text
+feat(billing): integrate stripe payment gateway
+
+Users can now enter credit card details to subscribe to the pro plan.
+
+Closes JIRA-892
+
+BREAKING CHANGE: The /api/v1/checkout endpoint now requires a valid JWT token.
+```
+
+Because of the `BREAKING CHANGE` footer, the automated release tool will bump the project from `v2.4.1` to `v3.0.0` automatically.
+
+## 7. Internal Working
+
+Conventional Commits don't change how Git works internally; they change how downstream tools read Git's internal log. Tools like `semantic-release` run `git log` to parse the history since the last Git Tag.
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'git commit -m "feat: X"' }, position: { x: 100, y: 100 } },
+    { id: '2', type: 'core', data: { label: 'git commit -m "fix: Y"' }, position: { x: 300, y: 100 } },
+    { id: '3', type: 'tool', data: { label: 'semantic-release (CI)' }, position: { x: 200, y: 200 } },
+    { id: '4', type: 'process', data: { label: 'Calculates SemVer (Minor bump)' }, position: { x: 200, y: 300 } },
+    { id: '5', type: 'output', data: { label: 'Tags v1.1.0' }, position: { x: 100, y: 400 } },
+    { id: '6', type: 'output', data: { label: 'Generates CHANGELOG.md' }, position: { x: 300, y: 400 } }
+  ]}
+  edges={[
+    { id: 'e1-3', source: '1', target: '3', animated: true, label: 'parses' },
+    { id: 'e2-3', source: '2', target: '3', animated: true, label: 'parses' },
+    { id: 'e3-4', source: '3', target: '4', animated: true, label: 'analyzes types' },
+    { id: 'e4-5', source: '4', target: '5', animated: true, label: 'creates release' },
+    { id: 'e4-6', source: '4', target: '6', animated: true, label: 'writes notes' }
+  ]}
+/>
+
+## 8. Performance Table
+
+| Activity | Metric | Target |
+|---|---|---|
+| Writing Commit Message | Time | ~10 seconds extra thought per commit. |
+| Automated Release | Time | Saves ~1-2 hours of manual release preparation. |
+| Changelog Generation | Accuracy | 100% accurate to the code merged. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the primary purpose of Conventional Commits? | To allow automated tools to determine Semantic Versioning (SemVer) bumps and generate changelogs. |
+| How do you indicate a major breaking change? | By appending `!` after the type/scope (e.g., `feat!: new API`) or adding `BREAKING CHANGE:` in the commit footer. |
+| What if a commit has multiple types, like a feature and a fix? | You should break it into two separate commits. Commits should be atomic. |
+| What scope should I use? | Scopes are optional but should represent the module or domain of the project (e.g., `feat(database)`, `fix(auth)`). |
+
+## 10. Tricky Questions & Edge Cases
+
+**Bro, I wrote `Feat: new page` with a capital F, will it work?**
+No! The specification is case-sensitive by default in most tools. `feat:` is valid, `Feat:` is treated as a standard, non-conventional string, meaning it might be ignored by the changelog generator.
+
+**Does a `refactor:` trigger a release?**
+By default in most tools (like semantic-release), no. Only `feat` and `fix` trigger releases (Minor and Patch). A `refactor` changes code internals without changing behavior, so the version number doesn't need to bump.
+
+## 11. Real-World Usage
+
+The Angular team at Google actually invented this standard (originally called the "Angular Commit Guidelines"). Today, almost every major open-source library uses it. In enterprise CI/CD, tools like `commitlint` are installed as a Git Hook (`commit-msg` hook). If a developer tries to commit `git commit -m "fixed stuff"`, the hook intercepts it and throws an error directly in the terminal, forcing them to rewrite it to `fix(module): fixed stuff`.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use the imperative mood in the description ("add feature", not "added feature"). | Don't end the description line with a period. |
+| Keep the first line under 72 characters. | Don't put paragraphs of explanation on the first line. Put it in the body. |
+| Enforce the rules using a CI linter or `husky` hook. | Don't rely on humans to "just remember" the rules. |
+
+## 13. Production Notes
+
+> **Warning: Squash Merging**
+> If your team uses "Squash and Merge" for Pull Requests on GitHub, the default behavior is often to combine all the messy branch commits into one commit message. If the resulting PR squash commit message does not follow Conventional Commits, your automated release pipeline will fail or skip the release entirely. Always ensure the *PR Title* follows the convention, as that becomes the final commit message.
+
+## 14. Common Mistakes
+
+| Mistake | Fix |
+|---|---|
+| Putting a space before the colon `feat : add button` | Remove the space: `feat: add button` |
+| Using custom, unrecognized types like `update:` or `change:` | Stick to the standard types (`feat`, `fix`, `chore`, `docs`, `style`, `refactor`, `perf`, `test`). |
+
+## 15. Related Topics
+- git-hooks-and-automation
+- pull-requests
+- branching-strategies
+
+## Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [conventional-changelog/conventional-changelog](https://github.com/conventional-changelog/conventional-changelog) | ⭐ 8k+ | Generate a changelog from git metadata | The core toolset for making Conventional Commits actually do work. |
+| [semantic-release/semantic-release](https://github.com/semantic-release/semantic-release) | ⭐ 19k+ | Fully automated version management and package publishing | The most popular CI tool for acting on conventional commits. |
+| [conventional-changelog/commitlint](https://github.com/conventional-changelog/commitlint) | ⭐ 14k+ | Lint commit messages | The standard tool used in git hooks to enforce the format. |
+| [commitizen/cz-cli](https://github.com/commitizen/cz-cli) | ⭐ 15k+ | The commitizen command line utility | Provides an interactive terminal prompt to help devs format messages correctly. |

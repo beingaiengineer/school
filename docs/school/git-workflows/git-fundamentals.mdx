@@ -1,0 +1,185 @@
+---
+sidebar_position: 1
+sidebar_label: "Git Fundamentals"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Git Fundamentals
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Git Fundamentals |
+| Difficulty | Beginner |
+| Used For | Version control, tracking history, and safe collaboration. |
+| Common Mistake | Editing `.git` directory manually or confusing staging with committing. |
+| Performance | O(1) for most local operations (commits, branches). |
+
+## 2. Real-World Analogy
+
+Bro, think of Git like taking a series of snapshots of your house while you renovate it.
+
+| Real-World Scenario | Git Equivalent |
+|---|---|
+| Buying materials and bringing them to your driveway | Making changes in your Working Directory |
+| Organizing materials inside the garage, ready to install | Adding changes to the Staging Area (`git add`) |
+| Taking a photo of the completed room and saving it in an album | Committing the changes (`git commit`) |
+| Sharing your photo album with your family online | Pushing to a Remote Repository (`git push`) |
+
+## 3. Concept Explanation
+
+Git is a distributed version control system. It exists so that you can track exactly what changed in your code, who changed it, and why. Without it, you are just renaming files like `app_final_v2_really_final.js`.
+
+In a corporate environment, Git gives you the safety net to experiment without breaking the production code. Every developer has a full copy of the entire history locally, which means you can work offline and operations are incredibly fast. The key to mastering Git is understanding its three states: Modified (Working Directory), Staged (Staging Area/Index), and Committed (Local Repository).
+
+## 4. Syntax Table
+
+| Command | What it does |
+|---|---|
+| `git init` | Initializes a new local Git repository. |
+| `git clone <url>` | Copies a remote repository to your local machine. |
+| `git status` | Shows which files are modified and staged. |
+| `git add <file>` | Moves changes from the working directory to the staging area. |
+| `git commit -m "..."` | Saves the staged changes into the local history. |
+| `git push` | Uploads local commits to the remote repository. |
+| `git pull` | Downloads and merges changes from the remote repository. |
+| `git log` | Shows the commit history. |
+
+## 5. Beginner Example
+
+Let's say you just created a new Python script. Here is how you save it to Git.
+
+```bash
+# Initialize a new repo
+git init
+
+# Create a file
+echo 'print("Hello Bro")' > main.py
+
+# Check status
+git status
+
+# Stage the file
+git add main.py
+
+# Commit it
+git commit -m "feat: add main script"
+```
+
+## 6. Real-World Engineering Example
+
+In production, you never commit directly to the `main` branch. You create a feature branch, do your work, stage specific files (not just `git add .`), commit with a descriptive message, and push.
+
+```bash
+# Create and switch to a new feature branch
+git checkout -b feature/user-authentication
+
+# Make changes to the auth service
+# ...
+
+# Stage only the specific files you want to commit
+git add src/auth/login.py src/auth/utils.py
+
+# Commit with a standard conventional commit message
+git commit -m "feat(auth): implement JWT based login
+
+- Added token generation
+- Added middleware for route protection
+- Closes JIRA-123"
+
+# Push the branch to the remote
+git push -u origin feature/user-authentication
+```
+
+## 7. Internal Working
+
+Under the hood, Git is a key-value data store. When you commit, Git doesn't save a "diff" (what changed); it takes a snapshot of exactly what all files look like at that moment.
+
+If a file didn't change, Git just stores a reference to the previous identical file. This makes it incredibly efficient. The key is an SHA-1 hash (a 40-character string).
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'data', data: { label: 'Working Directory (Modified Files)' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'git add' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'data', data: { label: 'Staging Area / Index (Snapshots built)' }, position: { x: 250, y: 200 } },
+    { id: '4', type: 'process', data: { label: 'git commit' }, position: { x: 250, y: 300 } },
+    { id: '5', type: 'core', data: { label: 'Local Repository (.git directory)' }, position: { x: 250, y: 400 } },
+    { id: '6', type: 'output', data: { label: 'Commit Object (SHA-1)' }, position: { x: 250, y: 500 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true, label: 'Stages' },
+    { id: 'e2-3', source: '2', target: '3', animated: true, label: 'Prepares' },
+    { id: 'e3-4', source: '3', target: '4', animated: true, label: 'Records' },
+    { id: 'e4-5', source: '4', target: '5', animated: true, label: 'Saves to' },
+    { id: 'e5-6', source: '5', target: '6', animated: true, label: 'Generates' }
+  ]}
+/>
+
+## 8. Performance Table
+
+| Operation | Time Complexity | Note |
+|---|---|---|
+| `git commit` | O(1) | Extremely fast as it just writes a snapshot locally. |
+| `git branch` | O(1) | A branch is just a pointer (41 bytes file) to a commit. |
+| `git clone` | O(N) | N is the size of the repo history. Can be slow for massive monorepos. |
+| `git status` | O(N) | N is the number of files in the working directory. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between Git and GitHub? | Git is the local version control tool. GitHub is a remote hosting service for Git repositories. |
+| What does `git clone` actually do? | It downloads the entire repository, including all branches and full commit history, to your local machine. |
+| Why is Git called "distributed"? | Because every developer has a full, complete copy of the repository history locally, not just the current files. |
+| Explain the staging area (index). | It's a buffer between the working directory and the repo. It lets you selectively choose which changes will be in the next commit. |
+| How do you change the message of the very last commit? | `git commit --amend -m "New message"` (only do this if you haven't pushed!). |
+
+## 10. Tricky Questions & Edge Cases
+
+**What happens if you accidentally delete the `.git` hidden folder?**
+Bro, you just deleted all your Git history. Your code files are still there in the working directory, but it is no longer a Git repository. It's just a regular folder now.
+
+**Can you commit an empty folder?**
+No. Git tracks file contents, not directories. If you need an empty folder, the standard trick is to add an empty hidden file inside it named `.gitkeep`.
+
+## 11. Real-World Usage
+
+Companies like Netflix and Uber rely on Git for everything. Their CI/CD pipelines are triggered entirely by Git events. When a developer pushes a commit or merges a branch, the Git server fires a webhook to systems like Jenkins or GitHub Actions, which then run tests, build Docker images, and deploy the code to AWS or Kubernetes. Git isn't just for code; it's the control plane for modern infrastructure (GitOps).
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Write clear, imperative commit messages ("Add feature", not "Added feature"). | Don't write messages like "fixed bug" or "WIP". |
+| Commit often and keep commits small and logically grouped. | Don't commit everything at the end of the week in one massive commit. |
+| Review your changes with `git diff` before staging. | Don't blindly run `git add .` without checking what you are adding. |
+
+## 13. Production Notes
+
+> **Warning: Large Files**
+> Do not commit large binary files (like `.mp4` videos, massive `.csv` datasets, or compiled `.jar` files) to Git. Git keeps a copy of every version of every file forever. Committing large binaries will cause your repository size to bloat exponentially, slowing down `git clone` for everyone on your team. Use `.gitignore` for build artifacts and Git LFS (Large File Storage) for necessary large media.
+
+## 14. Common Mistakes
+
+| Mistake | Fix |
+|---|---|
+| Typing `git commit` and getting stuck in the Vim editor | Press `Escape`, type `:wq`, and hit `Enter` to save and exit. |
+| Committing secrets (API keys, passwords) | Use tools like BFG Repo-Cleaner or `git filter-repo` to rewrite history and remove them, then rotate the keys immediately. |
+| Adding files you didn't mean to (`git add .`) | Unstage them using `git reset HEAD <file>`. |
+
+## 15. Related Topics
+- branching-strategies
+- pull-requests
+- conventional-commits
+
+## Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [git/git](https://github.com/git/git) | ⭐ 48k+ | The official Git source code | This is the actual C code that runs Git under the hood. |
+| [jlord/patchwork](https://github.com/jlord/patchwork) | ⭐ 15k+ | A learning repo for Git beginners | Great for seeing how open source PRs work fundamentally. |
+| [k88hudson/git-flight-rules](https://github.com/k88hudson/git-flight-rules) | ⭐ 45k+ | A guide about what to do when things go wrong in Git | Essential survival manual for fixing common and complex Git mistakes. |
+| [progit/progit2](https://github.com/progit/progit2) | ⭐ 12k+ | The source for the Pro Git book | The definitive open-source book on Git internals and usage. |
+| [tiimgreen/github-cheat-sheet](https://github.com/tiimgreen/github-cheat-sheet) | ⭐ 42k+ | A list of cool features of Git and GitHub | Quick reference for advanced commands and hidden features. |
