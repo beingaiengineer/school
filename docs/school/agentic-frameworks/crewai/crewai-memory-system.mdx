@@ -1,0 +1,202 @@
+---
+sidebar_position: 5
+sidebar_label: "CrewAI Memory System"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# CrewAI Memory System
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Enabling Short-term, Long-term, and Entity Memory in CrewAI |
+| Difficulty | Intermediate |
+| Used For | Allowing agents to remember user preferences across sessions, recall past task results, and share context |
+| Common Mistake | Turning on memory without configuring a proper embedding model, causing silent failures or high OpenAI bills |
+| Performance | Adds latency due to database reads/writes and embedding vector generation on every turn |
+
+## 2. Real-World Analogy
+
+| Human Memory | CrewAI Memory Equivalent |
+|---|---|
+| Remembering what you said 5 minutes ago | **Short-term Memory** (Context Window) |
+| Remembering your childhood phone number | **Long-term Memory** (SQLite / Vector Store) |
+| Remembering that "Apple" is a company, not a fruit | **Entity Memory** |
+| Leaving a note for your coworker | **Shared Crew Memory** |
+
+Bro, imagine working with a team where every morning, they forget everything that happened the day before. That is an agent without memory. CrewAI's memory system gives your agents a shared notebook (Short-term), a filing cabinet (Long-term), and a rolodex of important people/places (Entity).
+
+## 3. Concept Explanation
+
+CrewAI has a very robust, built-in memory system that you can enable with a single boolean flag: `memory=True`. When enabled, CrewAI automatically activates several memory modules:
+
+1. **Short-Term Memory:** Uses RAG (Retrieval-Augmented Generation) behind the scenes. As the crew works, it saves task outputs and tool results. Later agents can query this context.
+2. **Long-Term Memory:** Stores execution results in a local SQLite database after the crew finishes. If you run the crew again tomorrow, it can fetch past experiences to avoid repeating mistakes.
+3. **Entity Memory:** Automatically extracts key entities (like company names, user names, specific technologies) and stores them so agents maintain consistent facts about them across tasks.
+
+By default, CrewAI uses OpenAI for embeddings to power the RAG search.
+
+## 4. Syntax Table
+
+| Action | Syntax Example | Purpose |
+|---|---|---|
+| Enable Memory | `Crew(..., memory=True)` | Turns on the entire memory suite |
+| Configure Embeddings | `Crew(..., embedder=\{"provider": "openai"\})` | Set the model used for semantic search |
+| Custom DB Path | `Crew(..., memory_config=\{"path": "./db"\})` | Change where SQLite saves long-term data |
+| Disable for Agent | Not natively supported | Memory is a Crew-level construct |
+
+## 5. Beginner Example
+
+The easiest way to use memory is just to flip the switch. CrewAI handles the databases and vector stores automatically in your local directory.
+
+```python
+import os
+from crewai import Agent, Task, Crew, Process
+from langchain_openai import ChatOpenAI
+
+os.environ["OPENAI_API_KEY"] = "sk-..."
+
+llm = ChatOpenAI(model="gpt-4o-mini")
+
+researcher = Agent(role="Researcher", goal="Find data", backstory="You find facts.", llm=llm)
+writer = Agent(role="Writer", goal="Write articles", backstory="You write.", llm=llm)
+
+task1 = Task(description="Research Python 3.12 features.", expected_output="List", agent=researcher)
+task2 = Task(description="Write a blog post about it.", expected_output="Blog", agent=writer)
+
+# Enable memory!
+crew = Crew(
+    agents=[researcher, writer],
+    tasks=[task1, task2],
+    process=Process.sequential,
+    memory=True # <--- Magic happens here
+)
+
+# Run 1: Agents learn about Python 3.12 and save to SQLite
+crew.kickoff()
+
+# Run 2: Agents will pull from Long-Term memory to execute faster/better
+crew.kickoff()
+```
+
+## 6. Real-World Engineering Example
+
+Bro, in production, you might not want to use OpenAI for embeddings because it gets expensive. You can configure CrewAI to use an open-source local embedding model (like HuggingFace) to save money.
+
+```python
+import os
+from crewai import Crew, Agent, Task
+from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(model="gpt-4o")
+
+researcher = Agent(role="Researcher", goal="Find data", backstory="...", llm=llm)
+task1 = Task(description="Analyze Q3 earnings.", expected_output="...", agent=researcher)
+
+# Configure the Crew to use Ollama/HuggingFace for embeddings instead of OpenAI
+crew = Crew(
+    agents=[researcher],
+    tasks=[task1],
+    memory=True,
+    embedder={
+        "provider": "huggingface",
+        "config": {
+            "model": "BAAI/bge-small-en-v1.5" # Excellent open-source embedding model
+        }
+    }
+)
+
+result = crew.kickoff()
+```
+
+## 7. Internal Working
+
+What happens when an agent tries to remember something?
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', position: { x: 250, y: 0 }, data: { label: 'Agent Task', description: 'Agent needs info about "Acme Corp"' } },
+    { id: '2', type: 'process', position: { x: 250, y: 100 }, data: { label: 'Query Formulation', description: 'Creates semantic search query' } },
+    { id: '3', type: 'tool', position: { x: 250, y: 200 }, data: { label: 'Embedder', description: 'Converts query to Vector [0.1, 0.4...]' } },
+    { id: '4', type: 'data', position: { x: 50, y: 300 }, data: { label: 'Short-Term DB', description: 'ChromaDB (Current session)' } },
+    { id: '5', type: 'data', position: { x: 450, y: 300 }, data: { label: 'Long-Term DB', description: 'SQLite (Past sessions)' } },
+    { id: '6', type: 'output', position: { x: 250, y: 450 }, data: { label: 'Context Injected', description: 'Results appended to Agent Prompt' } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'Needs context' },
+    { id: 'e2-3', source: '2', target: '3', label: 'Vectorizes' },
+    { id: 'e3-4', source: '3', target: '4', label: 'Similarity Search', animated: true },
+    { id: 'e3-5', source: '3', target: '5', label: 'Similarity Search', animated: true },
+    { id: 'e4-6', source: '4', target: '6', label: 'Returns chunks' },
+    { id: 'e5-6', source: '5', target: '6', label: 'Returns history' }
+  ]}
+/>
+
+When `memory=True`, CrewAI spins up a local ChromaDB instance (for vector embeddings) and a SQLite database. Before an agent executes a task, CrewAI automatically searches these databases for relevant past context and injects it silently into the LLM's system prompt. When the task finishes, it embeds the result and writes it back to the databases.
+
+## 8. Performance Table
+
+| Memory Type | Latency Impact | Storage | Best For |
+|---|---|---|---|
+| None (`memory=False`) | Zero | None | One-off, stateless tasks |
+| Short-Term | Medium (Requires embedding call) | In-memory / ChromaDB | Complex tasks where Agent B needs context from Agent A |
+| Long-Term | High (Disk I/O + Embeddings) | SQLite | Recurring daily tasks (e.g., daily market analysis) |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| How does CrewAI store memory? | It uses ChromaDB for short-term/vector storage and SQLite for long-term persistence, stored locally by default. |
+| Why did my OpenAI bill spike when I enabled memory? | Because CrewAI uses OpenAI's `text-embedding-3-small` by default. Every piece of context and every search query generates an API call to OpenAI to create a vector. |
+| What is Entity Memory? | It is a system that identifies specific nouns (people, places, companies) in the text and stores facts about them so all agents share the same source of truth regarding that entity. |
+| Can I use a cloud vector database instead of ChromaDB? | Out of the box, CrewAI defaults to local ChromaDB. For cloud databases (like Pinecone or Weaviate), you would need to build a custom tool that the agents query manually. |
+| Does memory persist if I restart my Python script? | Yes, Long-Term memory persists because it is saved to a SQLite file (`.db`) on your disk. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, what happens if your Long-Term memory gets filled with garbage data from a failed agent run?
+
+**Answer:** If an agent hallucinates badly and saves it to Long-Term memory, future runs will fetch that hallucination via semantic search, poisoning your new runs. You must manually delete the local SQLite/ChromaDB folders that CrewAI generates to "wipe" the agent's memory if things get corrupted.
+
+## 11. Real-World Usage
+
+Memory is crucial for continuous pipelines:
+- **Coding Assistants:** The crew writes code on Day 1. It discovers that a specific internal API requires an auth token. It saves this to memory. On Day 2, when asked to write new code, it fetches the auth token requirement from memory automatically.
+- **Customer Profiling:** An agent reads user emails. Over time, it builds an Entity Memory of the user (e.g., "User prefers short responses, uses a Mac"). Next month, the agent uses that entity memory to customize the reply.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Do configure local open-source embedders (like HuggingFace) if you are processing massive amounts of text to avoid high API costs. | Don't turn on memory for simple, stateless tasks. It adds unnecessary latency and complexity. |
+| Do add `.chroma` and `.db` files to your `.gitignore` so you don't accidentally commit massive agent databases to GitHub. | Don't rely on memory for critical factual data. If an agent MUST know an API key, pass it in the prompt or use a custom Tool, don't hope it remembers it. |
+
+## 13. Production Notes
+
+> **Production Warning:**
+> CrewAI's default memory writes to local disk (SQLite/Chroma). If you deploy your CrewAI app to a serverless environment (like AWS Lambda or Vercel), the disk is ephemeral. The memory will be wiped every time the function spins down. You must deploy to a persistent container (like EC2 or a persistent volume on Kubernetes) if you want Long-Term memory to work.
+
+## 14. Common Mistakes
+
+| Mistake | Fix | Code Example |
+|---|---|---|
+| Forgetting to set OPENAI_API_KEY | Set the env var (used by embedder) | `os.environ["OPENAI_API_KEY"] = "..."` |
+| Committing memory to Git | Update `.gitignore` | `echo "*.db" >> .gitignore` |
+| Assuming memory is shared across servers | It is stored locally. | Use a shared EFS volume if using Kubernetes. |
+
+## 15. Related Topics
+- CrewAI Fundamentals
+- Agent Memory Types Overview
+- Semantic Memory
+
+## 16. Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [joaomdmoura/crewAI](https://github.com/joaomdmoura/crewAI) | ⭐ 18k+ | Official CrewAI repo | Look at the `crewai/memory` folder to see how it works |
+| [chroma-core/chroma](https://github.com/chroma-core/chroma) | ⭐ 12k+ | ChromaDB | The default vector database engine used by CrewAI |
+| [langchain-ai/langchain](https://github.com/langchain-ai/langchain) | ⭐ 90k+ | LangChain | Provides the embedding integrations (OpenAI, HuggingFace) |
+| [sqlite/sqlite](https://github.com/sqlite/sqlite) | ⭐ 5k+ | SQLite | The underlying long-term storage engine |
+| [huggingface/sentence-transformers](https://github.com/UKPLab/sentence-transformers) | ⭐ 14k+ | Open-source embeddings | Best way to save money on CrewAI memory embeddings |

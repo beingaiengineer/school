@@ -1,0 +1,222 @@
+---
+sidebar_position: 3
+sidebar_label: "Tasks & Processes"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# CrewAI Tasks and Processes
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Defining Tasks and Output Formats in CrewAI |
+| Difficulty | Intermediate |
+| Used For | Structuring the exact work to be done and guaranteeing the output matches a specific schema |
+| Common Mistake | Using vague `expected_output` descriptions, causing the agent to hallucinate the format |
+| Performance | Dictated by the complexity of the task description and how many tools it requires to complete |
+
+## 2. Real-World Analogy
+
+| Job Delegation | CrewAI Task Equivalent |
+|---|---|
+| Handing a physical file to an employee | Passing a `Task` to an `Agent` |
+| "Analyze this data" | `description` |
+| "I need a 2-page PDF report with a summary table" | `expected_output` |
+| "Give it to Jim when you are done" | The Crew `Process` routing the output |
+| "Fill out this exact Excel template" | `output_pydantic` or `output_json` |
+
+Bro, a Task in CrewAI is just a Jira ticket. If you write a Jira ticket that says "Fix the bug," the developer will do whatever they want. If you write "Fix the bug in auth.py, write a test, and deploy to staging," you get exactly what you want. The `Task` object is how you force the LLM to follow the rules.
+
+## 3. Concept Explanation
+
+While `Agents` define the persona, `Tasks` define the actual execution logic.
+
+A Task requires two main things:
+1. `description`: What needs to be done. This can contain `{placeholders}` that are filled in when the crew is kicked off.
+2. `expected_output`: A clear, plain-text description of what the final result should look like (e.g., "A markdown table with 3 columns").
+
+**Structured Outputs:** Modern CrewAI allows you to enforce strict data types. Instead of hoping the agent outputs JSON, you can pass a Pydantic model to `output_pydantic`. The agent will be forced to return a parsed Python object matching that schema.
+
+**Context Passing:** Tasks don't run in isolation. In a sequential process, the output of Task 1 is automatically appended to the context of Task 2. If you need Task 3 to know what Task 1 did, you can pass `context=[task1]` explicitly.
+
+## 4. Syntax Table
+
+| Parameter | Syntax Example | Purpose |
+|---|---|---|
+| Description | `description="Find data on {topic}"` | The actual instruction to the agent |
+| Expected Output | `expected_output="A 3-paragraph summary"` | Plain text instruction on format |
+| Agent | `agent=researcher_agent` | Who is responsible for this task |
+| Context | `context=[task_A, task_B]` | Explicitly pass outputs from previous tasks |
+| Pydantic Output | `output_pydantic=MyDataModel` | Force the agent to return a structured object |
+| Async Execution | `async_execution=True` | Run this task in the background (non-blocking) |
+
+## 5. Beginner Example
+
+Here is a basic sequential task setup where Task 2 relies on the output of Task 1.
+
+```python
+from crewai import Task, Agent, Crew
+from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(model="gpt-4o-mini")
+
+researcher = Agent(role="Researcher", goal="Find facts", backstory="You find facts.", llm=llm)
+writer = Agent(role="Writer", goal="Write summaries", backstory="You write.", llm=llm)
+
+# Task 1
+find_facts = Task(
+    description="Find 3 interesting facts about the {animal}.",
+    expected_output="A numbered list of 3 facts.",
+    agent=researcher
+)
+
+# Task 2
+write_blog = Task(
+    description="Using the facts provided, write a short introductory paragraph.",
+    expected_output="A single paragraph of text.",
+    agent=writer
+)
+
+crew = Crew(agents=[researcher, writer], tasks=[find_facts, write_blog])
+
+# The output of find_facts is automatically given to write_blog
+result = crew.kickoff(inputs={"animal": "Honey Badger"})
+print(result)
+```
+
+## 6. Real-World Engineering Example
+
+Bro, in production, you cannot parse unstructured text. You need JSON. You use Pydantic models to force the task to return exactly the data structure your API or database expects.
+
+```python
+from pydantic import BaseModel, Field
+from crewai import Task, Agent, Crew
+from langchain_openai import ChatOpenAI
+
+# 1. Define the strict schema you need
+class CompetitorAnalysis(BaseModel):
+    company_name: str
+    price_tier: str = Field(description="e.g., Low, Medium, High")
+    key_features: list[str]
+    is_threat: bool
+
+llm = ChatOpenAI(model="gpt-4o")
+analyst = Agent(
+    role="Market Analyst",
+    goal="Analyze competitors",
+    backstory="You are precise.",
+    llm=llm
+)
+
+# 2. Assign the schema to the task
+analysis_task = Task(
+    description="Analyze the competitor: {company}.",
+    expected_output="A complete JSON object matching the requested schema.",
+    agent=analyst,
+    output_pydantic=CompetitorAnalysis # Forces structured output
+)
+
+crew = Crew(agents=[analyst], tasks=[analysis_task])
+
+# 3. The result is now a strongly typed Pydantic object!
+result = crew.kickoff(inputs={"company": "Stripe"})
+
+# You can access it like a normal Python object
+print(f"Threat Level: {result.pydantic.is_threat}")
+print(f"Features: {result.pydantic.key_features}")
+```
+
+## 7. Internal Working
+
+How does CrewAI handle context passing and Pydantic enforcement?
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', position: { x: 250, y: 0 }, data: { label: 'Task Execution Starts', description: 'Agent receives task description' } },
+    { id: '2', type: 'data', position: { x: 50, y: 100 }, data: { label: 'Inject Inputs', description: '{placeholders} are replaced' } },
+    { id: '3', type: 'data', position: { x: 450, y: 100 }, data: { label: 'Inject Context', description: 'Outputs from previous tasks appended' } },
+    { id: '4', type: 'process', position: { x: 250, y: 200 }, data: { label: 'Agent Loop', description: 'LLM calls tools to satisfy description' } },
+    { id: '5', type: 'process', position: { x: 250, y: 300 }, data: { label: 'Output Parser', description: 'Checks if output matches Pydantic schema' } },
+    { id: '6', type: 'warning', position: { x: 450, y: 300 }, data: { label: 'Format Error', description: 'Sends error back to LLM to fix it' } },
+    { id: '7', type: 'output', position: { x: 250, y: 400 }, data: { label: 'Final Structured Output', description: 'Saved to Crew state' } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'Setup' },
+    { id: 'e1-3', source: '1', target: '3', label: 'Setup' },
+    { id: 'e2-4', source: '2', target: '4', label: 'Prompt' },
+    { id: 'e3-4', source: '3', target: '4', label: 'Prompt' },
+    { id: 'e4-5', source: '4', target: '5', label: 'Returns raw text' },
+    { id: 'e5-6', source: '5', target: '6', label: 'Fails validation' },
+    { id: 'e6-4', source: '6', target: '4', label: 'Retry loop', type: 'step' },
+    { id: 'e5-7', source: '5', target: '7', label: 'Passes validation', animated: true }
+  ]}
+/>
+
+When you use `output_pydantic`, CrewAI uses LangChain's structured output parsers. If the LLM returns invalid JSON (or forgets a required field), the parser throws an exception. CrewAI catches this exception, passes the error message *back* to the LLM, and says "You messed up the JSON, fix it." It will loop until it gets valid data.
+
+## 8. Performance Table
+
+| Output Type | Token Usage | Reliability | Speed |
+|---|---|---|---|
+| Plain Text | Standard | Low (Hard to parse) | Fast |
+| `output_json` | High (Schema included in prompt) | Medium (Sometimes hallucinates keys) | Slower (May require retries) |
+| `output_pydantic`| High | Very High (Strictly validated) | Slower (May require retries) |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| How do you pass data from Task 1 to Task 3, skipping Task 2? | Use the `context` parameter on Task 3: `Task(..., context=[task1])`. |
+| What is the difference between `output_json` and `output_pydantic`? | `output_pydantic` returns a fully instantiated Python class that you can interact with using dot notation (`result.field`). `output_json` just returns a Python dictionary. |
+| Can a task be executed asynchronously? | Yes, by setting `async_execution=True`. The crew will not wait for this task to finish before moving to the next one, unless a future task explicitly lists it in its `context`. |
+| What happens if an agent fails to match the `expected_output` format? | If using Pydantic, the agent will enter an error-correction loop. If it hits the `max_iter` limit of the agent without fixing it, the graph will crash or return a validation error. |
+| How do you save the output of a specific task to a file? | Use the `output_file` parameter: `Task(..., output_file='report.md')`. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, what happens if you have a Sequential process, and Task 2 requires data from Task 1, but Task 1 is set to `async_execution=True`?
+
+**Answer:** If Task 2 implicitly relies on Task 1 just because of sequential order, but Task 1 is async, Task 2 will likely start *before* Task 1 finishes and hallucinate the missing data. If you use async tasks, you MUST explicitly map dependencies using the `context` parameter. If Task 2 has `context=[task1]`, CrewAI is smart enough to block Task 2 until the async Task 1 is complete.
+
+## 11. Real-World Usage
+
+Pydantic tasks are the secret to using CrewAI in microservices.
+- **Data Extraction:** A microservice receives an uploaded PDF invoice. The CrewAI agent reads the PDF, and the Task is forced into an `InvoiceModel` Pydantic class. The microservice then dumps that model directly into the Postgres database.
+- **Content Pipelines:** An agent researches a topic, and the Task forces the output into a `{title, SEO_keywords, body, conclusion}` Pydantic schema, which is then sent directly to a WordPress REST API.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Do use `output_pydantic` for ANY task where the result needs to be parsed by downstream Python code. | Don't write vague `expected_output` strings like "A good summary." Say "A 3-paragraph summary using bullet points." |
+| Do use `context=[...]` explicitly if your process is complex or uses async tasks. | Don't create massive tasks that do 5 different things. Break them into 5 smaller tasks assigned to specialized agents. |
+
+## 13. Production Notes
+
+> **Production Warning:**
+> When using `output_pydantic`, you must use an LLM that supports Native Tool Calling / Structured Outputs (like `gpt-4o` or `claude-3-5-sonnet`). If you try to force structured outputs using older open-source models (like Llama 2), the agent will constantly fail validation, enter an infinite retry loop, and burn through tokens and time.
+
+## 14. Common Mistakes
+
+| Mistake | Fix | Code Example |
+|---|---|---|
+| Trying to `json.loads` a plain text task | Use Pydantic instead | `output_pydantic=MySchema` |
+| Variable typos in description | Match inputs exactly | `kickoff(inputs={"topic": "AI"})` -> `description="{topic}"` |
+| Overwriting context | Be careful with sequential processes | Pass explicit `context=[t1, t3]` |
+
+## 15. Related Topics
+- CrewAI Fundamentals
+- CrewAI Flows & Pipelines
+- Pydantic AI Structured Output
+
+## 16. Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [joaomdmoura/crewAI](https://github.com/joaomdmoura/crewAI) | ⭐ 18k+ | Official CrewAI repo | See how `Task` and `Process` are implemented |
+| [pydantic/pydantic](https://github.com/pydantic/pydantic) | ⭐ 18k+ | Pydantic | The core validation library used by CrewAI for structured tasks |
+| [langchain-ai/langchain](https://github.com/langchain-ai/langchain) | ⭐ 90k+ | LangChain | Provides the underlying output parsers that CrewAI relies on |
+| [crewAIInc/crewAI-examples](https://github.com/crewAIInc/crewAI-examples) | ⭐ 4k+ | CrewAI Examples | Shows complex context passing and async task setups |
+| [instructor-ai/instructor](https://github.com/jxnl/instructor) | ⭐ 6k+ | Structured LLM outputs | An alternative way to think about forcing Pydantic schemas |

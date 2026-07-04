@@ -1,0 +1,232 @@
+---
+sidebar_position: 6
+sidebar_label: "LangGraph Multi-Agent"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# LangGraph Multi-Agent Architectures
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Multi-Agent Systems in LangGraph |
+| Difficulty | Advanced |
+| Used For | Splitting complex tasks across specialized agents instead of using one massive, confused LLM |
+| Common Mistake | Using a shared global state where agents accidentally overwrite each other's work |
+| Performance | Slower end-to-end execution due to multiple LLM calls and network handoffs |
+
+## 2. Real-World Analogy
+
+| Restaurant Hierarchy | LangGraph Multi-Agent Equivalent |
+|---|---|
+| The Head Chef reads the ticket and delegates | The Supervisor Agent |
+| The Grill Cook cooks the steak | A specialized Worker Agent (Node) |
+| The Pastry Chef makes the dessert | Another specialized Worker Agent (Node) |
+| The Waiter delivers the full meal to the table | The final response node |
+
+Bro, a multi-agent system is exactly like a high-end kitchen. If you force one chef to chop vegetables, grill steaks, bake cakes, and serve the food, they will panic and burn the place down. This is what happens when you give one single LLM 50 tools. Instead, you create specific agents (Grill, Pastry), and a Supervisor who just manages the flow.
+
+## 3. Concept Explanation
+
+LangGraph is perfectly suited for multi-agent architectures because every agent can just be a `Node` or a compiled `Subgraph`.
+
+There are two main ways to build multi-agent systems in LangGraph:
+1. **Network of Nodes (Supervisor Pattern):** One primary node acts as a router, deciding which specialized worker node to call next. The workers don't know about each other.
+2. **Subgraphs (Hierarchical Teams):** You compile an entire LangGraph representing a "Research Team", and use that compiled graph as a single node inside a larger "Company Graph".
+
+By separating concerns, each agent gets a specific system prompt and a small, focused set of tools. This drastically reduces hallucinations and improves tool-calling accuracy.
+
+## 4. Syntax Table
+
+| Action | Syntax Example | Use Case |
+|---|---|---|
+| Define Supervisor Node | `builder.add_node("supervisor", supervisor_agent)` | Creating the router logic |
+| Define Worker Node | `builder.add_node("researcher", research_agent)` | Creating a specialized worker |
+| Conditional Routing | `builder.add_conditional_edges("supervisor", route_to_worker)` | Supervisor deciding who works next |
+| Subgraphs | `builder.add_node("team_a", compiled_team_a_graph)` | Embedding a full graph inside another graph |
+
+## 5. Beginner Example
+
+This is a simple Supervisor pattern where a routing function sends the task to either a Researcher or a Coder.
+
+```python
+from langgraph.graph import StateGraph, START, END
+from typing import TypedDict, Literal
+
+class State(TypedDict):
+    task: str
+    result: str
+
+def supervisor(state: State):
+    # In reality, an LLM would decide this
+    if "code" in state["task"].lower():
+        return {"result": "coder"}
+    return {"result": "researcher"}
+
+def coder_agent(state: State):
+    return {"result": f"Wrote code for: {state['task']}"}
+
+def researcher_agent(state: State):
+    return {"result": f"Researched: {state['task']}"}
+
+def route(state: State) -> Literal["coder", "researcher"]:
+    return state["result"]
+
+builder = StateGraph(State)
+builder.add_node("supervisor", supervisor)
+builder.add_node("coder", coder_agent)
+builder.add_node("researcher", researcher_agent)
+
+builder.add_edge(START, "supervisor")
+builder.add_conditional_edges("supervisor", route)
+builder.add_edge("coder", END)
+builder.add_edge("researcher", END)
+
+graph = builder.compile()
+
+print(graph.invoke({"task": "Write a python script"}))
+# Output: {'task': 'Write a python script', 'result': 'Wrote code for: Write a python script'}
+```
+
+## 6. Real-World Engineering Example
+
+Bro, in a real system, you don't use simple nodes for workers. You use full Subgraphs with their own internal state, so the workers don't pollute the supervisor's global state.
+
+```python
+from langgraph.graph import StateGraph, START, END
+from typing import TypedDict
+
+# --- 1. Define the Researcher Subgraph ---
+class ResearcherState(TypedDict):
+    query: str
+    draft: str
+
+def do_research(state: ResearcherState):
+    return {"draft": f"Data about {state['query']}"}
+
+research_builder = StateGraph(ResearcherState)
+research_builder.add_node("search", do_research)
+research_builder.add_edge(START, "search")
+research_builder.add_edge("search", END)
+research_graph = research_builder.compile()
+
+# --- 2. Define the Global State and Supervisor ---
+class GlobalState(TypedDict):
+    user_request: str
+    final_answer: str
+
+def call_research_team(state: GlobalState):
+    # Map global state to subgraph state
+    sub_input = {"query": state["user_request"]}
+
+    # Invoke the compiled subgraph!
+    sub_result = research_graph.invoke(sub_input)
+
+    # Map subgraph result back to global state
+    return {"final_answer": sub_result["draft"]}
+
+# --- 3. Build the Main Graph ---
+main_builder = StateGraph(GlobalState)
+main_builder.add_node("research_team", call_research_team)
+main_builder.add_edge(START, "research_team")
+main_builder.add_edge("research_team", END)
+
+main_graph = main_builder.compile()
+
+result = main_graph.invoke({"user_request": "quantum computing"})
+print(result["final_answer"]) # Output: Data about quantum computing
+```
+
+## 7. Internal Working
+
+How does a Subgraph execute inside a parent Graph?
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', position: { x: 250, y: 0 }, data: { label: 'Main Graph START', description: 'Receives user request' } },
+    { id: '2', type: 'process', position: { x: 250, y: 100 }, data: { label: 'Supervisor Node', description: 'Routes to Research Team' } },
+    { id: '3', type: 'core', position: { x: 450, y: 100 }, data: { label: 'Subgraph START', description: 'Accepts isolated state' } },
+    { id: '4', type: 'tool', position: { x: 450, y: 200 }, data: { label: 'Search Tool Node', description: 'Performs web search' } },
+    { id: '5', type: 'core', position: { x: 450, y: 300 }, data: { label: 'Subgraph END', description: 'Returns result to Main Graph' } },
+    { id: '6', type: 'output', position: { x: 250, y: 400 }, data: { label: 'Main Graph END', description: 'Returns final response' } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'Start' },
+    { id: 'e2-3', source: '2', target: '3', label: 'Invokes Subgraph', animated: true },
+    { id: 'e3-4', source: '3', target: '4', label: 'Internal step' },
+    { id: 'e4-5', source: '4', target: '5', label: 'Internal step' },
+    { id: 'e5-2', source: '5', target: '2', label: 'Returns data', type: 'step' },
+    { id: 'e2-6', source: '2', target: '6', label: 'Finish' }
+  ]}
+/>
+
+When the Main Graph hits a node that invokes a Subgraph, it actually pauses its own execution, passes the mapped data into the Subgraph's runner, waits for the Subgraph to hit its own `END`, and then maps the returned data back into the Main Graph's state. It's exactly like a standard function call stack in Python.
+
+## 8. Performance Table
+
+| Architecture | Setup Complexity | Token Usage | Best For |
+|---|---|---|---|
+| Single Agent | Low | Low (1 prompt) | Simple tasks, quick prototyping |
+| Supervisor Pattern | Medium | High (Supervisor + Worker calls) | Routing across 3-5 distinct skillsets |
+| Subgraphs | High | Very High | Massive enterprise systems with distinct teams |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why use multiple agents instead of one big agent? | LLMs degrade in performance when given too many tools and too long of a system prompt. Splitting them into distinct agents increases tool-calling accuracy. |
+| What is a Supervisor in LangGraph? | A node (usually an LLM) that acts as a router. It doesn't do the work; it decides which worker node should do the work next. |
+| How do you prevent workers from overwriting each other's data in the StateDict? | Use Subgraphs with their own isolated State schemas, or use the `add_messages` or `operator.add` reducers in the global TypedDict so lists are appended to, not overwritten. |
+| Can a LangGraph multi-agent system have a cycle? | Yes. The supervisor can send a task to a worker, the worker sends it to a reviewer, the reviewer sends it back to the worker, etc. |
+| How does a supervisor know when to stop? | The supervisor's LLM tool-calling logic must have a specific "FINISH" tool or output string that the conditional edge router uses to route to the `END` node. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, what if your Supervisor LLM decides to route to a worker that doesn't exist?
+
+**Answer:** Your graph will throw a `ValueError` because the conditional edge router will return a node name that wasn't added to the graph. Always implement a fallback or default route in your conditional edge function to handle hallucinated routing destinations.
+
+## 11. Real-World Usage
+
+Enterprise coding assistants use Subgraphs heavily.
+- The Main Graph receives a user ticket ("Fix login bug").
+- It routes to the `ResearchTeam` subgraph (which has agents for grepping the codebase and reading logs).
+- The `ResearchTeam` returns the context to the Main Graph.
+- The Main Graph routes to the `CodingTeam` subgraph (which has a Coder agent and a Reviewer agent that loop until the tests pass).
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Do give the Supervisor agent a strict schema (like a Pydantic enum) for deciding who to route to. | Don't let the Supervisor just output raw text to decide the route; it will hallucinate. |
+| Do use Subgraphs for complex workers so you can test the worker completely independently of the main graph. | Don't put 20 workers under one supervisor. Build a hierarchy (Supervisor -> Managers -> Workers). |
+
+## 13. Production Notes
+
+> **Production Warning:**
+> Multi-agent systems are incredibly slow and expensive. Every handoff is an LLM call. If your Supervisor calls a worker, and the worker calls a tool, and then goes back to the supervisor... you just made 3 LLM API calls, taking ~5-10 seconds and costing 3x the tokens. Only use multi-agent architectures if the problem cannot be solved by a single focused agent.
+
+## 14. Common Mistakes
+
+| Mistake | Fix | Code Example |
+|---|---|---|
+| Workers returning entire states and overwriting globals | Map the inputs and outputs carefully | `return {"global_result": worker_result}` |
+| Infinite loops between workers | Add a hard turn limit or human-in-the-loop | `builder.compile(interrupt_before=["worker"])` |
+| Forgetting to route back to the supervisor | Add an edge from worker back to supervisor | `builder.add_edge("coder", "supervisor")` |
+
+## 15. Related Topics
+- LangGraph State Machines
+- LangGraph Human in Loop
+- Orchestrator-Worker Pattern (Multi-Agent Patterns)
+
+## 16. Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [langchain-ai/langgraph](https://github.com/langchain-ai/langgraph) | ⭐ 8k+ | Official LangGraph repo | The core framework for these architectures |
+| [langchain-ai/langgraph-example](https://github.com/langchain-ai/langgraph-example) | ⭐ 1k+ | Official Examples | Contains multiple multi-agent supervisor examples |
+| [joaomdmoura/crewAI](https://github.com/joaomdmoura/crewAI) | ⭐ 18k+ | CrewAI Framework | The primary competitor to LangGraph for multi-agent systems |
+| [microsoft/autogen](https://github.com/microsoft/autogen) | ⭐ 30k+ | AutoGen Framework | Another massive multi-agent framework |
+| [langchain-ai/langsmith-cookbook](https://github.com/langchain-ai/langsmith-cookbook) | ⭐ 2k+ | LangSmith Cookbook | Shows how to trace complex multi-agent handoffs |
