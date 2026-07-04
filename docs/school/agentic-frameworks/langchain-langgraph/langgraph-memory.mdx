@@ -1,0 +1,235 @@
+---
+sidebar_position: 4
+sidebar_label: "LangGraph Memory"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# LangGraph Memory
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | LangGraph Memory and State Checkpointing |
+| Difficulty | Intermediate |
+| Used For | Adding persistence, chat history, and "memory" to LangGraph agents across multiple turns or sessions |
+| Common Mistake | Modifying state asynchronously without thread IDs, causing state corruption |
+| Performance | Fast for in-memory, network-dependent for SQLite/Postgres checkpointers |
+
+## 2. Real-World Analogy
+
+| Restaurant Scenario | LangGraph Memory Equivalent |
+|---|---|
+| A regular customer walks in | Starting a new thread with a specific `thread_id` |
+| The waiter remembers the customer's previous order | Loading state from a checkpointer |
+| The waiter writes down a new side order on the pad | Updating the state dictionary |
+| The restaurant saves all tickets in the back office at night | Persisting checkpoints to Postgres/SQLite |
+
+Bro, think of LangGraph memory like a good waiter. If you don't use memory (checkpointers), the waiter treats you like a stranger every single time you talk. With memory, the waiter has a notebook (the thread state) dedicated just to you, so they remember what you ordered 5 minutes ago.
+
+## 3. Concept Explanation
+
+By default, standard LangChain agents or simple LangGraph graphs are stateless. They run, they finish, and they forget everything.
+
+LangGraph solves this by introducing **Checkpointers**. A checkpointer saves the graph's `State` at every single node transition. This state is tied to a specific `thread_id` (usually a session ID or user ID). When you invoke the graph again with the same `thread_id`, LangGraph first loads the previous state, meaning your agent "remembers" the conversation history, previous tool calls, and intermediate variables.
+
+You need memory when:
+- Building chat applications that require context of previous messages.
+- Implementing human-in-the-loop (pausing and resuming).
+- Doing time-travel debugging (going back to a specific state and re-running).
+
+## 4. Syntax Table
+
+| Action | Syntax Example | Use Case |
+|---|---|---|
+| In-memory Checkpointer | `checkpointer = MemorySaver()` | Testing and simple local development |
+| SQLite Checkpointer | `checkpointer = SqliteSaver(conn)` | Local persistence across restarts |
+| Postgres Checkpointer | `checkpointer = AsyncPostgresSaver(conn)` | Production persistence |
+| Compiling with memory | `graph = builder.compile(checkpointer=checkpointer)` | Attaching memory to the graph |
+| Invoking with Thread ID | `graph.invoke(input, \{"configurable": \{"thread_id": "123"\}\})` | Resuming a specific session |
+
+## 5. Beginner Example
+
+Here is the absolute simplest way to add memory to a graph using `MemorySaver`.
+
+```python
+from langgraph.graph import StateGraph, START, END
+from langgraph.checkpoint.memory import MemorySaver
+from typing import TypedDict
+
+class State(TypedDict):
+    counter: int
+
+def increment_node(state: State):
+    return {"counter": state.get("counter", 0) + 1}
+
+builder = StateGraph(State)
+builder.add_node("increment", increment_node)
+builder.add_edge(START, "increment")
+builder.add_edge("increment", END)
+
+# 1. Create the checkpointer
+memory = MemorySaver()
+
+# 2. Compile with the checkpointer
+graph = builder.compile(checkpointer=memory)
+
+# 3. Use a thread ID to maintain state
+config = {"configurable": {"thread_id": "user_1"}}
+
+print(graph.invoke({"counter": 0}, config)) # Output: {'counter': 1}
+print(graph.invoke({}, config))             # Output: {'counter': 2}
+```
+
+## 6. Real-World Engineering Example
+
+Bro, in production, `MemorySaver` won't cut it. Your servers will restart and wipe the memory. Here's how you use an asynchronous Postgres checkpointer for a real chatbot.
+
+```python
+import asyncio
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+from psycopg_pool import AsyncConnectionPool
+from langgraph.graph import StateGraph, START, END
+from langgraph.graph.message import add_messages
+from typing import Annotated, TypedDict
+from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
+
+class ChatState(TypedDict):
+    messages: Annotated[list[BaseMessage], add_messages]
+    user_context: str
+
+async def process_chat(state: ChatState):
+    # Dummy processing logic
+    last_msg = state["messages"][-1].content
+    response = AIMessage(content=f"I heard you say: {last_msg}")
+    return {"messages": [response]}
+
+builder = StateGraph(ChatState)
+builder.add_node("chat", process_chat)
+builder.add_edge(START, "chat")
+builder.add_edge("chat", END)
+
+async def main():
+    DB_URI = "postgresql://user:pass@localhost:5432/db"
+
+    # 1. Setup Postgres pool and checkpointer
+    async with AsyncConnectionPool(DB_URI) as pool:
+        checkpointer = AsyncPostgresSaver(pool)
+
+        # 2. Initialize DB tables for memory
+        await checkpointer.setup()
+
+        # 3. Compile graph with Postgres memory
+        graph = builder.compile(checkpointer=checkpointer)
+
+        config = {"configurable": {"thread_id": "session_999"}}
+
+        # First turn
+        await graph.ainvoke(
+            {"messages": [HumanMessage(content="My favorite color is Blue")]},
+            config
+        )
+
+        # Second turn (Agent remembers previous state)
+        res = await graph.ainvoke(
+            {"messages": [HumanMessage(content="What is my favorite color?")]},
+            config
+        )
+        print(res["messages"][-1].content) # Agent has context to answer
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+## 7. Internal Working
+
+How does LangGraph memory actually flow?
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', position: { x: 250, y: 0 }, data: { label: 'graph.invoke()', description: 'Triggered with thread_id: "user_1"' } },
+    { id: '2', type: 'data', position: { x: 250, y: 100 }, data: { label: 'Checkpointer (Postgres)', description: 'Fetches existing state for "user_1"' } },
+    { id: '3', type: 'process', position: { x: 250, y: 200 }, data: { label: 'Load State', description: 'Populates StateDict with previous messages' } },
+    { id: '4', type: 'process', position: { x: 250, y: 300 }, data: { label: 'Execute Node', description: 'Agent processes new input + old state' } },
+    { id: '5', type: 'data', position: { x: 250, y: 400 }, data: { label: 'Checkpointer (Postgres)', description: 'Saves updated state as a new checkpoint' } },
+    { id: '6', type: 'output', position: { x: 250, y: 500 }, data: { label: 'Return Result', description: 'Returns to user' } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: '1. Request', animated: true },
+    { id: 'e2-3', source: '2', target: '3', label: '2. Fetch' },
+    { id: 'e3-4', source: '3', target: '4', label: '3. Hydrate' },
+    { id: 'e4-5', source: '4', target: '5', label: '4. Save', animated: true },
+    { id: 'e5-6', source: '5', target: '6', label: '5. Output' }
+  ]}
+/>
+
+Every time a node finishes, the checkpointer serializes the graph's state and saves it to the database with a `checkpoint_id`. This creates a linked list of states, which enables features like time-travel (rewinding).
+
+## 8. Performance Table
+
+| Memory Type | Latency | Persistence | Use Case |
+|---|---|---|---|
+| `MemorySaver` | ~1ms | None (Wiped on restart) | Local testing, stateless APIs |
+| `SqliteSaver` | ~5-15ms | Local Disk | Single-node deployments, side projects |
+| `AsyncPostgresSaver`| ~20-50ms | Distributed Database | Production, multi-node scaling |
+| `RedisSaver` (Custom)| ~5-10ms | Distributed Cache | High throughput, ephemeral sessions |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What happens if you forget to pass a `thread_id` to a compiled LangGraph checkpointer? | It throws an error. If a checkpointer is compiled into the graph, a `thread_id` in the `configurable` config is strictly required. |
+| Can you share memory between different users? | No, memory is strictly partitioned by `thread_id`. If users need shared context, you must inject it into the state manually, not rely on thread memory. |
+| How does `add_messages` reducer work with checkpointers? | The reducer appends new messages to the list instead of overwriting it. The checkpointer serializes this growing list. |
+| Why is `checkpoint_id` useful? | It allows "Time Travel". You can fetch a specific `checkpoint_id` from the past and fork the graph execution from that exact moment. |
+| What is a "Checkpoint Tuple"? | It's the core data structure returned by the checkpointer containing the `config` (with thread_id), the `checkpoint` (the actual state dict), and `metadata`. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, what happens if your agent state has a custom Python object (like an un-serializable database connection) and you use Postgres checkpointer?
+
+**Answer:** The checkpointer will crash. Checkpointers must serialize the state to JSON/Pickle to store it in the database. Custom objects without serializers will fail. Always keep your state pure — strings, dicts, lists, and Pydantic models.
+
+## 11. Real-World Usage
+
+Companies building complex customer support bots use Postgres checkpointers.
+- When a user chats, their `session_id` acts as the `thread_id`.
+- If the user closes the app and returns 3 days later, the backend fetches the same `thread_id`, and the bot seamlessly resumes the conversation.
+- If an agent hits an error, observability tools use the checkpointer's "time travel" feature to load the exact state that caused the crash for debugging.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Do use `MemorySaver` for all your PyTest suites to ensure fast execution. | Don't use `MemorySaver` in your production FastAPI deployment. |
+| Do use `add_messages` reducer for message histories so memory appends automatically. | Don't store large base64 documents in the graph state, it will bloat the database checkpoints. |
+| Do clear old checkpoints periodically if you have long-running sessions. | Don't mutate the state directly. Always return the new/appended state from nodes. |
+
+## 13. Production Notes
+
+> **Production Warning:**
+> Long conversations mean large checkpoints. If your chat goes on for 100 turns, LangGraph will save 100 checkpoints. Fetching the state will become slower, and your LLM will run out of context window. You MUST implement a node that summarizes older messages and truncates the state list, or your system will eventually OOM or hit token limits.
+
+## 14. Common Mistakes
+
+| Mistake | Fix | Code Example |
+|---|---|---|
+| Forgetting to compile the checkpointer | Pass it into `builder.compile()` | `builder.compile(checkpointer=memory)` |
+| Passing thread_id directly in input | Pass it in the `config` dict | `graph.invoke(input, {"configurable": {"thread_id": "123"}})` |
+| Overwriting message history | Use `add_messages` in `TypedDict` | `messages: Annotated[list[BaseMessage], add_messages]` |
+
+## 15. Related Topics
+- LangGraph State Machines
+- LangGraph Human in Loop (Relies heavily on checkpointers)
+- LangSmith Observability
+
+## 16. Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [langchain-ai/langgraph](https://github.com/langchain-ai/langgraph) | ⭐ 8k+ | Official LangGraph repo | Contains the core `checkpointer` implementations |
+| [langchain-ai/langgraph-example](https://github.com/langchain-ai/langgraph-example) | ⭐ 1k+ | Examples for LangGraph | Shows Postgres checkpointer setups in FastAPI |
+| [psycopg/psycopg](https://github.com/psycopg/psycopg) | ⭐ 4k+ | PostgreSQL adapter for Python | Required for `AsyncPostgresSaver` |
+| [encode/databases](https://github.com/encode/databases) | ⭐ 3k+ | Async database support | Good to know for scaling checkpointers |
+| [redis/redis-py](https://github.com/redis/redis-py) | ⭐ 12k+ | Redis Python client | Used for custom high-speed Redis checkpointers |

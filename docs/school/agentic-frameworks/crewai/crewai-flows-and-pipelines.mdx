@@ -1,0 +1,233 @@
+---
+sidebar_position: 4
+sidebar_label: "Flows & Pipelines"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# CrewAI Flows and Pipelines
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | CrewAI Flows |
+| Difficulty | Advanced |
+| Used For | Building event-driven architectures and combining multiple Crews into complex workflows |
+| Common Mistake | Using Crews for simple linear code logic instead of using the Flow decorator system |
+| Performance | Fast, as it allows combining standard Python code execution with heavy LLM Crew runs |
+
+## 2. Real-World Analogy
+
+| Corporate Structure | CrewAI Equivalent |
+|---|---|
+| The Marketing Department | `Crew 1` |
+| The Sales Department | `Crew 2` |
+| The CEO's Standard Operating Procedure (SOP) | The `Flow` class |
+| "Start the campaign" | `@start()` |
+| "Once Marketing finishes, hand it to Sales" | `@listen(marketing_func)` |
+
+Bro, a Crew is just a team of people. But what happens when you have multiple teams? The Marketing team writes the email, but then the Sales team needs to send it. You don't put them all in one massive meeting room (one giant Crew). You use a Flow. A Flow is the corporate pipeline that says: "Run this Python code, then trigger the Marketing Crew, take their output, run an API call, and then trigger the Sales Crew."
+
+## 3. Concept Explanation
+
+CrewAI recently introduced **Flows** to compete with LangGraph's state machine architecture.
+
+A Flow is a stateful, event-driven pipeline. It allows you to create workflows where:
+- Standard Python functions run *between* Crew executions.
+- Multiple separate Crews are chained together.
+- State is shared across the entire pipeline.
+- Functions can trigger other functions based on events.
+
+Before Flows, you had to write dirty Python scripts to run a Crew, parse the string, and start another Crew. With Flows, you subclass `Flow`, define a `State` (a Pydantic model), and use decorators like `@start()` and `@listen()` to build a clean event-driven graph.
+
+## 4. Syntax Table
+
+| Action | Syntax Example | Purpose |
+|---|---|---|
+| Define State | `class MyState(BaseModel): ...` | The global memory for the Flow |
+| Create Flow | `class MyFlow(Flow[MyState]):` | The main pipeline class |
+| Start Node | `@start()` | The entrypoint of the flow |
+| Listen/Trigger | `@listen(previous_func)` | Runs *after* the specified function finishes |
+| Router | `@router(func)` | Conditional branching based on state |
+| Run Flow | `flow = MyFlow(); flow.kickoff()` | Executes the pipeline |
+
+## 5. Beginner Example
+
+Here is a basic flow that doesn't even use a Crew. It just shows the event-driven architecture.
+
+```python
+from crewai.flow.flow import Flow, start, listen
+from pydantic import BaseModel
+
+class PipelineState(BaseModel):
+    message: str = ""
+    counter: int = 0
+
+class SimpleFlow(Flow[PipelineState]):
+
+    @start()
+    def initialize(self):
+        print("1. Initializing...")
+        self.state.message = "Hello"
+        self.state.counter = 1
+        return "init_done" # This return value triggers the listeners
+
+    @listen(initialize)
+    def do_work(self):
+        print(f"2. Working... State: {self.state.message}")
+        self.state.counter += 1
+
+    @listen(do_work)
+    def finish(self):
+        print(f"3. Finished. Counter: {self.state.counter}")
+
+flow = SimpleFlow()
+flow.kickoff()
+# Output:
+# 1. Initializing...
+# 2. Working... State: Hello
+# 3. Finished. Counter: 2
+```
+
+## 6. Real-World Engineering Example
+
+Bro, here is a real production pattern. We want to read an email, use an LLM to decide if it's spam, and if it's NOT spam, we trigger an entire Crew to draft a response.
+
+```python
+from pydantic import BaseModel
+from crewai.flow.flow import Flow, start, listen, router
+# Assume `response_crew` is a pre-built Crew() object
+
+class EmailState(BaseModel):
+    email_text: str = ""
+    is_spam: bool = False
+    draft: str = ""
+
+class EmailPipeline(Flow[EmailState]):
+
+    @start()
+    def fetch_email(self):
+        # Fake API call
+        self.state.email_text = "Hey, I need a refund on my order."
+        print("Fetched email.")
+
+    @listen(fetch_email)
+    def check_spam(self):
+        # A simple Python check or cheap LLM call
+        if "viagra" in self.state.email_text.lower():
+            self.state.is_spam = True
+        else:
+            self.state.is_spam = False
+
+    @router(check_spam)
+    def route_email(self):
+        if self.state.is_spam:
+            return "handle_spam"
+        return "handle_real_email"
+
+    @listen("handle_spam")
+    def delete_email(self):
+        print("Email deleted. Pipeline ends.")
+
+    @listen("handle_real_email")
+    def draft_response(self):
+        print("Valid email. Kicking off the AI Crew...")
+        # Trigger an actual CrewAI Crew!
+        # result = response_crew.kickoff(inputs={"email": self.state.email_text})
+        self.state.draft = "Here is your refund..." # Mock result
+        print(f"Response drafted: {self.state.draft}")
+
+flow = EmailPipeline()
+flow.kickoff()
+```
+
+## 7. Internal Working
+
+How does the Flow event system execute?
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', position: { x: 250, y: 0 }, data: { label: 'flow.kickoff()', description: 'Initializes state machine' } },
+    { id: '2', type: 'process', position: { x: 250, y: 100 }, data: { label: '@start() func', description: 'Executes and emits event' } },
+    { id: '3', type: 'tool', position: { x: 250, y: 200 }, data: { label: 'Event Router', description: 'Matches emitted function to listeners' } },
+    { id: '4', type: 'process', position: { x: 100, y: 300 }, data: { label: '@listen() func A', description: 'Executes' } },
+    { id: '5', type: 'process', position: { x: 400, y: 300 }, data: { label: '@listen() func B', description: 'Executes concurrently' } },
+    { id: '6', type: 'data', position: { x: 250, y: 450 }, data: { label: 'State Object', description: 'Updated globally by all funcs' } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'Triggers' },
+    { id: 'e2-3', source: '2', target: '3', label: 'Returns' },
+    { id: 'e3-4', source: '3', target: '4', label: 'Dispatches' },
+    { id: 'e3-5', source: '3', target: '5', label: 'Dispatches' },
+    { id: 'e4-6', source: '4', target: '6', label: 'Mutates' },
+    { id: 'e5-6', source: '5', target: '6', label: 'Mutates' }
+  ]}
+/>
+
+Under the hood, CrewAI Flows use a Pub/Sub (Publish-Subscribe) model. When a method finishes, it publishes an event with its method name. Any method decorated with `@listen(method_name)` subscribes to that event and is added to the execution queue. If multiple methods listen to the same event, they can execute concurrently.
+
+## 8. Performance Table
+
+| Architecture | Speed | Flexibility | Use Case |
+|---|---|---|---|
+| Single Crew | Slow (LLMs handling logic) | Low | Simple, single-domain tasks |
+| Python Script + Crews | Fast | Medium | Quick scripts, messy error handling |
+| CrewAI Flow | Fast | High | Enterprise pipelines, human-in-loop, DB calls |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the primary advantage of a CrewAI Flow over just using a Crew? | Flows allow you to write deterministic Python logic (like `if/else` statements, API calls, DB queries) *outside* of the LLM's control, reducing hallucinations and costs. |
+| Can multiple functions listen to the same `@start()` method? | Yes. If two methods `@listen(initialize)`, they will both be triggered when `initialize` finishes, allowing parallel execution. |
+| How do you share data between steps in a Flow? | By updating properties on `self.state`, which is typically defined as a Pydantic model at the top of the Flow. |
+| How does the `@router` decorator work? | A routing function returns a string. You can then use `@listen("that_string")` on other methods to conditionally execute them based on the router's output. |
+| Are Flows a replacement for LangGraph? | They are CrewAI's attempt to compete with LangGraph. LangGraph is still more robust for state checkpointer persistence, but Flows are much simpler to write. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, what happens if an LLM Crew throws an exception inside a Flow?
+
+**Answer:** Because the Flow is just standard Python, the exception will bubble up and crash the pipeline. However, because Flows isolate logic, you can easily wrap the `crew.kickoff()` call inside a standard `try/except` block within the listener method, handle the error, update `self.state.error_msg`, and route to a fallback `@listen` method.
+
+## 11. Real-World Usage
+
+Flows are used for orchestrating entire backend applications.
+- **Support Ticket System:** Flow starts on webhook. Step 1 (Python): Save to DB. Step 2 (Crew): Analyze sentiment. Step 3 (Router): If angry, alert manager; if happy, draft reply (Crew 2).
+- **Daily Reporting:** Cron job starts Flow. Step 1 (Python): Fetch Google Analytics. Step 2 (Crew): Write summary. Step 3 (Python): Send Slack message.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Do use Pydantic models for your Flow State to ensure type safety across the pipeline. | Don't put LLM API calls directly in Flow methods. Put them inside Agents/Crews, and call the Crew from the Flow method. |
+| Do use Flows to separate "thinking" from "doing". Let the LLM think, let Python do the API calls. | Don't create a massive 50-step Flow. Break pipelines down into manageable chunks. |
+
+## 13. Production Notes
+
+> **Production Warning:**
+> Unlike LangGraph's checkpointers, CrewAI Flows do not currently have native "pause and resume" state persistence out-of-the-box in the same robust way. If the server crashes in the middle of a Flow, that state is gone. If you need 100% durable state machines, you still need to back your Flow state with a database or use a queue like Temporal/Celery.
+
+## 14. Common Mistakes
+
+| Mistake | Fix | Code Example |
+|---|---|---|
+| Forgetting to call `flow.kickoff()` | Initialize and start | `MyFlow().kickoff()` |
+| Listening to a string instead of a function | Pass the function reference | `@listen(fetch_data)` not `@listen("fetch_data")` (unless it's a router output) |
+| Mutating state without type checking | Use Pydantic | `class State(BaseModel): count: int` |
+
+## 15. Related Topics
+- CrewAI Tasks & Processes
+- LangGraph State Machines (Alternative)
+- Orchestrator-Worker Pattern
+
+## 16. Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [joaomdmoura/crewAI](https://github.com/joaomdmoura/crewAI) | ⭐ 18k+ | Official CrewAI repo | Read the docs on the `Flow` class |
+| [langchain-ai/langgraph](https://github.com/langchain-ai/langgraph) | ⭐ 8k+ | LangGraph | The state machine framework that inspired CrewAI Flows |
+| [temporalio/sdk-python](https://github.com/temporalio/sdk-python) | ⭐ 3k+ | Temporal Python SDK | Often used alongside CrewAI to provide durable execution for Flows |
+| [pydantic/pydantic](https://github.com/pydantic/pydantic) | ⭐ 18k+ | Pydantic | The schema library used to define Flow state |
+| [crewAIInc/crewAI-examples](https://github.com/crewAIInc/crewAI-examples) | ⭐ 4k+ | CrewAI Examples | Shows how to wire multiple crews together using Flows |

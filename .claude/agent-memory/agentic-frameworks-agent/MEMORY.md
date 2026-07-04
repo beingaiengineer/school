@@ -90,20 +90,16 @@ For agentic framework topics, diagrams should focus on:
 - [x] `af-018` | Create `langchain-langgraph/langchain-fundamentals.mdx` | Branch: `jules/af-batch-002-patterns`
 - [x] `af-019` | Create `langchain-langgraph/langgraph-intro.mdx` | Branch: `jules/af-batch-002-patterns`
 - [x] `af-020` | Create `langchain-langgraph/langgraph-state-machines.mdx` | Branch: `jules/af-batch-002-patterns`
-- [ ] `af-021` | Create `langchain-langgraph/langgraph-memory.mdx` | Branch: `jules/af-batch-003-langgraph`
-- [ ] `af-022` | Create `langchain-langgraph/langgraph-human-in-loop.mdx` | Branch: `jules/af-batch-003-langgraph`
-- [ ] `af-023` | Create `langchain-langgraph/langgraph-multi-agent.mdx` | Branch: `jules/af-batch-003-langgraph`
-- [ ] `af-024` | Create `langchain-langgraph/langsmith-observability.mdx` | Branch: `jules/af-batch-003-langgraph`
-- [ ] `af-025` | Create `langchain-langgraph/langgraph-production-deployment.mdx` | Branch: `jules/af-batch-003-langgraph`
-- [ ] `af-026` | Create `crewai/crewai-fundamentals.mdx` | Branch: `jules/af-batch-003-langgraph`
-- [ ] `af-027` | Create `crewai/crewai-agents-and-roles.mdx` | Branch: `jules/af-batch-003-langgraph`
-- [ ] `af-028` | Create `crewai/crewai-tasks-and-processes.mdx` | Branch: `jules/af-batch-003-langgraph`
-- [ ] `af-029` | Create `crewai/crewai-flows-and-pipelines.mdx` | Branch: `jules/af-batch-003-langgraph`
-- [ ] `af-030` | Create `crewai/crewai-memory-system.mdx` | Branch: `jules/af-batch-003-langgraph`
-
-### Backlog
-
-#### Batch 4 — CrewAI + OpenAI SDK
+- [x] `af-021` | Create `langchain-langgraph/langgraph-memory.mdx` | Branch: `jules/af-batch-003-langgraph`
+- [x] `af-022` | Create `langchain-langgraph/langgraph-human-in-loop.mdx` | Branch: `jules/af-batch-003-langgraph`
+- [x] `af-023` | Create `langchain-langgraph/langgraph-multi-agent.mdx` | Branch: `jules/af-batch-003-langgraph`
+- [x] `af-024` | Create `langchain-langgraph/langsmith-observability.mdx` | Branch: `jules/af-batch-003-langgraph`
+- [x] `af-025` | Create `langchain-langgraph/langgraph-production-deployment.mdx` | Branch: `jules/af-batch-003-langgraph`
+- [x] `af-026` | Create `crewai/crewai-fundamentals.mdx` | Branch: `jules/af-batch-003-langgraph`
+- [x] `af-027` | Create `crewai/crewai-agents-and-roles.mdx` | Branch: `jules/af-batch-003-langgraph`
+- [x] `af-028` | Create `crewai/crewai-tasks-and-processes.mdx` | Branch: `jules/af-batch-003-langgraph`
+- [x] `af-029` | Create `crewai/crewai-flows-and-pipelines.mdx` | Branch: `jules/af-batch-003-langgraph`
+- [x] `af-030` | Create `crewai/crewai-memory-system.mdx` | Branch: `jules/af-batch-003-langgraph`
 - [ ] `af-031` | Create `crewai/crewai-multi-agent-crews.mdx` | Branch: `jules/af-batch-004-crewai-openai`
 - [ ] `af-032` | Create `crewai/crewai-production-deployment.mdx` | Branch: `jules/af-batch-004-crewai-openai`
 - [ ] `af-033` | Create `openai-agents-sdk/openai-sdk-fundamentals.mdx` | Branch: `jules/af-batch-004-crewai-openai`
@@ -114,6 +110,10 @@ For agentic framework topics, diagrams should focus on:
 - [ ] `af-038` | Create `openai-agents-sdk/openai-sdk-production-deployment.mdx` | Branch: `jules/af-batch-004-crewai-openai`
 - [ ] `af-039` | Create `google-adk/google-adk-fundamentals.mdx` | Branch: `jules/af-batch-004-crewai-openai`
 - [ ] `af-040` | Create `google-adk/google-adk-tools-and-functions.mdx` | Branch: `jules/af-batch-004-crewai-openai`
+
+### Backlog
+
+#### Batch 4 — CrewAI + OpenAI SDK
 
 #### Batch 5 — Google ADK + AutoGen
 - [ ] `af-041` | Create `google-adk/google-adk-multi-agent-orchestration.mdx` | Branch: `jules/af-batch-005-adk-autogen`
@@ -201,6 +201,7 @@ For agentic framework topics, diagrams should focus on:
 |---|---|
 | `[BAE-AF-1]` | Created intro categories and first 9 concepts including ReAct pattern. |
 | `[BAE-AF-2]` | Created 10 architecture patterns and LangGraph fundamentals concepts. |
+| `[BAE-AF-3]` | Created LangGraph advanced topics and CrewAI fundamentals (af-021 through af-030). |
 
 ---
 
@@ -230,18 +231,18 @@ For agentic framework topics, diagrams should focus on:
 - [ ] LangChain Fundamentals (langchain-langgraph/langchain-fundamentals.mdx)
 - [ ] LangGraph Intro (langchain-langgraph/langgraph-intro.mdx)
 - [ ] LangGraph State Machines (langchain-langgraph/langgraph-state-machines.mdx)
-- [ ] LangGraph Memory (langchain-langgraph/langgraph-memory.mdx)
-- [ ] LangGraph Human in Loop (langchain-langgraph/langgraph-human-in-loop.mdx)
-- [ ] LangGraph Multi-Agent (langchain-langgraph/langgraph-multi-agent.mdx)
-- [ ] LangSmith Observability (langchain-langgraph/langsmith-observability.mdx)
-- [ ] LangGraph Production (langchain-langgraph/langgraph-production-deployment.mdx)
+- [x] LangGraph Memory (langchain-langgraph/langgraph-memory.mdx)
+- [x] LangGraph Human in Loop (langchain-langgraph/langgraph-human-in-loop.mdx)
+- [x] LangGraph Multi-Agent (langchain-langgraph/langgraph-multi-agent.mdx)
+- [x] LangSmith Observability (langchain-langgraph/langsmith-observability.mdx)
+- [x] LangGraph Production (langchain-langgraph/langgraph-production-deployment.mdx)
 
 ## 4. CrewAI
-- [ ] CrewAI Fundamentals (crewai/crewai-fundamentals.mdx)
-- [ ] CrewAI Agents & Roles (crewai/crewai-agents-and-roles.mdx)
-- [ ] CrewAI Tasks & Tools (crewai/crewai-tasks-and-processes.mdx)
-- [ ] CrewAI Flows (crewai/crewai-flows-and-pipelines.mdx)
-- [ ] CrewAI Memory (crewai/crewai-memory-system.mdx)
+- [x] CrewAI Fundamentals (crewai/crewai-fundamentals.mdx)
+- [x] CrewAI Agents & Roles (crewai/crewai-agents-and-roles.mdx)
+- [x] CrewAI Tasks & Tools (crewai/crewai-tasks-and-processes.mdx)
+- [x] CrewAI Flows (crewai/crewai-flows-and-pipelines.mdx)
+- [x] CrewAI Memory (crewai/crewai-memory-system.mdx)
 - [ ] CrewAI Multi-Agent (crewai/crewai-multi-agent-crews.mdx)
 - [ ] CrewAI Production (crewai/crewai-production-deployment.mdx)
 
