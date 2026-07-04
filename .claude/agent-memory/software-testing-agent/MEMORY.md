@@ -55,16 +55,16 @@ Below are the topics that make up this course. This list serves as the structura
 > **Jules: Pick the first batch of `- [ ]` items (up to 10) under `### Next Task`. If fewer than 10, promote from `### Backlog`.**
 
 ### Next Task
-- [ ] `sof-001` | Create `testing-pyramid.mdx` | Branch: `jules/software-testing-batch`
-- [ ] `sof-002` | Create `unit-testing-with-pytest.mdx` | Branch: `jules/software-testing-batch`
-- [ ] `sof-003` | Create `pytest-fixtures-and-parametrize.mdx` | Branch: `jules/software-testing-batch`
-- [ ] `sof-004` | Create `mocking-and-patching.mdx` | Branch: `jules/software-testing-batch`
-- [ ] `sof-005` | Create `integration-testing.mdx` | Branch: `jules/software-testing-batch`
-- [ ] `sof-006` | Create `api-testing.mdx` | Branch: `jules/software-testing-batch`
-- [ ] `sof-007` | Create `test-driven-development.mdx` | Branch: `jules/software-testing-batch`
-- [ ] `sof-008` | Create `code-coverage.mdx` | Branch: `jules/software-testing-batch`
-- [ ] `sof-009` | Create `load-testing.mdx` | Branch: `jules/software-testing-batch`
-- [ ] `sof-010` | Create `testing-best-practices.mdx` | Branch: `jules/software-testing-batch`
+- [ ] [BAE-SOF-001] | Create `testing-pyramid.mdx` | Branch: `jules/software-testing-batch`
+- [ ] [BAE-SOF-002] | Create `unit-testing-with-pytest.mdx` | Branch: `jules/software-testing-batch`
+- [ ] [BAE-SOF-003] | Create `pytest-fixtures-and-parametrize.mdx` | Branch: `jules/software-testing-batch`
+- [ ] [BAE-SOF-004] | Create `mocking-and-patching.mdx` | Branch: `jules/software-testing-batch`
+- [ ] [BAE-SOF-005] | Create `integration-testing.mdx` | Branch: `jules/software-testing-batch`
+- [ ] [BAE-SOF-006] | Create `api-testing.mdx` | Branch: `jules/software-testing-batch`
+- [ ] [BAE-SOF-007] | Create `test-driven-development.mdx` | Branch: `jules/software-testing-batch`
+- [ ] [BAE-SOF-008] | Create `code-coverage.mdx` | Branch: `jules/software-testing-batch`
+- [ ] [BAE-SOF-009] | Create `load-testing.mdx` | Branch: `jules/software-testing-batch`
+- [ ] [BAE-SOF-010] | Create `testing-best-practices.mdx` | Branch: `jules/software-testing-batch`
 
 ### Backlog
 _Empty_

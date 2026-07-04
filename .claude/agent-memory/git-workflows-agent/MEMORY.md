@@ -55,16 +55,16 @@ Below are the topics that make up this course. This list serves as the structura
 > **Jules: Pick the first batch of `- [ ]` items (up to 10) under `### Next Task`. If fewer than 10, promote from `### Backlog`.**
 
 ### Next Task
-- [x] `git-001` | Create `git-fundamentals.mdx` | Branch: `jules/git-workflows-batch`
-- [x] `git-002` | Create `branching-strategies.mdx` | Branch: `jules/git-workflows-batch`
-- [x] `git-003` | Create `pull-requests.mdx` | Branch: `jules/git-workflows-batch`
-- [x] `git-004` | Create `code-review-culture.mdx` | Branch: `jules/git-workflows-batch`
-- [x] `git-005` | Create `merge-conflicts.mdx` | Branch: `jules/git-workflows-batch`
-- [x] `git-006` | Create `git-rebase-vs-merge.mdx` | Branch: `jules/git-workflows-batch`
-- [x] `git-007` | Create `git-hooks-and-automation.mdx` | Branch: `jules/git-workflows-batch`
-- [x] `git-008` | Create `monorepo-vs-polyrepo.mdx` | Branch: `jules/git-workflows-batch`
-- [x] `git-009` | Create `git-advanced-operations.mdx` | Branch: `jules/git-workflows-batch`
-- [x] `git-010` | Create `conventional-commits.mdx` | Branch: `jules/git-workflows-batch`
+- [x] [BAE-GIT-001] | Create `git-fundamentals.mdx` | Branch: `jules/git-workflows-batch`
+- [x] [BAE-GIT-002] | Create `branching-strategies.mdx` | Branch: `jules/git-workflows-batch`
+- [x] [BAE-GIT-003] | Create `pull-requests.mdx` | Branch: `jules/git-workflows-batch`
+- [x] [BAE-GIT-004] | Create `code-review-culture.mdx` | Branch: `jules/git-workflows-batch`
+- [x] [BAE-GIT-005] | Create `merge-conflicts.mdx` | Branch: `jules/git-workflows-batch`
+- [x] [BAE-GIT-006] | Create `git-rebase-vs-merge.mdx` | Branch: `jules/git-workflows-batch`
+- [x] [BAE-GIT-007] | Create `git-hooks-and-automation.mdx` | Branch: `jules/git-workflows-batch`
+- [x] [BAE-GIT-008] | Create `monorepo-vs-polyrepo.mdx` | Branch: `jules/git-workflows-batch`
+- [x] [BAE-GIT-009] | Create `git-advanced-operations.mdx` | Branch: `jules/git-workflows-batch`
+- [x] [BAE-GIT-010] | Create `conventional-commits.mdx` | Branch: `jules/git-workflows-batch`
 
 ### Backlog
 _Empty_

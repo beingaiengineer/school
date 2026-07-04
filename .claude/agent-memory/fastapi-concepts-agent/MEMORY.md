@@ -57,20 +57,20 @@ Below are the topics that make up this course. This list serves as the structura
 > **Jules: Pick the first batch of `- [ ]` items (up to 10) under `### Next Task`. If fewer than 10, promote from `### Backlog`.**
 
 ### Next Task
-- [ ] `fas-001` | Create `what-is-an-api.mdx` | Branch: `jules/fastapi-concepts-batch`
-- [ ] `fas-002` | Create `rest-api-design.mdx` | Branch: `jules/fastapi-concepts-batch`
-- [ ] `fas-003` | Create `fastapi-fundamentals.mdx` | Branch: `jules/fastapi-concepts-batch`
-- [ ] `fas-004` | Create `request-response-models.mdx` | Branch: `jules/fastapi-concepts-batch`
-- [ ] `fas-005` | Create `pydantic-validation.mdx` | Branch: `jules/fastapi-concepts-batch`
-- [ ] `fas-006` | Create `crud-operations.mdx` | Branch: `jules/fastapi-concepts-batch`
-- [ ] `fas-007` | Create `authentication-jwt.mdx` | Branch: `jules/fastapi-concepts-batch`
-- [ ] `fas-008` | Create `middleware-and-cors.mdx` | Branch: `jules/fastapi-concepts-batch`
-- [ ] `fas-009` | Create `error-handling-in-apis.mdx` | Branch: `jules/fastapi-concepts-batch`
-- [ ] `fas-010` | Create `background-tasks.mdx` | Branch: `jules/fastapi-concepts-batch`
+- [ ] [BAE-FAS-001] | Create `what-is-an-api.mdx` | Branch: `jules/fastapi-concepts-batch`
+- [ ] [BAE-FAS-002] | Create `rest-api-design.mdx` | Branch: `jules/fastapi-concepts-batch`
+- [ ] [BAE-FAS-003] | Create `fastapi-fundamentals.mdx` | Branch: `jules/fastapi-concepts-batch`
+- [ ] [BAE-FAS-004] | Create `request-response-models.mdx` | Branch: `jules/fastapi-concepts-batch`
+- [ ] [BAE-FAS-005] | Create `pydantic-validation.mdx` | Branch: `jules/fastapi-concepts-batch`
+- [ ] [BAE-FAS-006] | Create `crud-operations.mdx` | Branch: `jules/fastapi-concepts-batch`
+- [ ] [BAE-FAS-007] | Create `authentication-jwt.mdx` | Branch: `jules/fastapi-concepts-batch`
+- [ ] [BAE-FAS-008] | Create `middleware-and-cors.mdx` | Branch: `jules/fastapi-concepts-batch`
+- [ ] [BAE-FAS-009] | Create `error-handling-in-apis.mdx` | Branch: `jules/fastapi-concepts-batch`
+- [ ] [BAE-FAS-010] | Create `background-tasks.mdx` | Branch: `jules/fastapi-concepts-batch`
 
 ### Backlog
-- [ ] `fas-011` | Create `websockets.mdx` | Branch: `jules/fastapi-concepts-batch`
-- [ ] `fas-012` | Create `rate-limiting.mdx` | Branch: `jules/fastapi-concepts-batch`
+- [ ] [BAE-FAS-011] | Create `websockets.mdx` | Branch: `jules/fastapi-concepts-batch`
+- [ ] [BAE-FAS-012] | Create `rate-limiting.mdx` | Branch: `jules/fastapi-concepts-batch`
 
 ### Completed This Cycle
 | BAE ID | What's Done (High Level) |

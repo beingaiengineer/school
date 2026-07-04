@@ -55,16 +55,16 @@ Below are the topics that make up this course. This list serves as the structura
 > **Jules: Pick the first batch of `- [ ]` items (up to 10) under `### Next Task`. If fewer than 10, promote from `### Backlog`.**
 
 ### Next Task
-- [x] `cic-001` | Create `what-is-cicd.mdx` | Branch: `jules/cicd-pipelines-batch`
-- [x] `cic-002` | Create `github-actions-fundamentals.mdx` | Branch: `jules/cicd-pipelines-batch`
-- [x] `cic-003` | Create `building-your-first-pipeline.mdx` | Branch: `jules/cicd-pipelines-batch`
-- [x] `cic-004` | Create `automated-testing-in-ci.mdx` | Branch: `jules/cicd-pipelines-batch`
-- [x] `cic-005` | Create `code-quality-gates.mdx` | Branch: `jules/cicd-pipelines-batch`
-- [x] `cic-006` | Create `artifact-management.mdx` | Branch: `jules/cicd-pipelines-batch`
-- [x] `cic-007` | Create `dockerfile-fundamentals.mdx` | Branch: `jules/cicd-pipelines-batch`
-- [x] `cic-008` | Create `docker-compose-in-ci.mdx` | Branch: `jules/cicd-pipelines-batch`
-- [x] `cic-009` | Create `pipeline-security.mdx` | Branch: `jules/cicd-pipelines-batch`
-- [x] `cic-010` | Create `pipeline-optimization.mdx` | Branch: `jules/cicd-pipelines-batch`
+- [x] [BAE-CIC-001] | Create `what-is-cicd.mdx` | Branch: `jules/cicd-pipelines-batch`
+- [x] [BAE-CIC-002] | Create `github-actions-fundamentals.mdx` | Branch: `jules/cicd-pipelines-batch`
+- [x] [BAE-CIC-003] | Create `building-your-first-pipeline.mdx` | Branch: `jules/cicd-pipelines-batch`
+- [x] [BAE-CIC-004] | Create `automated-testing-in-ci.mdx` | Branch: `jules/cicd-pipelines-batch`
+- [x] [BAE-CIC-005] | Create `code-quality-gates.mdx` | Branch: `jules/cicd-pipelines-batch`
+- [x] [BAE-CIC-006] | Create `artifact-management.mdx` | Branch: `jules/cicd-pipelines-batch`
+- [x] [BAE-CIC-007] | Create `dockerfile-fundamentals.mdx` | Branch: `jules/cicd-pipelines-batch`
+- [x] [BAE-CIC-008] | Create `docker-compose-in-ci.mdx` | Branch: `jules/cicd-pipelines-batch`
+- [x] [BAE-CIC-009] | Create `pipeline-security.mdx` | Branch: `jules/cicd-pipelines-batch`
+- [x] [BAE-CIC-010] | Create `pipeline-optimization.mdx` | Branch: `jules/cicd-pipelines-batch`
 
 ### Backlog
 _Empty_

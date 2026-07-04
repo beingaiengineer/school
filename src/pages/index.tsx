@@ -33,50 +33,140 @@ const courses: Course[] = [
     featured: true,
   },
   {
-    emoji: '🟨',
-    title: 'Modern JavaScript',
-    description:
-      'Advanced ES6+, async programming, and engine internals.',
-    topicCount: 'Coming soon',
-    href: '#',
-    accent: 'var(--course-coming-soon)',
-    available: false,
-  },
-  {
-    emoji: '⚛️',
-    title: 'React Architecture',
-    description:
-      'Building scalable frontends with Next.js and state management.',
-    topicCount: 'Coming soon',
-    href: '#',
-    accent: 'var(--course-coming-soon)',
-    available: false,
-  },
-  {
-    emoji: '🐳',
-    title: 'DevOps & Cloud',
-    description:
-      'Docker, Kubernetes, CI/CD, and AWS infrastructure.',
-    topicCount: 'Coming soon',
-    href: '#',
-    accent: 'var(--course-coming-soon)',
-    available: false,
-  },
-  {
     emoji: '🤖',
-    title: 'AI / ML Engineering',
+    title: 'Agentic Frameworks',
     description:
-      'Machine learning fundamentals, deep learning, LLMs, RAG, agents, and MLOps.',
+      'Master AI agents, LangChain, LangGraph, CrewAI, and multi-agent systems.',
+    topicCount: 'Live',
+    href: '/docs/school/agentic-frameworks/intro/what-are-ai-agents',
+    accent: 'var(--course-python)',
+    available: true,
+  },
+  {
+    emoji: '🛡️',
+    title: 'App Security',
+    description:
+      'Secure applications against OWASP top 10, handle auth, and protect data.',
     topicCount: 'Coming soon',
     href: '#',
     accent: 'var(--course-coming-soon)',
     available: false,
   },
   {
-    emoji: '🏗️',
-    title: 'System Design',
+    emoji: '🚀',
+    title: 'CI/CD Pipelines',
     description:
-      'Designing large-scale distributed systems and microservices.',
+      'Automate testing, builds, and deployments with GitHub Actions.',
+    topicCount: 'Coming soon',
+    href: '#',
+    accent: 'var(--course-coming-soon)',
+    available: false,
+  },
+  {
+    emoji: '⚡',
+    title: 'FastAPI Concepts',
+    description:
+      'Deep dive into building high-performance REST APIs with FastAPI.',
+    topicCount: 'Coming soon',
+    href: '#',
+    accent: 'var(--course-coming-soon)',
+    available: false,
+  },
+  {
+    emoji: '🌿',
+    title: 'Git Workflows',
+    description:
+      'Master advanced Git, rebase, merge strategies, and team collaboration.',
+    topicCount: 'Coming soon',
+    href: '#',
+    accent: 'var(--course-coming-soon)',
+    available: false,
+  },
+  {
+    emoji: '🚨',
+    title: 'Incident Management',
+    description:
+      'Handle production outages, runbooks, and post-mortems like a pro.',
+    topicCount: 'Coming soon',
+    href: '#',
+    accent: 'var(--course-coming-soon)',
+    available: false,
+  },
+  {
+    emoji: '📊',
+    title: 'Observability',
+    description:
+      'Implement logging, metrics, and tracing for production systems.',
+    topicCount: 'Coming soon',
+    href: '#',
+    accent: 'var(--course-coming-soon)',
+    available: false,
+  },
+  {
+    emoji: '🧩',
+    title: 'OOP & Patterns',
+    description:
+      'Object-oriented programming and essential software design patterns.',
+    topicCount: 'Coming soon',
+    href: '#',
+    accent: 'var(--course-coming-soon)',
+    available: false,
+  },
+  {
+    emoji: '🚢',
+    title: 'Release & Deployment',
+    description:
+      'Strategies for safely rolling out code to millions of users.',
+    topicCount: 'Coming soon',
+    href: '#',
+    accent: 'var(--course-coming-soon)',
+    available: false,
+  },
+  {
+    emoji: '📏',
+    title: 'Requirements & Estimation',
+    description:
+      'Learn how to break down complex projects and estimate work.',
+    topicCount: 'Coming soon',
+    href: '#',
+    accent: 'var(--course-coming-soon)',
+    available: false,
+  },
+  {
+    emoji: '🔄',
+    title: 'SDLC & Agile',
+    description:
+      'The software development lifecycle, Scrum, Kanban, and sprints.',
+    topicCount: 'Coming soon',
+    href: '#',
+    accent: 'var(--course-coming-soon)',
+    available: false,
+  },
+  {
+    emoji: '📈',
+    title: 'SLIs & SLOs',
+    description:
+      'Define, measure, and manage service level reliability objectives.',
+    topicCount: 'Coming soon',
+    href: '#',
+    accent: 'var(--course-coming-soon)',
+    available: false,
+  },
+  {
+    emoji: '🧪',
+    title: 'Software Testing',
+    description:
+      'Unit, integration, and E2E testing strategies for bulletproof code.',
+    topicCount: 'Coming soon',
+    href: '#',
+    accent: 'var(--course-coming-soon)',
+    available: false,
+  },
+  {
+    emoji: '👥',
+    title: 'Team Structure',
+    description:
+      'How modern engineering organizations and tech teams are structured.',
     topicCount: 'Coming soon',
     href: '#',
     accent: 'var(--course-coming-soon)',

@@ -34,10 +34,10 @@ If both are empty, stop and report: "All tasks complete. No pending work."
 
 ## Step 3: Execute
 
-1. **Calculate the session ID**: Look at the `### Completed This Cycle` table in your current `MEMORY.md`. Count only completed data rows, not the header. If there are 0 rows, your ID is 1; if there are 2 rows, your ID is 3. Prefix it with the course code (e.g., `[BAE-INC-3]`).
-2. **Create a single branch** using the batch name and ID (e.g., `jules/BAE-INC-3-intro` or `jules/BAE-FAST-12-concurrency`)
+1. **Identify the Session Task IDs**: The tasks in the queue already have predefined Jira-style IDs (e.g., `[BAE-INC-001]`). Extract the exact ID range you are working on (e.g., `[BAE-INC-001 to BAE-INC-010]`). Do NOT invent or calculate new IDs.
+2. **Create a single branch** using the batch name and task IDs (e.g., `jules/BAE-INC-001-to-010`)
 3. **Implement all assigned topics** (up to 10 per session)
-3. For each topic page, ensure it has all **15 mandatory sections** from CLAUDE.md:
+4. For each topic page, ensure it has all **15 mandatory sections** from CLAUDE.md:
    - Quick Summary table
    - Real-World Analogy
    - Concept Explanation
@@ -53,8 +53,9 @@ If both are empty, stop and report: "All tasks complete. No pending work."
    - Production Notes (warning callout)
    - Common Mistakes (table with fixes)
    - Related Topics
-4. Ensure every `<LearningFlow>` diagram is unique and topic-specific
-5. For **new content creation** tasks: research thoroughly, use real-world examples, community feedback, and production scenarios
+5. Ensure every `<LearningFlow>` diagram is unique and topic-specific
+6. **Generate an Illustration**: For every new topic page, use the `bae-illustrations` skill to design and generate a 16:9 illustration featuring Bae. The illustration MUST strictly visually represent the "Real-World Analogy" described for that topic. Embed the generated image near the Real-World Analogy section.
+7. For **new content creation** tasks: research thoroughly, use real-world examples, community feedback, and production scenarios
 
 ---
 
@@ -74,11 +75,11 @@ If the build fails, fix the errors and rebuild. Do not raise a PR with a broken 
 
 In the relevant agent memory file:
 1. Mark the completed tasks in the `### Next Task` checklist as `- [x]`. Leave them in the list.
-2. In the `### Completed This Cycle` section, append a new row to the session tracking table. The table should only track the BAE ID and a High-Level Summary.
+2. In the `### Completed This Cycle` section, append a new row to the session tracking table. The table should track the exact predefined Task IDs you just completed and a High-Level Summary.
    - Example format:
-     | BAE ID | What's Done (High Level) |
+     | Task IDs | What's Done (High Level) |
      |---|---|
-     | `[BAE-INC-3]` | Created intro to incidents, covered severity levels, and on-call culture |
+     | `[BAE-INC-001 to BAE-INC-010]` | Created intro to incidents, covered severity levels, and on-call culture |
 3. Promote the next batch of `- [ ]` items from `### Backlog` into `### Next Task` (up to 10).
 
 ---
@@ -86,10 +87,10 @@ In the relevant agent memory file:
 ## Step 6: Commit & PR
 
 1. Stage all changed files (content files and MEMORY.md).
-2. Commit with message: `feat(<course>): [BAE-X] <batch description>`
+2. Commit with message: `feat(<course>): [Task IDs] <batch description>`
 3. Push the branch.
 4. Raise a PR with:
-   - **Title**: `[BAE-X] <Course Name>: <Batch Description>` (e.g., "[BAE-INC-3] Incident Management: Intro batch — 10 topics")
+   - **Title**: `[Task IDs] <Course Name>: <Batch Description>` (e.g., "[BAE-INC-001 to BAE-INC-010] Incident Management: Intro batch — 10 topics")
    - **Body**: 
      - **High-Level Summary**: A clear description of the concepts covered in this batch.
      - **What's Done**: A detailed list of the exact files created/modified and the topics covered.
