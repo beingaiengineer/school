@@ -1,0 +1,110 @@
+---
+sidebar_position: 2
+sidebar_label: "Conversable Agents in AutoGen"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Conversable Agents in AutoGen
+
+## 1. Quick Summary
+| Area | Details |
+|---|---|
+| Topic | Conversable Agents in AutoGen |
+| Difficulty | Intermediate |
+| Used For | Building agents that can chat and collaborate. |
+| Common Mistake | Not setting clear termination conditions, causing infinite conversation loops. |
+| Performance | Depends on the framework and underlying LLM latency. |
+
+## 2. Real-World Analogy
+Like a lively debate club. Each member can speak, listen, and respond to the others, keeping the conversation flowing until a conclusion is reached.
+
+![Real World Analogy](./images/autogen-conversable-agents/analogy.png)
+
+| Debate Club | Agentic Concept |
+|---|---|
+| Speaker | ConversableAgent |
+| Moderator | Orchestrator |
+| Closing Statement | Termination Message |
+
+## 3. Concept Explanation
+In AutoGen, all agents inherit from `ConversableAgent`. This means they are inherently designed to send, receive, and process messages. This abstraction allows you to seamlessly mix LLM-backed agents, tool-executing agents, and human users in the same conversation thread.
+
+## 4. Syntax Table
+| Action | Code Example |
+|---|---|
+| Define Agent | `agent = ConversableAgent("name")` |
+| Send Message | `agent1.send("Hello", agent2)` |
+
+## 5. Beginner Example
+```python
+agent_a = autogen.ConversableAgent("Agent_A")
+agent_b = autogen.ConversableAgent("Agent_B")
+
+# Manual message sending
+agent_a.send("What is 2+2?", agent_b)
+```
+
+## 6. Real-World Engineering Example
+```python
+reviewer = autogen.ConversableAgent(
+    name="CodeReviewer",
+    system_message="Review code for security vulnerabilities. Reply TERMINATE when done.",
+    is_termination_msg=lambda x: x.get("content", "").rstrip().endswith("TERMINATE")
+)
+```
+
+## 7. Internal Working
+Here is how it works under the hood. The flow represents the lifecycle of the agent's execution process.
+
+<LearningFlow />
+
+## 8. Performance Table
+| Operation | Complexity |
+|---|---|
+| Initialization | O(1) |
+| Tool Execution | O(N) where N is payload size |
+| State Update | O(1) |
+
+## 9. Top Interview Questions
+| Question | Answer |
+|---|---|
+| How do you stop two ConversableAgents from talking forever? | Implement the `is_termination_msg` callback or set `max_consecutive_auto_reply`. |
+| Can a ConversableAgent be backed by a custom LLM? | Yes, you can register custom reply functions or use custom LLM clients. |
+| What are the security implications? | You must implement guardrails to prevent unauthorized tool execution or prompt injection. |
+| When should you NOT use this? | When a simple direct LLM call or basic script would suffice. |
+| How does it scale? | By distributing agent workloads across serverless functions or containerized environments. |
+
+## 10. Tricky Questions & Edge Cases
+Watch out for concurrency issues, bro. If multiple agents try to update the same shared state without proper locking mechanisms, you'll run into race conditions that are a nightmare to debug.
+
+## 11. Real-World Usage
+Used by top tech companies for internal tooling, customer support automation, and complex data pipeline orchestration. For instance, tech teams use these patterns to orchestrate delivery logistics dynamically based on real-time traffic data.
+
+## 12. Best Practices
+| DO | DON'T |
+|---|---|
+| Write comprehensive unit tests for individual agent tools | Skip error handling and assume the LLM will always return the perfect format |
+| Use structured logging to trace agent decision paths | Hardcode sensitive API keys directly in the agent's configuration |
+| Implement clear guardrails and timeout limits | Let an agent run indefinitely in an unbounded loop |
+
+## 13. Production Notes
+Warning: Always monitor memory usage and LLM token limits in production. A rogue agent stuck in a loop can quickly rack up massive API bills. Implement hard limits and alerting.
+
+## 14. Common Mistakes
+| Mistake | Fix |
+|---|---|
+| Ignoring logs | Add structured logging to track every step of the agent's thought process |
+| Assuming perfect output | Use tools like Pydantic to strictly validate output schemas before proceeding |
+
+## 15. Related Topics
+- Framework Architecture Patterns
+- Production Deployment Strategies
+- Agent Observability
+
+## 16. Top GitHub Repos
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [microsoft/autogen](https://github.com/microsoft/autogen) | ⭐ 25k+ | Microsoft AutoGen | The core framework repository |
+| [langchain-ai/langgraph](https://github.com/langchain-ai/langgraph) | ⭐ 10k+ | Building stateful applications | Key competitor offering different paradigms |
+| [joaomdmoura/crewai](https://github.com/joaomdmoura/crewai) | ⭐ 15k+ | Role-playing AI agents | Popular alternative for specific use cases |

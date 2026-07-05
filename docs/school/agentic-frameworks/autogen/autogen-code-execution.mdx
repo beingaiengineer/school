@@ -1,0 +1,112 @@
+---
+sidebar_position: 4
+sidebar_label: "Code Execution in AutoGen"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Code Execution in AutoGen
+
+## 1. Quick Summary
+| Area | Details |
+|---|---|
+| Topic | Code Execution in AutoGen |
+| Difficulty | Intermediate |
+| Used For | Executing generated code safely in AutoGen. |
+| Common Mistake | Running agent-generated code without a sandbox (Docker). |
+| Performance | Depends on the framework and underlying LLM latency. |
+
+## 2. Real-World Analogy
+Like an architect who not only draws the blueprints but also puts on a hard hat and builds the house themselves to make sure it works.
+
+![Real World Analogy](./images/autogen-code-execution/analogy.png)
+
+| Construction | Code Execution |
+|---|---|
+| Blueprint | Generated Code |
+| Hard Hat | Docker Sandbox |
+| Building | Execution Engine |
+
+## 3. Concept Explanation
+AutoGen excels at generating and executing code iteratively. A coding agent writes the script, and a UserProxyAgent (acting as the executor) runs it and feeds the output or error trace back to the coding agent to fix it. Always use Docker to sandbox execution.
+
+## 4. Syntax Table
+| Action | Code Example |
+|---|---|
+| Enable Execution | `code_execution_config={"use_docker": True}` |
+| Disable Execution | `code_execution_config=False` |
+
+## 5. Beginner Example
+```python
+executor = autogen.UserProxyAgent(
+    name="Executor",
+    code_execution_config={"work_dir": "workspace", "use_docker": True}
+)
+```
+
+## 6. Real-World Engineering Example
+```python
+# Using a custom Docker image with pre-installed dependencies
+executor = autogen.UserProxyAgent(
+    name="DataScienceExecutor",
+    code_execution_config={
+        "work_dir": "data_workspace",
+        "use_docker": "my-data-science-env:latest"
+    }
+)
+```
+
+## 7. Internal Working
+Here is how it works under the hood. The flow represents the lifecycle of the agent's execution process.
+
+<LearningFlow />
+
+## 8. Performance Table
+| Operation | Complexity |
+|---|---|
+| Initialization | O(1) |
+| Tool Execution | O(N) where N is payload size |
+| State Update | O(1) |
+
+## 9. Top Interview Questions
+| Question | Answer |
+|---|---|
+| Why does AutoGen recommend Docker for code execution? | Because LLMs can generate malicious or destructive code (like `rm -rf /`). Docker sandboxes this safely. |
+| What happens if code execution fails in AutoGen? | The error stack trace is sent back to the LLM agent as a message, prompting it to debug and rewrite the code. |
+| What are the security implications? | You must implement guardrails to prevent unauthorized tool execution or prompt injection. |
+| When should you NOT use this? | When a simple direct LLM call or basic script would suffice. |
+| How does it scale? | By distributing agent workloads across serverless functions or containerized environments. |
+
+## 10. Tricky Questions & Edge Cases
+Watch out for concurrency issues, bro. If multiple agents try to update the same shared state without proper locking mechanisms, you'll run into race conditions that are a nightmare to debug.
+
+## 11. Real-World Usage
+Used by top tech companies for internal tooling, customer support automation, and complex data pipeline orchestration. For instance, tech teams use these patterns to orchestrate delivery logistics dynamically based on real-time traffic data.
+
+## 12. Best Practices
+| DO | DON'T |
+|---|---|
+| Write comprehensive unit tests for individual agent tools | Skip error handling and assume the LLM will always return the perfect format |
+| Use structured logging to trace agent decision paths | Hardcode sensitive API keys directly in the agent's configuration |
+| Implement clear guardrails and timeout limits | Let an agent run indefinitely in an unbounded loop |
+
+## 13. Production Notes
+Warning: Always monitor memory usage and LLM token limits in production. A rogue agent stuck in a loop can quickly rack up massive API bills. Implement hard limits and alerting.
+
+## 14. Common Mistakes
+| Mistake | Fix |
+|---|---|
+| Ignoring logs | Add structured logging to track every step of the agent's thought process |
+| Assuming perfect output | Use tools like Pydantic to strictly validate output schemas before proceeding |
+
+## 15. Related Topics
+- Framework Architecture Patterns
+- Production Deployment Strategies
+- Agent Observability
+
+## 16. Top GitHub Repos
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [microsoft/autogen](https://github.com/microsoft/autogen) | ⭐ 25k+ | Microsoft AutoGen | The core framework repository |
+| [langchain-ai/langgraph](https://github.com/langchain-ai/langgraph) | ⭐ 10k+ | Building stateful applications | Key competitor offering different paradigms |
+| [joaomdmoura/crewai](https://github.com/joaomdmoura/crewai) | ⭐ 15k+ | Role-playing AI agents | Popular alternative for specific use cases |
