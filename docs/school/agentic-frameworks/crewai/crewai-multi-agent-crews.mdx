@@ -1,0 +1,190 @@
+---
+sidebar_position: 10
+sidebar_label: "Multi-Agent Crews"
+---
+
+# CrewAI Multi-Agent Crews
+
+## 1. Quick Summary
+| Area | Details |
+|---|---|
+| Topic | CrewAI Multi-Agent Crews |
+| Difficulty | Intermediate |
+| Used For | Orchestrating multiple specialized agents to solve complex, multi-step problems together. |
+| Common Mistake | Giving all tools to all agents instead of dividing them by role. |
+| Performance | Linear scaling based on the number of agents and their token usage. |
+
+## 2. Real-World Analogy
+Bro, imagine a Swiggy food delivery fleet. You have the Customer Support Agent handling complaints, the Delivery Partner Agent navigating traffic, and the Restaurant Manager Agent preparing the food. If one guy tries to do all three, chaos ensues. A Multi-Agent Crew in CrewAI is exactly like this fleet — you build specialized roles and let them pass the parcel smoothly.
+
+| Swiggy Delivery System | CrewAI Equivalent |
+|---|---|
+| Support / Delivery / Restaurant | Different Agent Roles |
+| Food order lifecycle | Task pipeline |
+| Swiggy App backend | The Crew orchestrator |
+
+## 3. Concept Explanation
+A Multi-Agent Crew in CrewAI is a collection of autonomous agents working together to achieve a shared goal. Instead of having one massive LLM prompt trying to do research, writing, formatting, and reviewing, you break it down.
+
+You use it when your task requires different personas or when giving one agent too many tools causes it to get confused. You shouldn't use it for simple, single-step tasks like formatting a JSON string — that's overkill, bro.
+
+## 4. Syntax Table
+| Concept | Code | Description |
+|---|---|---|
+| Agent Setup | `Agent(role='Writer', goal='...')` | Defines an individual agent. |
+| Task Setup | `Task(description='...', agent=writer)` | Assigns work to an agent. |
+| Crew Setup | `Crew(agents=[...], tasks=[...])` | Groups them together. |
+| Execution | `crew.kickoff()` | Starts the entire process. |
+
+## 5. Beginner Example
+Here is the most basic way to set up a crew.
+
+```python
+from crewai import Agent, Task, Crew
+
+researcher = Agent(
+    role='Researcher',
+    goal='Find facts about space',
+    backstory='You are a NASA scientist.',
+    verbose=True
+)
+
+writer = Agent(
+    role='Writer',
+    goal='Write a blog post about space',
+    backstory='You are a tech journalist.',
+    verbose=True
+)
+
+research_task = Task(description='Research Mars', expected_output='Bullet points', agent=researcher)
+write_task = Task(description='Write a blog', expected_output='A blog post', agent=writer)
+
+crew = Crew(agents=[researcher, writer], tasks=[research_task, write_task])
+result = crew.kickoff()
+print(result)
+```
+
+## 6. Real-World Engineering Example
+Bro, in production, we don't just hardcode text. We build data pipelines. Let's look at a financial analysis crew that fetches stock data, analyzes it, and writes a report.
+
+```python
+import os
+from crewai import Agent, Task, Crew, Process
+from crewai_tools import SerperDevTool
+
+os.environ["SERPER_API_KEY"] = "your-api-key"
+search_tool = SerperDevTool()
+
+# Specialized Agents
+data_analyst = Agent(
+    role='Data Analyst',
+    goal='Extract financial data for AAPL',
+    backstory='Wall street veteran.',
+    tools=[search_tool],
+    verbose=True
+)
+
+risk_manager = Agent(
+    role='Risk Manager',
+    goal='Evaluate risk based on the data',
+    backstory='Conservative risk assessor.',
+    verbose=True
+)
+
+# Sequential Tasks
+data_task = Task(
+    description='Find AAPL quarterly earnings.',
+    expected_output='Raw earnings data.',
+    agent=data_analyst
+)
+
+risk_task = Task(
+    description='Analyze the earnings for risk factors.',
+    expected_output='A risk summary report.',
+    agent=risk_manager
+)
+
+# Crew setup with Sequential Process
+financial_crew = Crew(
+    agents=[data_analyst, risk_manager],
+    tasks=[data_task, risk_task],
+    process=Process.sequential
+)
+
+report = financial_crew.kickoff()
+```
+
+## 7. Internal Working
+Under the hood, CrewAI runs an orchestration loop. When you call `kickoff()`, it looks at the `Process` type. For sequential processes, it takes the output of Task A and automatically injects it into the context of Task B.
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'Crew Orchestrator' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Task 1: Research' }, position: { x: 100, y: 100 } },
+    { id: '3', type: 'process', data: { label: 'Task 2: Write' }, position: { x: 400, y: 100 } },
+    { id: '4', type: 'data', data: { label: 'Shared Memory' }, position: { x: 250, y: 200 } },
+    { id: 'e1', source: '1', target: '2', label: 'Delegates' },
+    { id: 'e2', source: '2', target: '4', label: 'Saves Output' },
+    { id: 'e3', source: '4', target: '3', label: 'Injects Context' },
+    { id: 'e4', source: '1', target: '3', label: 'Delegates Next' }
+  ]}
+/>
+
+## 8. Performance Table
+| Aspect | Metric |
+|---|---|
+| Startup Time | Minimal (Python overhead) |
+| Execution Time | Highly dependent on LLM latency |
+| Token Usage | High; context is passed between agents |
+| Scalability | Limited by API rate limits |
+
+## 9. Top Interview Questions
+| Question | Answer |
+|---|---|
+| Why use CrewAI over LangGraph? | CrewAI is faster to prototype for role-based agents. LangGraph is better for strict state machine control. |
+| What is a Sequential Process? | Tasks execute one after the other, passing outputs forward. |
+| Can agents delegate to each other? | Yes, in Hierarchical processes, a manager agent can delegate tasks to worker agents. |
+| How does memory work in a Crew? | Crews share short-term memory during the kickoff to maintain context across tasks. |
+| What happens if an agent gets stuck? | CrewAI has built-in retry mechanisms, but you should set max_iterations to prevent infinite loops. |
+
+## 10. Tricky Questions & Edge Cases
+Bro, what happens if Task A outputs something completely unexpected? Task B might hallucinate.
+**The Fix:** Always set strict `expected_output` formats on your Tasks. CrewAI uses these to validate the output before moving to the next agent.
+
+## 11. Real-World Usage
+Top companies use multi-agent setups for complex workflows. Customer support pipelines often have an Intent Classifier Agent, a Knowledge Retrieval Agent, and a Drafting Agent. This separation of concerns makes debugging prompt failures much easier.
+
+## 12. Best Practices
+| DO | DON'T |
+|---|---|
+| Give agents highly specific roles and backstories. | Create generic agents that do a bit of everything. |
+| Use Pydantic models for expected outputs. | Rely on free-text parsing between critical tasks. |
+| Limit the tools an agent has access to. | Give the file system tool to an agent making web searches. |
+
+## 13. Production Notes
+:::warning
+When running Crews in production, monitor your token costs. Because the output of Agent A is passed as context to Agent B, long pipelines can cause your context window (and bill) to explode exponentially.
+:::
+
+## 14. Common Mistakes
+| Mistake | Fix |
+|---|---|
+| Agents getting confused by too many tools | Divide tools strictly. Give the Search tool only to the Researcher. |
+| Tasks running out of order | Ensure you are using `Process.sequential` or managing dependencies correctly. |
+| Infinite loops during tool usage | Set `max_iterations` on your Agents. |
+
+## 15. Related Topics
+- CrewAI Tasks & Tools
+- CrewAI Flows
+- LangGraph Multi-Agent
+
+## 16. Top GitHub Repos
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [joaomdmoura/crewAI](https://github.com/joaomdmoura/crewAI) | ⭐ 18k+ | The official CrewAI framework. | This is the core engine you are using. |
+| [joaomdmoura/crewAI-examples](https://github.com/joaomdmoura/crewAI-examples) | ⭐ 3k+ | Official examples for CrewAI. | Great place to see production-level setups. |
+| [langchain-ai/langgraph](https://github.com/langchain-ai/langgraph) | ⭐ 12k+ | State machine agent framework. | The primary alternative for strict control. |
+| [microsoft/autogen](https://github.com/microsoft/autogen) | ⭐ 30k+ | Microsoft's multi-agent framework. | Another major player in the multi-agent space. |
+| [crewAIInc/crewAI-tools](https://github.com/crewAIInc/crewAI-tools) | ⭐ 1k+ | Official tools library for CrewAI. | Where you get your Serper, File, and Web tools. |

@@ -100,22 +100,17 @@ For agentic framework topics, diagrams should focus on:
 - [x] [BAE-AF-028] | Create `crewai/crewai-tasks-and-processes.mdx` | Branch: `jules/af-batch-003-langgraph`
 - [x] [BAE-AF-029] | Create `crewai/crewai-flows-and-pipelines.mdx` | Branch: `jules/af-batch-003-langgraph`
 - [x] [BAE-AF-030] | Create `crewai/crewai-memory-system.mdx` | Branch: `jules/af-batch-003-langgraph`
-- [ ] [BAE-AF-031] | Create `crewai/crewai-multi-agent-crews.mdx` | Branch: `jules/af-batch-004-crewai-openai`
-- [ ] [BAE-AF-032] | Create `crewai/crewai-production-deployment.mdx` | Branch: `jules/af-batch-004-crewai-openai`
-- [ ] [BAE-AF-033] | Create `openai-agents-sdk/openai-sdk-fundamentals.mdx` | Branch: `jules/af-batch-004-crewai-openai`
-- [ ] [BAE-AF-034] | Create `openai-agents-sdk/openai-sdk-tools-and-functions.mdx` | Branch: `jules/af-batch-004-crewai-openai`
-- [ ] [BAE-AF-035] | Create `openai-agents-sdk/openai-sdk-handoffs.mdx` | Branch: `jules/af-batch-004-crewai-openai`
-- [ ] [BAE-AF-036] | Create `openai-agents-sdk/openai-sdk-guardrails.mdx` | Branch: `jules/af-batch-004-crewai-openai`
-- [ ] [BAE-AF-037] | Create `openai-agents-sdk/openai-sdk-tracing.mdx` | Branch: `jules/af-batch-004-crewai-openai`
-- [ ] [BAE-AF-038] | Create `openai-agents-sdk/openai-sdk-production-deployment.mdx` | Branch: `jules/af-batch-004-crewai-openai`
-- [ ] [BAE-AF-039] | Create `google-adk/google-adk-fundamentals.mdx` | Branch: `jules/af-batch-004-crewai-openai`
-- [ ] [BAE-AF-040] | Create `google-adk/google-adk-tools-and-functions.mdx` | Branch: `jules/af-batch-004-crewai-openai`
+- [x] [BAE-AF-031] | Create `crewai/crewai-multi-agent-crews.mdx` | Branch: `jules/af-batch-004-crewai-openai`
+- [x] [BAE-AF-032] | Create `crewai/crewai-production-deployment.mdx` | Branch: `jules/af-batch-004-crewai-openai`
+- [x] [BAE-AF-033] | Create `openai-agents-sdk/openai-sdk-fundamentals.mdx` | Branch: `jules/af-batch-004-crewai-openai`
+- [x] [BAE-AF-034] | Create `openai-agents-sdk/openai-sdk-tools-and-functions.mdx` | Branch: `jules/af-batch-004-crewai-openai`
+- [x] [BAE-AF-035] | Create `openai-agents-sdk/openai-sdk-handoffs.mdx` | Branch: `jules/af-batch-004-crewai-openai`
+- [x] [BAE-AF-036] | Create `openai-agents-sdk/openai-sdk-guardrails.mdx` | Branch: `jules/af-batch-004-crewai-openai`
+- [x] [BAE-AF-037] | Create `openai-agents-sdk/openai-sdk-tracing.mdx` | Branch: `jules/af-batch-004-crewai-openai`
+- [x] [BAE-AF-038] | Create `openai-agents-sdk/openai-sdk-production-deployment.mdx` | Branch: `jules/af-batch-004-crewai-openai`
+- [x] [BAE-AF-039] | Create `google-adk/google-adk-fundamentals.mdx` | Branch: `jules/af-batch-004-crewai-openai`
+- [x] [BAE-AF-040] | Create `google-adk/google-adk-tools-and-functions.mdx` | Branch: `jules/af-batch-004-crewai-openai`
 
-### Backlog
-
-#### Batch 4 — CrewAI + OpenAI SDK
-
-#### Batch 5 — Google ADK + AutoGen
 - [ ] [BAE-AF-041] | Create `google-adk/google-adk-multi-agent-orchestration.mdx` | Branch: `jules/af-batch-005-adk-autogen`
 - [ ] [BAE-AF-042] | Create `google-adk/google-adk-sessions-and-state.mdx` | Branch: `jules/af-batch-005-adk-autogen`
 - [ ] [BAE-AF-043] | Create `google-adk/google-adk-callbacks-and-hooks.mdx` | Branch: `jules/af-batch-005-adk-autogen`
@@ -126,6 +121,12 @@ For agentic framework topics, diagrams should focus on:
 - [ ] [BAE-AF-048] | Create `autogen/autogen-code-execution.mdx` | Branch: `jules/af-batch-005-adk-autogen`
 - [ ] [BAE-AF-049] | Create `autogen/autogen-production-deployment.mdx` | Branch: `jules/af-batch-005-adk-autogen`
 - [ ] [BAE-AF-050] | Create `pydantic-ai/pydantic-ai-fundamentals.mdx` | Branch: `jules/af-batch-005-adk-autogen`
+
+### Backlog
+
+#### Batch 4 — CrewAI + OpenAI SDK
+
+#### Batch 5 — Google ADK + AutoGen
 
 #### Batch 6 — Pydantic AI + Semantic Kernel
 - [ ] [BAE-AF-051] | Create `pydantic-ai/pydantic-ai-type-safe-agents.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
@@ -202,6 +203,7 @@ For agentic framework topics, diagrams should focus on:
 | `[BAE-AF-1]` | Created intro categories and first 9 concepts including ReAct pattern. |
 | `[BAE-AF-2]` | Created 10 architecture patterns and LangGraph fundamentals concepts. |
 | `[BAE-AF-3]` | Created LangGraph advanced topics and CrewAI fundamentals (af-021 through af-030). |
+| `[BAE-AF-031 to BAE-AF-040]` | Created CrewAI advanced concepts, OpenAI SDK fundamentals, and Google ADK basics. |
 
 ---
 
@@ -243,20 +245,20 @@ For agentic framework topics, diagrams should focus on:
 - [x] CrewAI Tasks & Tools (crewai/crewai-tasks-and-processes.mdx)
 - [x] CrewAI Flows (crewai/crewai-flows-and-pipelines.mdx)
 - [x] CrewAI Memory (crewai/crewai-memory-system.mdx)
-- [ ] CrewAI Multi-Agent (crewai/crewai-multi-agent-crews.mdx)
-- [ ] CrewAI Production (crewai/crewai-production-deployment.mdx)
+- [x] CrewAI Multi-Agent (crewai/crewai-multi-agent-crews.mdx)
+- [x] CrewAI Production (crewai/crewai-production-deployment.mdx)
 
 ## 5. OpenAI Agents SDK
-- [ ] OpenAI SDK Fundamentals (openai-agents-sdk/openai-sdk-fundamentals.mdx)
-- [ ] OpenAI SDK Tools (openai-agents-sdk/openai-sdk-tools-and-functions.mdx)
-- [ ] OpenAI SDK Handoffs (openai-agents-sdk/openai-sdk-handoffs.mdx)
-- [ ] OpenAI SDK Guardrails (openai-agents-sdk/openai-sdk-guardrails.mdx)
-- [ ] OpenAI SDK Tracing (openai-agents-sdk/openai-sdk-tracing.mdx)
-- [ ] OpenAI SDK Production (openai-agents-sdk/openai-sdk-production-deployment.mdx)
+- [x] OpenAI SDK Fundamentals (openai-agents-sdk/openai-sdk-fundamentals.mdx)
+- [x] OpenAI SDK Tools (openai-agents-sdk/openai-sdk-tools-and-functions.mdx)
+- [x] OpenAI SDK Handoffs (openai-agents-sdk/openai-sdk-handoffs.mdx)
+- [x] OpenAI SDK Guardrails (openai-agents-sdk/openai-sdk-guardrails.mdx)
+- [x] OpenAI SDK Tracing (openai-agents-sdk/openai-sdk-tracing.mdx)
+- [x] OpenAI SDK Production (openai-agents-sdk/openai-sdk-production-deployment.mdx)
 
 ## 6. Google ADK
-- [ ] Google ADK Fundamentals (google-adk/google-adk-fundamentals.mdx)
-- [ ] Google ADK Tools (google-adk/google-adk-tools-and-functions.mdx)
+- [x] Google ADK Fundamentals (google-adk/google-adk-fundamentals.mdx)
+- [x] Google ADK Tools (google-adk/google-adk-tools-and-functions.mdx)
 - [ ] Google ADK Multi-Agent (google-adk/google-adk-multi-agent-orchestration.mdx)
 - [ ] Google ADK Sessions (google-adk/google-adk-sessions-and-state.mdx)
 - [ ] Google ADK Callbacks (google-adk/google-adk-callbacks-and-hooks.mdx)
