@@ -54,7 +54,15 @@ If both are empty, stop and report: "All tasks complete. No pending work."
    - Common Mistakes (table with fixes)
    - Related Topics
 5. Ensure every `<LearningFlow>` diagram is unique and topic-specific
-6. **Generate an Illustration**: For every new topic page, use the `bae-illustrations` skill to design and generate a 16:9 illustration featuring Bae. The illustration MUST strictly visually represent the "Real-World Analogy" described for that topic. Embed the generated image near the Real-World Analogy section.
+6. **Generate an Illustration**: For every new topic page, you need an illustration featuring Bae that represents the "Real-World Analogy".
+   - **If the `generate_image` tool is available (Interactive Chat Session)**:
+     - Use the `bae-illustrations` skill to formulate the prompt and generate the image.
+     - Save the image to the course asset path: `docs/school/<course-name>/assets/<filename>.png` and embed it as `![Real-World Analogy](../assets/<filename>.png)` below the H2 heading.
+   - **If the `generate_image` tool is NOT available (Autonomous/Headless Server Environment)**:
+     - **Do NOT block or stop execution, and DO NOT use/commit placeholder images.**
+     - Instead of the image tag, embed an MDX comment as a marker under the "Real-World Analogy" H2 heading: `{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: <formulated prompt> */}`.
+     - Log the details (course name, file name, target path, and formulated prompt) in the global pending illustrations queue file: `pending_illustrations.md` in the repository root (create this file if it does not exist).
+     - When an interactive agent runs, it will read `pending_illustrations.md`, generate the actual illustrations, write them to the asset paths, insert the proper `![Real-World Analogy](../assets/<filename>.png)` tag into the MDX file replacing the comment marker, and clear the queue.
 7. For **new content creation** tasks: research thoroughly, use real-world examples, community feedback, and production scenarios
 
 ---
