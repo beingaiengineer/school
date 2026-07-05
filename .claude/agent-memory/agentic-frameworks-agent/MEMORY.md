@@ -111,24 +111,17 @@ For agentic framework topics, diagrams should focus on:
 - [x] [BAE-AF-039] | Create `google-adk/google-adk-fundamentals.mdx` | Branch: `jules/af-batch-004-crewai-openai`
 - [x] [BAE-AF-040] | Create `google-adk/google-adk-tools-and-functions.mdx` | Branch: `jules/af-batch-004-crewai-openai`
 
-- [ ] [BAE-AF-041] | Create `google-adk/google-adk-multi-agent-orchestration.mdx` | Branch: `jules/af-batch-005-adk-autogen`
-- [ ] [BAE-AF-042] | Create `google-adk/google-adk-sessions-and-state.mdx` | Branch: `jules/af-batch-005-adk-autogen`
-- [ ] [BAE-AF-043] | Create `google-adk/google-adk-callbacks-and-hooks.mdx` | Branch: `jules/af-batch-005-adk-autogen`
-- [ ] [BAE-AF-044] | Create `google-adk/google-adk-production-deployment.mdx` | Branch: `jules/af-batch-005-adk-autogen`
-- [ ] [BAE-AF-045] | Create `autogen/autogen-fundamentals.mdx` | Branch: `jules/af-batch-005-adk-autogen`
-- [ ] [BAE-AF-046] | Create `autogen/autogen-conversable-agents.mdx` | Branch: `jules/af-batch-005-adk-autogen`
-- [ ] [BAE-AF-047] | Create `autogen/autogen-group-chat-patterns.mdx` | Branch: `jules/af-batch-005-adk-autogen`
-- [ ] [BAE-AF-048] | Create `autogen/autogen-code-execution.mdx` | Branch: `jules/af-batch-005-adk-autogen`
-- [ ] [BAE-AF-049] | Create `autogen/autogen-production-deployment.mdx` | Branch: `jules/af-batch-005-adk-autogen`
-- [ ] [BAE-AF-050] | Create `pydantic-ai/pydantic-ai-fundamentals.mdx` | Branch: `jules/af-batch-005-adk-autogen`
+- [x] [BAE-AF-041] | Create `google-adk/google-adk-multi-agent-orchestration.mdx` | Branch: `jules/af-batch-005-adk-autogen`
+- [x] [BAE-AF-042] | Create `google-adk/google-adk-sessions-and-state.mdx` | Branch: `jules/af-batch-005-adk-autogen`
+- [x] [BAE-AF-043] | Create `google-adk/google-adk-callbacks-and-hooks.mdx` | Branch: `jules/af-batch-005-adk-autogen`
+- [x] [BAE-AF-044] | Create `google-adk/google-adk-production-deployment.mdx` | Branch: `jules/af-batch-005-adk-autogen`
+- [x] [BAE-AF-045] | Create `autogen/autogen-fundamentals.mdx` | Branch: `jules/af-batch-005-adk-autogen`
+- [x] [BAE-AF-046] | Create `autogen/autogen-conversable-agents.mdx` | Branch: `jules/af-batch-005-adk-autogen`
+- [x] [BAE-AF-047] | Create `autogen/autogen-group-chat-patterns.mdx` | Branch: `jules/af-batch-005-adk-autogen`
+- [x] [BAE-AF-048] | Create `autogen/autogen-code-execution.mdx` | Branch: `jules/af-batch-005-adk-autogen`
+- [x] [BAE-AF-049] | Create `autogen/autogen-production-deployment.mdx` | Branch: `jules/af-batch-005-adk-autogen`
+- [x] [BAE-AF-050] | Create `pydantic-ai/pydantic-ai-fundamentals.mdx` | Branch: `jules/af-batch-005-adk-autogen`
 
-### Backlog
-
-#### Batch 4 — CrewAI + OpenAI SDK
-
-#### Batch 5 — Google ADK + AutoGen
-
-#### Batch 6 — Pydantic AI + Semantic Kernel
 - [ ] [BAE-AF-051] | Create `pydantic-ai/pydantic-ai-type-safe-agents.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
 - [ ] [BAE-AF-052] | Create `pydantic-ai/pydantic-ai-tools-and-dependencies.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
 - [ ] [BAE-AF-053] | Create `pydantic-ai/pydantic-ai-structured-output.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
@@ -139,6 +132,14 @@ For agentic framework topics, diagrams should focus on:
 - [ ] [BAE-AF-058] | Create `semantic-kernel/semantic-kernel-memory-and-embeddings.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
 - [ ] [BAE-AF-059] | Create `semantic-kernel/semantic-kernel-production-deployment.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
 - [ ] [BAE-AF-060] | Create `emerging-frameworks/smolagents-huggingface.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
+
+### Backlog
+
+#### Batch 4 — CrewAI + OpenAI SDK
+
+#### Batch 5 — Google ADK + AutoGen
+
+#### Batch 6 — Pydantic AI + Semantic Kernel
 
 #### Batch 7 — Emerging Frameworks
 - [ ] [BAE-AF-061] | Create `emerging-frameworks/agno-formerly-phidata.mdx` | Branch: `jules/af-batch-007-emerging`
@@ -204,6 +205,7 @@ For agentic framework topics, diagrams should focus on:
 | `[BAE-AF-2]` | Created 10 architecture patterns and LangGraph fundamentals concepts. |
 | `[BAE-AF-3]` | Created LangGraph advanced topics and CrewAI fundamentals (af-021 through af-030). |
 | `[BAE-AF-031 to BAE-AF-040]` | Created CrewAI advanced concepts, OpenAI SDK fundamentals, and Google ADK basics. |
+| `[BAE-AF-041 to BAE-AF-050]` | Created advanced Google ADK concepts, AutoGen basics, and Pydantic AI fundamentals. |
 
 ---
 
@@ -259,20 +261,20 @@ For agentic framework topics, diagrams should focus on:
 ## 6. Google ADK
 - [x] Google ADK Fundamentals (google-adk/google-adk-fundamentals.mdx)
 - [x] Google ADK Tools (google-adk/google-adk-tools-and-functions.mdx)
-- [ ] Google ADK Multi-Agent (google-adk/google-adk-multi-agent-orchestration.mdx)
-- [ ] Google ADK Sessions (google-adk/google-adk-sessions-and-state.mdx)
-- [ ] Google ADK Callbacks (google-adk/google-adk-callbacks-and-hooks.mdx)
-- [ ] Google ADK Production (google-adk/google-adk-production-deployment.mdx)
+- [x] Google ADK Multi-Agent (google-adk/google-adk-multi-agent-orchestration.mdx)
+- [x] Google ADK Sessions (google-adk/google-adk-sessions-and-state.mdx)
+- [x] Google ADK Callbacks (google-adk/google-adk-callbacks-and-hooks.mdx)
+- [x] Google ADK Production (google-adk/google-adk-production-deployment.mdx)
 
 ## 7. AutoGen
-- [ ] AutoGen Fundamentals (autogen/autogen-fundamentals.mdx)
-- [ ] AutoGen Agents (autogen/autogen-conversable-agents.mdx)
-- [ ] AutoGen Group Chat (autogen/autogen-group-chat-patterns.mdx)
-- [ ] AutoGen Code Execution (autogen/autogen-code-execution.mdx)
-- [ ] AutoGen Production (autogen/autogen-production-deployment.mdx)
+- [x] AutoGen Fundamentals (autogen/autogen-fundamentals.mdx)
+- [x] AutoGen Agents (autogen/autogen-conversable-agents.mdx)
+- [x] AutoGen Group Chat (autogen/autogen-group-chat-patterns.mdx)
+- [x] AutoGen Code Execution (autogen/autogen-code-execution.mdx)
+- [x] AutoGen Production (autogen/autogen-production-deployment.mdx)
 
 ## 8. Pydantic AI
-- [ ] Pydantic AI Fundamentals (pydantic-ai/pydantic-ai-fundamentals.mdx)
+- [x] Pydantic AI Fundamentals (pydantic-ai/pydantic-ai-fundamentals.mdx)
 - [ ] Pydantic AI Type Safety (pydantic-ai/pydantic-ai-type-safe-agents.mdx)
 - [ ] Pydantic AI Tools (pydantic-ai/pydantic-ai-tools-and-dependencies.mdx)
 - [ ] Pydantic AI Structured Output (pydantic-ai/pydantic-ai-structured-output.mdx)

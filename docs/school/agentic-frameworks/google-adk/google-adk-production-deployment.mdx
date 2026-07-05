@@ -1,0 +1,110 @@
+---
+sidebar_position: 10
+sidebar_label: "Production Deployment for Google ADK"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Production Deployment for Google ADK
+
+## 1. Quick Summary
+| Area | Details |
+|---|---|
+| Topic | Production Deployment for Google ADK |
+| Difficulty | Intermediate |
+| Used For | Deploying Google ADK agents to GCP. |
+| Common Mistake | Ignoring cost monitoring and rate limits. |
+| Performance | Depends on the framework and underlying LLM latency. |
+
+## 2. Real-World Analogy
+Moving your favorite recipe from cooking in your small kitchen for 2 people to a massive restaurant kitchen serving 500 people a night.
+
+![Real World Analogy](./images/google-adk-production-deployment/analogy.png)
+
+| Small Kitchen | Restaurant Kitchen |
+|---|---|
+| Local script | Cloud deployment |
+| One stove | Load balancer |
+| Handwritten recipe | CI/CD pipeline |
+
+## 3. Concept Explanation
+Deploying Google ADK to production usually involves leveraging Google Cloud Run or Google Kubernetes Engine (GKE). Because ADK is deeply integrated with GCP, you must configure IAM roles, setup Secret Manager for keys, and use Cloud Logging for observability.
+
+## 4. Syntax Table
+| Action | Code Example |
+|---|---|
+| Containerize | `FROM python:3.9` |
+| Deploy | `gcloud run deploy adk-agent --image ...` |
+
+## 5. Beginner Example
+```Dockerfile
+FROM python:3.9-slim
+WORKDIR /app
+COPY . .
+RUN pip install google-adk
+CMD ["python", "main.py"]
+```
+
+## 6. Real-World Engineering Example
+```bash
+# Deploying an ADK agent to Cloud Run with IAM bindings
+gcloud run deploy customer-support-agent \
+  --image gcr.io/my-project/agent:latest \
+  --service-account agent-sa@my-project.iam.gserviceaccount.com \
+  --set-env-vars ENVIRONMENT=production
+```
+
+## 7. Internal Working
+Here is how it works under the hood. The flow represents the lifecycle of the agent's execution process.
+
+<LearningFlow />
+
+## 8. Performance Table
+| Operation | Complexity |
+|---|---|
+| Initialization | O(1) |
+| Tool Execution | O(N) where N is payload size |
+| State Update | O(1) |
+
+## 9. Top Interview Questions
+| Question | Answer |
+|---|---|
+| How should you handle secrets in a production ADK app? | Use Google Cloud Secret Manager and inject them at runtime, never hardcode them. |
+| Why is Cloud Run a good fit for agents? | It scales to zero when idle, saving costs on infrequent agent triggers. |
+| What are the security implications? | You must implement guardrails to prevent unauthorized tool execution or prompt injection. |
+| When should you NOT use this? | When a simple direct LLM call or basic script would suffice. |
+| How does it scale? | By distributing agent workloads across serverless functions or containerized environments. |
+
+## 10. Tricky Questions & Edge Cases
+Watch out for concurrency issues, bro. If multiple agents try to update the same shared state without proper locking mechanisms, you'll run into race conditions that are a nightmare to debug.
+
+## 11. Real-World Usage
+Used by top tech companies for internal tooling, customer support automation, and complex data pipeline orchestration. For instance, tech teams use these patterns to orchestrate delivery logistics dynamically based on real-time traffic data.
+
+## 12. Best Practices
+| DO | DON'T |
+|---|---|
+| Write comprehensive unit tests for individual agent tools | Skip error handling and assume the LLM will always return the perfect format |
+| Use structured logging to trace agent decision paths | Hardcode sensitive API keys directly in the agent's configuration |
+| Implement clear guardrails and timeout limits | Let an agent run indefinitely in an unbounded loop |
+
+## 13. Production Notes
+Warning: Always monitor memory usage and LLM token limits in production. A rogue agent stuck in a loop can quickly rack up massive API bills. Implement hard limits and alerting.
+
+## 14. Common Mistakes
+| Mistake | Fix |
+|---|---|
+| Ignoring logs | Add structured logging to track every step of the agent's thought process |
+| Assuming perfect output | Use tools like Pydantic to strictly validate output schemas before proceeding |
+
+## 15. Related Topics
+- Framework Architecture Patterns
+- Production Deployment Strategies
+- Agent Observability
+
+## 16. Top GitHub Repos
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [GoogleCloudPlatform/cloud-run-hello](https://github.com/GoogleCloudPlatform/cloud-run-hello) | ⭐ 1k+ | Cloud Run Examples | Good reference for GCP deployments |
+| [langchain-ai/langgraph](https://github.com/langchain-ai/langgraph) | ⭐ 10k+ | Building stateful applications | Key competitor offering different paradigms |
+| [joaomdmoura/crewai](https://github.com/joaomdmoura/crewai) | ⭐ 15k+ | Role-playing AI agents | Popular alternative for specific use cases |
