@@ -122,16 +122,16 @@ For agentic framework topics, diagrams should focus on:
 - [x] [BAE-AF-049] | Create `autogen/autogen-production-deployment.mdx` | Branch: `jules/af-batch-005-adk-autogen`
 - [x] [BAE-AF-050] | Create `pydantic-ai/pydantic-ai-fundamentals.mdx` | Branch: `jules/af-batch-005-adk-autogen`
 
-- [ ] [BAE-AF-051] | Create `pydantic-ai/pydantic-ai-type-safe-agents.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
-- [ ] [BAE-AF-052] | Create `pydantic-ai/pydantic-ai-tools-and-dependencies.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
-- [ ] [BAE-AF-053] | Create `pydantic-ai/pydantic-ai-structured-output.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
-- [ ] [BAE-AF-054] | Create `pydantic-ai/pydantic-ai-production-deployment.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
-- [ ] [BAE-AF-055] | Create `semantic-kernel/semantic-kernel-fundamentals.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
-- [ ] [BAE-AF-056] | Create `semantic-kernel/semantic-kernel-plugins-and-functions.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
-- [ ] [BAE-AF-057] | Create `semantic-kernel/semantic-kernel-planners.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
-- [ ] [BAE-AF-058] | Create `semantic-kernel/semantic-kernel-memory-and-embeddings.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
-- [ ] [BAE-AF-059] | Create `semantic-kernel/semantic-kernel-production-deployment.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
-- [ ] [BAE-AF-060] | Create `emerging-frameworks/smolagents-huggingface.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
+- [x] [BAE-AF-051] | Create `pydantic-ai/pydantic-ai-type-safe-agents.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
+- [x] [BAE-AF-052] | Create `pydantic-ai/pydantic-ai-tools-and-dependencies.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
+- [x] [BAE-AF-053] | Create `pydantic-ai/pydantic-ai-structured-output.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
+- [x] [BAE-AF-054] | Create `pydantic-ai/pydantic-ai-production-deployment.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
+- [x] [BAE-AF-055] | Create `semantic-kernel/semantic-kernel-fundamentals.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
+- [x] [BAE-AF-056] | Create `semantic-kernel/semantic-kernel-plugins-and-functions.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
+- [x] [BAE-AF-057] | Create `semantic-kernel/semantic-kernel-planners.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
+- [x] [BAE-AF-058] | Create `semantic-kernel/semantic-kernel-memory-and-embeddings.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
+- [x] [BAE-AF-059] | Create `semantic-kernel/semantic-kernel-production-deployment.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
+- [x] [BAE-AF-060] | Create `emerging-frameworks/smolagents-huggingface.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
 
 ### Backlog
 
@@ -206,6 +206,7 @@ For agentic framework topics, diagrams should focus on:
 | `[BAE-AF-3]` | Created LangGraph advanced topics and CrewAI fundamentals (af-021 through af-030). |
 | `[BAE-AF-031 to BAE-AF-040]` | Created CrewAI advanced concepts, OpenAI SDK fundamentals, and Google ADK basics. |
 | `[BAE-AF-041 to BAE-AF-050]` | Created advanced Google ADK concepts, AutoGen basics, and Pydantic AI fundamentals. |
+| `[BAE-AF-051 to BAE-AF-060]` | Created Pydantic AI advanced concepts, Semantic Kernel basics, and first emerging framework. |
 
 ---
 
@@ -275,20 +276,20 @@ For agentic framework topics, diagrams should focus on:
 
 ## 8. Pydantic AI
 - [x] Pydantic AI Fundamentals (pydantic-ai/pydantic-ai-fundamentals.mdx)
-- [ ] Pydantic AI Type Safety (pydantic-ai/pydantic-ai-type-safe-agents.mdx)
-- [ ] Pydantic AI Tools (pydantic-ai/pydantic-ai-tools-and-dependencies.mdx)
-- [ ] Pydantic AI Structured Output (pydantic-ai/pydantic-ai-structured-output.mdx)
-- [ ] Pydantic AI Production (pydantic-ai/pydantic-ai-production-deployment.mdx)
+- [x] Pydantic AI Type Safety (pydantic-ai/pydantic-ai-type-safe-agents.mdx)
+- [x] Pydantic AI Tools (pydantic-ai/pydantic-ai-tools-and-dependencies.mdx)
+- [x] Pydantic AI Structured Output (pydantic-ai/pydantic-ai-structured-output.mdx)
+- [x] Pydantic AI Production (pydantic-ai/pydantic-ai-production-deployment.mdx)
 
 ## 9. Semantic Kernel
-- [ ] Semantic Kernel Fundamentals (semantic-kernel/semantic-kernel-fundamentals.mdx)
-- [ ] Semantic Kernel Plugins (semantic-kernel/semantic-kernel-plugins-and-functions.mdx)
-- [ ] Semantic Kernel Planners (semantic-kernel/semantic-kernel-planners.mdx)
-- [ ] Semantic Kernel Memory (semantic-kernel/semantic-kernel-memory-and-embeddings.mdx)
-- [ ] Semantic Kernel Production (semantic-kernel/semantic-kernel-production-deployment.mdx)
+- [x] Semantic Kernel Fundamentals (semantic-kernel/semantic-kernel-fundamentals.mdx)
+- [x] Semantic Kernel Plugins (semantic-kernel/semantic-kernel-plugins-and-functions.mdx)
+- [x] Semantic Kernel Planners (semantic-kernel/semantic-kernel-planners.mdx)
+- [x] Semantic Kernel Memory (semantic-kernel/semantic-kernel-memory-and-embeddings.mdx)
+- [x] Semantic Kernel Production (semantic-kernel/semantic-kernel-production-deployment.mdx)
 
 ## 10. Emerging Frameworks
-- [ ] Smolagents (emerging-frameworks/smolagents-huggingface.mdx)
+- [x] Smolagents (emerging-frameworks/smolagents-huggingface.mdx)
 - [ ] Agno (emerging-frameworks/agno-formerly-phidata.mdx)
 - [ ] LlamaIndex Agents (emerging-frameworks/llamaindex-agents-and-workflows.mdx)
 - [ ] Haystack Agents (emerging-frameworks/haystack-agents.mdx)
