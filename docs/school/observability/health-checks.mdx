@@ -1,0 +1,195 @@
+---
+sidebar_position: 9
+sidebar_label: "Health Checks"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Health Checks
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Health Checks (Liveness & Readiness) |
+| Difficulty | Beginner |
+| Used For | Allowing load balancers and container orchestrators to know if an app is ready to receive traffic or needs to be restarted |
+| Common Mistake | Making a health check query an external database, causing a cascading failure |
+| Performance | Evaluated constantly (e.g., every 5 seconds); must be extremely fast and lightweight |
+
+## 2. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: Modern black and white illustration, clean ink or vector style. Pure white background. Strictly grayscale, no colors. Minimal text. The main character is Bae, a cute baby elephant drawn in black and white, wearing a backward baseball cap and oversized thick-rimmed glasses. Bae the baby elephant is doing regular checkups as a doctor on patients */}
+
+Think of a doctor checking on patients in a hospital ward, bro.
+
+The **Liveness Check** is the doctor checking for a pulse. Are you alive? If you have no pulse, the doctor calls a Code Blue (Kubernetes kills the container and restarts it).
+
+The **Readiness Check** is the doctor asking, "Are you ready to run a marathon?" You might be alive (you have a pulse), but you just woke up from surgery and need 10 minutes to recover. The doctor won't kill you, but they won't put you in the marathon yet (Kubernetes won't send you HTTP traffic until you say you are ready).
+
+## 3. Concept Explanation
+
+Bro, in a modern cloud environment, you don't manually route traffic to servers. A Load Balancer or Kubernetes does it automatically. But how does Kubernetes know if your Python script has finished loading its massive machine learning model into RAM? How does it know if your app is stuck in a `while (true)` deadlock?
+
+It uses Health Checks. These are dedicated HTTP endpoints (like `/healthz` or `/ready`) that your application exposes. Infrastructure tools constantly ping these endpoints. If your app returns a `200 OK`, traffic flows. If it times out or returns a `500`, the infrastructure reacts instantly to protect the users.
+
+## 4. Syntax Table
+
+| Type | Purpose | Kubernetes Reaction on Failure |
+|---|---|---|
+| Liveness Probe | Answers: Is the app stuck or deadlocked? | Kills the pod and restarts a fresh one. |
+| Readiness Probe | Answers: Is the app ready to handle user requests? | Stops sending HTTP traffic to this pod until it recovers. |
+| Startup Probe | Answers: Has the app finished its initial boot sequence? | Disables liveness/readiness checks until boot is done (prevents killing slow-booting apps). |
+
+## 5. Beginner Example
+
+A basic health check in an Express.js app is just a route that returns a 200.
+
+```javascript
+const express = require('express');
+const app = express();
+
+// A simple liveness check. If Node.js is deadlocked, it won't reply here.
+app.get('/health/live', (req, res) => {
+    res.status(200).send("Alive");
+});
+
+// A readiness check.
+let isReady = false;
+
+// Simulate a slow boot (e.g., connecting to DB)
+setTimeout(() => { isReady = true; }, 5000);
+
+app.get('/health/ready', (req, res) => {
+    if (isReady) {
+        res.status(200).send("Ready for traffic");
+    } else {
+        res.status(503).send("Still booting...");
+    }
+});
+
+app.listen(3000);
+```
+
+## 6. Real-World Engineering Example
+
+In production, you define these probes in your Kubernetes deployment YAML so the infrastructure knows where to look.
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-backend-api
+spec:
+  template:
+    spec:
+      containers:
+      - name: api
+        image: mycompany/api:v1.0
+        ports:
+        - containerPort: 3000
+
+        # Liveness: If this fails 3 times, restart the container
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+
+        # Readiness: If this fails, remove from Load Balancer
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+```
+
+## 7. Internal Working
+
+Bro, the magic of health checks is how they prevent users from ever seeing an error during deployments. When a new version of your app is deployed, the Load Balancer pings the Readiness endpoint. Only when it gets a `200 OK` does it start sending user traffic to the new version.
+
+<LearningFlow
+  nodes={[
+    { id: '1', kind: 'core', label: 'User Request', position: { x: 50, y: 150 } },
+    { id: '2', kind: 'tool', label: 'Kubernetes Service (Load Balancer)', position: { x: 300, y: 150 } },
+    { id: '3', kind: 'process', label: 'Pod A (Ready: 200 OK)', position: { x: 600, y: 0 } },
+    { id: '4', kind: 'process', label: 'Pod B (Ready: 200 OK)', position: { x: 600, y: 150 } },
+    { id: '5', kind: 'warning', label: 'Pod C (Ready: 503 FAIL)', position: { x: 600, y: 300 } },
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'GET /checkout', animated: true },
+    { id: 'e2-3', source: '2', target: '3', label: 'routes traffic' },
+    { id: 'e2-4', source: '2', target: '4', label: 'routes traffic' },
+    { id: 'e2-5', source: '2', target: '5', label: 'traffic BLOCKED', style: { strokeDasharray: '5,5' } },
+  ]}
+/>
+
+## 8. Performance Table
+
+| Operation | Performance Impact | Risk |
+|---|---|---|
+| Shallow Check (Return 200) | Zero | None. Perfectly safe to run every 1 second. |
+| Deep Check (Ping Database) | Low/Medium | High risk. If 50 pods ping the DB every 5 seconds, they might DDoS their own database! |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between Liveness and Readiness probes? | Liveness failing = Restart the container. Readiness failing = Stop sending traffic to the container. |
+| Should a Liveness probe check the database connection? | Absolutely not. If the database goes down, all 50 of your API pods will fail their liveness check simultaneously. Kubernetes will restart all 50 pods at the exact same time, causing a massive stampede that will crush the database when it comes back up. |
+| Should a Readiness probe check the database? | Yes, usually. If the database is unreachable, the pod cannot serve traffic anyway, so it should be removed from the load balancer until the connection is restored. |
+| How do you handle a slow-booting application (like a massive Java Spring app)? | Use a Startup Probe. It runs first and gives the app a long time (e.g., 2 minutes) to boot. Once the startup probe succeeds, it hands control over to the Liveness/Readiness probes. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, a major gotcha is **Cascading Failures due to Deep Health Checks**.
+
+Imagine Service A depends on Service B. You write a "deep" health check in Service A that makes an HTTP call to Service B to make sure it's alive.
+
+One day, Service B has a tiny 5-second network blip.
+Service A's health check fails.
+Kubernetes sees Service A is "unhealthy" and *restarts all of Service A*.
+Now Service A is offline. The API Gateway sees Service A is offline, and fails all user requests.
+
+A 5-second blip in a downstream service caused your entire frontend to go down! Health checks should only check the *local* health of the container. Never do deep network calls in a liveness probe.
+
+## 11. Real-World Usage
+
+At companies like Amazon, deployments happen every second. When you write code and push it, Kubernetes spins up the new container. Kubernetes polls `/ready`. The moment `/ready` returns 200, Kubernetes flips the traffic from the old container to the new one. The health check is the literal switch that enables zero-downtime deployments.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| DO keep liveness checks extremely simple (e.g., just returning a hardcoded HTTP 200). | DON'T write complex logic in a liveness check that could timeout or throw exceptions. |
+| DO use readiness checks to verify local dependencies (like a local cache is populated). | DON'T check external SaaS APIs (like Stripe) in your readiness probe. If Stripe goes down, your pods shouldn't be taken out of rotation. |
+| DO use `/healthz` or `/ping` as standard naming conventions. | DON'T put health checks behind authentication. The load balancer must be able to hit them anonymously. |
+
+## 13. Production Notes
+
+:::caution Keep Health Checks Fast
+A health check is called constantly (often every 5 or 10 seconds per pod). If your health check takes 2 seconds to run, and you have 100 pods, you are wasting massive amounts of compute just proving the app is alive. A health check should return in under 10 milliseconds.
+:::
+
+## 14. Common Mistakes
+
+| Mistake | Fix | Example |
+|---|---|---|
+| Timeout Mismatch | Ensure the probe timeout is higher than the response time. | **Bad:** App takes 2s to check cache, but K8s probe timeout is set to 1s. Pod gets killed constantly. |
+| Using Liveness for everything | Only use liveness if restarting the pod actually fixes the problem (like deadlocks). | **Bad:** Liveness probe fails because a file is missing. Restarting the pod won't magically create the file! |
+| Zombie Connections | If checking a DB in a readiness probe, clean up connections. | **Fix:** Use a connection pool. Don't open a new connection every 5 seconds just for a health check and leave it open. |
+
+## 15. Related Topics
+
+- [Metrics & Dashboards](./metrics-and-dashboards.mdx)
+- [Centralized Logging](./centralized-logging.mdx)
+
+## 16. Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [kubernetes/kubernetes](https://github.com/kubernetes/kubernetes) | ⭐ 100k+ | Production-Grade Container Scheduling and Management | The engine that popularized and executes these probes in modern cloud environments. |
+| [grpc-ecosystem/grpc-health-probe](https://github.com/grpc-ecosystem/grpc-health-probe) | ⭐ 3k+ | A command-line tool for health-checking gRPC applications in Kubernetes | Essential because Kubernetes natively understands HTTP probes, but needs this tool for gRPC probes. |
+| [infracloudio/botkube](https://github.com/infracloudio/botkube) | ⭐ 2k+ | App that helps you monitor your Kubernetes cluster | Good for alerting Slack when a pod continually fails its health checks and enters a CrashLoopBackOff. |

@@ -1,0 +1,219 @@
+---
+sidebar_position: 4
+sidebar_label: "Metrics & Dashboards"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Metrics & Dashboards
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Metrics & Dashboards |
+| Difficulty | Beginner |
+| Used For | Tracking numbers over time (e.g., error rates, CPU usage, active users) to spot trends and trigger alerts |
+| Common Mistake | Creating "Frankenstein dashboards" with 50+ useless graphs that nobody looks at |
+| Performance | Extremely lightweight; tracking a metric uses mere bytes of memory |
+
+## 2. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: Modern black and white illustration, clean ink or vector style. Pure white background. Strictly grayscale, no colors. Minimal text. The main character is Bae, a cute baby elephant drawn in black and white, wearing a backward baseball cap and oversized thick-rimmed glasses. Bae the baby elephant is looking at a power grid control room dashboard */}
+
+Think of flying a commercial airplane, bro. The pilot doesn't read a text log of every single drop of fuel entering the engine. That would be impossible to process.
+
+Instead, the pilot looks at a dashboard with gauges: Fuel Level, Altitude, Engine Temperature. These gauges represent **Metrics**—aggregated numbers updated in real-time. If the engine temperature gauge crosses the red line, a buzzer goes off (an Alert). Only *then* does the mechanic dig into the detailed text logs (Structured Logging) to find out exactly which valve failed.
+
+Metrics tell you *what* is happening right now. Logs tell you *why* it happened.
+
+## 3. Concept Explanation
+
+Bro, metrics are simply numbers that represent the state of your system over time. While logs record discrete events (e.g., "User A logged in", "User B failed to log in"), metrics aggregate those events (e.g., "We had 500 logins and 12 failures in the last minute").
+
+Because metrics are just numbers (counters, gauges, histograms), they are incredibly cheap to store and process. This makes them the perfect tool for real-time dashboards and alerting. You can keep a year's worth of metric data in the same disk space that one hour of text logs would consume.
+
+Dashboards are the visual representation of these metrics. A good dashboard provides a 10,000-foot view of your system's health at a single glance.
+
+## 4. Syntax Table
+
+There are four primary types of metrics you need to know:
+
+| Metric Type | Behavior | Real-World Example |
+|---|---|---|
+| Counter | Only goes up (never resets unless the app restarts) | Total HTTP requests served, Total errors |
+| Gauge | Can go up and down | Current active users, CPU usage, Memory used |
+| Histogram | Tracks the distribution of values into "buckets" | HTTP response times (e.g., 95% of requests are < 200ms) |
+| Summary | Similar to a histogram, but calculates quantiles locally | Exact 99th percentile response time |
+
+## 5. Beginner Example
+
+Let's look at how you define a Counter metric in a simple Python app using the `prometheus_client` library.
+
+```python
+from prometheus_client import Counter, start_http_server
+import time
+import random
+
+# Define a Counter. It takes a name and a description.
+# We also define a 'label' called 'endpoint' so we can track different URLs.
+REQUESTS = Counter('http_requests_total', 'Total HTTP Requests', ['endpoint'])
+
+# Start a background server on port 8000 to expose the metrics
+start_http_server(8000)
+
+while True:
+    # Simulate a request hitting the /api/users endpoint
+    # We increment the counter for that specific label
+    REQUESTS.labels(endpoint='/api/users').inc()
+
+    # Simulate work
+    time.sleep(random.random())
+```
+
+If you curl `http://localhost:8000`, you'll see the raw metric data:
+`http_requests_total{endpoint="/api/users"} 45.0`
+
+## 6. Real-World Engineering Example
+
+In production, you usually use a middleware or an interceptor to automatically track metrics for every request, rather than doing it manually inside your business logic.
+
+Here is a realistic FastAPI example tracking request counts and request duration (using a Histogram).
+
+```python
+from fastapi import FastAPI, Request
+from prometheus_client import make_asgi_app, Counter, Histogram
+import time
+
+app = FastAPI()
+
+# Add prometheus asgi middleware to route /metrics
+metrics_app = make_asgi_app()
+app.mount("/metrics", metrics_app)
+
+# Define our metrics
+HTTP_REQUESTS = Counter(
+    "api_requests_total",
+    "Total HTTP requests",
+    ["method", "endpoint", "status_code"]
+)
+HTTP_LATENCY = Histogram(
+    "api_request_duration_seconds",
+    "HTTP request latency",
+    ["endpoint"]
+)
+
+@app.middleware("http")
+async def track_metrics(request: Request, call_next):
+    start_time = time.time()
+
+    # Process the request
+    response = await call_next(request)
+
+    # Record latency
+    process_time = time.time() - start_time
+    HTTP_LATENCY.labels(endpoint=request.url.path).observe(process_time)
+
+    # Record count
+    HTTP_REQUESTS.labels(
+        method=request.method,
+        endpoint=request.url.path,
+        status_code=response.status_code
+    ).inc()
+
+    return response
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+```
+
+## 7. Internal Working
+
+Bro, there are two ways metrics get from your app to the Time-Series Database (TSDB): **Push** and **Pull**.
+
+In a **Push** model (like Datadog or StatsD), your app actively sends UDP/TCP packets containing metric updates to a central server.
+In a **Pull** model (like Prometheus), your app exposes a `/metrics` HTTP endpoint. The central server (Prometheus) wakes up every 15 seconds, makes an HTTP GET request to your app, scrapes the current numbers, and stores them.
+
+<LearningFlow
+  nodes={[
+    { id: '1', kind: 'core', label: 'App (FastAPI)', position: { x: 50, y: 150 } },
+    { id: '2', kind: 'data', label: 'In-Memory Counters (Registry)', position: { x: 50, y: 250 } },
+    { id: '3', kind: 'tool', label: 'Prometheus Server (TSDB)', position: { x: 300, y: 200 } },
+    { id: '4', kind: 'output', label: 'Grafana Dashboard', position: { x: 550, y: 200 } },
+    { id: '5', kind: 'warning', label: 'Alertmanager', position: { x: 300, y: 350 } },
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'increments memory vars' },
+    { id: 'e3-1', source: '3', target: '1', label: 'HTTP GET /metrics (Scrapes)', animated: true },
+    { id: 'e4-3', source: '4', target: '3', label: 'queries (PromQL)' },
+    { id: 'e3-5', source: '3', target: '5', label: 'triggers if metric > threshold', style: { strokeDasharray: '5,5' } },
+  ]}
+/>
+
+## 8. Performance Table
+
+| Activity | Performance Impact | Why? |
+|---|---|---|
+| Incrementing a Counter | Virtually Zero | It's just adding +1 to a variable in RAM. |
+| Exposing `/metrics` | Very Low | Rendering a plain text string every 15 seconds is trivial. |
+| Time-Series Storage | Highly Optimized | TSDBs use heavy compression; storing millions of data points takes megabytes, not gigabytes. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is a Time-Series Database (TSDB)? | A database specifically optimized for storing pairs of time and value (e.g., `[10:00AM, 50]`, `[10:01AM, 60]`). Prometheus and InfluxDB are TSDBs. |
+| Why use a Histogram instead of calculating an average? | Averages lie, bro. If 99 requests take 1ms, and 1 request takes 10,000ms, the average is ~100ms. Everything looks fine! A histogram lets you calculate the 99th percentile (p99), revealing that some users are experiencing 10-second delays. |
+| What is the difference between a Push and Pull metrics architecture? | Push (Datadog): App sends metrics to the server. Good for short-lived batch jobs. Pull (Prometheus): Server scrapes metrics from the app. Good for avoiding overwhelming the server, and automatically knowing if an app is down (the scrape fails). |
+| What is high cardinality and why is it dangerous? | Cardinality is the number of unique label combinations. If you use `user_id` as a label, you create a new memory series for every user. A million users = a million series. It will crash your app's memory and the TSDB. |
+| How do you monitor a metric that only goes up, like a Counter? | You use a rate function. You don't care that total requests = 1,000,000. You care about `rate(http_requests_total[5m])`, which tells you the requests *per second* over the last 5 minutes. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, a major gotcha is **Counter Resets**.
+
+Imagine you have a Counter tracking total errors. It says `500`. Then, you deploy a new version of your app. The container restarts, and the Counter drops back to `0` in memory!
+
+If your dashboard just shows the raw value, it will look like your errors miraculously disappeared. You must *always* wrap Counters in a `rate()` or `increase()` function in your query language (like PromQL). These functions are smart enough to detect when a number drops from 500 to 0 and handle the math correctly to show the true ongoing rate.
+
+## 11. Real-World Usage
+
+At companies like Shopify during Black Friday, dashboards are projected onto massive TVs in the engineering war room. They aren't looking at logs. They are watching a few golden metrics: Checkout Success Rate, Database CPU, and Payment Gateway Latency. If the Checkout Success Rate drops below 99%, an alert fires, and the team immediately dives into the traces to find the bottleneck.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| DO alert on symptom-based metrics (e.g., "Error rate > 5%"). | DON'T alert on cause-based metrics (e.g., "CPU > 80%"). High CPU is fine if the users aren't seeing errors! |
+| DO use Histograms to track latency (p95, p99). | DON'T use simple averages for latency. |
+| DO keep dashboards simple. 4 to 6 critical graphs per service. | DON'T create massive dashboards with 50 graphs. Nobody will look at them. |
+
+## 13. Production Notes
+
+:::caution The Trap of Averages
+Never rely on the `average` (mean) for latency in production. The average hides outliers. Always use the 95th percentile (p95) or 99th percentile (p99). If your p99 latency is 2 seconds, it means 1 out of every 100 users is waiting 2 seconds for a page to load. That is the metric that actually impacts user experience.
+:::
+
+## 14. Common Mistakes
+
+| Mistake | Fix | Example |
+|---|---|---|
+| Unbounded Labels (High Cardinality) | Only use labels with a small, finite set of options. | **Bad:** `REQUESTS.labels(user_email="bob@test.com")`<br/>**Good:** `REQUESTS.labels(http_status="404")` |
+| Using Gauges for countable events | If you want to know "how many times did X happen", use a Counter. Gauges are for current state. | **Bad:** Using a Gauge and doing `Gauge.set(Gauge.get() + 1)`.<br/>**Good:** Using `Counter.inc()`. |
+| Alerting on every spike | Add a duration threshold to alerts. | **Bad:** Alert if CPU > 90%. (It might just be a 2-second garbage collection pause).<br/>**Good:** Alert if CPU > 90% *for more than 5 minutes*. |
+
+## 15. Related Topics
+
+- [Prometheus & Grafana](./prometheus-grafana.mdx)
+- [Golden Signals](./golden-signals.mdx)
+
+## 16. Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [prometheus/prometheus](https://github.com/prometheus/prometheus) | ⭐ 50k+ | The Prometheus monitoring system and time series database. | The industry standard backend for pull-based metrics. |
+| [grafana/grafana](https://github.com/grafana/grafana) | ⭐ 57k+ | The open and composable observability and data visualization platform. | The industry standard frontend for building metric dashboards. |
+| [influxdata/influxdb](https://github.com/influxdata/influxdb) | ⭐ 26k+ | Scalable datastore for metrics, events, and real-time analytics. | A very popular alternative push-based TSDB. |
+| [VictoriaMetrics/VictoriaMetrics](https://github.com/VictoriaMetrics/VictoriaMetrics) | ⭐ 10k+ | Fast, cost-effective and scalable TSDB. | A highly optimized drop-in replacement for Prometheus when you need massive scale. |
+| [statsd/statsd](https://github.com/statsd/statsd) | ⭐ 16k+ | Daemon for easy but powerful stats aggregation. | The classic Etsy project that popularized simple push-based UDP metrics. |
