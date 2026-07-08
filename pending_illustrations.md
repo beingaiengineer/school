@@ -10,10 +10,20 @@ An agent in an interactive chat session can then read this file, generate the im
 ## Queue
 
 <!-- entries start -->
-### Course: Agentic Frameworks (0 topics pending)
+### Course: Agentic Frameworks (10 topics pending)
 
 | Topic | File Path | Target Image Path | Prompt |
 |---|---|---|---|
+| Agno (formerly Phidata) | docs/school/agentic-frameworks/emerging-frameworks/agno-formerly-phidata.mdx | docs/school/agentic-frameworks/assets/agno-formerly-phidata.png | A dedicated financial advisor quickly setting up specialized tools (calculators, market data) for a client, representing Agno's focus on specialized agent tooling. |
+| LlamaIndex Agents and Workflows | docs/school/agentic-frameworks/emerging-frameworks/llamaindex-agents-and-workflows.mdx | docs/school/agentic-frameworks/assets/llamaindex-agents-and-workflows.png | A smart librarian efficiently navigating a massive library index system to find exactly the right book, representing LlamaIndex data retrieval. |
+| Haystack Agents | docs/school/agentic-frameworks/emerging-frameworks/haystack-agents.mdx | docs/school/agentic-frameworks/assets/haystack-agents.png | An assembly line passing components through different specialized stations, representing Haystack's pipeline architecture. |
+| Mastra TypeScript Agents | docs/school/agentic-frameworks/emerging-frameworks/mastra-typescript-agents.mdx | docs/school/agentic-frameworks/assets/mastra-typescript-agents.png | A high-tech digital ordering system seamlessly syncing with barista stations, representing Mastra's native TypeScript integration. |
+| Camel AI | docs/school/agentic-frameworks/emerging-frameworks/camel-ai.mdx | docs/school/agentic-frameworks/assets/camel-ai.png | Two expert debaters systematically arguing back and forth to reach a conclusion, representing Camel AI's role-playing. |
+| MetaGPT | docs/school/agentic-frameworks/emerging-frameworks/metagpt.mdx | docs/school/agentic-frameworks/assets/metagpt.png | A software company with a CEO, PM, architect, and developer passing documents down a chain of command, representing MetaGPT. |
+| MCP Protocol Deep Dive | docs/school/agentic-frameworks/protocols/mcp-protocol-deep-dive.mdx | docs/school/agentic-frameworks/assets/mcp-protocol-deep-dive.png | A universal USB-C cable that can connect to a monitor, a hard drive, or a phone, representing the Model Context Protocol (MCP). |
+| MCP Popular Servers | docs/school/agentic-frameworks/protocols/mcp-popular-servers.mdx | docs/school/agentic-frameworks/assets/mcp-popular-servers.png | A digital marketplace where different specialized applications can be downloaded, representing the ecosystem of MCP servers. |
+| MCP Server Development | docs/school/agentic-frameworks/protocols/mcp-server-development.mdx | docs/school/agentic-frameworks/assets/mcp-server-development.png | An engineer soldering a custom adapter that translates a proprietary connection into a universal standard, representing building an MCP server. |
+| A2A Protocol Deep Dive | docs/school/agentic-frameworks/protocols/a2a-protocol-deep-dive.mdx | docs/school/agentic-frameworks/assets/a2a-protocol-deep-dive.png | Two corporate departments with different internal systems communicating seamlessly via official email memos, representing the Agent-to-Agent (A2A) protocol. |
 
 ### Course: App Security (0 topics pending)
 
