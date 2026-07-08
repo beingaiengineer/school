@@ -142,16 +142,16 @@ For agentic framework topics, diagrams should focus on:
 #### Batch 6 — Pydantic AI + Semantic Kernel
 
 #### Batch 7 — Emerging Frameworks
-- [ ] [BAE-AF-061] | Create `emerging-frameworks/agno-formerly-phidata.mdx` | Branch: `jules/af-batch-007-emerging`
-- [ ] [BAE-AF-062] | Create `emerging-frameworks/llamaindex-agents-and-workflows.mdx` | Branch: `jules/af-batch-007-emerging`
-- [ ] [BAE-AF-063] | Create `emerging-frameworks/haystack-agents.mdx` | Branch: `jules/af-batch-007-emerging`
-- [ ] [BAE-AF-064] | Create `emerging-frameworks/mastra-typescript-agents.mdx` | Branch: `jules/af-batch-007-emerging`
-- [ ] [BAE-AF-065] | Create `emerging-frameworks/camel-ai.mdx` | Branch: `jules/af-batch-007-emerging`
-- [ ] [BAE-AF-066] | Create `emerging-frameworks/metagpt.mdx` | Branch: `jules/af-batch-007-emerging`
-- [ ] [BAE-AF-067] | Create `protocols/mcp-protocol-deep-dive.mdx` | Branch: `jules/af-batch-007-emerging`
-- [ ] [BAE-AF-068] | Create `protocols/mcp-popular-servers.mdx` | Branch: `jules/af-batch-007-emerging`
-- [ ] [BAE-AF-069] | Create `protocols/mcp-server-development.mdx` | Branch: `jules/af-batch-007-emerging`
-- [ ] [BAE-AF-070] | Create `protocols/a2a-protocol-deep-dive.mdx` | Branch: `jules/af-batch-007-emerging`
+- [x] [BAE-AF-061] | Create `emerging-frameworks/agno-formerly-phidata.mdx` | Branch: `jules/af-batch-007-emerging`
+- [x] [BAE-AF-062] | Create `emerging-frameworks/llamaindex-agents-and-workflows.mdx` | Branch: `jules/af-batch-007-emerging`
+- [x] [BAE-AF-063] | Create `emerging-frameworks/haystack-agents.mdx` | Branch: `jules/af-batch-007-emerging`
+- [x] [BAE-AF-064] | Create `emerging-frameworks/mastra-typescript-agents.mdx` | Branch: `jules/af-batch-007-emerging`
+- [x] [BAE-AF-065] | Create `emerging-frameworks/camel-ai.mdx` | Branch: `jules/af-batch-007-emerging`
+- [x] [BAE-AF-066] | Create `emerging-frameworks/metagpt.mdx` | Branch: `jules/af-batch-007-emerging`
+- [x] [BAE-AF-067] | Create `protocols/mcp-protocol-deep-dive.mdx` | Branch: `jules/af-batch-007-emerging`
+- [x] [BAE-AF-068] | Create `protocols/mcp-popular-servers.mdx` | Branch: `jules/af-batch-007-emerging`
+- [x] [BAE-AF-069] | Create `protocols/mcp-server-development.mdx` | Branch: `jules/af-batch-007-emerging`
+- [x] [BAE-AF-070] | Create `protocols/a2a-protocol-deep-dive.mdx` | Branch: `jules/af-batch-007-emerging`
 
 #### Batch 8 — Protocols + Multi-Agent
 - [ ] [BAE-AF-071] | Create `protocols/a2a-agent-cards.mdx` | Branch: `jules/af-batch-008-protocols`
@@ -207,6 +207,7 @@ For agentic framework topics, diagrams should focus on:
 | `[BAE-AF-031 to BAE-AF-040]` | Created CrewAI advanced concepts, OpenAI SDK fundamentals, and Google ADK basics. |
 | `[BAE-AF-041 to BAE-AF-050]` | Created advanced Google ADK concepts, AutoGen basics, and Pydantic AI fundamentals. |
 | `[BAE-AF-051 to BAE-AF-060]` | Created Pydantic AI advanced concepts, Semantic Kernel basics, and first emerging framework. |
+| `[BAE-AF-061 to BAE-AF-070]` | Created emerging frameworks (Agno, LlamaIndex, Haystack, Mastra, Camel AI, MetaGPT) and protocol deep dives (MCP, A2A). |
 
 ---
 
@@ -290,18 +291,18 @@ For agentic framework topics, diagrams should focus on:
 
 ## 10. Emerging Frameworks
 - [x] Smolagents (emerging-frameworks/smolagents-huggingface.mdx)
-- [ ] Agno (emerging-frameworks/agno-formerly-phidata.mdx)
-- [ ] LlamaIndex Agents (emerging-frameworks/llamaindex-agents-and-workflows.mdx)
-- [ ] Haystack Agents (emerging-frameworks/haystack-agents.mdx)
-- [ ] Mastra (emerging-frameworks/mastra-typescript-agents.mdx)
-- [ ] Camel AI (emerging-frameworks/camel-ai.mdx)
-- [ ] MetaGPT (emerging-frameworks/metagpt.mdx)
+- [x] Agno (emerging-frameworks/agno-formerly-phidata.mdx)
+- [x] LlamaIndex Agents (emerging-frameworks/llamaindex-agents-and-workflows.mdx)
+- [x] Haystack Agents (emerging-frameworks/haystack-agents.mdx)
+- [x] Mastra (emerging-frameworks/mastra-typescript-agents.mdx)
+- [x] Camel AI (emerging-frameworks/camel-ai.mdx)
+- [x] MetaGPT (emerging-frameworks/metagpt.mdx)
 
 ## 11. Protocols
-- [ ] MCP Protocol (protocols/mcp-protocol-deep-dive.mdx)
-- [ ] MCP Servers (protocols/mcp-popular-servers.mdx)
-- [ ] MCP Building Servers (protocols/mcp-server-development.mdx)
-- [ ] A2A Protocol (protocols/a2a-protocol-deep-dive.mdx)
+- [x] MCP Protocol (protocols/mcp-protocol-deep-dive.mdx)
+- [x] MCP Servers (protocols/mcp-popular-servers.mdx)
+- [x] MCP Building Servers (protocols/mcp-server-development.mdx)
+- [x] A2A Protocol (protocols/a2a-protocol-deep-dive.mdx)
 - [ ] A2A Agent Cards (protocols/a2a-agent-cards.mdx)
 - [ ] MCP vs A2A (protocols/mcp-vs-a2a-when-to-use.mdx)
 
