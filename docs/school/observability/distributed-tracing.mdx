@@ -1,0 +1,210 @@
+---
+sidebar_position: 6
+sidebar_label: "Distributed Tracing"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Distributed Tracing
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Distributed Tracing |
+| Difficulty | Advanced |
+| Used For | Tracking a single user request as it travels across multiple microservices |
+| Common Mistake | Dropping the Trace ID between service calls |
+| Performance | High overhead. Usually requires "sampling" (only recording 1% or 5% of traces) to save network and storage costs |
+
+## 2. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: Modern black and white illustration, clean ink or vector style. Pure white background. Strictly grayscale, no colors. Minimal text. The main character is Bae, a cute baby elephant drawn in black and white, wearing a backward baseball cap and oversized thick-rimmed glasses. Bae the baby elephant is tracking a BlueDart courier package hop-by-hop */}
+
+Think of ordering a package online, bro.
+
+If you just look at the seller's log, it says "Package handed to courier at 9 AM." If you look at your log, it says "Package did not arrive by 5 PM." Why did it fail? You have no idea.
+
+Distributed Tracing is like the barcode tracking number on the box. Every single person who touches the box (the warehouse worker, the truck driver, the sorting facility, the local delivery guy) scans that exact same barcode. Later, you can go to a central website, type in that barcode, and see the exact timeline: It spent 2 hours in transit, 4 hours stuck at the sorting facility (the bottleneck!), and was finally loaded onto the wrong truck.
+
+## 3. Concept Explanation
+
+Bro, in a monolithic app, if a request is slow, you just look at a stack trace or profile the code on that one machine.
+
+In a modern architecture, a user clicking "Checkout" might hit the API Gateway, which calls the User Service, which calls the Cart Service, which calls the Inventory Service, which calls the Payment Gateway. If the whole process takes 5 seconds (which is terrible), how do you know which service is slow? You can't just guess.
+
+Distributed tracing solves this by generating a unique `Trace ID` at the very edge of your system (the API gateway). Every single time Service A makes an HTTP or gRPC call to Service B, it passes that `Trace ID` in the request headers. Every service records its own start and stop times (called a `Span`) and sends them to a central backend (like Jaeger). The backend stitches all the spans together using the `Trace ID` to draw a beautiful "Flame Graph" showing exactly where time was spent.
+
+## 4. Syntax Table
+
+| Concept | Explanation |
+|---|---|
+| Trace | The end-to-end journey of a single request. (The whole package delivery) |
+| Span | A single operation within a trace. (e.g., The DB query inside the User Service) |
+| Trace ID | A globally unique 16-byte identifier for the whole Trace. |
+| Span ID | A unique 8-byte identifier for a specific operation. |
+| Context Propagation | The act of passing the Trace ID in HTTP headers to the next service. |
+
+## 5. Beginner Example
+
+Let's look at how you manually propagate a trace across an HTTP call using Python and `requests`.
+
+**Service A (The Caller)**
+```python
+import requests
+import uuid
+
+def handle_user_request():
+    # 1. Generate a unique Trace ID at the edge
+    trace_id = str(uuid.uuid4())
+    print(f"Service A: Starting work for trace {trace_id}")
+
+    # 2. Inject the context into the HTTP headers
+    headers = {
+        "X-B3-TraceId": trace_id, # Standard Zipkin trace header
+        "X-B3-SpanId": str(uuid.uuid4())[:16]
+    }
+
+    # 3. Call Service B
+    requests.get("http://service-b.internal/do-work", headers=headers)
+```
+
+**Service B (The Receiver)**
+```python
+from flask import Flask, request
+
+app = Flask(__name__)
+
+@app.route("/do-work")
+def do_work():
+    # 4. Extract the context from the incoming headers
+    trace_id = request.headers.get("X-B3-TraceId")
+
+    print(f"Service B: Doing work for trace {trace_id}")
+    return "Done"
+```
+
+## 6. Real-World Engineering Example
+
+In reality, bro, you don't manually write HTTP headers. You use libraries like OpenTelemetry that automatically monkey-patch your framework (like FastAPI or Flask) to inject and extract headers behind the scenes.
+
+```python
+from fastapi import FastAPI
+from opentelemetry import trace
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
+import requests
+
+app = FastAPI()
+
+# Automatically traces all incoming requests and extracts headers
+FastAPIInstrumentor.instrument_app(app)
+# Automatically injects trace headers into outgoing requests
+RequestsInstrumentor().instrument()
+
+tracer = trace.get_tracer(__name__)
+
+@app.get("/checkout")
+def checkout():
+    # We can create custom child spans within the auto-generated trace
+    with tracer.start_as_current_span("verify_inventory"):
+        # This outgoing request will magically have the trace headers attached!
+        res = requests.get("http://inventory-service/check")
+
+    with tracer.start_as_current_span("charge_card"):
+        # We can add metadata to the span
+        current_span = trace.get_current_span()
+        current_span.set_attribute("payment.provider", "stripe")
+
+    return {"status": "success"}
+```
+
+## 7. Internal Working
+
+Bro, the most critical part is Context Propagation. If the trace context is lost, the trace breaks into two disconnected halves, and it's useless.
+
+<LearningFlow
+  nodes={[
+    { id: '1', kind: 'core', label: 'API Gateway (Generates Trace ID: 123)', position: { x: 250, y: 0 } },
+    { id: '2', kind: 'process', label: 'Service A (Extracts 123, Creates Span)', position: { x: 250, y: 150 } },
+    { id: '3', kind: 'process', label: 'Service B (Extracts 123, Creates Span)', position: { x: 50, y: 300 } },
+    { id: '4', kind: 'process', label: 'Service C (Extracts 123, Creates Span)', position: { x: 450, y: 300 } },
+    { id: '5', kind: 'tool', label: 'Jaeger Backend', position: { x: 250, y: 450 } },
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'HTTP Headers (traceparent: 123)', animated: true },
+    { id: 'e2-3', source: '2', target: '3', label: 'HTTP Headers (traceparent: 123)', animated: true },
+    { id: 'e2-4', source: '2', target: '4', label: 'gRPC Metadata (traceparent: 123)', animated: true },
+    { id: 'e1-5', source: '1', target: '5', label: 'UDP/TCP sends span data async', style: { strokeDasharray: '5,5' } },
+    { id: 'e2-5', source: '2', target: '5', label: 'udp sends async', style: { strokeDasharray: '5,5' } },
+    { id: 'e3-5', source: '3', target: '5', label: 'udp sends async', style: { strokeDasharray: '5,5' } },
+    { id: 'e4-5', source: '4', target: '5', label: 'udp sends async', style: { strokeDasharray: '5,5' } },
+  ]}
+/>
+
+## 8. Performance Table
+
+| Activity | CPU/Memory Cost | Network Cost |
+|---|---|---|
+| Header Injection/Extraction | Very Low | Adds ~100 bytes to HTTP headers |
+| Generating Spans | Low | Small objects in memory |
+| Sending Spans to Backend | High | If you trace 100% of traffic on a busy app, the sheer volume of UDP/TCP packets sent to Jaeger will saturate your network and cost a fortune. |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What happens if a service forgets to pass the Trace ID? | The trace is broken. The downstream service will assume it's a brand new request, generate a *new* Trace ID, and the Jaeger UI will not be able to stitch them together. |
+| What is Trace Sampling? | Tracing 100% of requests is too expensive. Sampling means we randomly decide (e.g., at the API gateway) to only trace 5% of requests. We pass a `sampled=true` flag so downstream services know to also trace this specific request. |
+| What is "Tail-Based Sampling"? | Instead of randomly dropping traces at the *start* of the request (Head-based), we collect *all* traces in a buffer, and only keep them if they result in an error or are very slow. It ensures we never miss a bug, but it is very computationally expensive. |
+| How do traces integrate with structured logs? | You include the `trace_id` as a field in every single structured JSON log. If you see an error log, you copy the `trace_id` and paste it into Jaeger to see the whole system state. |
+| What is a Flame Graph? | A visualization where time is the X-axis, and services/functions are stacked on the Y-axis. It instantly visually highlights which service took the most time. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, a massive gotcha in tracing is **Asynchronous Messaging (Queues/Kafka)**.
+
+When Service A calls Service B via HTTP, it's synchronous. You just put the trace ID in the HTTP header.
+But what if Service A puts a message on a Kafka topic, and Service B reads it 5 minutes later?
+
+If you don't propagate the trace ID inside the Kafka message payload (or Kafka headers), the trace breaks. You must explicitly extract the context from the message when consuming it, and start a new span linked to the original trace ID. Without this, your tracing completely fails for event-driven architectures.
+
+## 11. Real-World Usage
+
+At companies like Uber, a single ride request might touch over 100 microservices. Jaeger (which was actually created at Uber) allows an engineer to type in a `ride_id` (which was logged alongside the `trace_id`), open a massive flame graph, and instantly see: "Ah, the delay is exactly here—the Pricing Service spent 3 seconds waiting on a Redis cache miss." Without tracing, debugging this would take days of guessing.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| DO use auto-instrumentation libraries whenever possible to avoid writing manual trace code. | DON'T write your own context propagation logic. You will mess it up. |
+| DO inject the `trace_id` into your application logs. | DON'T treat tracing and logging as separate, disconnected silos. |
+| DO set up Head-Based sampling (e.g., 1%) to keep costs under control. | DON'T try to trace 100% of traffic in a high-volume production system unless you have an infinite budget. |
+
+## 13. Production Notes
+
+:::caution The Cost of Tracing
+Trace data is massive. If you have 20 microservices, a single user request generates 20 spans. If you have 10,000 requests per second, you are generating 200,000 spans per second. If you don't sample heavily, your tracing backend will cost more to run than your actual application!
+:::
+
+## 14. Common Mistakes
+
+| Mistake | Fix | Example |
+|---|---|---|
+| Losing Context in Threads/Async | Use contextvars or library features to pass context across thread boundaries. | **Bad:** Spawning a background thread in Python without passing the OpenTelemetry context. |
+| Missing DB Traces | Instrument your database drivers. | **Fix:** Use `opentelemetry.instrumentation.sqlalchemy` to automatically generate spans for every SQL query. |
+| Too many manual spans | Let the framework handle HTTP/DB spans. Only manually wrap critical complex business logic. | **Bad:** Writing a `with tracer.start_as_current_span()` around a basic `a + b` math function. |
+
+## 15. Related Topics
+
+- [What is Observability?](./what-is-observability.mdx)
+- [OpenTelemetry](./opentelemetry.mdx)
+
+## 16. Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [jaegertracing/jaeger](https://github.com/jaegertracing/jaeger) | ⭐ 18k+ | Open source, end-to-end distributed tracing. | The industry standard backend and UI for viewing traces, created by Uber. |
+| [openzipkin/zipkin](https://github.com/openzipkin/zipkin) | ⭐ 16k+ | A distributed tracing system. | The original pioneer of tracing, created by Twitter. Still widely used. |
+| [open-telemetry/opentelemetry-python](https://github.com/open-telemetry/opentelemetry-python) | ⭐ 3k+ | OpenTelemetry Python API and SDK. | The modern, vendor-neutral way to generate traces in Python. |
+| [signoz/signoz](https://github.com/signoz/signoz) | ⭐ 15k+ | Open-source observability platform alternative to Datadog. | A modern all-in-one tool that provides an excellent UI for traces over ClickHouse. |
