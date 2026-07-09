@@ -133,6 +133,17 @@ For agentic framework topics, diagrams should focus on:
 - [x] [BAE-AF-059] | Create `semantic-kernel/semantic-kernel-production-deployment.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
 - [x] [BAE-AF-060] | Create `emerging-frameworks/smolagents-huggingface.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
 
+- [ ] [BAE-AF-081] | Create `memory-and-state/long-term-memory-persistence.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [ ] [BAE-AF-082] | Create `memory-and-state/vector-store-memory.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [ ] [BAE-AF-083] | Create `memory-and-state/conversation-management.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [ ] [BAE-AF-084] | Create `memory-and-state/state-persistence-and-checkpointing.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [ ] [BAE-AF-085] | Create `tools-and-actions/tool-design-principles.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [ ] [BAE-AF-086] | Create `tools-and-actions/function-calling-deep-dive.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [ ] [BAE-AF-087] | Create `tools-and-actions/api-tools-rest-graphql.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [ ] [BAE-AF-088] | Create `tools-and-actions/database-tools.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [ ] [BAE-AF-089] | Create `tools-and-actions/code-execution-sandboxes.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [ ] [BAE-AF-090] | Create `tools-and-actions/tool-error-handling-and-retries.mdx` | Branch: `jules/af-batch-009-memory-tools`
+
 ### Backlog
 
 #### Batch 4 — CrewAI + OpenAI SDK
@@ -154,18 +165,16 @@ For agentic framework topics, diagrams should focus on:
 - [x] [BAE-AF-070] | Create `protocols/a2a-protocol-deep-dive.mdx` | Branch: `jules/af-batch-007-emerging`
 
 #### Batch 8 — Protocols + Multi-Agent
-- [ ] [BAE-AF-071] | Create `protocols/a2a-agent-cards.mdx` | Branch: `jules/af-batch-008-protocols`
-- [ ] [BAE-AF-072] | Create `protocols/mcp-vs-a2a-when-to-use.mdx` | Branch: `jules/af-batch-008-protocols`
-- [ ] [BAE-AF-073] | Create `multi-agent-systems/multi-agent-patterns-overview.mdx` | Branch: `jules/af-batch-008-protocols`
-- [ ] [BAE-AF-074] | Create `multi-agent-systems/orchestrator-worker-pattern.mdx` | Branch: `jules/af-batch-008-protocols`
-- [ ] [BAE-AF-075] | Create `multi-agent-systems/supervisor-pattern.mdx` | Branch: `jules/af-batch-008-protocols`
-- [ ] [BAE-AF-076] | Create `multi-agent-systems/hierarchical-agent-teams.mdx` | Branch: `jules/af-batch-008-protocols`
-- [ ] [BAE-AF-077] | Create `multi-agent-systems/agent-communication-protocols.mdx` | Branch: `jules/af-batch-008-protocols`
-- [ ] [BAE-AF-078] | Create `multi-agent-systems/multi-agent-debugging.mdx` | Branch: `jules/af-batch-008-protocols`
-- [ ] [BAE-AF-079] | Create `memory-and-state/agent-memory-types-overview.mdx` | Branch: `jules/af-batch-008-protocols`
-- [ ] [BAE-AF-080] | Create `memory-and-state/short-term-memory-context-window.mdx` | Branch: `jules/af-batch-008-protocols`
-
-#### Batch 9 — Memory + Tools
+- [x] [BAE-AF-071] | Create `protocols/a2a-agent-cards.mdx` | Branch: `jules/af-batch-008-protocols`
+- [x] [BAE-AF-072] | Create `protocols/mcp-vs-a2a-when-to-use.mdx` | Branch: `jules/af-batch-008-protocols`
+- [x] [BAE-AF-073] | Create `multi-agent-systems/multi-agent-patterns-overview.mdx` | Branch: `jules/af-batch-008-protocols`
+- [x] [BAE-AF-074] | Create `multi-agent-systems/orchestrator-worker-pattern.mdx` | Branch: `jules/af-batch-008-protocols`
+- [x] [BAE-AF-075] | Create `multi-agent-systems/supervisor-pattern.mdx` | Branch: `jules/af-batch-008-protocols`
+- [x] [BAE-AF-076] | Create `multi-agent-systems/hierarchical-agent-teams.mdx` | Branch: `jules/af-batch-008-protocols`
+- [x] [BAE-AF-077] | Create `multi-agent-systems/agent-communication-protocols.mdx` | Branch: `jules/af-batch-008-protocols`
+- [x] [BAE-AF-078] | Create `multi-agent-systems/multi-agent-debugging.mdx` | Branch: `jules/af-batch-008-protocols`
+- [x] [BAE-AF-079] | Create `memory-and-state/agent-memory-types-overview.mdx` | Branch: `jules/af-batch-008-protocols`
+- [x] [BAE-AF-080] | Create `memory-and-state/short-term-memory-context-window.mdx` | Branch: `jules/af-batch-008-protocols`
 - [ ] [BAE-AF-081] | Create `memory-and-state/long-term-memory-persistence.mdx` | Branch: `jules/af-batch-009-memory-tools`
 - [ ] [BAE-AF-082] | Create `memory-and-state/vector-store-memory.mdx` | Branch: `jules/af-batch-009-memory-tools`
 - [ ] [BAE-AF-083] | Create `memory-and-state/conversation-management.mdx` | Branch: `jules/af-batch-009-memory-tools`
@@ -176,6 +185,8 @@ For agentic framework topics, diagrams should focus on:
 - [ ] [BAE-AF-088] | Create `tools-and-actions/database-tools.mdx` | Branch: `jules/af-batch-009-memory-tools`
 - [ ] [BAE-AF-089] | Create `tools-and-actions/code-execution-sandboxes.mdx` | Branch: `jules/af-batch-009-memory-tools`
 - [ ] [BAE-AF-090] | Create `tools-and-actions/tool-error-handling-and-retries.mdx` | Branch: `jules/af-batch-009-memory-tools`
+
+#### Batch 9 — Memory + Tools
 
 #### Batch 10 — Production
 - [ ] [BAE-AF-091] | Create `production/agent-evaluation-frameworks.mdx` | Branch: `jules/af-batch-010-production`
@@ -209,6 +220,7 @@ For agentic framework topics, diagrams should focus on:
 | `[BAE-AF-051 to BAE-AF-060]` | Created Pydantic AI advanced concepts, Semantic Kernel basics, and first emerging framework. |
 | `[BAE-AF-061 to BAE-AF-070]` | Created emerging frameworks (Agno, LlamaIndex, Haystack, Mastra, Camel AI, MetaGPT) and protocol deep dives (MCP, A2A). |
 
+| `[BAE-AF-071 to BAE-AF-080]` | Created Protocols and Multi-Agent Systems concepts. |
 ---
 
 # Course Roadmap & Progress
@@ -303,20 +315,20 @@ For agentic framework topics, diagrams should focus on:
 - [x] MCP Servers (protocols/mcp-popular-servers.mdx)
 - [x] MCP Building Servers (protocols/mcp-server-development.mdx)
 - [x] A2A Protocol (protocols/a2a-protocol-deep-dive.mdx)
-- [ ] A2A Agent Cards (protocols/a2a-agent-cards.mdx)
-- [ ] MCP vs A2A (protocols/mcp-vs-a2a-when-to-use.mdx)
+- [x] A2A Agent Cards (protocols/a2a-agent-cards.mdx)
+- [x] MCP vs A2A (protocols/mcp-vs-a2a-when-to-use.mdx)
 
 ## 12. Multi-Agent Systems
-- [ ] Multi-Agent Patterns (multi-agent-systems/multi-agent-patterns-overview.mdx)
-- [ ] Orchestrator Worker (multi-agent-systems/orchestrator-worker-pattern.mdx)
-- [ ] Supervisor Pattern (multi-agent-systems/supervisor-pattern.mdx)
-- [ ] Hierarchical Agents (multi-agent-systems/hierarchical-agent-teams.mdx)
-- [ ] Agent Communication (multi-agent-systems/agent-communication-protocols.mdx)
-- [ ] Multi-Agent Debugging (multi-agent-systems/multi-agent-debugging.mdx)
+- [x] Multi-Agent Patterns (multi-agent-systems/multi-agent-patterns-overview.mdx)
+- [x] Orchestrator Worker (multi-agent-systems/orchestrator-worker-pattern.mdx)
+- [x] Supervisor Pattern (multi-agent-systems/supervisor-pattern.mdx)
+- [x] Hierarchical Agents (multi-agent-systems/hierarchical-agent-teams.mdx)
+- [x] Agent Communication (multi-agent-systems/agent-communication-protocols.mdx)
+- [x] Multi-Agent Debugging (multi-agent-systems/multi-agent-debugging.mdx)
 
 ## 13. Memory & State
-- [ ] Agent Memory Types (memory-and-state/agent-memory-types-overview.mdx)
-- [ ] Short-Term Memory (memory-and-state/short-term-memory-context-window.mdx)
+- [x] Agent Memory Types (memory-and-state/agent-memory-types-overview.mdx)
+- [x] Short-Term Memory (memory-and-state/short-term-memory-context-window.mdx)
 - [ ] Long-Term Memory (memory-and-state/long-term-memory-persistence.mdx)
 - [ ] Vector Store Memory (memory-and-state/vector-store-memory.mdx)
 - [ ] Conversation Management (memory-and-state/conversation-management.mdx)
