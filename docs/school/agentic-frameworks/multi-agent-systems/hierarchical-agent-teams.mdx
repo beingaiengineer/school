@@ -1,0 +1,140 @@
+---
+sidebar_position: 6
+sidebar_label: "Hierarchical Agent Teams"
+---
+
+# Hierarchical Agent Teams
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Hierarchical Agent Teams |
+| Difficulty | Intermediate |
+| Used For | Organizing and structuring multi-agent capabilities. |
+| Common Mistake | Creating too many layers, causing massive latency and context loss. |
+| Performance | Varies by network overhead and token usage. |
+
+## 2. Real-World Analogy
+
+Imagine the Indian Railways system. You have the Railway Board at the top, zonal managers below them, and station masters below them. The station master only talks to the zonal manager, not directly to the Railway Board. This is a hierarchical agent team.
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A hierarchical flowchart represented by different levels of Indian Railway managers. */}
+
+## 3. Concept Explanation
+
+Hierarchical agent teams organize agents into a tree structure where higher-level agents manage teams of lower-level agents. This allows systems to scale to handle massive, complex workflows without overwhelming a single orchestrator. It solves the problem of "one giant prompt" failing on complex tasks by breaking them down and distributing them. Bro, the key is knowing when to use which pattern and tool.
+
+## 4. Syntax Table
+
+| Concept | Description | Typical Use Case |
+|---|---|---|
+| Hand-off | Transferring control to another agent | Linear workflows |
+| Broadcast | Sending a message to all agents | Event-driven systems |
+| Supervisor | One agent delegates and reviews | Complex tasks needing oversight |
+
+## 5. Beginner Example
+
+```python
+# A simple conceptual example of agent delegation
+def main_agent(task):
+    if "research" in task:
+        return research_agent(task)
+    elif "write" in task:
+        return writer_agent(task)
+    return "Task completed by main agent"
+```
+
+## 6. Real-World Engineering Example
+
+```python
+# Real-world scenario: routing incoming queries based on Hierarchical Agent Teams
+class CustomerSupportRouter:
+    def route_ticket(self, ticket):
+        intent = self.analyze_intent(ticket)
+        if intent == "billing":
+            return self.billing_agent.handle(ticket)
+        elif intent == "technical":
+            return self.tech_support_agent.handle(ticket)
+        else:
+            return self.general_agent.handle(ticket)
+```
+
+## 7. Internal Working
+
+Bro, here is how the data flows when agents collaborate:
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'User Request' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Orchestrator Agent' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'tool', data: { label: 'Worker Agent A' }, position: { x: 100, y: 200 } },
+    { id: '4', type: 'tool', data: { label: 'Worker Agent B' }, position: { x: 400, y: 200 } },
+    { id: 'e1-2', source: '1', target: '2', animated: true },
+    { id: 'e2-3', source: '2', target: '3', animated: true, label: 'Delegates' },
+    { id: 'e2-4', source: '2', target: '4', animated: true, label: 'Delegates' }
+  ]}
+/>
+
+## 8. Performance Table
+
+| Operation | Time Complexity | Space/Token Complexity |
+|---|---|---|
+| Single Agent | $O(1)$ routing | Low |
+| Orchestrator | $O(N)$ for $N$ workers | Medium (context shared) |
+| Broadcast | $O(N)$ messages | High (duplicated context) |
+
+## 9. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| How do you prevent infinite loops in multi-agent systems? | Implement a max-turns counter or state-based termination checks. |
+| When would you use a supervisor vs a router? | Router just delegates. Supervisor delegates, reviews, and can send back for rework. |
+| How do agents share memory? | Through a shared state dictionary, external database, or message passing. |
+| What's the main challenge with multi-agent setups? | Error propagation; if one agent hallucinates, it affects downstream agents. |
+| How do you test a multi-agent system? | Unit test agents individually with mocked inputs, then integration test the flows. |
+
+## 10. Tricky Questions & Edge Cases
+
+Bro, what happens if two agents need to update the same shared state simultaneously? You get race conditions! Always ensure atomic updates or use a single state-manager agent. Also, watch out for context window overflow when agents pass large messages back and forth.
+
+## 11. Real-World Usage
+
+Companies like Swiggy use multi-agent patterns for complex support tickets. One agent classifies, another fetches order data, and a third formulates the response. This compartmentalization keeps individual prompts focused and reliable.
+
+## 12. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Keep agent responsibilities narrow and focused. | Create "god agents" that try to do everything. |
+| Use structured outputs (JSON) for inter-agent communication. | Rely on raw text parsing between agents. |
+| Implement strict timeouts and max-iteration limits. | Let agents talk indefinitely without boundaries. |
+
+## 13. Production Notes
+
+> **Warning:** Multi-agent systems multiply your API costs and latency. If a single LLM call takes 2 seconds, a 5-agent sequence might take 10+ seconds. Always stream intermediate progress to the user to manage expectations.
+
+## 14. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Creating too many layers, causing massive latency and context loss. | Keep the hierarchy as flat as possible, typically no more than 2-3 levels deep. |
+| Hardcoding agent handoffs. | Use a dynamic router or state machine framework (like LangGraph). |
+
+## 15. Related Topics
+
+- LangGraph State Machines
+- CrewAI Fundamentals
+- Function Calling
+
+## 16. Top GitHub Repos
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [langchain-ai/langgraph](https://github.com/langchain-ai/langgraph) | ⭐ 8k+ | State machine for multi-actor LLM applications | The standard for complex orchestrations |
+| [joaomdmoura/crewAI](https://github.com/joaomdmoura/crewAI) | ⭐ 15k+ | Framework for orchestrating role-playing AI agents | Simplest way to build multi-agent teams |
+| [microsoft/autogen](https://github.com/microsoft/autogen) | ⭐ 25k+ | Programming framework for agentic AI | Microsoft's heavy-duty multi-agent lib |
+| [GoogleCloudPlatform/agent-engine](https://github.com/GoogleCloudPlatform/agent-engine) | ⭐ 2k+ | Enterprise agent architecture examples | Good production reference patterns |
+| [anthropics/courses](https://github.com/anthropics/courses) | ⭐ 5k+ | Anthropic's official educational materials | Deep insights into Claude's tool use |
