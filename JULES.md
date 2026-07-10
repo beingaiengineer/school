@@ -79,6 +79,26 @@ If the build fails, fix the errors and rebuild. Do not raise a PR with a broken 
 
 ---
 
+## Step 4.5: Content Review (Quality Gate)
+
+After the build passes, **self-review every file you created or modified in this session** before proceeding.
+
+1. Open [`.claude/agents/code-reviewer.md`](./.claude/agents/code-reviewer.md) and read the full review checklist.
+2. For each file, run through all 7 checks (Structural Completeness, Content Depth, Hallucination Detection, Diagram Quality, Illustration Queue Integrity, Frontmatter, Build).
+3. Output the **Verdict Table** as described in the reviewer instructions.
+
+### On FAIL
+If **any** file fails review:
+1. Fix the file immediately — rewrite the failing sections with genuine, researched content.
+2. Re-run `npm run build` to verify the fix compiles.
+3. Re-review the fixed file.
+4. **Do NOT proceed to Step 5 until every file passes all 7 checks.**
+
+### On PASS
+If all files pass, proceed to Step 5.
+
+---
+
 ## Step 5: Update Memory
 
 In the relevant agent memory file:
