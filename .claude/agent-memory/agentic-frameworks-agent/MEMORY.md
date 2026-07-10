@@ -111,6 +111,7 @@ For agentic framework topics, diagrams should focus on:
 - [x] [BAE-AF-039] | Create `google-adk/google-adk-fundamentals.mdx` | Branch: `jules/af-batch-004-crewai-openai`
 - [x] [BAE-AF-040] | Create `google-adk/google-adk-tools-and-functions.mdx` | Branch: `jules/af-batch-004-crewai-openai`
 
+
 - [x] [BAE-AF-041] | Create `google-adk/google-adk-multi-agent-orchestration.mdx` | Branch: `jules/af-batch-005-adk-autogen`
 - [x] [BAE-AF-042] | Create `google-adk/google-adk-sessions-and-state.mdx` | Branch: `jules/af-batch-005-adk-autogen`
 - [x] [BAE-AF-043] | Create `google-adk/google-adk-callbacks-and-hooks.mdx` | Branch: `jules/af-batch-005-adk-autogen`
@@ -133,15 +134,15 @@ For agentic framework topics, diagrams should focus on:
 - [x] [BAE-AF-059] | Create `semantic-kernel/semantic-kernel-production-deployment.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
 - [x] [BAE-AF-060] | Create `emerging-frameworks/smolagents-huggingface.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
 
-- [ ] [BAE-AF-081] | Create `memory-and-state/long-term-memory-persistence.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [ ] [BAE-AF-082] | Create `memory-and-state/vector-store-memory.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [ ] [BAE-AF-083] | Create `memory-and-state/conversation-management.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [ ] [BAE-AF-084] | Create `memory-and-state/state-persistence-and-checkpointing.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [ ] [BAE-AF-085] | Create `tools-and-actions/tool-design-principles.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [ ] [BAE-AF-086] | Create `tools-and-actions/function-calling-deep-dive.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [ ] [BAE-AF-087] | Create `tools-and-actions/api-tools-rest-graphql.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [ ] [BAE-AF-088] | Create `tools-and-actions/database-tools.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [ ] [BAE-AF-089] | Create `tools-and-actions/code-execution-sandboxes.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [x] [BAE-AF-081] | Create `memory-and-state/long-term-memory-persistence.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [x] [BAE-AF-082] | Create `memory-and-state/vector-store-memory.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [x] [BAE-AF-083] | Create `memory-and-state/conversation-management.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [x] [BAE-AF-084] | Create `memory-and-state/state-persistence-and-checkpointing.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [x] [BAE-AF-085] | Create `tools-and-actions/tool-design-principles.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [x] [BAE-AF-086] | Create `tools-and-actions/function-calling-deep-dive.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [x] [BAE-AF-087] | Create `tools-and-actions/api-tools-rest-graphql.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [x] [BAE-AF-088] | Create `tools-and-actions/database-tools.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [x] [BAE-AF-089] | Create `tools-and-actions/code-execution-sandboxes.mdx` | Branch: `jules/af-batch-009-memory-tools`
 - [ ] [BAE-AF-090] | Create `tools-and-actions/tool-error-handling-and-retries.mdx` | Branch: `jules/af-batch-009-memory-tools`
 
 ### Backlog
@@ -175,30 +176,21 @@ For agentic framework topics, diagrams should focus on:
 - [x] [BAE-AF-078] | Create `multi-agent-systems/multi-agent-debugging.mdx` | Branch: `jules/af-batch-008-protocols`
 - [x] [BAE-AF-079] | Create `memory-and-state/agent-memory-types-overview.mdx` | Branch: `jules/af-batch-008-protocols`
 - [x] [BAE-AF-080] | Create `memory-and-state/short-term-memory-context-window.mdx` | Branch: `jules/af-batch-008-protocols`
-- [ ] [BAE-AF-081] | Create `memory-and-state/long-term-memory-persistence.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [ ] [BAE-AF-082] | Create `memory-and-state/vector-store-memory.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [ ] [BAE-AF-083] | Create `memory-and-state/conversation-management.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [ ] [BAE-AF-084] | Create `memory-and-state/state-persistence-and-checkpointing.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [ ] [BAE-AF-085] | Create `tools-and-actions/tool-design-principles.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [ ] [BAE-AF-086] | Create `tools-and-actions/function-calling-deep-dive.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [ ] [BAE-AF-087] | Create `tools-and-actions/api-tools-rest-graphql.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [ ] [BAE-AF-088] | Create `tools-and-actions/database-tools.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [ ] [BAE-AF-089] | Create `tools-and-actions/code-execution-sandboxes.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [x] [BAE-AF-081] | Create `memory-and-state/long-term-memory-persistence.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [x] [BAE-AF-082] | Create `memory-and-state/vector-store-memory.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [x] [BAE-AF-083] | Create `memory-and-state/conversation-management.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [x] [BAE-AF-084] | Create `memory-and-state/state-persistence-and-checkpointing.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [x] [BAE-AF-085] | Create `tools-and-actions/tool-design-principles.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [x] [BAE-AF-086] | Create `tools-and-actions/function-calling-deep-dive.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [x] [BAE-AF-087] | Create `tools-and-actions/api-tools-rest-graphql.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [x] [BAE-AF-088] | Create `tools-and-actions/database-tools.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [x] [BAE-AF-089] | Create `tools-and-actions/code-execution-sandboxes.mdx` | Branch: `jules/af-batch-009-memory-tools`
 - [ ] [BAE-AF-090] | Create `tools-and-actions/tool-error-handling-and-retries.mdx` | Branch: `jules/af-batch-009-memory-tools`
 
 #### Batch 9 — Memory + Tools
 
 #### Batch 10 — Production
-- [ ] [BAE-AF-091] | Create `production/agent-evaluation-frameworks.mdx` | Branch: `jules/af-batch-010-production`
-- [ ] [BAE-AF-092] | Create `production/agent-observability-and-tracing.mdx` | Branch: `jules/af-batch-010-production`
-- [ ] [BAE-AF-093] | Create `production/agent-guardrails-and-safety.mdx` | Branch: `jules/af-batch-010-production`
-- [ ] [BAE-AF-094] | Create `production/agent-security-threats.mdx` | Branch: `jules/af-batch-010-production`
-- [ ] [BAE-AF-095] | Create `production/agent-cost-optimization.mdx` | Branch: `jules/af-batch-010-production`
-- [ ] [BAE-AF-096] | Create `production/agent-deployment-patterns.mdx` | Branch: `jules/af-batch-010-production`
-- [ ] [BAE-AF-097] | Create `production/agent-scaling-strategies.mdx` | Branch: `jules/af-batch-010-production`
-- [ ] [BAE-AF-098] | Create `interview-prep/agent-interview-questions.mdx` | Branch: `jules/af-batch-010-production`
-- [ ] [BAE-AF-099] | Create `interview-prep/framework-comparison-questions.mdx` | Branch: `jules/af-batch-010-production`
-- [ ] [BAE-AF-100] | Create `interview-prep/agent-design-rounds.mdx` | Branch: `jules/af-batch-010-production`
+
 
 #### Batch 11 — Interview Prep + Best Practices
 - [ ] [BAE-AF-101] | Create `interview-prep/agent-coding-rounds.mdx` | Branch: `jules/af-batch-011-interview`
@@ -219,6 +211,7 @@ For agentic framework topics, diagrams should focus on:
 | `[BAE-AF-041 to BAE-AF-050]` | Created advanced Google ADK concepts, AutoGen basics, and Pydantic AI fundamentals. |
 | `[BAE-AF-051 to BAE-AF-060]` | Created Pydantic AI advanced concepts, Semantic Kernel basics, and first emerging framework. |
 | `[BAE-AF-061 to BAE-AF-070]` | Created emerging frameworks (Agno, LlamaIndex, Haystack, Mastra, Camel AI, MetaGPT) and protocol deep dives (MCP, A2A). |
+| `[BAE-AF-081 to BAE-AF-090]` | Created memory persistence concepts and tool/action design principles. |
 
 | `[BAE-AF-071 to BAE-AF-080]` | Created Protocols and Multi-Agent Systems concepts. |
 ---
@@ -330,17 +323,17 @@ For agentic framework topics, diagrams should focus on:
 - [x] Agent Memory Types (memory-and-state/agent-memory-types-overview.mdx)
 - [x] Short-Term Memory (memory-and-state/short-term-memory-context-window.mdx)
 - [ ] Long-Term Memory (memory-and-state/long-term-memory-persistence.mdx)
-- [ ] Vector Store Memory (memory-and-state/vector-store-memory.mdx)
-- [ ] Conversation Management (memory-and-state/conversation-management.mdx)
-- [ ] State Persistence (memory-and-state/state-persistence-and-checkpointing.mdx)
+- [x] Vector Store Memory (memory-and-state/vector-store-memory.mdx)
+- [x] Conversation Management (memory-and-state/conversation-management.mdx)
+- [x] State Persistence (memory-and-state/state-persistence-and-checkpointing.mdx)
 
 ## 14. Tools & Actions
-- [ ] Tool Design Principles (tools-and-actions/tool-design-principles.mdx)
-- [ ] Function Calling (tools-and-actions/function-calling-deep-dive.mdx)
-- [ ] API Tools (tools-and-actions/api-tools-rest-graphql.mdx)
-- [ ] Database Tools (tools-and-actions/database-tools.mdx)
+- [x] Tool Design Principles (tools-and-actions/tool-design-principles.mdx)
+- [x] Function Calling (tools-and-actions/function-calling-deep-dive.mdx)
+- [x] API Tools (tools-and-actions/api-tools-rest-graphql.mdx)
+- [x] Database Tools (tools-and-actions/database-tools.mdx)
 - [ ] Code Execution Tools (tools-and-actions/code-execution-sandboxes.mdx)
-- [ ] Tool Error Handling (tools-and-actions/tool-error-handling-and-retries.mdx)
+- [x] Tool Error Handling (tools-and-actions/tool-error-handling-and-retries.mdx)
 
 ## 15. Production
 - [ ] Agent Evaluation (production/agent-evaluation-frameworks.mdx)
