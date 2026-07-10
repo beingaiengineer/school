@@ -55,16 +55,16 @@ Below are the topics that make up this course. This list serves as the structura
 > **Jules: Pick the first batch of `- [ ]` items (up to 10) under `### Next Task`. If fewer than 10, promote from `### Backlog`.**
 
 ### Next Task
-- [x] [BAE-APP-001] | Create `security-mindset.mdx` | Branch: `jules/app-security-batch`
-- [x] [BAE-APP-002] | Create `threat-modeling.mdx` | Branch: `jules/app-security-batch`
-- [x] [BAE-APP-003] | Create `owasp-top-10.mdx` | Branch: `jules/app-security-batch`
-- [x] [BAE-APP-004] | Create `authentication-deep-dive.mdx` | Branch: `jules/app-security-batch`
-- [x] [BAE-APP-005] | Create `authorization-rbac-abac.mdx` | Branch: `jules/app-security-batch`
-- [x] [BAE-APP-006] | Create `secrets-management.mdx` | Branch: `jules/app-security-batch`
-- [x] [BAE-APP-007] | Create `api-security.mdx` | Branch: `jules/app-security-batch`
-- [x] [BAE-APP-008] | Create `dependency-security.mdx` | Branch: `jules/app-security-batch`
-- [x] [BAE-APP-009] | Create `security-in-cicd.mdx` | Branch: `jules/app-security-batch`
-- [x] [BAE-APP-010] | Create `data-protection.mdx` | Branch: `jules/app-security-batch`
+- [x] [BAE-APP-001] | Create `security-mindset.mdx`
+- [x] [BAE-APP-002] | Create `threat-modeling.mdx`
+- [x] [BAE-APP-003] | Create `owasp-top-10.mdx`
+- [x] [BAE-APP-004] | Create `authentication-deep-dive.mdx`
+- [x] [BAE-APP-005] | Create `authorization-rbac-abac.mdx`
+- [x] [BAE-APP-006] | Create `secrets-management.mdx`
+- [x] [BAE-APP-007] | Create `api-security.mdx`
+- [x] [BAE-APP-008] | Create `dependency-security.mdx`
+- [x] [BAE-APP-009] | Create `security-in-cicd.mdx`
+- [x] [BAE-APP-010] | Create `data-protection.mdx`
 
 ### Backlog
 _Empty_

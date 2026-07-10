@@ -252,151 +252,151 @@ Before deleting files:
 > **Jules: Pick the first `- [ ]` under `### Next Task`. If empty, promote from `### Backlog`.**
 
 ### Next Task
-- [ ] [BAE-REVIEW-001] | **Audit & rewrite** `intro/what-is-python.mdx` | Branch: `jules/review-what-is-python`
+- [ ] [BAE-REVIEW-001] | **Audit & rewrite** `intro/what-is-python.mdx`
 
 ### Backlog
-- [ ] [BAE-REVIEW-002] | Audit `intro/setup-python.mdx` | Branch: `jules/review-setup-python`
-- [ ] [BAE-REVIEW-003] | Audit `intro/python-execution-flow.mdx` | Branch: `jules/review-python-execution-flow`
-- [ ] [BAE-REVIEW-004] | Audit `intro/first-python-program.mdx` | Branch: `jules/review-first-python-program`
-- [ ] [BAE-REVIEW-005] | Audit `fundamentals/variables.mdx` | Branch: `jules/review-variables`
-- [ ] [BAE-REVIEW-006] | Audit `fundamentals/data-types.mdx` | Branch: `jules/review-data-types`
-- [ ] [BAE-REVIEW-007] | Audit `fundamentals/operators.mdx` | Branch: `jules/review-operators`
-- [ ] [BAE-REVIEW-008] | Audit `fundamentals/input-output.mdx` | Branch: `jules/review-input-output`
-- [ ] [BAE-REVIEW-009] | Audit `fundamentals/type-conversion.mdx` | Branch: `jules/review-type-conversion`
-- [ ] [BAE-REVIEW-010] | Audit `fundamentals/comments-docstrings.mdx` | Branch: `jules/review-comments-docstrings`
-- [ ] [BAE-REVIEW-011] | Audit `control-flow/if-else.mdx` | Branch: `jules/review-if-else`
-- [ ] [BAE-REVIEW-012] | Audit `control-flow/nested-conditions.mdx` | Branch: `jules/review-nested-conditions`
-- [ ] [BAE-REVIEW-013] | Audit `control-flow/loops.mdx` | Branch: `jules/review-loops`
-- [ ] [BAE-REVIEW-014] | Audit `control-flow/break-continue-pass.mdx` | Branch: `jules/review-break-continue-pass`
-- [ ] [BAE-REVIEW-015] | Audit `control-flow/pattern-programs.mdx` | Branch: `jules/review-pattern-programs`
-- [ ] [BAE-REVIEW-016] | Audit `control-flow/match-case.mdx` | Branch: `jules/review-match-case`
-- [ ] [BAE-REVIEW-017] | Audit `functions/functions-basics.mdx` | Branch: `jules/review-functions-basics`
-- [ ] [BAE-REVIEW-018] | Audit `functions/arguments-parameters.mdx` | Branch: `jules/review-arguments-parameters`
-- [ ] [BAE-REVIEW-019] | Audit `functions/return-values.mdx` | Branch: `jules/review-return-values`
-- [ ] [BAE-REVIEW-020] | Audit `functions/lambda-functions.mdx` | Branch: `jules/review-lambda-functions`
-- [ ] [BAE-REVIEW-021] | Audit `functions/recursion.mdx` | Branch: `jules/review-recursion`
-- [ ] [BAE-REVIEW-022] | Audit `functions/decorators.mdx` | Branch: `jules/review-decorators`
-- [ ] [BAE-REVIEW-023] | Audit `functions/generators.mdx` | Branch: `jules/review-generators`
-- [ ] [BAE-REVIEW-024] | Audit `functions/iterators.mdx` | Branch: `jules/review-iterators`
-- [ ] [BAE-REVIEW-025] | Audit `functions/closures.mdx` | Branch: `jules/review-closures`
-- [ ] [BAE-REVIEW-026] | Audit `collections/lists.mdx` | Branch: `jules/review-lists`
-- [ ] [BAE-REVIEW-027] | Audit `collections/tuples.mdx` | Branch: `jules/review-tuples`
-- [ ] [BAE-REVIEW-028] | Audit `collections/sets.mdx` | Branch: `jules/review-sets`
-- [ ] [BAE-REVIEW-029] | Audit `collections/dictionaries.mdx` | Branch: `jules/review-dictionaries`
-- [ ] [BAE-REVIEW-030] | Audit `collections/list-comprehension.mdx` | Branch: `jules/review-list-comprehension`
-- [ ] [BAE-REVIEW-031] | Audit `collections/dictionary-comprehension.mdx` | Branch: `jules/review-dictionary-comprehension`
-- [ ] [BAE-REVIEW-032] | Audit `collections/collections-module.mdx` | Branch: `jules/review-collections-module`
-- [ ] [BAE-REVIEW-033] | Audit `collections/deque.mdx` | Branch: `jules/review-deque`
-- [ ] [BAE-REVIEW-034] | Audit `collections/counter.mdx` | Branch: `jules/review-counter`
-- [ ] [BAE-REVIEW-035] | Audit `collections/defaultdict.mdx` | Branch: `jules/review-defaultdict`
-- [ ] [BAE-REVIEW-036] | Audit `strings/string-basics.mdx` | Branch: `jules/review-string-basics`
-- [ ] [BAE-REVIEW-037] | Audit `strings/string-methods.mdx` | Branch: `jules/review-string-methods`
-- [ ] [BAE-REVIEW-038] | Audit `strings/string-formatting.mdx` | Branch: `jules/review-string-formatting`
-- [ ] [BAE-REVIEW-039] | Audit `strings/regex.mdx` | Branch: `jules/review-regex`
-- [ ] [BAE-REVIEW-040] | Audit `strings/unicode.mdx` | Branch: `jules/review-unicode`
-- [ ] [BAE-REVIEW-041] | Audit `strings/f-strings.mdx` | Branch: `jules/review-f-strings`
-- [ ] [BAE-REVIEW-042] | Audit `oops/classes-objects.mdx` | Branch: `jules/review-classes-objects`
-- [ ] [BAE-REVIEW-043] | Audit `oops/constructors.mdx` | Branch: `jules/review-constructors`
-- [ ] [BAE-REVIEW-044] | Audit `oops/inheritance.mdx` | Branch: `jules/review-inheritance`
-- [ ] [BAE-REVIEW-045] | Audit `oops/polymorphism.mdx` | Branch: `jules/review-polymorphism`
-- [ ] [BAE-REVIEW-046] | Audit `oops/encapsulation.mdx` | Branch: `jules/review-encapsulation`
-- [ ] [BAE-REVIEW-047] | Audit `oops/abstraction.mdx` | Branch: `jules/review-abstraction`
-- [ ] [BAE-REVIEW-048] | Audit `oops/magic-methods.mdx` | Branch: `jules/review-magic-methods`
-- [ ] [BAE-REVIEW-049] | Audit `oops/dataclasses.mdx` | Branch: `jules/review-dataclasses`
-- [ ] [BAE-REVIEW-050] | Audit `oops/solid-principles.mdx` | Branch: `jules/review-solid-principles`
-- [ ] [BAE-REVIEW-051] | Audit `oops/composition-vs-inheritance.mdx` | Branch: `jules/review-composition-vs-inheritance`
-- [ ] [BAE-REVIEW-052] | Audit `error-handling/exceptions.mdx` | Branch: `jules/review-exceptions`
-- [ ] [BAE-REVIEW-053] | Audit `error-handling/custom-exceptions.mdx` | Branch: `jules/review-custom-exceptions`
-- [ ] [BAE-REVIEW-054] | Audit `error-handling/logging.mdx` | Branch: `jules/review-logging`
-- [ ] [BAE-REVIEW-055] | Audit `error-handling/debugging.mdx` | Branch: `jules/review-debugging`
-- [ ] [BAE-REVIEW-056] | Audit `error-handling/production-debugging.mdx` | Branch: `jules/review-production-debugging`
-- [ ] [BAE-REVIEW-057] | Audit `file-handling/reading-files.mdx` | Branch: `jules/review-reading-files`
-- [ ] [BAE-REVIEW-058] | Audit `file-handling/writing-files.mdx` | Branch: `jules/review-writing-files`
-- [ ] [BAE-REVIEW-059] | Audit `file-handling/csv-files.mdx` | Branch: `jules/review-csv-files`
-- [ ] [BAE-REVIEW-060] | Audit `file-handling/json-files.mdx` | Branch: `jules/review-json-files`
-- [ ] [BAE-REVIEW-061] | Audit `file-handling/pathlib.mdx` | Branch: `jules/review-pathlib`
-- [ ] [BAE-REVIEW-062] | Audit `file-handling/file-best-practices.mdx` | Branch: `jules/review-file-best-practices`
-- [ ] [BAE-REVIEW-063] | Audit `modules-packages/modules.mdx` | Branch: `jules/review-modules`
-- [ ] [BAE-REVIEW-064] | Audit `modules-packages/packages.mdx` | Branch: `jules/review-packages`
-- [ ] [BAE-REVIEW-065] | Audit `modules-packages/virtual-environments.mdx` | Branch: `jules/review-virtual-environments`
-- [ ] [BAE-REVIEW-066] | Audit `modules-packages/pip.mdx` | Branch: `jules/review-pip`
-- [ ] [BAE-REVIEW-067] | Audit `modules-packages/pyproject-toml.mdx` | Branch: `jules/review-pyproject-toml`
-- [ ] [BAE-REVIEW-068] | Audit `modules-packages/dependency-management.mdx` | Branch: `jules/review-dependency-management`
-- [ ] [BAE-REVIEW-069] | Audit `advanced-python/memory-management.mdx` | Branch: `jules/review-memory-management`
-- [ ] [BAE-REVIEW-070] | Audit `advanced-python/garbage-collection.mdx` | Branch: `jules/review-garbage-collection`
-- [ ] [BAE-REVIEW-071] | Audit `advanced-python/shallow-vs-deep-copy.mdx` | Branch: `jules/review-shallow-vs-deep-copy`
-- [ ] [BAE-REVIEW-072] | Audit `advanced-python/mutability.mdx` | Branch: `jules/review-mutability`
-- [ ] [BAE-REVIEW-073] | Audit `advanced-python/context-managers.mdx` | Branch: `jules/review-context-managers`
-- [ ] [BAE-REVIEW-074] | Audit `advanced-python/descriptors.mdx` | Branch: `jules/review-descriptors`
-- [ ] [BAE-REVIEW-075] | Audit `advanced-python/metaclasses.mdx` | Branch: `jules/review-metaclasses`
-- [ ] [BAE-REVIEW-076] | Audit `advanced-python/monkey-patching.mdx` | Branch: `jules/review-monkey-patching`
-- [ ] [BAE-REVIEW-077] | Audit `advanced-python/dynamic-typing.mdx` | Branch: `jules/review-dynamic-typing`
-- [ ] [BAE-REVIEW-078] | Audit `advanced-python/python-internals.mdx` | Branch: `jules/review-python-internals`
-- [ ] [BAE-REVIEW-079] | Audit `concurrency/threading.mdx` | Branch: `jules/review-threading`
-- [ ] [BAE-REVIEW-080] | Audit `concurrency/multiprocessing.mdx` | Branch: `jules/review-multiprocessing`
-- [ ] [BAE-REVIEW-081] | Audit `concurrency/asyncio.mdx` | Branch: `jules/review-asyncio`
-- [ ] [BAE-REVIEW-082] | Audit `concurrency/async-await.mdx` | Branch: `jules/review-async-await`
-- [ ] [BAE-REVIEW-083] | Audit `concurrency/race-conditions.mdx` | Branch: `jules/review-race-conditions`
-- [ ] [BAE-REVIEW-084] | Audit `concurrency/queues.mdx` | Branch: `jules/review-queues`
-- [ ] [BAE-REVIEW-085] | Audit `concurrency/locks-semaphores.mdx` | Branch: `jules/review-locks-semaphores`
-- [ ] [BAE-REVIEW-086] | Audit `concurrency/gil.mdx` | Branch: `jules/review-gil`
-- [ ] [BAE-REVIEW-087] | Audit `api-development/requests-library.mdx` | Branch: `jules/review-requests-library`
-- [ ] [BAE-REVIEW-088] | Audit `api-development/rest-api-basics.mdx` | Branch: `jules/review-rest-api-basics`
-- [ ] [BAE-REVIEW-089] | Audit `api-development/fastapi.mdx` | Branch: `jules/review-fastapi`
-- [ ] [BAE-REVIEW-090] | Audit `api-development/flask.mdx` | Branch: `jules/review-flask`
-- [ ] [BAE-REVIEW-091] | Audit `api-development/authentication.mdx` | Branch: `jules/review-authentication`
-- [ ] [BAE-REVIEW-092] | Audit `api-development/middleware.mdx` | Branch: `jules/review-middleware`
-- [ ] [BAE-REVIEW-093] | Audit `api-development/api-versioning.mdx` | Branch: `jules/review-api-versioning`
-- [ ] [BAE-REVIEW-094] | Audit `api-development/rate-limiting.mdx` | Branch: `jules/review-rate-limiting`
-- [ ] [BAE-REVIEW-095] | Audit `databases/sqlite.mdx` | Branch: `jules/review-sqlite`
-- [ ] [BAE-REVIEW-096] | Audit `databases/postgresql.mdx` | Branch: `jules/review-postgresql`
-- [ ] [BAE-REVIEW-097] | Audit `databases/sqlalchemy.mdx` | Branch: `jules/review-sqlalchemy`
-- [ ] [BAE-REVIEW-098] | Audit `databases/orm-vs-raw-sql.mdx` | Branch: `jules/review-orm-vs-raw-sql`
-- [ ] [BAE-REVIEW-099] | Audit `databases/transactions.mdx` | Branch: `jules/review-transactions`
-- [ ] [BAE-REVIEW-100] | Audit `databases/indexing.mdx` | Branch: `jules/review-indexing`
-- [ ] [BAE-REVIEW-101] | Audit `databases/connection-pooling.mdx` | Branch: `jules/review-connection-pooling`
-- [ ] [BAE-REVIEW-102] | Audit `testing/pytest.mdx` | Branch: `jules/review-pytest`
-- [ ] [BAE-REVIEW-103] | Audit `testing/unit-testing.mdx` | Branch: `jules/review-unit-testing`
-- [ ] [BAE-REVIEW-104] | Audit `testing/mocking.mdx` | Branch: `jules/review-mocking`
-- [ ] [BAE-REVIEW-105] | Audit `testing/integration-testing.mdx` | Branch: `jules/review-integration-testing`
-- [ ] [BAE-REVIEW-106] | Audit `testing/load-testing.mdx` | Branch: `jules/review-load-testing`
-- [ ] [BAE-REVIEW-107] | Audit `testing/test-best-practices.mdx` | Branch: `jules/review-test-best-practices`
-- [ ] [BAE-REVIEW-108] | Audit `performance/profiling.mdx` | Branch: `jules/review-profiling`
-- [ ] [BAE-REVIEW-109] | Audit `performance/memory-optimization.mdx` | Branch: `jules/review-memory-optimization`
-- [ ] [BAE-REVIEW-110] | Audit `performance/caching.mdx` | Branch: `jules/review-caching`
-- [ ] [BAE-REVIEW-111] | Audit `performance/lazy-loading.mdx` | Branch: `jules/review-lazy-loading`
-- [ ] [BAE-REVIEW-112] | Audit `performance/vectorization.mdx` | Branch: `jules/review-vectorization`
-- [ ] [BAE-REVIEW-113] | Audit `performance/numpy-performance.mdx` | Branch: `jules/review-numpy-performance`
-- [ ] [BAE-REVIEW-114] | Audit `performance/performance-best-practices.mdx` | Branch: `jules/review-performance-best-practices`
-- [ ] [BAE-REVIEW-115] | Audit `system-design/python-architecture.mdx` | Branch: `jules/review-python-architecture`
-- [ ] [BAE-REVIEW-116] | Audit `system-design/scalable-python.mdx` | Branch: `jules/review-scalable-python`
-- [ ] [BAE-REVIEW-117] | Audit `system-design/event-driven-systems.mdx` | Branch: `jules/review-event-driven-systems`
-- [ ] [BAE-REVIEW-118] | Audit `system-design/queue-systems.mdx` | Branch: `jules/review-queue-systems`
-- [ ] [BAE-REVIEW-119] | Audit `system-design/distributed-systems.mdx` | Branch: `jules/review-distributed-systems`
-- [ ] [BAE-REVIEW-120] | Audit `system-design/microservices.mdx` | Branch: `jules/review-microservices`
-- [ ] [BAE-REVIEW-121] | Audit `system-design/production-patterns.mdx` | Branch: `jules/review-production-patterns`
-- [ ] [BAE-REVIEW-122] | Audit `ai-engineering/python-for-ai.mdx` | Branch: `jules/review-python-for-ai`
-- [ ] [BAE-REVIEW-123] | Audit `ai-engineering/numpy.mdx` | Branch: `jules/review-numpy`
-- [ ] [BAE-REVIEW-124] | Audit `ai-engineering/pandas.mdx` | Branch: `jules/review-pandas`
-- [ ] [BAE-REVIEW-125] | Audit `ai-engineering/llm-basics.mdx` | Branch: `jules/review-llm-basics`
-- [ ] [BAE-REVIEW-126] | Audit `ai-engineering/rag-pipelines.mdx` | Branch: `jules/review-rag-pipelines`
-- [ ] [BAE-REVIEW-127] | Audit `ai-engineering/vector-databases.mdx` | Branch: `jules/review-vector-databases`
-- [ ] [BAE-REVIEW-128] | Audit `ai-engineering/ai-agents.mdx` | Branch: `jules/review-ai-agents`
-- [ ] [BAE-REVIEW-129] | Audit `ai-engineering/async-ai-workflows.mdx` | Branch: `jules/review-async-ai-workflows`
-- [ ] [BAE-REVIEW-130] | Audit `ai-engineering/ai-observability.mdx` | Branch: `jules/review-ai-observability`
-- [ ] [BAE-REVIEW-131] | Audit `interview-prep/top-python-interview-questions.mdx` | Branch: `jules/review-top-python-interview-questions`
-- [ ] [BAE-REVIEW-132] | Audit `interview-prep/tricky-python-questions.mdx` | Branch: `jules/review-tricky-python-questions`
-- [ ] [BAE-REVIEW-133] | Audit `interview-prep/debugging-rounds.mdx` | Branch: `jules/review-debugging-rounds`
-- [ ] [BAE-REVIEW-134] | Audit `interview-prep/coding-round-patterns.mdx` | Branch: `jules/review-coding-round-patterns`
-- [ ] [BAE-REVIEW-135] | Audit `interview-prep/system-design-rounds.mdx` | Branch: `jules/review-system-design-rounds`
-- [ ] [BAE-REVIEW-136] | Audit `interview-prep/senior-python-questions.mdx` | Branch: `jules/review-senior-python-questions`
-- [ ] [BAE-REVIEW-137] | Audit `best-practices/clean-code.mdx` | Branch: `jules/review-clean-code`
-- [ ] [BAE-REVIEW-138] | Audit `best-practices/project-structure.mdx` | Branch: `jules/review-project-structure`
-- [ ] [BAE-REVIEW-139] | Audit `best-practices/coding-standards.mdx` | Branch: `jules/review-coding-standards`
-- [ ] [BAE-REVIEW-140] | Audit `best-practices/security-best-practices.mdx` | Branch: `jules/review-security-best-practices`
-- [ ] [BAE-REVIEW-141] | Audit `best-practices/production-checklists.mdx` | Branch: `jules/review-production-checklists`
-- [ ] [BAE-REVIEW-142] | Audit `best-practices/scalability-guidelines.mdx` | Branch: `jules/review-scalability-guidelines`
-- [ ] [BAE-REVIEW-143] | Audit `best-practices/engineering-principles.mdx` | Branch: `jules/review-engineering-principles`
+- [ ] [BAE-REVIEW-002] | Audit `intro/setup-python.mdx`
+- [ ] [BAE-REVIEW-003] | Audit `intro/python-execution-flow.mdx`
+- [ ] [BAE-REVIEW-004] | Audit `intro/first-python-program.mdx`
+- [ ] [BAE-REVIEW-005] | Audit `fundamentals/variables.mdx`
+- [ ] [BAE-REVIEW-006] | Audit `fundamentals/data-types.mdx`
+- [ ] [BAE-REVIEW-007] | Audit `fundamentals/operators.mdx`
+- [ ] [BAE-REVIEW-008] | Audit `fundamentals/input-output.mdx`
+- [ ] [BAE-REVIEW-009] | Audit `fundamentals/type-conversion.mdx`
+- [ ] [BAE-REVIEW-010] | Audit `fundamentals/comments-docstrings.mdx`
+- [ ] [BAE-REVIEW-011] | Audit `control-flow/if-else.mdx`
+- [ ] [BAE-REVIEW-012] | Audit `control-flow/nested-conditions.mdx`
+- [ ] [BAE-REVIEW-013] | Audit `control-flow/loops.mdx`
+- [ ] [BAE-REVIEW-014] | Audit `control-flow/break-continue-pass.mdx`
+- [ ] [BAE-REVIEW-015] | Audit `control-flow/pattern-programs.mdx`
+- [ ] [BAE-REVIEW-016] | Audit `control-flow/match-case.mdx`
+- [ ] [BAE-REVIEW-017] | Audit `functions/functions-basics.mdx`
+- [ ] [BAE-REVIEW-018] | Audit `functions/arguments-parameters.mdx`
+- [ ] [BAE-REVIEW-019] | Audit `functions/return-values.mdx`
+- [ ] [BAE-REVIEW-020] | Audit `functions/lambda-functions.mdx`
+- [ ] [BAE-REVIEW-021] | Audit `functions/recursion.mdx`
+- [ ] [BAE-REVIEW-022] | Audit `functions/decorators.mdx`
+- [ ] [BAE-REVIEW-023] | Audit `functions/generators.mdx`
+- [ ] [BAE-REVIEW-024] | Audit `functions/iterators.mdx`
+- [ ] [BAE-REVIEW-025] | Audit `functions/closures.mdx`
+- [ ] [BAE-REVIEW-026] | Audit `collections/lists.mdx`
+- [ ] [BAE-REVIEW-027] | Audit `collections/tuples.mdx`
+- [ ] [BAE-REVIEW-028] | Audit `collections/sets.mdx`
+- [ ] [BAE-REVIEW-029] | Audit `collections/dictionaries.mdx`
+- [ ] [BAE-REVIEW-030] | Audit `collections/list-comprehension.mdx`
+- [ ] [BAE-REVIEW-031] | Audit `collections/dictionary-comprehension.mdx`
+- [ ] [BAE-REVIEW-032] | Audit `collections/collections-module.mdx`
+- [ ] [BAE-REVIEW-033] | Audit `collections/deque.mdx`
+- [ ] [BAE-REVIEW-034] | Audit `collections/counter.mdx`
+- [ ] [BAE-REVIEW-035] | Audit `collections/defaultdict.mdx`
+- [ ] [BAE-REVIEW-036] | Audit `strings/string-basics.mdx`
+- [ ] [BAE-REVIEW-037] | Audit `strings/string-methods.mdx`
+- [ ] [BAE-REVIEW-038] | Audit `strings/string-formatting.mdx`
+- [ ] [BAE-REVIEW-039] | Audit `strings/regex.mdx`
+- [ ] [BAE-REVIEW-040] | Audit `strings/unicode.mdx`
+- [ ] [BAE-REVIEW-041] | Audit `strings/f-strings.mdx`
+- [ ] [BAE-REVIEW-042] | Audit `oops/classes-objects.mdx`
+- [ ] [BAE-REVIEW-043] | Audit `oops/constructors.mdx`
+- [ ] [BAE-REVIEW-044] | Audit `oops/inheritance.mdx`
+- [ ] [BAE-REVIEW-045] | Audit `oops/polymorphism.mdx`
+- [ ] [BAE-REVIEW-046] | Audit `oops/encapsulation.mdx`
+- [ ] [BAE-REVIEW-047] | Audit `oops/abstraction.mdx`
+- [ ] [BAE-REVIEW-048] | Audit `oops/magic-methods.mdx`
+- [ ] [BAE-REVIEW-049] | Audit `oops/dataclasses.mdx`
+- [ ] [BAE-REVIEW-050] | Audit `oops/solid-principles.mdx`
+- [ ] [BAE-REVIEW-051] | Audit `oops/composition-vs-inheritance.mdx`
+- [ ] [BAE-REVIEW-052] | Audit `error-handling/exceptions.mdx`
+- [ ] [BAE-REVIEW-053] | Audit `error-handling/custom-exceptions.mdx`
+- [ ] [BAE-REVIEW-054] | Audit `error-handling/logging.mdx`
+- [ ] [BAE-REVIEW-055] | Audit `error-handling/debugging.mdx`
+- [ ] [BAE-REVIEW-056] | Audit `error-handling/production-debugging.mdx`
+- [ ] [BAE-REVIEW-057] | Audit `file-handling/reading-files.mdx`
+- [ ] [BAE-REVIEW-058] | Audit `file-handling/writing-files.mdx`
+- [ ] [BAE-REVIEW-059] | Audit `file-handling/csv-files.mdx`
+- [ ] [BAE-REVIEW-060] | Audit `file-handling/json-files.mdx`
+- [ ] [BAE-REVIEW-061] | Audit `file-handling/pathlib.mdx`
+- [ ] [BAE-REVIEW-062] | Audit `file-handling/file-best-practices.mdx`
+- [ ] [BAE-REVIEW-063] | Audit `modules-packages/modules.mdx`
+- [ ] [BAE-REVIEW-064] | Audit `modules-packages/packages.mdx`
+- [ ] [BAE-REVIEW-065] | Audit `modules-packages/virtual-environments.mdx`
+- [ ] [BAE-REVIEW-066] | Audit `modules-packages/pip.mdx`
+- [ ] [BAE-REVIEW-067] | Audit `modules-packages/pyproject-toml.mdx`
+- [ ] [BAE-REVIEW-068] | Audit `modules-packages/dependency-management.mdx`
+- [ ] [BAE-REVIEW-069] | Audit `advanced-python/memory-management.mdx`
+- [ ] [BAE-REVIEW-070] | Audit `advanced-python/garbage-collection.mdx`
+- [ ] [BAE-REVIEW-071] | Audit `advanced-python/shallow-vs-deep-copy.mdx`
+- [ ] [BAE-REVIEW-072] | Audit `advanced-python/mutability.mdx`
+- [ ] [BAE-REVIEW-073] | Audit `advanced-python/context-managers.mdx`
+- [ ] [BAE-REVIEW-074] | Audit `advanced-python/descriptors.mdx`
+- [ ] [BAE-REVIEW-075] | Audit `advanced-python/metaclasses.mdx`
+- [ ] [BAE-REVIEW-076] | Audit `advanced-python/monkey-patching.mdx`
+- [ ] [BAE-REVIEW-077] | Audit `advanced-python/dynamic-typing.mdx`
+- [ ] [BAE-REVIEW-078] | Audit `advanced-python/python-internals.mdx`
+- [ ] [BAE-REVIEW-079] | Audit `concurrency/threading.mdx`
+- [ ] [BAE-REVIEW-080] | Audit `concurrency/multiprocessing.mdx`
+- [ ] [BAE-REVIEW-081] | Audit `concurrency/asyncio.mdx`
+- [ ] [BAE-REVIEW-082] | Audit `concurrency/async-await.mdx`
+- [ ] [BAE-REVIEW-083] | Audit `concurrency/race-conditions.mdx`
+- [ ] [BAE-REVIEW-084] | Audit `concurrency/queues.mdx`
+- [ ] [BAE-REVIEW-085] | Audit `concurrency/locks-semaphores.mdx`
+- [ ] [BAE-REVIEW-086] | Audit `concurrency/gil.mdx`
+- [ ] [BAE-REVIEW-087] | Audit `api-development/requests-library.mdx`
+- [ ] [BAE-REVIEW-088] | Audit `api-development/rest-api-basics.mdx`
+- [ ] [BAE-REVIEW-089] | Audit `api-development/fastapi.mdx`
+- [ ] [BAE-REVIEW-090] | Audit `api-development/flask.mdx`
+- [ ] [BAE-REVIEW-091] | Audit `api-development/authentication.mdx`
+- [ ] [BAE-REVIEW-092] | Audit `api-development/middleware.mdx`
+- [ ] [BAE-REVIEW-093] | Audit `api-development/api-versioning.mdx`
+- [ ] [BAE-REVIEW-094] | Audit `api-development/rate-limiting.mdx`
+- [ ] [BAE-REVIEW-095] | Audit `databases/sqlite.mdx`
+- [ ] [BAE-REVIEW-096] | Audit `databases/postgresql.mdx`
+- [ ] [BAE-REVIEW-097] | Audit `databases/sqlalchemy.mdx`
+- [ ] [BAE-REVIEW-098] | Audit `databases/orm-vs-raw-sql.mdx`
+- [ ] [BAE-REVIEW-099] | Audit `databases/transactions.mdx`
+- [ ] [BAE-REVIEW-100] | Audit `databases/indexing.mdx`
+- [ ] [BAE-REVIEW-101] | Audit `databases/connection-pooling.mdx`
+- [ ] [BAE-REVIEW-102] | Audit `testing/pytest.mdx`
+- [ ] [BAE-REVIEW-103] | Audit `testing/unit-testing.mdx`
+- [ ] [BAE-REVIEW-104] | Audit `testing/mocking.mdx`
+- [ ] [BAE-REVIEW-105] | Audit `testing/integration-testing.mdx`
+- [ ] [BAE-REVIEW-106] | Audit `testing/load-testing.mdx`
+- [ ] [BAE-REVIEW-107] | Audit `testing/test-best-practices.mdx`
+- [ ] [BAE-REVIEW-108] | Audit `performance/profiling.mdx`
+- [ ] [BAE-REVIEW-109] | Audit `performance/memory-optimization.mdx`
+- [ ] [BAE-REVIEW-110] | Audit `performance/caching.mdx`
+- [ ] [BAE-REVIEW-111] | Audit `performance/lazy-loading.mdx`
+- [ ] [BAE-REVIEW-112] | Audit `performance/vectorization.mdx`
+- [ ] [BAE-REVIEW-113] | Audit `performance/numpy-performance.mdx`
+- [ ] [BAE-REVIEW-114] | Audit `performance/performance-best-practices.mdx`
+- [ ] [BAE-REVIEW-115] | Audit `system-design/python-architecture.mdx`
+- [ ] [BAE-REVIEW-116] | Audit `system-design/scalable-python.mdx`
+- [ ] [BAE-REVIEW-117] | Audit `system-design/event-driven-systems.mdx`
+- [ ] [BAE-REVIEW-118] | Audit `system-design/queue-systems.mdx`
+- [ ] [BAE-REVIEW-119] | Audit `system-design/distributed-systems.mdx`
+- [ ] [BAE-REVIEW-120] | Audit `system-design/microservices.mdx`
+- [ ] [BAE-REVIEW-121] | Audit `system-design/production-patterns.mdx`
+- [ ] [BAE-REVIEW-122] | Audit `ai-engineering/python-for-ai.mdx`
+- [ ] [BAE-REVIEW-123] | Audit `ai-engineering/numpy.mdx`
+- [ ] [BAE-REVIEW-124] | Audit `ai-engineering/pandas.mdx`
+- [ ] [BAE-REVIEW-125] | Audit `ai-engineering/llm-basics.mdx`
+- [ ] [BAE-REVIEW-126] | Audit `ai-engineering/rag-pipelines.mdx`
+- [ ] [BAE-REVIEW-127] | Audit `ai-engineering/vector-databases.mdx`
+- [ ] [BAE-REVIEW-128] | Audit `ai-engineering/ai-agents.mdx`
+- [ ] [BAE-REVIEW-129] | Audit `ai-engineering/async-ai-workflows.mdx`
+- [ ] [BAE-REVIEW-130] | Audit `ai-engineering/ai-observability.mdx`
+- [ ] [BAE-REVIEW-131] | Audit `interview-prep/top-python-interview-questions.mdx`
+- [ ] [BAE-REVIEW-132] | Audit `interview-prep/tricky-python-questions.mdx`
+- [ ] [BAE-REVIEW-133] | Audit `interview-prep/debugging-rounds.mdx`
+- [ ] [BAE-REVIEW-134] | Audit `interview-prep/coding-round-patterns.mdx`
+- [ ] [BAE-REVIEW-135] | Audit `interview-prep/system-design-rounds.mdx`
+- [ ] [BAE-REVIEW-136] | Audit `interview-prep/senior-python-questions.mdx`
+- [ ] [BAE-REVIEW-137] | Audit `best-practices/clean-code.mdx`
+- [ ] [BAE-REVIEW-138] | Audit `best-practices/project-structure.mdx`
+- [ ] [BAE-REVIEW-139] | Audit `best-practices/coding-standards.mdx`
+- [ ] [BAE-REVIEW-140] | Audit `best-practices/security-best-practices.mdx`
+- [ ] [BAE-REVIEW-141] | Audit `best-practices/production-checklists.mdx`
+- [ ] [BAE-REVIEW-142] | Audit `best-practices/scalability-guidelines.mdx`
+- [ ] [BAE-REVIEW-143] | Audit `best-practices/engineering-principles.mdx`
 
 ### Completed This Cycle
 | BAE ID | What's Done (High Level) |

@@ -55,16 +55,16 @@ Below are the topics that make up this course. This list serves as the structura
 > **Jules: Pick the first batch of `- [ ]` items (up to 10) under `### Next Task`. If fewer than 10, promote from `### Backlog`.**
 
 ### Next Task
-- [x] [BAE-GIT-001] | Create `git-fundamentals.mdx` | Branch: `jules/git-workflows-batch`
-- [x] [BAE-GIT-002] | Create `branching-strategies.mdx` | Branch: `jules/git-workflows-batch`
-- [x] [BAE-GIT-003] | Create `pull-requests.mdx` | Branch: `jules/git-workflows-batch`
-- [x] [BAE-GIT-004] | Create `code-review-culture.mdx` | Branch: `jules/git-workflows-batch`
-- [x] [BAE-GIT-005] | Create `merge-conflicts.mdx` | Branch: `jules/git-workflows-batch`
-- [x] [BAE-GIT-006] | Create `git-rebase-vs-merge.mdx` | Branch: `jules/git-workflows-batch`
-- [x] [BAE-GIT-007] | Create `git-hooks-and-automation.mdx` | Branch: `jules/git-workflows-batch`
-- [x] [BAE-GIT-008] | Create `monorepo-vs-polyrepo.mdx` | Branch: `jules/git-workflows-batch`
-- [x] [BAE-GIT-009] | Create `git-advanced-operations.mdx` | Branch: `jules/git-workflows-batch`
-- [x] [BAE-GIT-010] | Create `conventional-commits.mdx` | Branch: `jules/git-workflows-batch`
+- [x] [BAE-GIT-001] | Create `git-fundamentals.mdx`
+- [x] [BAE-GIT-002] | Create `branching-strategies.mdx`
+- [x] [BAE-GIT-003] | Create `pull-requests.mdx`
+- [x] [BAE-GIT-004] | Create `code-review-culture.mdx`
+- [x] [BAE-GIT-005] | Create `merge-conflicts.mdx`
+- [x] [BAE-GIT-006] | Create `git-rebase-vs-merge.mdx`
+- [x] [BAE-GIT-007] | Create `git-hooks-and-automation.mdx`
+- [x] [BAE-GIT-008] | Create `monorepo-vs-polyrepo.mdx`
+- [x] [BAE-GIT-009] | Create `git-advanced-operations.mdx`
+- [x] [BAE-GIT-010] | Create `conventional-commits.mdx`
 
 ### Backlog
 _Empty_

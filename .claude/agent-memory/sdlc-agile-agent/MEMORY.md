@@ -55,16 +55,16 @@ Below are the topics that make up this course. This list serves as the structura
 > **Jules: Pick the first batch of `- [ ]` items (up to 10) under `### Next Task`. If fewer than 10, promote from `### Backlog`.**
 
 ### Next Task
-- [ ] [BAE-SDL-001] | Create `what-is-sdlc.mdx` | Branch: `jules/sdlc-agile-batch`
-- [ ] [BAE-SDL-002] | Create `waterfall-vs-agile.mdx` | Branch: `jules/sdlc-agile-batch`
-- [ ] [BAE-SDL-003] | Create `agile-principles.mdx` | Branch: `jules/sdlc-agile-batch`
-- [ ] [BAE-SDL-004] | Create `scrum-framework.mdx` | Branch: `jules/sdlc-agile-batch`
-- [ ] [BAE-SDL-005] | Create `kanban-method.mdx` | Branch: `jules/sdlc-agile-batch`
-- [ ] [BAE-SDL-006] | Create `sprint-planning.mdx` | Branch: `jules/sdlc-agile-batch`
-- [ ] [BAE-SDL-007] | Create `daily-standups.mdx` | Branch: `jules/sdlc-agile-batch`
-- [ ] [BAE-SDL-008] | Create `sprint-retrospectives.mdx` | Branch: `jules/sdlc-agile-batch`
-- [ ] [BAE-SDL-009] | Create `sprint-reviews-and-demos.mdx` | Branch: `jules/sdlc-agile-batch`
-- [ ] [BAE-SDL-010] | Create `definition-of-done.mdx` | Branch: `jules/sdlc-agile-batch`
+- [ ] [BAE-SDL-001] | Create `what-is-sdlc.mdx`
+- [ ] [BAE-SDL-002] | Create `waterfall-vs-agile.mdx`
+- [ ] [BAE-SDL-003] | Create `agile-principles.mdx`
+- [ ] [BAE-SDL-004] | Create `scrum-framework.mdx`
+- [ ] [BAE-SDL-005] | Create `kanban-method.mdx`
+- [ ] [BAE-SDL-006] | Create `sprint-planning.mdx`
+- [ ] [BAE-SDL-007] | Create `daily-standups.mdx`
+- [ ] [BAE-SDL-008] | Create `sprint-retrospectives.mdx`
+- [ ] [BAE-SDL-009] | Create `sprint-reviews-and-demos.mdx`
+- [ ] [BAE-SDL-010] | Create `definition-of-done.mdx`
 
 ### Backlog
 _Empty_

@@ -54,15 +54,15 @@ Below are the topics that make up this course. This list serves as the structura
 > **Jules: Pick the first batch of `- [ ]` items (up to 10) under `### Next Task`. If fewer than 10, promote from `### Backlog`.**
 
 ### Next Task
-- [ ] [BAE-SLI-001] | Create `sli-slo-sla-explained.mdx` | Branch: `jules/sli-slo-batch`
-- [ ] [BAE-SLI-002] | Create `defining-slis.mdx` | Branch: `jules/sli-slo-batch`
-- [ ] [BAE-SLI-003] | Create `setting-slos.mdx` | Branch: `jules/sli-slo-batch`
-- [ ] [BAE-SLI-004] | Create `error-budgets.mdx` | Branch: `jules/sli-slo-batch`
-- [ ] [BAE-SLI-005] | Create `burn-rate-alerts.mdx` | Branch: `jules/sli-slo-batch`
-- [ ] [BAE-SLI-006] | Create `reliability-engineering.mdx` | Branch: `jules/sli-slo-batch`
-- [ ] [BAE-SLI-007] | Create `toil-reduction.mdx` | Branch: `jules/sli-slo-batch`
-- [ ] [BAE-SLI-008] | Create `capacity-planning.mdx` | Branch: `jules/sli-slo-batch`
-- [ ] [BAE-SLI-009] | Create `chaos-engineering.mdx` | Branch: `jules/sli-slo-batch`
+- [ ] [BAE-SLI-001] | Create `sli-slo-sla-explained.mdx`
+- [ ] [BAE-SLI-002] | Create `defining-slis.mdx`
+- [ ] [BAE-SLI-003] | Create `setting-slos.mdx`
+- [ ] [BAE-SLI-004] | Create `error-budgets.mdx`
+- [ ] [BAE-SLI-005] | Create `burn-rate-alerts.mdx`
+- [ ] [BAE-SLI-006] | Create `reliability-engineering.mdx`
+- [ ] [BAE-SLI-007] | Create `toil-reduction.mdx`
+- [ ] [BAE-SLI-008] | Create `capacity-planning.mdx`
+- [ ] [BAE-SLI-009] | Create `chaos-engineering.mdx`
 
 ### Backlog
 _Empty_

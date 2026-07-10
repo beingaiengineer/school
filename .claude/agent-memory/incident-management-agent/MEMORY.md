@@ -54,15 +54,15 @@ Below are the topics that make up this course. This list serves as the structura
 > **Jules: Pick the first batch of `- [ ]` items (up to 10) under `### Next Task`. If fewer than 10, promote from `### Backlog`.**
 
 ### Next Task
-- [x] [BAE-INC-001] | Create `what-is-an-incident.mdx` | Branch: `jules/incident-management-batch`
-- [x] [BAE-INC-002] | Create `severity-levels.mdx` | Branch: `jules/incident-management-batch`
-- [x] [BAE-INC-003] | Create `on-call-culture.mdx` | Branch: `jules/incident-management-batch`
-- [x] [BAE-INC-004] | Create `incident-response-process.mdx` | Branch: `jules/incident-management-batch`
-- [x] [BAE-INC-005] | Create `incident-commander-role.mdx` | Branch: `jules/incident-management-batch`
-- [x] [BAE-INC-006] | Create `runbooks.mdx` | Branch: `jules/incident-management-batch`
-- [x] [BAE-INC-007] | Create `blameless-postmortems.mdx` | Branch: `jules/incident-management-batch`
-- [x] [BAE-INC-008] | Create `incident-communication.mdx` | Branch: `jules/incident-management-batch`
-- [x] [BAE-INC-009] | Create `incident-tools.mdx` | Branch: `jules/incident-management-batch`
+- [x] [BAE-INC-001] | Create `what-is-an-incident.mdx`
+- [x] [BAE-INC-002] | Create `severity-levels.mdx`
+- [x] [BAE-INC-003] | Create `on-call-culture.mdx`
+- [x] [BAE-INC-004] | Create `incident-response-process.mdx`
+- [x] [BAE-INC-005] | Create `incident-commander-role.mdx`
+- [x] [BAE-INC-006] | Create `runbooks.mdx`
+- [x] [BAE-INC-007] | Create `blameless-postmortems.mdx`
+- [x] [BAE-INC-008] | Create `incident-communication.mdx`
+- [x] [BAE-INC-009] | Create `incident-tools.mdx`
 
 ### Backlog
 _Empty_

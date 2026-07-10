@@ -55,16 +55,16 @@ Below are the topics that make up this course. This list serves as the structura
 > **Jules: Pick the first batch of `- [ ]` items (up to 10) under `### Next Task`. If fewer than 10, promote from `### Backlog`.**
 
 ### Next Task
-- [ ] [BAE-REQ-001] | Create `requirement-gathering.mdx` | Branch: `jules/requirements-estimation-batch`
-- [ ] [BAE-REQ-002] | Create `product-requirement-documents.mdx` | Branch: `jules/requirements-estimation-batch`
-- [ ] [BAE-REQ-003] | Create `writing-user-stories.mdx` | Branch: `jules/requirements-estimation-batch`
-- [ ] [BAE-REQ-004] | Create `acceptance-criteria.mdx` | Branch: `jules/requirements-estimation-batch`
-- [ ] [BAE-REQ-005] | Create `estimation-techniques.mdx` | Branch: `jules/requirements-estimation-batch`
-- [ ] [BAE-REQ-006] | Create `planning-poker.mdx` | Branch: `jules/requirements-estimation-batch`
-- [ ] [BAE-REQ-007] | Create `velocity-and-burndown.mdx` | Branch: `jules/requirements-estimation-batch`
-- [ ] [BAE-REQ-008] | Create `technical-debt.mdx` | Branch: `jules/requirements-estimation-batch`
-- [ ] [BAE-REQ-009] | Create `writing-rfcs.mdx` | Branch: `jules/requirements-estimation-batch`
-- [ ] [BAE-REQ-010] | Create `architecture-decision-records.mdx` | Branch: `jules/requirements-estimation-batch`
+- [ ] [BAE-REQ-001] | Create `requirement-gathering.mdx`
+- [ ] [BAE-REQ-002] | Create `product-requirement-documents.mdx`
+- [ ] [BAE-REQ-003] | Create `writing-user-stories.mdx`
+- [ ] [BAE-REQ-004] | Create `acceptance-criteria.mdx`
+- [ ] [BAE-REQ-005] | Create `estimation-techniques.mdx`
+- [ ] [BAE-REQ-006] | Create `planning-poker.mdx`
+- [ ] [BAE-REQ-007] | Create `velocity-and-burndown.mdx`
+- [ ] [BAE-REQ-008] | Create `technical-debt.mdx`
+- [ ] [BAE-REQ-009] | Create `writing-rfcs.mdx`
+- [ ] [BAE-REQ-010] | Create `architecture-decision-records.mdx`
 
 ### Backlog
 _Empty_

@@ -54,15 +54,15 @@ Below are the topics that make up this course. This list serves as the structura
 > **Jules: Pick the first batch of `- [ ]` items (up to 10) under `### Next Task`. If fewer than 10, promote from `### Backlog`.**
 
 ### Next Task
-- [ ] [BAE-TEA-001] | Create `your-first-day.mdx` | Branch: `jules/team-structure-batch`
-- [ ] [BAE-TEA-002] | Create `engineering-org-structure.mdx` | Branch: `jules/team-structure-batch`
-- [ ] [BAE-TEA-003] | Create `product-manager-role.mdx` | Branch: `jules/team-structure-batch`
-- [ ] [BAE-TEA-004] | Create `engineering-manager-role.mdx` | Branch: `jules/team-structure-batch`
-- [ ] [BAE-TEA-005] | Create `tech-lead-vs-staff-engineer.mdx` | Branch: `jules/team-structure-batch`
-- [ ] [BAE-TEA-006] | Create `cross-team-collaboration.mdx` | Branch: `jules/team-structure-batch`
-- [ ] [BAE-TEA-007] | Create `communication-in-engineering.mdx` | Branch: `jules/team-structure-batch`
-- [ ] [BAE-TEA-008] | Create `remote-work-engineering.mdx` | Branch: `jules/team-structure-batch`
-- [ ] [BAE-TEA-009] | Create `engineering-ladder.mdx` | Branch: `jules/team-structure-batch`
+- [ ] [BAE-TEA-001] | Create `your-first-day.mdx`
+- [ ] [BAE-TEA-002] | Create `engineering-org-structure.mdx`
+- [ ] [BAE-TEA-003] | Create `product-manager-role.mdx`
+- [ ] [BAE-TEA-004] | Create `engineering-manager-role.mdx`
+- [ ] [BAE-TEA-005] | Create `tech-lead-vs-staff-engineer.mdx`
+- [ ] [BAE-TEA-006] | Create `cross-team-collaboration.mdx`
+- [ ] [BAE-TEA-007] | Create `communication-in-engineering.mdx`
+- [ ] [BAE-TEA-008] | Create `remote-work-engineering.mdx`
+- [ ] [BAE-TEA-009] | Create `engineering-ladder.mdx`
 
 ### Backlog
 _Empty_

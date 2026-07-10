@@ -54,15 +54,15 @@ Below are the topics that make up this course. This list serves as the structura
 > **Jules: Pick the first batch of `- [ ]` items (up to 10) under `### Next Task`. If fewer than 10, promote from `### Backlog`.**
 
 ### Next Task
-- [ ] [BAE-OOP-001] | Create `oop-in-production.mdx` | Branch: `jules/oop-patterns-batch`
-- [ ] [BAE-OOP-002] | Create `classes-and-objects-real-world.mdx` | Branch: `jules/oop-patterns-batch`
-- [ ] [BAE-OOP-003] | Create `inheritance-vs-composition.mdx` | Branch: `jules/oop-patterns-batch`
-- [ ] [BAE-OOP-004] | Create `solid-principles.mdx` | Branch: `jules/oop-patterns-batch`
-- [ ] [BAE-OOP-005] | Create `design-patterns-strategy.mdx` | Branch: `jules/oop-patterns-batch`
-- [ ] [BAE-OOP-006] | Create `repository-pattern.mdx` | Branch: `jules/oop-patterns-batch`
-- [ ] [BAE-OOP-007] | Create `service-layer-pattern.mdx` | Branch: `jules/oop-patterns-batch`
-- [ ] [BAE-OOP-008] | Create `dependency-injection.mdx` | Branch: `jules/oop-patterns-batch`
-- [ ] [BAE-OOP-009] | Create `clean-architecture.mdx` | Branch: `jules/oop-patterns-batch`
+- [ ] [BAE-OOP-001] | Create `oop-in-production.mdx`
+- [ ] [BAE-OOP-002] | Create `classes-and-objects-real-world.mdx`
+- [ ] [BAE-OOP-003] | Create `inheritance-vs-composition.mdx`
+- [ ] [BAE-OOP-004] | Create `solid-principles.mdx`
+- [ ] [BAE-OOP-005] | Create `design-patterns-strategy.mdx`
+- [ ] [BAE-OOP-006] | Create `repository-pattern.mdx`
+- [ ] [BAE-OOP-007] | Create `service-layer-pattern.mdx`
+- [ ] [BAE-OOP-008] | Create `dependency-injection.mdx`
+- [ ] [BAE-OOP-009] | Create `clean-architecture.mdx`
 
 ### Backlog
 _Empty_

@@ -28,10 +28,6 @@ Every topic must be framed as: **"What will you actually experience, and what do
 
 ---
 
-## Course Outline
-Refer to the dedicated course design spec at [design.md](../../docs/school/incident-management/design.md) for the exact topic list and course path.
-
----
 
 ## Research-First Mandate
 
@@ -44,10 +40,6 @@ This course requires **deep, current research** for every topic. Before writing 
 
 ---
 
-## Course Outline
-Refer to the dedicated course design spec at [design.md](../../docs/school/incident-management/design.md) for the exact topic list and course path.
-
----
 
 ## Mandatory Additional Section: Top GitHub Repos Table
 
@@ -58,27 +50,7 @@ Refer to the dedicated course design spec at [design.md](../../docs/school/incid
 ## Top GitHub Repos
 
 | Repository | Stars | Description | Why It Matters |
-|---
-
-## Course Outline
-Refer to the dedicated course design spec at [design.md](../../docs/school/incident-management/design.md) for the exact topic list and course path.
-
----|---
-
-## Course Outline
-Refer to the dedicated course design spec at [design.md](../../docs/school/incident-management/design.md) for the exact topic list and course path.
-
----|---
-
-## Course Outline
-Refer to the dedicated course design spec at [design.md](../../docs/school/incident-management/design.md) for the exact topic list and course path.
-
----|---
-
-## Course Outline
-Refer to the dedicated course design spec at [design.md](../../docs/school/incident-management/design.md) for the exact topic list and course path.
-
----|
+|---|---|---|---|
 | [owner/repo-name](https://github.com/owner/repo-name) | ⭐ 45k+ | Short description | How it relates to this topic |
 ```
 
@@ -89,10 +61,6 @@ Refer to the dedicated course design spec at [design.md](../../docs/school/incid
 
 ---
 
-## Course Outline
-Refer to the dedicated course design spec at [design.md](../../docs/school/incident-management/design.md) for the exact topic list and course path.
-
----
 
 ## Topic Coverage Philosophy
 

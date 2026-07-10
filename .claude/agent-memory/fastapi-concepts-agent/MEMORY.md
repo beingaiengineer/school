@@ -57,20 +57,20 @@ Below are the topics that make up this course. This list serves as the structura
 > **Jules: Pick the first batch of `- [ ]` items (up to 10) under `### Next Task`. If fewer than 10, promote from `### Backlog`.**
 
 ### Next Task
-- [ ] [BAE-FAS-001] | Create `what-is-an-api.mdx` | Branch: `jules/fastapi-concepts-batch`
-- [ ] [BAE-FAS-002] | Create `rest-api-design.mdx` | Branch: `jules/fastapi-concepts-batch`
-- [ ] [BAE-FAS-003] | Create `fastapi-fundamentals.mdx` | Branch: `jules/fastapi-concepts-batch`
-- [ ] [BAE-FAS-004] | Create `request-response-models.mdx` | Branch: `jules/fastapi-concepts-batch`
-- [ ] [BAE-FAS-005] | Create `pydantic-validation.mdx` | Branch: `jules/fastapi-concepts-batch`
-- [ ] [BAE-FAS-006] | Create `crud-operations.mdx` | Branch: `jules/fastapi-concepts-batch`
-- [ ] [BAE-FAS-007] | Create `authentication-jwt.mdx` | Branch: `jules/fastapi-concepts-batch`
-- [ ] [BAE-FAS-008] | Create `middleware-and-cors.mdx` | Branch: `jules/fastapi-concepts-batch`
-- [ ] [BAE-FAS-009] | Create `error-handling-in-apis.mdx` | Branch: `jules/fastapi-concepts-batch`
-- [ ] [BAE-FAS-010] | Create `background-tasks.mdx` | Branch: `jules/fastapi-concepts-batch`
+- [ ] [BAE-FAS-001] | Create `what-is-an-api.mdx`
+- [ ] [BAE-FAS-002] | Create `rest-api-design.mdx`
+- [ ] [BAE-FAS-003] | Create `fastapi-fundamentals.mdx`
+- [ ] [BAE-FAS-004] | Create `request-response-models.mdx`
+- [ ] [BAE-FAS-005] | Create `pydantic-validation.mdx`
+- [ ] [BAE-FAS-006] | Create `crud-operations.mdx`
+- [ ] [BAE-FAS-007] | Create `authentication-jwt.mdx`
+- [ ] [BAE-FAS-008] | Create `middleware-and-cors.mdx`
+- [ ] [BAE-FAS-009] | Create `error-handling-in-apis.mdx`
+- [ ] [BAE-FAS-010] | Create `background-tasks.mdx`
 
 ### Backlog
-- [ ] [BAE-FAS-011] | Create `websockets.mdx` | Branch: `jules/fastapi-concepts-batch`
-- [ ] [BAE-FAS-012] | Create `rate-limiting.mdx` | Branch: `jules/fastapi-concepts-batch`
+- [ ] [BAE-FAS-011] | Create `websockets.mdx`
+- [ ] [BAE-FAS-012] | Create `rate-limiting.mdx`
 
 ### Completed This Cycle
 | BAE ID | What's Done (High Level) |

@@ -55,16 +55,16 @@ Below are the topics that make up this course. This list serves as the structura
 > **Jules: Pick the first batch of `- [ ]` items (up to 10) under `### Next Task`. If fewer than 10, promote from `### Backlog`.**
 
 ### Next Task
-- [x] [BAE-OBS-001] | Create `what-is-observability.mdx` | Branch: `jules/observability-batch`
-- [x] [BAE-OBS-002] | Create `structured-logging.mdx` | Branch: `jules/observability-batch`
-- [x] [BAE-OBS-003] | Create `centralized-logging.mdx` | Branch: `jules/observability-batch`
-- [x] [BAE-OBS-004] | Create `metrics-and-dashboards.mdx` | Branch: `jules/observability-batch`
-- [x] [BAE-OBS-005] | Create `prometheus-grafana.mdx` | Branch: `jules/observability-batch`
-- [x] [BAE-OBS-006] | Create `distributed-tracing.mdx` | Branch: `jules/observability-batch`
-- [x] [BAE-OBS-007] | Create `opentelemetry.mdx` | Branch: `jules/observability-batch`
-- [x] [BAE-OBS-008] | Create `alerting-rules.mdx` | Branch: `jules/observability-batch`
-- [x] [BAE-OBS-009] | Create `health-checks.mdx` | Branch: `jules/observability-batch`
-- [x] [BAE-OBS-010] | Create `golden-signals.mdx` | Branch: `jules/observability-batch`
+- [x] [BAE-OBS-001] | Create `what-is-observability.mdx`
+- [x] [BAE-OBS-002] | Create `structured-logging.mdx`
+- [x] [BAE-OBS-003] | Create `centralized-logging.mdx`
+- [x] [BAE-OBS-004] | Create `metrics-and-dashboards.mdx`
+- [x] [BAE-OBS-005] | Create `prometheus-grafana.mdx`
+- [x] [BAE-OBS-006] | Create `distributed-tracing.mdx`
+- [x] [BAE-OBS-007] | Create `opentelemetry.mdx`
+- [x] [BAE-OBS-008] | Create `alerting-rules.mdx`
+- [x] [BAE-OBS-009] | Create `health-checks.mdx`
+- [x] [BAE-OBS-010] | Create `golden-signals.mdx`
 
 ### Backlog
 _Empty_

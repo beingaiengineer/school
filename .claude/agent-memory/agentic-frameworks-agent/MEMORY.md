@@ -70,80 +70,80 @@ For agentic framework topics, diagrams should focus on:
 > **Jules: Pick the first batch of `- [ ]` items (up to 10) under `### Next Task`. If fewer than 10, promote from `### Backlog`.**
 
 ### Next Task
-- [x] [BAE-AF-001] | Create `_category_.json` files for all 17 categories | Branch: `jules/af-batch-001-setup`
-- [x] [BAE-AF-002] | Create `intro/what-are-ai-agents.mdx` | Branch: `jules/af-batch-001-setup`
-- [x] [BAE-AF-003] | Create `intro/agent-vs-chatbot-vs-rag.mdx` | Branch: `jules/af-batch-001-setup`
-- [x] [BAE-AF-004] | Create `intro/anatomy-of-an-agent.mdx` | Branch: `jules/af-batch-001-setup`
-- [x] [BAE-AF-005] | Create `intro/agent-types-and-taxonomies.mdx` | Branch: `jules/af-batch-001-setup`
-- [x] [BAE-AF-006] | Create `intro/how-agents-think.mdx` | Branch: `jules/af-batch-001-setup`
-- [x] [BAE-AF-007] | Create `intro/agent-ecosystem-landscape-2026.mdx` | Branch: `jules/af-batch-001-setup`
-- [x] [BAE-AF-008] | Create `intro/choosing-a-framework.mdx` | Branch: `jules/af-batch-001-setup`
-- [x] [BAE-AF-009] | Create `intro/your-first-agent.mdx` | Branch: `jules/af-batch-001-setup`
-- [x] [BAE-AF-010] | Create `architecture-patterns/react-pattern.mdx` | Branch: `jules/af-batch-001-setup`
-- [x] [BAE-AF-011] | Create `architecture-patterns/plan-and-execute.mdx` | Branch: `jules/af-batch-002-patterns`
-- [x] [BAE-AF-012] | Create `architecture-patterns/reflection-and-reflexion.mdx` | Branch: `jules/af-batch-002-patterns`
-- [x] [BAE-AF-013] | Create `architecture-patterns/tool-use-pattern.mdx` | Branch: `jules/af-batch-002-patterns`
-- [x] [BAE-AF-014] | Create `architecture-patterns/routing-pattern.mdx` | Branch: `jules/af-batch-002-patterns`
-- [x] [BAE-AF-015] | Create `architecture-patterns/parallelization-pattern.mdx` | Branch: `jules/af-batch-002-patterns`
-- [x] [BAE-AF-016] | Create `architecture-patterns/human-in-the-loop.mdx` | Branch: `jules/af-batch-002-patterns`
-- [x] [BAE-AF-017] | Create `architecture-patterns/agent-architectures-compared.mdx` | Branch: `jules/af-batch-002-patterns`
-- [x] [BAE-AF-018] | Create `langchain-langgraph/langchain-fundamentals.mdx` | Branch: `jules/af-batch-002-patterns`
-- [x] [BAE-AF-019] | Create `langchain-langgraph/langgraph-intro.mdx` | Branch: `jules/af-batch-002-patterns`
-- [x] [BAE-AF-020] | Create `langchain-langgraph/langgraph-state-machines.mdx` | Branch: `jules/af-batch-002-patterns`
-- [x] [BAE-AF-021] | Create `langchain-langgraph/langgraph-memory.mdx` | Branch: `jules/af-batch-003-langgraph`
-- [x] [BAE-AF-022] | Create `langchain-langgraph/langgraph-human-in-loop.mdx` | Branch: `jules/af-batch-003-langgraph`
-- [x] [BAE-AF-023] | Create `langchain-langgraph/langgraph-multi-agent.mdx` | Branch: `jules/af-batch-003-langgraph`
-- [x] [BAE-AF-024] | Create `langchain-langgraph/langsmith-observability.mdx` | Branch: `jules/af-batch-003-langgraph`
-- [x] [BAE-AF-025] | Create `langchain-langgraph/langgraph-production-deployment.mdx` | Branch: `jules/af-batch-003-langgraph`
-- [x] [BAE-AF-026] | Create `crewai/crewai-fundamentals.mdx` | Branch: `jules/af-batch-003-langgraph`
-- [x] [BAE-AF-027] | Create `crewai/crewai-agents-and-roles.mdx` | Branch: `jules/af-batch-003-langgraph`
-- [x] [BAE-AF-028] | Create `crewai/crewai-tasks-and-processes.mdx` | Branch: `jules/af-batch-003-langgraph`
-- [x] [BAE-AF-029] | Create `crewai/crewai-flows-and-pipelines.mdx` | Branch: `jules/af-batch-003-langgraph`
-- [x] [BAE-AF-030] | Create `crewai/crewai-memory-system.mdx` | Branch: `jules/af-batch-003-langgraph`
-- [x] [BAE-AF-031] | Create `crewai/crewai-multi-agent-crews.mdx` | Branch: `jules/af-batch-004-crewai-openai`
-- [x] [BAE-AF-032] | Create `crewai/crewai-production-deployment.mdx` | Branch: `jules/af-batch-004-crewai-openai`
-- [x] [BAE-AF-033] | Create `openai-agents-sdk/openai-sdk-fundamentals.mdx` | Branch: `jules/af-batch-004-crewai-openai`
-- [x] [BAE-AF-034] | Create `openai-agents-sdk/openai-sdk-tools-and-functions.mdx` | Branch: `jules/af-batch-004-crewai-openai`
-- [x] [BAE-AF-035] | Create `openai-agents-sdk/openai-sdk-handoffs.mdx` | Branch: `jules/af-batch-004-crewai-openai`
-- [x] [BAE-AF-036] | Create `openai-agents-sdk/openai-sdk-guardrails.mdx` | Branch: `jules/af-batch-004-crewai-openai`
-- [x] [BAE-AF-037] | Create `openai-agents-sdk/openai-sdk-tracing.mdx` | Branch: `jules/af-batch-004-crewai-openai`
-- [x] [BAE-AF-038] | Create `openai-agents-sdk/openai-sdk-production-deployment.mdx` | Branch: `jules/af-batch-004-crewai-openai`
-- [x] [BAE-AF-039] | Create `google-adk/google-adk-fundamentals.mdx` | Branch: `jules/af-batch-004-crewai-openai`
-- [x] [BAE-AF-040] | Create `google-adk/google-adk-tools-and-functions.mdx` | Branch: `jules/af-batch-004-crewai-openai`
+- [x] [BAE-AF-001] | Create `_category_.json` files for all 17 categories
+- [x] [BAE-AF-002] | Create `intro/what-are-ai-agents.mdx`
+- [x] [BAE-AF-003] | Create `intro/agent-vs-chatbot-vs-rag.mdx`
+- [x] [BAE-AF-004] | Create `intro/anatomy-of-an-agent.mdx`
+- [x] [BAE-AF-005] | Create `intro/agent-types-and-taxonomies.mdx`
+- [x] [BAE-AF-006] | Create `intro/how-agents-think.mdx`
+- [x] [BAE-AF-007] | Create `intro/agent-ecosystem-landscape-2026.mdx`
+- [x] [BAE-AF-008] | Create `intro/choosing-a-framework.mdx`
+- [x] [BAE-AF-009] | Create `intro/your-first-agent.mdx`
+- [x] [BAE-AF-010] | Create `architecture-patterns/react-pattern.mdx`
+- [x] [BAE-AF-011] | Create `architecture-patterns/plan-and-execute.mdx`
+- [x] [BAE-AF-012] | Create `architecture-patterns/reflection-and-reflexion.mdx`
+- [x] [BAE-AF-013] | Create `architecture-patterns/tool-use-pattern.mdx`
+- [x] [BAE-AF-014] | Create `architecture-patterns/routing-pattern.mdx`
+- [x] [BAE-AF-015] | Create `architecture-patterns/parallelization-pattern.mdx`
+- [x] [BAE-AF-016] | Create `architecture-patterns/human-in-the-loop.mdx`
+- [x] [BAE-AF-017] | Create `architecture-patterns/agent-architectures-compared.mdx`
+- [x] [BAE-AF-018] | Create `langchain-langgraph/langchain-fundamentals.mdx`
+- [x] [BAE-AF-019] | Create `langchain-langgraph/langgraph-intro.mdx`
+- [x] [BAE-AF-020] | Create `langchain-langgraph/langgraph-state-machines.mdx`
+- [x] [BAE-AF-021] | Create `langchain-langgraph/langgraph-memory.mdx`
+- [x] [BAE-AF-022] | Create `langchain-langgraph/langgraph-human-in-loop.mdx`
+- [x] [BAE-AF-023] | Create `langchain-langgraph/langgraph-multi-agent.mdx`
+- [x] [BAE-AF-024] | Create `langchain-langgraph/langsmith-observability.mdx`
+- [x] [BAE-AF-025] | Create `langchain-langgraph/langgraph-production-deployment.mdx`
+- [x] [BAE-AF-026] | Create `crewai/crewai-fundamentals.mdx`
+- [x] [BAE-AF-027] | Create `crewai/crewai-agents-and-roles.mdx`
+- [x] [BAE-AF-028] | Create `crewai/crewai-tasks-and-processes.mdx`
+- [x] [BAE-AF-029] | Create `crewai/crewai-flows-and-pipelines.mdx`
+- [x] [BAE-AF-030] | Create `crewai/crewai-memory-system.mdx`
+- [x] [BAE-AF-031] | Create `crewai/crewai-multi-agent-crews.mdx`
+- [x] [BAE-AF-032] | Create `crewai/crewai-production-deployment.mdx`
+- [x] [BAE-AF-033] | Create `openai-agents-sdk/openai-sdk-fundamentals.mdx`
+- [x] [BAE-AF-034] | Create `openai-agents-sdk/openai-sdk-tools-and-functions.mdx`
+- [x] [BAE-AF-035] | Create `openai-agents-sdk/openai-sdk-handoffs.mdx`
+- [x] [BAE-AF-036] | Create `openai-agents-sdk/openai-sdk-guardrails.mdx`
+- [x] [BAE-AF-037] | Create `openai-agents-sdk/openai-sdk-tracing.mdx`
+- [x] [BAE-AF-038] | Create `openai-agents-sdk/openai-sdk-production-deployment.mdx`
+- [x] [BAE-AF-039] | Create `google-adk/google-adk-fundamentals.mdx`
+- [x] [BAE-AF-040] | Create `google-adk/google-adk-tools-and-functions.mdx`
 
 
-- [x] [BAE-AF-041] | Create `google-adk/google-adk-multi-agent-orchestration.mdx` | Branch: `jules/af-batch-005-adk-autogen`
-- [x] [BAE-AF-042] | Create `google-adk/google-adk-sessions-and-state.mdx` | Branch: `jules/af-batch-005-adk-autogen`
-- [x] [BAE-AF-043] | Create `google-adk/google-adk-callbacks-and-hooks.mdx` | Branch: `jules/af-batch-005-adk-autogen`
-- [x] [BAE-AF-044] | Create `google-adk/google-adk-production-deployment.mdx` | Branch: `jules/af-batch-005-adk-autogen`
-- [x] [BAE-AF-045] | Create `autogen/autogen-fundamentals.mdx` | Branch: `jules/af-batch-005-adk-autogen`
-- [x] [BAE-AF-046] | Create `autogen/autogen-conversable-agents.mdx` | Branch: `jules/af-batch-005-adk-autogen`
-- [x] [BAE-AF-047] | Create `autogen/autogen-group-chat-patterns.mdx` | Branch: `jules/af-batch-005-adk-autogen`
-- [x] [BAE-AF-048] | Create `autogen/autogen-code-execution.mdx` | Branch: `jules/af-batch-005-adk-autogen`
-- [x] [BAE-AF-049] | Create `autogen/autogen-production-deployment.mdx` | Branch: `jules/af-batch-005-adk-autogen`
-- [x] [BAE-AF-050] | Create `pydantic-ai/pydantic-ai-fundamentals.mdx` | Branch: `jules/af-batch-005-adk-autogen`
+- [x] [BAE-AF-041] | Create `google-adk/google-adk-multi-agent-orchestration.mdx`
+- [x] [BAE-AF-042] | Create `google-adk/google-adk-sessions-and-state.mdx`
+- [x] [BAE-AF-043] | Create `google-adk/google-adk-callbacks-and-hooks.mdx`
+- [x] [BAE-AF-044] | Create `google-adk/google-adk-production-deployment.mdx`
+- [x] [BAE-AF-045] | Create `autogen/autogen-fundamentals.mdx`
+- [x] [BAE-AF-046] | Create `autogen/autogen-conversable-agents.mdx`
+- [x] [BAE-AF-047] | Create `autogen/autogen-group-chat-patterns.mdx`
+- [x] [BAE-AF-048] | Create `autogen/autogen-code-execution.mdx`
+- [x] [BAE-AF-049] | Create `autogen/autogen-production-deployment.mdx`
+- [x] [BAE-AF-050] | Create `pydantic-ai/pydantic-ai-fundamentals.mdx`
 
-- [x] [BAE-AF-051] | Create `pydantic-ai/pydantic-ai-type-safe-agents.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
-- [x] [BAE-AF-052] | Create `pydantic-ai/pydantic-ai-tools-and-dependencies.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
-- [x] [BAE-AF-053] | Create `pydantic-ai/pydantic-ai-structured-output.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
-- [x] [BAE-AF-054] | Create `pydantic-ai/pydantic-ai-production-deployment.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
-- [x] [BAE-AF-055] | Create `semantic-kernel/semantic-kernel-fundamentals.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
-- [x] [BAE-AF-056] | Create `semantic-kernel/semantic-kernel-plugins-and-functions.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
-- [x] [BAE-AF-057] | Create `semantic-kernel/semantic-kernel-planners.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
-- [x] [BAE-AF-058] | Create `semantic-kernel/semantic-kernel-memory-and-embeddings.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
-- [x] [BAE-AF-059] | Create `semantic-kernel/semantic-kernel-production-deployment.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
-- [x] [BAE-AF-060] | Create `emerging-frameworks/smolagents-huggingface.mdx` | Branch: `jules/af-batch-006-pydantic-sk`
+- [x] [BAE-AF-051] | Create `pydantic-ai/pydantic-ai-type-safe-agents.mdx`
+- [x] [BAE-AF-052] | Create `pydantic-ai/pydantic-ai-tools-and-dependencies.mdx`
+- [x] [BAE-AF-053] | Create `pydantic-ai/pydantic-ai-structured-output.mdx`
+- [x] [BAE-AF-054] | Create `pydantic-ai/pydantic-ai-production-deployment.mdx`
+- [x] [BAE-AF-055] | Create `semantic-kernel/semantic-kernel-fundamentals.mdx`
+- [x] [BAE-AF-056] | Create `semantic-kernel/semantic-kernel-plugins-and-functions.mdx`
+- [x] [BAE-AF-057] | Create `semantic-kernel/semantic-kernel-planners.mdx`
+- [x] [BAE-AF-058] | Create `semantic-kernel/semantic-kernel-memory-and-embeddings.mdx`
+- [x] [BAE-AF-059] | Create `semantic-kernel/semantic-kernel-production-deployment.mdx`
+- [x] [BAE-AF-060] | Create `emerging-frameworks/smolagents-huggingface.mdx`
 
-- [x] [BAE-AF-081] | Create `memory-and-state/long-term-memory-persistence.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [x] [BAE-AF-082] | Create `memory-and-state/vector-store-memory.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [x] [BAE-AF-083] | Create `memory-and-state/conversation-management.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [x] [BAE-AF-084] | Create `memory-and-state/state-persistence-and-checkpointing.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [x] [BAE-AF-085] | Create `tools-and-actions/tool-design-principles.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [x] [BAE-AF-086] | Create `tools-and-actions/function-calling-deep-dive.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [x] [BAE-AF-087] | Create `tools-and-actions/api-tools-rest-graphql.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [x] [BAE-AF-088] | Create `tools-and-actions/database-tools.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [x] [BAE-AF-089] | Create `tools-and-actions/code-execution-sandboxes.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [ ] [BAE-AF-090] | Create `tools-and-actions/tool-error-handling-and-retries.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [x] [BAE-AF-081] | Create `memory-and-state/long-term-memory-persistence.mdx`
+- [x] [BAE-AF-082] | Create `memory-and-state/vector-store-memory.mdx`
+- [x] [BAE-AF-083] | Create `memory-and-state/conversation-management.mdx`
+- [x] [BAE-AF-084] | Create `memory-and-state/state-persistence-and-checkpointing.mdx`
+- [x] [BAE-AF-085] | Create `tools-and-actions/tool-design-principles.mdx`
+- [x] [BAE-AF-086] | Create `tools-and-actions/function-calling-deep-dive.mdx`
+- [x] [BAE-AF-087] | Create `tools-and-actions/api-tools-rest-graphql.mdx`
+- [x] [BAE-AF-088] | Create `tools-and-actions/database-tools.mdx`
+- [x] [BAE-AF-089] | Create `tools-and-actions/code-execution-sandboxes.mdx`
+- [ ] [BAE-AF-090] | Create `tools-and-actions/tool-error-handling-and-retries.mdx`
 
 ### Backlog
 
@@ -154,38 +154,38 @@ For agentic framework topics, diagrams should focus on:
 #### Batch 6 — Pydantic AI + Semantic Kernel
 
 #### Batch 7 — Emerging Frameworks
-- [x] [BAE-AF-061] | Create `emerging-frameworks/agno-formerly-phidata.mdx` | Branch: `jules/af-batch-007-emerging`
-- [x] [BAE-AF-062] | Create `emerging-frameworks/llamaindex-agents-and-workflows.mdx` | Branch: `jules/af-batch-007-emerging`
-- [x] [BAE-AF-063] | Create `emerging-frameworks/haystack-agents.mdx` | Branch: `jules/af-batch-007-emerging`
-- [x] [BAE-AF-064] | Create `emerging-frameworks/mastra-typescript-agents.mdx` | Branch: `jules/af-batch-007-emerging`
-- [x] [BAE-AF-065] | Create `emerging-frameworks/camel-ai.mdx` | Branch: `jules/af-batch-007-emerging`
-- [x] [BAE-AF-066] | Create `emerging-frameworks/metagpt.mdx` | Branch: `jules/af-batch-007-emerging`
-- [x] [BAE-AF-067] | Create `protocols/mcp-protocol-deep-dive.mdx` | Branch: `jules/af-batch-007-emerging`
-- [x] [BAE-AF-068] | Create `protocols/mcp-popular-servers.mdx` | Branch: `jules/af-batch-007-emerging`
-- [x] [BAE-AF-069] | Create `protocols/mcp-server-development.mdx` | Branch: `jules/af-batch-007-emerging`
-- [x] [BAE-AF-070] | Create `protocols/a2a-protocol-deep-dive.mdx` | Branch: `jules/af-batch-007-emerging`
+- [x] [BAE-AF-061] | Create `emerging-frameworks/agno-formerly-phidata.mdx`
+- [x] [BAE-AF-062] | Create `emerging-frameworks/llamaindex-agents-and-workflows.mdx`
+- [x] [BAE-AF-063] | Create `emerging-frameworks/haystack-agents.mdx`
+- [x] [BAE-AF-064] | Create `emerging-frameworks/mastra-typescript-agents.mdx`
+- [x] [BAE-AF-065] | Create `emerging-frameworks/camel-ai.mdx`
+- [x] [BAE-AF-066] | Create `emerging-frameworks/metagpt.mdx`
+- [x] [BAE-AF-067] | Create `protocols/mcp-protocol-deep-dive.mdx`
+- [x] [BAE-AF-068] | Create `protocols/mcp-popular-servers.mdx`
+- [x] [BAE-AF-069] | Create `protocols/mcp-server-development.mdx`
+- [x] [BAE-AF-070] | Create `protocols/a2a-protocol-deep-dive.mdx`
 
 #### Batch 8 — Protocols + Multi-Agent
-- [x] [BAE-AF-071] | Create `protocols/a2a-agent-cards.mdx` | Branch: `jules/af-batch-008-protocols`
-- [x] [BAE-AF-072] | Create `protocols/mcp-vs-a2a-when-to-use.mdx` | Branch: `jules/af-batch-008-protocols`
-- [x] [BAE-AF-073] | Create `multi-agent-systems/multi-agent-patterns-overview.mdx` | Branch: `jules/af-batch-008-protocols`
-- [x] [BAE-AF-074] | Create `multi-agent-systems/orchestrator-worker-pattern.mdx` | Branch: `jules/af-batch-008-protocols`
-- [x] [BAE-AF-075] | Create `multi-agent-systems/supervisor-pattern.mdx` | Branch: `jules/af-batch-008-protocols`
-- [x] [BAE-AF-076] | Create `multi-agent-systems/hierarchical-agent-teams.mdx` | Branch: `jules/af-batch-008-protocols`
-- [x] [BAE-AF-077] | Create `multi-agent-systems/agent-communication-protocols.mdx` | Branch: `jules/af-batch-008-protocols`
-- [x] [BAE-AF-078] | Create `multi-agent-systems/multi-agent-debugging.mdx` | Branch: `jules/af-batch-008-protocols`
-- [x] [BAE-AF-079] | Create `memory-and-state/agent-memory-types-overview.mdx` | Branch: `jules/af-batch-008-protocols`
-- [x] [BAE-AF-080] | Create `memory-and-state/short-term-memory-context-window.mdx` | Branch: `jules/af-batch-008-protocols`
-- [x] [BAE-AF-081] | Create `memory-and-state/long-term-memory-persistence.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [x] [BAE-AF-082] | Create `memory-and-state/vector-store-memory.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [x] [BAE-AF-083] | Create `memory-and-state/conversation-management.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [x] [BAE-AF-084] | Create `memory-and-state/state-persistence-and-checkpointing.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [x] [BAE-AF-085] | Create `tools-and-actions/tool-design-principles.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [x] [BAE-AF-086] | Create `tools-and-actions/function-calling-deep-dive.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [x] [BAE-AF-087] | Create `tools-and-actions/api-tools-rest-graphql.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [x] [BAE-AF-088] | Create `tools-and-actions/database-tools.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [x] [BAE-AF-089] | Create `tools-and-actions/code-execution-sandboxes.mdx` | Branch: `jules/af-batch-009-memory-tools`
-- [ ] [BAE-AF-090] | Create `tools-and-actions/tool-error-handling-and-retries.mdx` | Branch: `jules/af-batch-009-memory-tools`
+- [ ] [BAE-AF-071] | Create `protocols/a2a-agent-cards.mdx`
+- [ ] [BAE-AF-072] | Create `protocols/mcp-vs-a2a-when-to-use.mdx`
+- [ ] [BAE-AF-073] | Create `multi-agent-systems/multi-agent-patterns-overview.mdx`
+- [ ] [BAE-AF-074] | Create `multi-agent-systems/orchestrator-worker-pattern.mdx`
+- [ ] [BAE-AF-075] | Create `multi-agent-systems/supervisor-pattern.mdx`
+- [ ] [BAE-AF-076] | Create `multi-agent-systems/hierarchical-agent-teams.mdx`
+- [ ] [BAE-AF-077] | Create `multi-agent-systems/agent-communication-protocols.mdx`
+- [ ] [BAE-AF-078] | Create `multi-agent-systems/multi-agent-debugging.mdx`
+- [ ] [BAE-AF-079] | Create `memory-and-state/agent-memory-types-overview.mdx`
+- [ ] [BAE-AF-080] | Create `memory-and-state/short-term-memory-context-window.mdx`
+- [ ] [BAE-AF-081] | Create `memory-and-state/long-term-memory-persistence.mdx`
+- [ ] [BAE-AF-082] | Create `memory-and-state/vector-store-memory.mdx`
+- [ ] [BAE-AF-083] | Create `memory-and-state/conversation-management.mdx`
+- [ ] [BAE-AF-084] | Create `memory-and-state/state-persistence-and-checkpointing.mdx`
+- [ ] [BAE-AF-085] | Create `tools-and-actions/tool-design-principles.mdx`
+- [ ] [BAE-AF-086] | Create `tools-and-actions/function-calling-deep-dive.mdx`
+- [ ] [BAE-AF-087] | Create `tools-and-actions/api-tools-rest-graphql.mdx`
+- [ ] [BAE-AF-088] | Create `tools-and-actions/database-tools.mdx`
+- [ ] [BAE-AF-089] | Create `tools-and-actions/code-execution-sandboxes.mdx`
+- [ ] [BAE-AF-090] | Create `tools-and-actions/tool-error-handling-and-retries.mdx`
 
 #### Batch 9 — Memory + Tools
 
@@ -193,13 +193,13 @@ For agentic framework topics, diagrams should focus on:
 
 
 #### Batch 11 — Interview Prep + Best Practices
-- [ ] [BAE-AF-101] | Create `interview-prep/agent-coding-rounds.mdx` | Branch: `jules/af-batch-011-interview`
-- [ ] [BAE-AF-102] | Create `interview-prep/agent-system-design.mdx` | Branch: `jules/af-batch-011-interview`
-- [ ] [BAE-AF-103] | Create `best-practices/framework-selection-guide.mdx` | Branch: `jules/af-batch-011-interview`
-- [ ] [BAE-AF-104] | Create `best-practices/agent-design-patterns.mdx` | Branch: `jules/af-batch-011-interview`
-- [ ] [BAE-AF-105] | Create `best-practices/agent-testing.mdx` | Branch: `jules/af-batch-011-interview`
-- [ ] [BAE-AF-106] | Create `best-practices/agent-anti-patterns.mdx` | Branch: `jules/af-batch-011-interview`
-- [ ] [BAE-AF-107] | Create `best-practices/future-of-agents.mdx` | Branch: `jules/af-batch-011-interview`
+- [ ] [BAE-AF-101] | Create `interview-prep/agent-coding-rounds.mdx`
+- [ ] [BAE-AF-102] | Create `interview-prep/agent-system-design.mdx`
+- [ ] [BAE-AF-103] | Create `best-practices/framework-selection-guide.mdx`
+- [ ] [BAE-AF-104] | Create `best-practices/agent-design-patterns.mdx`
+- [ ] [BAE-AF-105] | Create `best-practices/agent-testing.mdx`
+- [ ] [BAE-AF-106] | Create `best-practices/agent-anti-patterns.mdx`
+- [ ] [BAE-AF-107] | Create `best-practices/future-of-agents.mdx`
 
 ### Completed This Cycle
 | BAE ID | What's Done (High Level) |
