@@ -227,16 +227,6 @@ No reusable insights recorded yet.
 ---
 
 ## Backlog
-- [ ] [BAE-REVIEW-001] | **Audit & rewrite** `intro/what-is-python.mdx`
-- [ ] [BAE-REVIEW-002] | Audit `intro/setup-python.mdx`
-- [ ] [BAE-REVIEW-003] | Audit `intro/python-execution-flow.mdx`
-- [ ] [BAE-REVIEW-004] | Audit `intro/first-python-program.mdx`
-- [ ] [BAE-REVIEW-005] | Audit `fundamentals/variables.mdx`
-- [ ] [BAE-REVIEW-006] | Audit `fundamentals/data-types.mdx`
-- [ ] [BAE-REVIEW-007] | Audit `fundamentals/operators.mdx`
-- [ ] [BAE-REVIEW-008] | Audit `fundamentals/input-output.mdx`
-- [ ] [BAE-REVIEW-009] | Audit `fundamentals/type-conversion.mdx`
-- [ ] [BAE-REVIEW-010] | Audit `fundamentals/comments-docstrings.mdx`
 - [ ] [BAE-REVIEW-011] | Audit `control-flow/if-else.mdx`
 - [ ] [BAE-REVIEW-012] | Audit `control-flow/nested-conditions.mdx`
 - [ ] [BAE-REVIEW-013] | Audit `control-flow/loops.mdx`
@@ -377,6 +367,16 @@ No reusable insights recorded yet.
 
 | BAE ID | What's Done (High Level) |
 |---|---|
+| BAE-REVIEW-001 | Rewrote what-is-python.mdx |
+| BAE-REVIEW-002 | Rewrote setup-python.mdx |
+| BAE-REVIEW-003 | Rewrote python-execution-flow.mdx |
+| BAE-REVIEW-004 | Rewrote first-python-program.mdx |
+| BAE-REVIEW-005 | Rewrote variables.mdx |
+| BAE-REVIEW-006 | Rewrote data-types.mdx |
+| BAE-REVIEW-007 | Rewrote operators.mdx |
+| BAE-REVIEW-008 | Rewrote input-output.mdx |
+| BAE-REVIEW-009 | Rewrote type-conversion.mdx |
+| BAE-REVIEW-010 | Rewrote comments-docstrings.mdx |
 
 ---
 
