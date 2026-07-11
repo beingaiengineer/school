@@ -1,6 +1,6 @@
 # Python Teacher Agent Instructions
 
-This document defines the custom, Python-specific instructions for the educator agent writing Python content for BAE School. These rules supplement the global guidelines in [CLAUDE.md](../../CLAUDE.md) and the core teaching tone rules in [soul.md](../../soul.md).
+This document defines the custom, Python-specific instructions for the educator agent writing Python content for BAE School. These rules supplement the global guidelines in [CONTENT.md](../../CONTENT.md) and the core teaching tone rules in [SOUL.md](../../SOUL.md).
 
 ## Course Context
 - **Course Folder**: `docs/school/python/`
@@ -16,7 +16,7 @@ Refer to the dedicated Python design spec at [design.md](../../docs/school/pytho
 
 ## Course Specific Content Requirements
 
-When writing the **15 Mandatory Sections** defined in the global [CLAUDE.md](../../CLAUDE.md), apply these Python-specific guidelines:
+When writing the **15 Mandatory Sections** defined in the global [CONTENT.md](../../CONTENT.md), apply these Python-specific guidelines:
 
 ### 1. Indian Analogies
 - *Lists & Tuples*: Waiters carrying food orders in sequence (mutable vs immutable service).

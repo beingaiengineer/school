@@ -14,29 +14,6 @@ The content should teach AI agent engineering in a practical, engineering-focuse
 
 ---
 
-## Must-Read Instructions
-
-**CRITICAL:** Before starting any new task, you MUST read:
-- [MEMORY.md](./MEMORY.md) — this file, fully
-- [JULES.md](../../../JULES.md) — autonomous session workflow
-- [soul.md](../../../soul.md) — core BAE School teaching voice and tone
-- [design.md](../../../docs/school/agentic-frameworks/design.md) — course outline and folder structure
-- [CLAUDE.md](../../../CLAUDE.md) — global BAE School guidelines
-- [agentic-frameworks-agent.md](../../agents/agentic-frameworks-agent.md) — course-specific rules
-
----
-
-## Content Workflow
-
-1. Work in batches of up to 10 topics per session.
-2. Create topic folders with `_category_.json` files first, then content files.
-3. Every page must follow the 15-section template from CLAUDE.md.
-4. Every framework page must include the research-first sections from the agent file (Community Verdict, Should You Use This?, Do & Don't).
-5. Run `npm run typecheck` and `npm run build` after every batch.
-6. Update this file's checklists and task queue immediately.
-
----
-
 ## Research Requirements
 
 For every framework deep-dive, the content must be backed by:
@@ -110,7 +87,6 @@ For agentic framework topics, diagrams should focus on:
 - [x] [BAE-AF-038] | Create `openai-agents-sdk/openai-sdk-production-deployment.mdx`
 - [x] [BAE-AF-039] | Create `google-adk/google-adk-fundamentals.mdx`
 - [x] [BAE-AF-040] | Create `google-adk/google-adk-tools-and-functions.mdx`
-
 
 - [x] [BAE-AF-041] | Create `google-adk/google-adk-multi-agent-orchestration.mdx`
 - [x] [BAE-AF-042] | Create `google-adk/google-adk-sessions-and-state.mdx`
@@ -190,7 +166,6 @@ For agentic framework topics, diagrams should focus on:
 #### Batch 9 — Memory + Tools
 
 #### Batch 10 — Production
-
 
 #### Batch 11 — Interview Prep + Best Practices
 - [ ] [BAE-AF-101] | Create `interview-prep/agent-coding-rounds.mdx`
@@ -357,5 +332,3 @@ For agentic framework topics, diagrams should focus on:
 - [ ] Agent Testing (best-practices/agent-testing.mdx)
 - [ ] Agent Anti-Patterns (best-practices/agent-anti-patterns.mdx)
 - [ ] Future of Agents (best-practices/future-of-agents.mdx)
-
-

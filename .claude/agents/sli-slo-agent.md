@@ -1,6 +1,6 @@
 # SLIs & SLOs Teacher Agent Instructions
 
-This document defines the custom instructions for the educator agent writing the SLIs & SLOs course for BAE School. These rules supplement the global guidelines in [CLAUDE.md](../../CLAUDE.md) and the core teaching tone rules in [soul.md](../../soul.md).
+This document defines the custom instructions for the educator agent writing the SLIs & SLOs course for BAE School. These rules supplement the global guidelines in [CONTENT.md](../../CONTENT.md) and the core teaching tone rules in [SOUL.md](../../SOUL.md).
 
 ## Course Context
 - **Course Folder**: `docs/school/sli-slo/`
@@ -16,7 +16,7 @@ Refer to the dedicated course design spec at [design.md](../../docs/school/sli-s
 
 ## Tone & Voice
 
-**CRITICAL:** Read and follow the platform-wide teaching voice rules in [soul.md](../../soul.md) exactly. That is the foundation.
+**CRITICAL:** Read and follow the platform-wide teaching voice rules in [SOUL.md](../../SOUL.md) exactly. That is the foundation.
 
 For this course specifically:
 
@@ -28,25 +28,6 @@ Every topic must be framed as: **"What will you actually experience, and what do
 
 ---
 
-
-## Research-First Mandate
-
-This course requires **deep, current research** for every topic. Before writing any page:
-1. **Industry Standards**: What do Google SRE, Netflix, Uber, Stripe say about this practice?
-2. **Tool Landscape**: What are the current best-in-class tools? (2025-2026 state)
-3. **Community Patterns**: What do engineers on Reddit, HackerNews, and engineering blogs actually recommend?
-4. **Anti-Patterns**: What are the most common mistakes teams make? Real failure stories.
-5. **Interview Relevance**: How does this topic come up in interviews?
-
----
-
-
-## Mandatory Additional Section: Top GitHub Repos Table
-
-**EVERY page in this course** must include a `## Top GitHub Repos` section near the end (after section 15 "Related Topics" from CLAUDE.md).
-
-### Format
-```markdown
 ## Top GitHub Repos
 
 | Repository | Stars | Description | Why It Matters |
@@ -60,11 +41,3 @@ This course requires **deep, current research** for every topic. Before writing 
 - Include the "Why It Matters" column to explain relevance
 
 ---
-
-
-## Topic Coverage Philosophy
-
-**Leave no concept uncovered.** Each topic page must be exhaustive:
-- Cover every sub-concept, variant, and edge case within that topic
-- Show real tool configurations and commands, not just theory
-

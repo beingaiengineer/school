@@ -8,28 +8,6 @@ Create a real-world, journey-based course covering **Requirement gathering, PRDs
 
 ---
 
-## Must-Read Instructions
-
-**CRITICAL:** Before starting any new task, you MUST read:
-- [MEMORY.md](./MEMORY.md) — this file, fully
-- [JULES.md](../../../JULES.md) — autonomous session workflow
-- [soul.md](../../../soul.md) — core BAE School teaching voice and tone
-- [design.md](../../../docs/school/requirements-estimation/design.md) — course outline and folder structure
-- [CLAUDE.md](../../../CLAUDE.md) — global BAE School guidelines
-- [requirements-estimation-agent.md](../../agents/requirements-estimation-agent.md) — course-specific rules
-
----
-
-## Content Workflow
-
-1. Work in batches of up to 10 topics per session.
-2. If a folder doesn't exist, create it along with a `_category_.json` file.
-3. Every page must follow the 15-section template from CLAUDE.md + Section 16 (Top GitHub Repos).
-4. Run `npm run typecheck` and `npm run build` after every batch to ensure the site compiles.
-5. Update this file's checklists and task queue immediately after finishing a task.
-
----
-
 ## Course Design & Outline
 
 Below are the topics that make up this course. This list serves as the structural design spec.
@@ -72,5 +50,3 @@ _Empty_
 ### Completed This Cycle
 | BAE ID | What's Done (High Level) |
 |---|---|
-
-

@@ -15,36 +15,6 @@ The content should teach technology topics (starting with Python) in a practical
 
 ---
 
-## Must-Read Instructions
-
-**CRITICAL:** Before starting any new task, making changes to the codebase, or submitting a commit/PR, you MUST always read the project memory file completely:
-- [MEMORY.md](./MEMORY.md)
-
-Before writing Python school content, read:
-- [JULES.md](../../../JULES.md) — autonomous session workflow (for Jules sessions)
-- [soul.md](../../../soul.md) — core BAE School teaching voice and tone
-- [design.md](../../../design.md)
-- [CLAUDE.md](../../../CLAUDE.md)
-- [python-agent.md](../../agents/python-agent.md)
-
-These are the source of truth for content structure, tone, and workflow.
-
----
-
-## Content Workflow Habit
-
-Do not bulk-generate all topics unless the user explicitly asks for that.
-
-Preferred workflow:
-1. Work topic by topic.
-2. Let the user review style.
-3. Keep content concise.
-4. Put relevant content only in the matching topic file.
-5. Run validation after meaningful changes.
-6. Update the checklists and progress status in [MEMORY.md](./MEMORY.md) immediately.
-
----
-
 ## Python Topic Page Structure
 
 Each Python topic page should follow the required 15-section structure:
@@ -590,4 +560,3 @@ This checklist tracks the implementation of BAE School playbook topics. Complete
 - [x] Production Checklists (best-practices/production-checklists.mdx)
 - [x] Scalability Guidelines (best-practices/scalability-guidelines.mdx)
 - [x] Engineering Principles (best-practices/engineering-principles.mdx)
-

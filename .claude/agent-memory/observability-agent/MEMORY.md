@@ -8,28 +8,6 @@ Create a real-world, journey-based course covering **Logs, metrics, traces, Prom
 
 ---
 
-## Must-Read Instructions
-
-**CRITICAL:** Before starting any new task, you MUST read:
-- [MEMORY.md](./MEMORY.md) — this file, fully
-- [JULES.md](../../../JULES.md) — autonomous session workflow
-- [soul.md](../../../soul.md) — core BAE School teaching voice and tone
-- [design.md](../../../docs/school/observability/design.md) — course outline and folder structure
-- [CLAUDE.md](../../../CLAUDE.md) — global BAE School guidelines
-- [observability-agent.md](../../agents/observability-agent.md) — course-specific rules
-
----
-
-## Content Workflow
-
-1. Work in batches of up to 10 topics per session.
-2. If a folder doesn't exist, create it along with a `_category_.json` file.
-3. Every page must follow the 15-section template from CLAUDE.md + Section 16 (Top GitHub Repos).
-4. Run `npm run typecheck` and `npm run build` after every batch to ensure the site compiles.
-5. Update this file's checklists and task queue immediately after finishing a task.
-
----
-
 ## Course Design & Outline
 
 Below are the topics that make up this course. This list serves as the structural design spec.
@@ -73,5 +51,3 @@ _Empty_
 | BAE ID | What's Done (High Level) |
 |---|---|
 | `[BAE-OBS-001]` through `[BAE-OBS-010]` | Created observability introduction batch including what is observability, logging strategies, metrics, tracing, prometheus, grafana, open telemetry, alerting, health checks, and golden signals. |
-
-
