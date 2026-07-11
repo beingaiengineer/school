@@ -10,163 +10,190 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 | Area | Details |
 |---|---|
-| Topic | Comments and Docstrings |
+| Topic | Python Comments & Docstrings |
 | Difficulty | Beginner |
-| Used For | Explaining *why* code exists and documenting functions/classes |
-| Core Idea | Python ignores comments; docstrings are attached to objects |
-| Common Mistake | Writing comments that just repeat what the code says |
-| Performance | Zero runtime cost for comments |
+| Used For | Explaining *why* code exists and documenting APIs |
+| Core Idea | Code tells the machine *how*; Comments tell the human *why* |
+| Common Mistake | Writing comments that just repeat exactly what the code says |
+| Performance | Zero overhead. They are stripped out or ignored by the execution engine |
 
-Bro, comments are notes you leave for the next engineer (which is usually you, three months later). Docstrings are official manuals for your code.
+Bro, writing code that a computer can understand is easy. Writing code that another human engineer can understand six months later is the true mark of a senior developer.
 
-## 2. Real-World Analogy
+## 2. Engineering Story
 
-Think of a complex machine in a factory.
+You inherit a massive, 5,000-line script from an engineer who quit the company. On line 402, you see: `time.sleep(3)`. Why is there a 3-second delay? Is it waiting for a database to boot? Is it a rate limit for an API? Is it just a leftover hack from debugging?
 
-The big warning sticker saying "DO NOT PULL THIS LEVER" is a **comment**. It's an immediate note for the operator.
+You don't know. So you remove it to speed up the code. The next day, the entire production pipeline collapses because the downstream API was silently dropping requests that came in too fast. If the previous engineer had just written `# Wait 3 seconds to avoid Shopify API rate limits`, you wouldn't have brought down production. Comments are the connective tissue of engineering teams.
 
-The thick instruction manual sitting next to the machine that explains how the machine works, its inputs, and outputs is the **docstring**.
+## 3. Real-World Analogy
 
-## 3. Concept Explanation
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: An Indian mechanic's logbook. One page shows the complex mechanical steps to fix a car (the code), and sticky notes on the side explain WHY certain weird tools were used for a specific model (the comments). */}
 
-**Comments** start with a `#`. The Python interpreter completely ignores them. Use them to explain *why* you did something weird or complicated.
+Think of code like a complex repair manual for a mechanic, and comments like the handwritten sticky notes on the pages.
 
-**Docstrings** use triple quotes (`"""`). They are placed immediately inside a function, class, or module. Unlike comments, Python keeps docstrings around in memory so tools and IDEs can read them.
+| Manual Analogy | Python Equivalent |
+|---|---|
+| The official printed instructions | The actual Python code (Variables, Loops) |
+| Sticky note: "Use the red wrench, the blue one strips the bolt" | An inline Comment (`# Why we do this`) |
+| The table of contents and chapter summary | A Docstring (`"""What this module does"""`) |
+| The mechanic reading the book | The next engineer maintaining the code |
 
-## 4. Syntax Table
+The car doesn't care about the sticky notes. But the next mechanic reading the manual absolutely relies on them to avoid making mistakes.
+
+## 4. Concept Explanation
+
+In Python, there are two distinct ways to leave notes:
+
+**1. Comments (`#`)**: Used for inline explanations. Anything after the hash symbol on that specific line is completely ignored by the Python compiler. They explain the *why* behind a tricky piece of logic.
+
+**2. Docstrings (`"""`)**: Short for "Documentation Strings". These are multi-line strings placed immediately inside a function, class, or module. Unlike `#` comments, docstrings are actually saved in memory as an attribute of the object (`obj.__doc__`). Automated tools use them to generate official API documentation (like the manual you read online for libraries like Pandas).
+
+## 5. Syntax Table
 
 | Type | Syntax | Use Case |
 |---|---|---|
-| Single Line Comment | `# Note here` | Explaining a tricky line of code |
-| Inline Comment | `x = 1 # counter` | Brief context (use sparingly) |
-| Multi-line Comment | `# Note 1 \n# Note 2` | Explaining a complex algorithm step |
-| Docstring | `"""Docs here"""` | Defining a function's purpose/args |
+| Inline Comment | `# text` | Explaining a specific line of code or edge case |
+| Block Comment | `# line 1`<br/>`# line 2` | Explaining a larger block of logic |
+| Function Docstring | `"""Description"""` | Placed immediately under a `def` to explain the function |
+| Module Docstring | `"""Description"""` | Placed at the very top of a `.py` file |
+| Type Hints in Docstrings | `:param name: str` | Sphinx/Sphinx-style documentation for arguments |
 
-## 5. Beginner Example
+## 6. Beginner Example
 
-```python
-# Calculate the total price including tax
-price = 100
-tax = 0.05
-
-total = price + (price * tax)  # tax is 5%
-
-def greet(name):
-    """
-    Greets the user by name.
-    """
-    print(f"Hello, {name}")
-```
-
-## 6. Real-World Engineering Example
-
-Bro, in a real codebase, your comments explain business rules, not Python syntax.
+Here is the difference between a bad comment, a good comment, and a docstring.
 
 ```python
-def process_refund(payment_id):
+# BAD COMMENT: Repeats the code
+x = x + 1 # Adds 1 to x
+
+# GOOD COMMENT: Explains the 'why'
+x = x + 1 # Adjusting for zero-based index offset from the frontend
+
+def calculate_taxes(income):
     """
-    Initiates a refund with the payment gateway.
+    Calculates federal taxes based on 2024 brackets.
 
     Args:
-        payment_id (str): The Stripe payment reference.
-    Returns:
-        bool: True if refund initiated, False if already refunded.
-    """
-    # Wait for 2 seconds to avoid hitting the rate limit of the legacy API.
-    # See Jira ticket: BUG-1024
-    time.sleep(2)
+        income (float): The user's total annual income.
 
-    gateway.refund(payment_id)
+    Returns:
+        float: The total tax owed.
+    """
+    # We use a hardcoded 0.20 rate for this prototype.
+    # TODO: Connect this to the live IRS API before launch.
+    return income * 0.20
 ```
 
-Notice how the comment explains *why* the `sleep` is there. Without it, another engineer would delete it.
+## 7. Real-World Engineering Example
 
-## 7. Internal Working
+In production, docstrings are not optional. If you write a utility function for your team, you must document what it takes and what it returns, or nobody will use it.
+
+```python
+import time
+
+def fetch_user_data(user_id: int, retries: int = 3) -> dict:
+    """
+    Fetches user profile data from the legacy Auth0 system.
+
+    This function includes exponential backoff because the legacy
+    system is known to randomly drop connections during peak hours.
+
+    Args:
+        user_id (int): The internal database ID of the user.
+        retries (int, optional): Max connection attempts. Defaults to 3.
+
+    Returns:
+        dict: A JSON payload containing 'name', 'email', and 'role'.
+
+    Raises:
+        ConnectionError: If the legacy system fails after all retries.
+    """
+    for attempt in range(retries):
+        # Simulate network call
+        success = False
+
+        if success:
+            return {"name": "Jules", "role": "admin"}
+
+        # Wait longer on each subsequent failure (exponential backoff)
+        time.sleep(2 ** attempt)
+
+    raise ConnectionError(f"Auth0 is completely down for user {user_id}.")
+```
+
+## 8. Internal Working
+
+Bro, what happens to comments when Python runs?
+During the Lexing phase, the Python compiler completely strips out `#` comments. They do not exist in the `.pyc` bytecode.
+However, Docstrings (`"""`) are recognized as actual string objects. The compiler attaches them to the `__doc__` attribute of the function or class.
 
 <LearningFlow
   diagram={{
-    title: 'Comments vs docstrings in Python',
-    height: 360,
     nodes: [
-      {id: 'source', title: 'Source Code', detail: '.py file with comments and docstrings', x: 40, y: 140, kind: 'data'},
-      {id: 'comment', title: '# Comment', detail: 'Ignored by parser — for humans only', x: 280, y: 40, kind: 'tool'},
-      {id: 'docstring', title: 'Docstring', detail: 'Triple-quoted string stored in __doc__', x: 280, y: 260, kind: 'process'},
-      {id: 'discarded', title: 'Discarded', detail: 'Not in bytecode or runtime', x: 520, y: 40, kind: 'warning'},
-      {id: 'accessible', title: '__doc__ Attribute', detail: 'Available via help() and tooling', x: 520, y: 260, kind: 'output'},
+      { id: '1', kind: 'core', title: 'Source Code', detail: 'Source File with `#` and `"""`', x: 50, y: 150 },
+      { id: '2', kind: 'process', title: 'Parser', detail: 'Lexer / Parser', x: 300, y: 150 },
+      { id: '3', kind: 'warning', title: 'Comment Stripping', detail: 'Strips `#` Comments', x: 300, y: 50 },
+      { id: '4', kind: 'process', title: 'Docstring Parsing', detail: 'Reads `"""` Docstrings', x: 550, y: 150 },
+      { id: '5', kind: 'output', title: 'Attribute Binding', detail: 'Attaches to `func.__doc__`', x: 800, y: 150 },
     ],
     edges: [
-      {source: 'source', target: 'comment', label: '# lines'},
-      {source: 'source', target: 'docstring', label: 'first string'},
-      {source: 'comment', target: 'discarded', label: 'stripped by parser'},
-      {source: 'docstring', target: 'accessible', label: 'stored as attribute'},
-    ],
+      { source: '1', target: '2', label: 'compiles', animated: true },
+      { source: '2', target: '3', label: 'ignores completely' },
+      { source: '2', target: '4', label: 'keeps in memory', animated: true },
+      { source: '4', target: '5', label: 'binds attribute' },
+    ]
   }}
 />
 
-When Python parses your file, it literally throws away `#` comments before compiling to bytecode. They do not use runtime memory.
+## 9. Performance Table
 
-Docstrings (`"""`) are different. Python attaches them to the object's `__doc__` attribute.
-If you type `help(process_refund)` in the console, Python prints that docstring!
-
-## 8. Performance Table
-
-| Operation | Complexity | Note |
+| Documentation Type | Overhead | Impact |
 |---|---|---|
-| `# comment` | O(1) parse time | Zero execution cost, stripped out. |
-| `"""docstring"""` | O(1) | Tiny memory cost to store the string on the object. |
+| `# Inline Comments` | Zero | Stripped before bytecode. Write as many as you need. |
+| `"""Docstrings"""` | Near Zero | Stored in memory as a string reference. Completely negligible. |
+| Type Hints | Zero at runtime | Evaluated statically by IDEs, ignored by the execution engine. |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
-| Difference between `#` and `"""`? | `#` is ignored; `"""` is attached to `__doc__` and readable by tools. |
-| Can you use `#` for multi-line? | Yes, just put `#` at the start of every line. |
-| Does Python have block comments like `/* */`? | No. Python only has `#` and docstrings. |
-| When should you comment? | Explain the "why", not the "what". Let the code explain the "what". |
+| Does Python have multi-line comments? | No. Python does not have a specific multi-line comment syntax like `/* */` in C++. Engineers either use multiple `#` lines or use a multi-line string `"""` (though technically the latter is an unassigned string, not a true comment). |
+| What is the difference between a comment and a docstring? | Comments (`#`) are ignored by the compiler and are meant for inline explanations. Docstrings (`"""`) are retained in memory, attached to the `__doc__` attribute, and used to generate official API documentation. |
+| How do you view a function's docstring at runtime? | You can call `print(my_function.__doc__)` or use the built-in `help(my_function)` command in the REPL. |
+| Should you comment every line of code? | Absolutely not. Clean code should be self-documenting through good variable names. Comments should only explain *why* something is done, not *what* is being done. |
+| What is a TODO comment? | It is a standardized comment format (`# TODO: Fix this later`) that IDEs scan and aggregate into a task list for the engineering team. |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
-What happens if you use a loose string as a comment?
+Bro, can a docstring be placed anywhere?
+No. For Python to officially recognize a string as a docstring (and attach it to the `__doc__` attribute), it must be the **very first statement** inside the module, function, class, or method definition. If you put a `print()` statement before the `"""` string, Python just treats it as a random, floating string in memory and ignores it.
 
-```python
-def my_func():
-    "This is technically a docstring"
+## 12. Real-World Usage
 
-    "This is just an unassigned string, not a real comment"
-    x = 10
-```
+Every major open-source library (like NumPy, Pandas, or Django) relies heavily on Docstrings. When you hover over `pd.read_csv()` in VS Code and a massive helpful popup appears explaining the arguments, your IDE is literally reading the `__doc__` attribute written by the Pandas engineers. Without docstrings, the modern Python ecosystem would collapse into chaos.
 
-Bro, the first string becomes the `__doc__`. The second string is just a useless object Python creates and immediately throws away. Don't use strings as block comments; use `#`.
-
-## 11. Real-World Usage
-
-Where do we see this heavily?
-- **FastAPI:** Automatically uses your docstrings to generate Swagger UI API documentation.
-- **Sphinx / MkDocs:** Reads docstrings to build beautiful HTML docs for libraries.
-- **VS Code / PyCharm:** Shows your docstrings when you hover over a function name.
-
-## 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
-| Comment *why* a hack exists | Write `# adds 1 to x` next to `x += 1` |
-| Write docstrings for all public functions | Leave complex arguments undocumented |
-| Keep comments updated | Leave old comments when you change the code |
+| DO write a Docstring for every public function and class. | DON'T write a Docstring for a 2-line internal helper function. |
+| DO explain the *Why* in inline comments. | DON'T explain the *What* (e.g., `# This is a loop`). |
+| DO update comments when you change the code. | DON'T leave outdated comments. A wrong comment is worse than no comment at all. |
 
-## 13. Production Notes
+## 14. Production Notes
 
-> ⚠ Production Note:
-> "Dead code" is not a comment.
+> ⚠️ **The Danger of Outdated Comments**
+> In production, code rots. An engineer updates a function's logic but forgets to update the Docstring. Six months later, another engineer reads the Docstring, assumes the function behaves a certain way, and introduces a critical bug. Always review comments during Pull Request reviews just as rigorously as the code itself.
 
-Never leave blocks of commented-out code (`# old_logic()`) in production. If you need it later, that's what Git is for. Commented-out code rots quickly and confuses everyone who reads it.
+## 15. Common Mistakes
 
-## 14. Common Mistakes
+| Mistake | Bad Code | Good Code |
+|---|---|---|
+| Redundant commenting | `# Set x to 5`<br/>`x = 5` | `x = 5  # Default retry limit` |
+| Misplaced Docstring | `def func():`<br/>`  x = 1`<br/>`  """Docstring here"""` | `def func():`<br/>`  """Docstring first!"""`<br/>`  x = 1` |
+| Leaving dead code | `# old_logic_that_didnt_work()` | Just delete it. Git remembers history. |
 
-- Writing useless comments that insult the reader's intelligence (e.g., `# print the result`).
-- Forgetting to update the docstring when changing the function parameters.
-- Using `"""` in the middle of a script thinking it's a block comment (it actually wastes memory).
-
-## 15. Related Topics
-- Functions Basics
-- Classes and Objects
-- Best Practices: Clean Code
+## 16. Related Topics
+- [Functions Basics](../functions/functions-basics.mdx)
+- [Variables](./variables.mdx)
+- [Best Practices - Clean Code](../best-practices/clean-code.mdx)
