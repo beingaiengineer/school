@@ -45,7 +45,7 @@ Below are the topics that make up this course. This list serves as the structura
 ## Current Focus
 
 Course complete.
-Waiting for future improvements.
+Improvements completed.
 
 ---
 
@@ -88,7 +88,7 @@ No active blockers.
 
 ## Lessons Learned
 
-No reusable insights recorded yet.
+Fixed broken Docusaurus build links pointing to non-existent markdown files outside the current plugin path by removing invalid links.
 
 ---
 
@@ -118,7 +118,7 @@ _Empty_
 
 - [ ] Add diagrams
 - [ ] Improve engineering story
-- [ ] Expand interview questions
+- [x] Expand interview questions
 - [ ] Improve SEO
 - [ ] Better analogy
 - [ ] Add benchmarks
