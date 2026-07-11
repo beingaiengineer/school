@@ -12,185 +12,224 @@ import LearningFlow from '@site/src/components/LearningFlow';
 | Area | Details |
 |---|---|
 | Topic | Security Mindset |
-| Difficulty | Beginner |
-| Used For | Building software that resists attacks by default |
-| Common Mistake | Trusting client-side validation alone |
-| Performance | Minimal direct impact, but secure architectures scale better safely |
+| Difficulty | Beginner / Intermediate |
+| Used For | Building software that resists attacks, limits blast radiuses, and handles malicious actors by default. |
+| Common Mistake | Trusting client-side validation and assuming all users will follow the "happy path." |
+| Performance | Minimal direct impact, but layered security requires efficient architecture to avoid latency pile-ups. |
 
-## 2. Real-World Analogy
+## 2. Engineering Story
+
+It was Black Friday at a fast-growing e-commerce startup. At 2:00 AM, the primary database CPU spiked to 100%, and the site went down. The Site Reliability Engineering (SRE) team scrambled, assuming it was a massive traffic surge. They frantically scaled up the RDS instances, but within minutes, the CPU hit 100% again. 
+
+Digging into the application logs, they found a strange query pattern originating from the site's search bar. Instead of searching for regular product names, a single IP address was passing deeply nested, maliciously crafted regex strings into the search parameter. Because the application assumed users would only type normal text, it passed the payload directly to the database. The database was forced to execute millions of complex regex evaluations, effectively bringing down the entire cluster. 
+
+It wasn't a traffic surge; it was a targeted Denial of Service (DoS) attack. The team realized a hard truth: they had built features purely for the "happy path" and left the system wide open to malicious intent. They had fundamentally lacked a security mindset.
+
+## 3. Real-World Analogy
 
 ![Real-World Analogy](./assets/security-mindset.png)
 
 | Physical World | Software Equivalent |
 |---|---|
-| Trusting a stranger on the street | Trusting user input blindly |
-| Checking physical ID at tech park gates | Identity & Access Management (IAM) |
-| Hiding house keys under the mat | Hardcoding secrets in source code |
-| Locking the bank locker | Encrypting data at rest |
+| Trusting a stranger on the street | Trusting user input blindly without validation |
+| Checking physical ID at tech park gates | Identity & Access Management (IAM) and Authentication |
+| Hiding house keys under the mat | Hardcoding AWS secrets or API keys in source code |
+| Locking a bank vault | Encrypting data at rest (AES-256) |
+| Security cameras and motion sensors | Audit logging and intrusion detection systems |
 
-Bro, think of a corporate tech park in Bengaluru. You don't just let anyone walk in and sit at a desk. You check IDs at the main gate, you have turnstiles for the building, and badge readers for server rooms. That defense-in-depth approach is exactly what a security mindset is in software.
+Bro, think of a corporate tech park in Bengaluru. You don't just let anyone walk in and sit at a desk. You check IDs at the main gate, you have turnstiles for the building lobby, badge readers for specific floors, and biometric scanners for the server rooms. If someone jumps the main gate, they still can't access the server room. That "defense-in-depth" approach—layering security controls so no single failure compromises the entire system—is exactly what a security mindset is in software engineering.
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 
-A security mindset isn't about using the newest, fanciest encryption algorithm. It’s about assuming your application **will** be attacked. It’s a shift from "how do I make this feature work?" to "how could someone break this feature?"
+A security mindset isn't about memorizing the newest, fanciest encryption algorithm or using a specific tool. It’s a fundamental psychological shift. It’s changing your thought process from "How do I make this feature work?" to "**How could someone break this feature?**"
 
-Why does it exist? Because the internet is hostile. Every exposed endpoint is scanned by bots within minutes. If you build a feature assuming users are well-intentioned, attackers will exploit it. When you adopt a security mindset, you design systems defensively from day one.
+Why does it exist? Because the internet is fundamentally hostile. Every exposed endpoint, database, or server is scanned by automated botnets within minutes of going live. If you build a feature assuming users are well-intentioned, attackers will exploit that assumption. When you adopt a security mindset, you design systems defensively from day one.
 
-When to use it? Always. Security is not a "Phase 2" feature. It must be baked into the architecture, the code, the CI/CD pipeline, and the infrastructure.
+You must internalize three core philosophies:
+1. **Assume Breach:** Assume attackers are already inside your network. Don't trust internal traffic any more than external traffic (Zero Trust).
+2. **Least Privilege:** Give every user, service, and function only the bare minimum permissions required to do its job.
+3. **Defense in Depth:** Never rely on a single layer of security. Use multiple, redundant defensive mechanisms.
 
-## 4. Syntax Table
+When to use it? Always. Security is not a "Phase 2" feature you tack on before launch. It must be baked into the architecture, the code, the CI/CD pipeline, and the infrastructure.
 
-While security mindset is a concept, here are some key security principles mapped to common implementation practices:
+## 5. Syntax Table
 
-| Principle | Implementation Practice |
-|---|---|
-| **Defense in Depth** | WAF -> API Gateway Auth -> Service Level Auth -> DB Access Control |
-| **Least Privilege** | Granting a microservice read-only access to a specific DB table, not root access |
-| **Fail Securely** | Catching an exception and returning a generic `500` error, not a stack trace |
-| **Never Trust Input** | Sanitizing and validating all data at the API boundary before processing |
+While security mindset is a conceptual framework, it dictates how you implement everyday patterns. Here are key principles mapped to their practical implementations:
 
-## 5. Beginner Example
+| Principle | Implementation Practice | Ecosystem / Tool |
+|---|---|---|
+| **Defense in Depth** | WAF -> API Gateway -> App Auth -> DB Roles | AWS WAF, NGINX, JWT, PostgreSQL RLS |
+| **Least Privilege** | IAM Roles granting read-only DB access | AWS IAM, Kubernetes RBAC |
+| **Fail Securely** | Catching exceptions and returning a generic `500` error | Try/Catch blocks, Global Error Handlers |
+| **Never Trust Input** | Sanitizing/validating at the API boundary | Zod, Joi, class-validator |
+| **Data Protection** | Encrypting PII in transit and at rest | TLS 1.3, AES-256, HashiCorp Vault |
 
-Let's look at a common mistake: trusting input.
+## 6. Beginner Example
+
+Let's look at a common mistake: trusting user input blindly. This simple oversight leads to SQL Injection, one of the oldest and most dangerous vulnerabilities.
 
 ```javascript
-// DON'T do this, bro. Vulnerable to SQL Injection.
+// ❌ DON'T do this, bro. Vulnerable to SQL Injection.
 async function getUser(username) {
   // Assuming the user is nice and won't pass `' OR 1=1 --`
+  // An attacker passing that string bypasses authentication entirely.
   const query = `SELECT * FROM users WHERE username = '${username}'`;
   return await db.execute(query);
 }
 
-// DO this instead. Parameterized queries.
+// ✅ DO this instead. Parameterized queries.
 async function getUserSecure(username) {
+  // The database engine treats the input strictly as a string literal, not executable code.
   const query = `SELECT * FROM users WHERE username = ?`;
   return await db.execute(query, [username]);
 }
 ```
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
-Bro, in a real production system, a security mindset applies to everything, including how you handle files. Imagine a Swiggy-like app where restaurants upload menu images.
+In a real production system, a security mindset applies to everything, including how you handle file uploads. Imagine a food delivery app where restaurant partners upload menu images. An attacker might try to upload a malicious shell script disguised as an image.
 
 ```javascript
 const multer = require('multer');
 const path = require('path');
+const crypto = require('crypto');
 
 // A security-minded approach to file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, '/var/app/uploads/')
+    // Store in a highly restricted directory with no execute permissions
+    cb(null, '/var/app/uploads/quarantine/')
   },
   filename: function (req, file, cb) {
-    // 1. Never trust the user's filename. Generate a new one.
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname))
+    // 1. NEVER trust the user's filename. Generate a cryptographically random one.
+    // This prevents Path Traversal attacks (e.g., passing filename: "../../../etc/passwd")
+    const randomName = crypto.randomBytes(16).toString('hex');
+    cb(null, randomName + path.extname(file.originalname))
   }
 })
 
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 2 * 1024 * 1024 // 2. Limit file size (DoS prevention)
+    // 2. Limit file size aggressively to prevent DoS via disk exhaustion
+    fileSize: 2 * 1024 * 1024 // 2MB max
   },
   fileFilter: (req, file, cb) => {
-    // 3. Strictly validate file type. Don't trust the extension alone, but it's a start.
+    // 3. Validate file type. Don't trust the extension alone, verify the MIME type.
     if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only JPEG and PNG allowed.'));
+      cb(new Error('Invalid file type. Security policy allows only JPEG and PNG.'));
     }
   }
 });
 ```
-This is a security mindset in action: we don't trust the file name, we limit the size to prevent abuse, and we restrict the type.
+*Note: In top-tier production environments, this file would be uploaded to an S3 bucket via a Pre-Signed URL, scanned by an async Lambda function (for malware/viruses), and only then moved to a public-facing bucket.*
 
-## 7. Internal Working
+## 8. Internal Working
 
-How does a system enforce a security boundary? Let's visualize a standard secure request flow.
+How does a system enforce a security boundary across an entire architecture? Let's visualize a standard defense-in-depth request flow. If one layer fails, the next layer catches the attack.
 
 <LearningFlow
   nodes={[
-    { id: '1', type: 'tool', data: { label: 'User Request' }, position: { x: 50, y: 50 } },
-    { id: '2', type: 'process', data: { label: 'WAF (Blocks Malicious Payloads)' }, position: { x: 50, y: 150 } },
-    { id: '3', type: 'process', data: { label: 'API Gateway (Rate Limits & Auth)' }, position: { x: 50, y: 250 } },
-    { id: '4', type: 'core', data: { label: 'App Service (Input Validation)' }, position: { x: 50, y: 350 } },
-    { id: '5', type: 'data', data: { label: 'Database (Parameterized Query)' }, position: { x: 50, y: 450 } },
-    { id: '6', type: 'warning', data: { label: 'Rejected at WAF' }, position: { x: 250, y: 150 } },
+    { id: '1', type: 'tool', data: { label: 'Attacker Request' }, position: { x: 50, y: 50 } },
+    { id: '2', type: 'process', data: { label: 'WAF (AWS Shield)' }, position: { x: 50, y: 150 } },
+    { id: '3', type: 'warning', data: { label: 'Drops known bad IPs' }, position: { x: 350, y: 150 } },
+    { id: '4', type: 'process', data: { label: 'API Gateway (Rate Limiter)' }, position: { x: 50, y: 250 } },
+    { id: '5', type: 'core', data: { label: 'Auth Middleware (JWT Verify)' }, position: { x: 50, y: 350 } },
+    { id: '6', type: 'output', data: { label: '401 Unauthorized' }, position: { x: 350, y: 350 } },
+    { id: '7', type: 'core', data: { label: 'App Service (Zod Validation)' }, position: { x: 50, y: 450 } },
+    { id: '8', type: 'data', data: { label: 'Database (Parameterized)' }, position: { x: 50, y: 550 } },
   ]}
   edges={[
-    { id: 'e1-2', source: '1', target: '2', animated: true, label: 'Incoming Traffic' },
-    { id: 'e2-3', source: '2', target: '3', animated: true, label: 'Clean Traffic' },
-    { id: 'e2-6', source: '2', target: '6', label: 'Blocked' },
-    { id: 'e3-4', source: '3', target: '4', animated: true, label: 'Authenticated' },
-    { id: 'e4-5', source: '4', target: '5', animated: true, label: 'Safe Data Query' },
+    { id: 'e1-2', source: '1', target: '2', animated: true, label: 'Malicious Payload' },
+    { id: 'e2-3', source: '2', target: '3', label: 'Regex Match (Blocked)' },
+    { id: 'e2-4', source: '2', target: '4', animated: true, label: 'Allowed Traffic' },
+    { id: 'e4-5', source: '4', target: '5', animated: true, label: 'Under Rate Limit' },
+    { id: 'e5-6', source: '5', target: '6', label: 'Invalid Token' },
+    { id: 'e5-7', source: '5', target: '7', animated: true, label: 'Valid JWT Context' },
+    { id: 'e7-8', source: '7', target: '8', animated: true, label: 'Sanitized Data' },
   ]}
 />
 
-## 8. Performance Table
+## 9. Performance Table
+
+Implementing security controls always involves a trade-off with performance. A mature engineering team optimizes these layers to minimize latency.
 
 | Defense Layer | Performance Impact | Why? |
 |---|---|---|
-| WAF Inspection | ~2-10ms | Deep packet inspection and regex matching take slight compute. |
-| API Rate Limiting | Under 1ms | Usually backed by fast in-memory stores like Redis. |
-| JWT Verification | ~1-5ms | Cryptographic signature validation is fast but not free. |
-| Input Sanitization | Under 1ms | Quick string operations. |
+| **WAF Inspection** | ~2-10ms | Deep packet inspection, IP blocklist lookups, and regex matching consume compute at the edge. |
+| **API Rate Limiting** | < 1ms | Usually backed by highly optimized in-memory stores (like Redis) using sliding window algorithms. |
+| **JWT Verification** | ~1-5ms | Cryptographic signature validation (e.g., RSA or HMAC) requires CPU cycles but avoids DB roundtrips. |
+| **Input Validation (Zod)** | < 1ms | Extremely fast synchronous AST or schema traversal. |
+| **TLS 1.3 Handshake** | ~20-50ms | Reduced from older TLS versions, but still requires network round trips for key exchange. |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
-| What is "Defense in Depth"? | Layering multiple security controls (WAF, IAM, network ACLs, DB roles) so if one fails, others protect the system. |
-| What does "Principle of Least Privilege" mean? | Giving a user or service only the bare minimum permissions needed to do its job, and nothing more. |
-| Why is client-side validation not enough? | Because an attacker can easily bypass the UI and send crafted malicious HTTP requests directly to the API. |
-| What is "Fail Securely"? | When an error occurs, the system should default to denying access or rejecting the action, rather than accidentally allowing it. |
-| Explain the concept of "Zero Trust". | Never implicitly trust anything inside or outside the network. Verify every request, every time, regardless of origin. |
+| **What is "Defense in Depth"?** | Layering multiple independent security controls (WAF, IAM, network ACLs, DB roles) so if one mechanism fails, others still protect the system. |
+| **What does "Principle of Least Privilege" mean?** | Giving a user, system, or service only the bare minimum permissions needed to complete its function, and nothing more. |
+| **Why is client-side validation not enough?** | Because an attacker can easily bypass the browser/UI via Postman, cURL, or a proxy, sending crafted malicious HTTP requests directly to your backend API. |
+| **What is "Fail Securely"?** | When an unexpected error occurs, the system should default to denying access or rejecting the action (e.g., returning 500) rather than accidentally executing logic or leaking data. |
+| **Explain the concept of "Zero Trust".** | A security framework that assumes the internal network is already compromised. It requires strict identity verification for every person and device attempting to access resources on a private network, regardless of whether they are inside or outside the network perimeter. |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 **Question:** If my database is deployed in a private subnet with no public IP, do I still need to encrypt data at rest?
-**Answer:** Yes, bro! A security mindset assumes the perimeter *will* be breached. If an attacker gains access to the private subnet (e.g., via a compromised internal EC2 instance), unencrypted data at rest is fully exposed. This is defense in depth.
+**Answer:** Yes, absolutely. A security mindset assumes the perimeter *will* be breached. If an attacker gains access to the private subnet (e.g., via a compromised internal EC2 instance or Server-Side Request Forgery), unencrypted data at rest is fully exposed. Encryption at rest is a crucial layer of defense in depth.
 
-**Question:** We use HTTPS everywhere. Are we safe from man-in-the-middle attacks?
-**Answer:** Mostly, but not entirely. If a user connects to corporate Wi-Fi that requires a custom root certificate, their traffic can be decrypted by the network admin. Also, if your app doesn't enforce Certificate Pinning, it might trust a maliciously installed cert on the device.
+**Question:** We use HTTPS everywhere. Are we completely safe from Man-in-the-Middle (MitM) attacks?
+**Answer:** Mostly, but not entirely. If a user connects to a corporate network that requires installing a custom root certificate, their traffic can be transparently decrypted by the IT department (or an attacker who compromises that cert). Furthermore, if a mobile app doesn't enforce **Certificate Pinning**, an attacker can trick the device into trusting a maliciously installed certificate, allowing them to inspect and modify traffic.
 
-## 11. Real-World Usage
+**Question:** How do you immediately revoke a compromised JWT (JSON Web Token) if it's stateless?
+**Answer:** Because JWTs are verified cryptographically without checking a database, they cannot be natively "revoked" before they expire. The edge case fix involves maintaining a centralized "blocklist" of compromised token IDs (JTI) in Redis that the auth middleware checks, or reducing the JWT lifespan to 5-15 minutes and relying on refresh tokens.
 
-Tech giants like Netflix and Google operate on a **Zero Trust** architecture. Google’s BeyondCorp model assumes the internal network is just as dangerous as the public internet. Access to services is granted based on device health, user identity, and context, regardless of whether the user is sitting in a Google office or a coffee shop.
+## 12. Real-World Usage
 
-## 12. Best Practices
+Top-tier tech giants design entirely around a security mindset:
+- **Google (BeyondCorp):** Google completely abandoned the traditional "castle and moat" VPN approach. BeyondCorp assumes the internal network is just as dangerous as the public internet. Access to services is granted dynamically based on device health, user identity, and context, regardless of whether the user is in a Google office or a coffee shop.
+- **AWS (Shared Responsibility Model):** Amazon enforces the reality that security is a partnership. AWS is responsible for the "Security **OF** the Cloud" (physical hardware, hypervisors), while the customer is responsible for "Security **IN** the Cloud" (IAM roles, application code, data encryption). 
+- **Netflix (Chaos Kong):** Netflix actively runs internal tools that shut down servers or sever network connections in production to guarantee that their systems fail gracefully and securely without exposing sensitive states.
+
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
-| Validate and sanitize all inputs at the backend. | Rely on frontend JavaScript validation for security. |
-| Apply the principle of least privilege everywhere. | Run applications as the `root` user or DB admin. |
-| Use established, audited cryptography libraries. | Try to write your own encryption algorithms. |
-| Fail securely. Return generic error messages. | Leak stack traces or specific database errors to the user. |
+| **DO** validate, sanitize, and strictly type all inputs at the backend boundary using tools like Zod or Joi. | **DON'T** rely solely on frontend JavaScript or HTML5 validation attributes for security. |
+| **DO** apply the principle of least privilege to every database query, IAM role, and container. | **DON'T** run applications as the `root` user or connect to the DB as the administrative user. |
+| **DO** use established, audited, open-source cryptography libraries (e.g., bcrypt, Argon2). | **DON'T** ever attempt to write your own hashing or encryption algorithms. |
+| **DO** fail securely by logging the error internally and returning a generic, safe error message to the client. | **DON'T** leak stack traces, specific framework versions, or database syntax errors to the user. |
 
-## 13. Production Notes
+## 14. Production Notes
 
-> ⚠️ **Warning on Logging**
-> A common security mindset failure is accidentally logging sensitive data. Always ensure passwords, API keys, PII (Personally Identifiable Information), and authorization tokens are scrubbed or masked before writing to your centralized logging system (like ELK or Splunk). If an attacker gets read access to your logs, they shouldn't get the keys to the kingdom.
+> ⚠️ **Warning on Logging & Data Leaks**
+> A massive security mindset failure in production is accidentally logging sensitive data. Always ensure that passwords, API keys, PII (Personally Identifiable Information like SSNs or credit cards), and authorization tokens are scrubbed, masked, or hashed before writing to your centralized logging system (like DataDog, Splunk, or ELK). If an attacker gets read access to your application logs, they shouldn't instantly get the keys to the kingdom. Use logging libraries with built-in redaction (e.g., Pino redaction).
 
-## 14. Common Mistakes
+> ⚠️ **Rate Limiting Side Effects**
+> Implementing rate limits is crucial, but ensure your rate limiter tracks IPs or User IDs behind proxies correctly. If you blindly rate-limit based on the incoming IP while behind a load balancer (like AWS ALB or Cloudflare), you might accidentally block all legitimate users because the IP appears as the load balancer's IP. Always parse `X-Forwarded-For` safely.
+
+## 15. Common Mistakes
 
 | Mistake | Why it's bad | How to fix it |
 |---|---|---|
-| Hardcoding Secrets | Pushing API keys or DB passwords to GitHub means anyone can read them. | Use environment variables and secrets managers (like AWS Secrets Manager or HashiCorp Vault). |
-| Trusting the `Referer` Header | Attackers can spoof HTTP headers easily. | Never use headers for authentication or critical authorization checks. |
-| Verbose Error Messages | Telling an attacker exactly why their SQL injection failed helps them refine it. | Catch all unhandled exceptions and return a standard `500 Internal Server Error`. |
+| **Hardcoding Secrets** | Pushing API keys, JWT secrets, or DB passwords to GitHub means automated bots will scrape and exploit them within seconds. | Use environment variables (`.env` files ignored by git) and inject them via Secret Managers (AWS Secrets Manager, HashiCorp Vault). |
+| **Trusting HTTP Headers** | Attackers can easily spoof headers like `Referer`, `User-Agent`, or `X-Forwarded-For`. | Never use HTTP headers as the sole mechanism for authentication, authorization, or critical business logic. |
+| **Verbose Error Messages** | Telling an attacker exactly why their SQL injection or payload failed helps them refine their attack vectors rapidly. | Catch all unhandled exceptions globally and return a standard `{ "error": "Internal Server Error" }` for 500s. |
+| **Missing Rate Limiting** | Allows brute-force attacks on login endpoints and makes the system vulnerable to Application-Layer DoS. | Implement sliding-window rate limiting on all public endpoints, with aggressive limits on auth/password-reset routes. |
 
-## 15. Related Topics
+## 16. Related Topics
 - [Threat Modeling](./threat-modeling.mdx)
 - [OWASP Top 10](./owasp-top-10.mdx)
 - [Secrets Management](./secrets-management.mdx)
+- [Authentication vs Authorization](./auth-vs-auth.mdx)
 
-## 16. Top GitHub Repos
+## 17. Top GitHub Repositories
 
 | Repository | Stars | Description | Why It Matters |
 |---|---|---|---|
-| [OWASP/CheatSheetSeries](https://github.com/OWASP/CheatSheetSeries) | ⭐ 28k+ | The OWASP Cheat Sheet Series | Essential quick reference for securing applications against common vulnerabilities. |
-| [swisskyrepo/PayloadsAllTheThings](https://github.com/swisskyrepo/PayloadsAllTheThings) | ⭐ 55k+ | A list of useful payloads and bypasses for Web Application Security. | Shows you exactly how attackers craft malicious inputs so you can defend against them. |
-| [minimaxir/big-list-of-naughty-strings](https://github.com/minimaxir/big-list-of-naughty-strings) | ⭐ 45k+ | Strings which have a high probability of causing issues when used as user-input data. | Great for testing your input validation logic. |
-| [zaproxy/zaproxy](https://github.com/zaproxy/zaproxy) | ⭐ 12k+ | The OWASP ZAP core project | An open-source web app scanner. Running this builds your security mindset by showing your app's flaws. |
-| [Checkmarx/kics](https://github.com/Checkmarx/kics) | ⭐ 3.5k+ | Find security vulnerabilities, compliance issues, and infrastructure misconfigurations early. | Helps shift security left into your CI/CD pipeline. |
+| [OWASP/CheatSheetSeries](https://github.com/OWASP/CheatSheetSeries) | ⭐ 28k+ | The OWASP Cheat Sheet Series | An essential, practical quick reference for securing applications against the most common vulnerabilities. |
+| [swisskyrepo/PayloadsAllTheThings](https://github.com/swisskyrepo/PayloadsAllTheThings) | ⭐ 55k+ | Useful payloads and bypasses for Web App Security. | Shows you exactly how attackers craft malicious inputs, helping you build a defensive mindset. |
+| [minimaxir/big-list-of-naughty-strings](https://github.com/minimaxir/big-list-of-naughty-strings) | ⭐ 45k+ | Strings which have a high probability of causing issues when used as user-input data. | The ultimate test suite for verifying your input validation and sanitization logic. |
+| [zaproxy/zaproxy](https://github.com/zaproxy/zaproxy) | ⭐ 12k+ | The OWASP ZAP core project | An open-source web app scanner. Running this locally builds your security mindset by instantly highlighting your application's flaws. |
+| [Checkmarx/kics](https://github.com/Checkmarx/kics) | ⭐ 3.5k+ | Find security vulnerabilities, compliance issues, and misconfigurations early. | Helps shift security left into your CI/CD pipeline, automating the security mindset. |

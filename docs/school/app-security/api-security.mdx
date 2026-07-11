@@ -12,14 +12,18 @@ import LearningFlow from '@site/src/components/LearningFlow';
 | Area | Details |
 |---|---|
 | Topic | API Security |
-| Difficulty | Intermediate |
+| Difficulty | Intermediate / Advanced |
 | Used For | Protecting the programmatic interfaces that power modern applications |
-| Common Mistake | Assuming undocumented APIs are hidden from attackers |
-| Performance | Slight latency added by WAFs, rate limiters, and payload inspection |
+| Common Mistake | Assuming undocumented APIs are hidden from attackers (Security through Obscurity) |
+| Performance | Slight latency added by WAFs, rate limiters, and payload inspection (~5-15ms) |
 
-## 2. Real-World Analogy
+## 2. Engineering Story
 
-![Real-World Analogy](./assets/api-security.png)
+During a massive Diwali Mega Sale, a rapidly growing e-commerce startup launched their highly anticipated new mobile app. The launch initially looked like a success, but at 2:00 AM, the database CPU suddenly spiked to 100%, causing a complete outage for three hours. The engineering team frantically scaled up the read replicas, assuming it was a massive surge in legitimate customer traffic. However, upon checking the access logs, they discovered the truth: millions of requests were hitting a single, undocumented endpoint `/api/v1/coupons/validate`. 
+
+The developers had intentionally hidden this endpoint in the mobile app's code, assuming no one would find it without a browser UI. But an attacker had reverse-engineered the app, found the endpoint, and wrote a Python script to brute-force coupon codes at 10,000 requests per second. Because there was no rate limiting, no authentication required for that specific endpoint, and no Web Application Firewall (WAF) rules to block bot traffic, the backend database was completely overwhelmed. This incident proved a harsh reality for the team: APIs are meant for machines, and without strict security boundaries, they will be weaponized by machines.
+
+## 3. Real-World Analogy
 
 | Physical World | Software Equivalent |
 |---|---|
@@ -28,48 +32,51 @@ import LearningFlow from '@site/src/components/LearningFlow';
 | Limiting customers to ordering 5 pizzas at once | Rate Limiting |
 | Changing the table number on your ticket to get someone else's food | Broken Object Level Authorization (BOLA) |
 
-Bro, imagine you run a massive cloud kitchen (like a backend API) that serves Swiggy and Zomato. You don't have waiters; you just have an automated counter where delivery guys drop tickets. If you don't check if the ticket is valid (AuthN), if you don't check if the guy is allowed to take that specific order (AuthZ), or if you let one guy drop 50,000 tickets at once (Rate Limiting), your kitchen will collapse. API security is building strict rules for that automated counter.
+Imagine you run a massive cloud kitchen (like a backend API) that serves Swiggy and Zomato. You don't have waiters; you just have an automated counter where delivery guys drop tickets. If you don't check if the ticket is valid (AuthN), if you don't check if the guy is allowed to take that specific order (AuthZ), or if you let one guy drop 50,000 tickets at once (Rate Limiting), your kitchen will collapse. API security is building strict rules for that automated counter, ensuring only legitimate, well-behaved actors get their orders processed.
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 
-API Security focuses on securing the Application Programming Interfaces that connect microservices, mobile apps, and single-page applications to backend data.
+API Security focuses on securing the Application Programming Interfaces that connect microservices, mobile apps, single-page applications, and third-party integrations to backend data and business logic.
 
-Why does it exist? Because APIs are designed to be consumed by machines. They expose direct access to business logic and databases. Unlike traditional web pages, if an API is vulnerable, an attacker can write a script to exploit it thousands of times per second.
+**Why does it exist?** APIs are designed to be consumed by machines, exposing direct access to databases and critical operations. Unlike traditional web pages, if an API is vulnerable, an attacker can write a script to exploit it thousands of times per second. Traditional web security focused on Cross-Site Scripting (XSS) and CSRF, but API security deals with business logic flaws like Broken Object Level Authorization (BOLA), mass assignment, and lack of resource limiting.
 
-When to use it? Any time you expose an endpoint over HTTP/gRPC. Internal APIs need security just as much as public APIs (Zero Trust architecture).
+**When to use it?** Every single time you expose an endpoint over HTTP, gRPC, or WebSockets. Even internal APIs require strict security (Zero Trust architecture) because perimeter breaches happen, and once inside, internal APIs are often soft targets. 
 
-## 4. Syntax Table
+**When NOT to use it?** Never. There is no scenario where skipping API security is acceptable in production.
 
-Here are the primary layers of API security you need to implement:
+## 5. Syntax Table
 
-| Security Layer | Implementation | Purpose |
+Here are the primary layers of API security you need to implement to build a resilient system:
+
+| Security Layer | Implementation Strategy | Purpose |
 |---|---|---|
-| **Transport Security** | TLS (HTTPS) | Encrypts data in transit to prevent sniffing. |
-| **Authentication** | JWT, OAuth 2.0 | Verifies the identity of the API caller. |
-| **Authorization** | Scope checking, RBAC, ABAC | Ensures the caller can perform the action. |
-| **Rate Limiting** | Redis-based token bucket | Prevents brute-forcing and resource exhaustion. |
-| **Input Validation** | Joi, Zod, express-validator | Rejects malformed or malicious payloads (SQLi/XSS). |
+| **Transport Security** | TLS 1.3 (HTTPS) | Encrypts data in transit to prevent sniffing and man-in-the-middle attacks. |
+| **Authentication** | JWT, OAuth 2.0, API Keys | Verifies the identity of the API caller. Answers "Who are you?" |
+| **Authorization** | Scope checking, RBAC, ABAC | Ensures the caller is allowed to perform the action. Answers "What can you do?" |
+| **Rate Limiting** | Redis token bucket, API Gateway | Prevents brute-forcing, scraping, and resource exhaustion (DoS). |
+| **Input Validation** | Joi, Zod, express-validator | Rejects malformed or malicious payloads (SQLi, NoSQLi, XSS) at the edge. |
+| **Idempotency** | UUID keys in headers | Prevents replay attacks and double-processing of critical requests. |
 
-## 5. Beginner Example
+## 6. Beginner Example
 
-Let's look at a very common API flaw: Mass Assignment.
+A very common API flaw is **Mass Assignment**, where an API blindly accepts a JSON object and applies it directly to the database model, allowing attackers to overwrite sensitive fields.
 
 ```javascript
 // DON'T: Mass Assignment Vulnerability
 app.put('/api/users/:id', async (req, res) => {
   const user = await User.findByPk(req.params.id);
 
-  // Attacker sends { "email": "hacked@a.com", "isAdmin": true }
-  // You blindly update everything they sent!
-  await user.update(req.body);
+  // Attacker sends { "email": "hacker@evil.com", "isAdmin": true, "balance": 9999 }
+  // The backend blindly updates everything in the database!
+  await user.update(req.body); 
   res.json(user);
 });
 
-// DO: Explicit payload extraction
+// DO: Explicit payload extraction (Allow-listing)
 app.put('/api/users/secure/:id', async (req, res) => {
   const user = await User.findByPk(req.params.id);
 
-  // Only extract the fields the user is allowed to change
+  // Only extract the exact fields the user is explicitly allowed to change
   const { email, name } = req.body;
 
   await user.update({ email, name });
@@ -77,15 +84,16 @@ app.put('/api/users/secure/:id', async (req, res) => {
 });
 ```
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
-Bro, let's look at how you secure an API endpoint using multiple layers of defense: Authentication, Authorization, Input Validation, and Rate Limiting.
+In production, an API endpoint is protected by multiple layers of defense: Rate Limiting, Authentication, Authorization, and Input Validation. Here is a production-grade Express.js endpoint for processing payments.
 
 ```javascript
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const { z } = require('zod');
 const { verifyToken, requireRole } = require('./middlewares/auth');
+const PaymentService = require('./services/payment');
 
 const app = express();
 app.use(express.json());
@@ -97,123 +105,131 @@ const paymentLimiter = rateLimit({
   message: { error: 'Too many payment requests, please try again later.' }
 });
 
-// 2. Input Validation Schema (Zod)
+// 2. Input Validation Schema (Zod) - Strict allow-list
 const paymentSchema = z.object({
-  amount: z.number().positive().max(10000), // Prevent sending -500 to steal money
+  amount: z.number().positive().max(10000), // Prevent negative amounts (stealing)
   currency: z.enum(['USD', 'INR', 'EUR']),
-  targetAccountId: z.string().uuid()
-});
+  targetAccountId: z.string().uuid() // Ensure valid format to prevent SQLi
+}).strict(); // Rejects any extra fields
 
-// 3 & 4. Authentication (verifyToken) & Authorization (requireRole) applied as middleware
+// 3 & 4. Authentication (verifyToken) & Authorization (requireRole)
 app.post('/api/payments/transfer', paymentLimiter, verifyToken, requireRole('verified_user'), async (req, res) => {
-
   try {
-    // 5. Strictly validate the incoming body
+    // 5. Strictly validate the incoming body before running business logic
     const validatedData = paymentSchema.parse(req.body);
 
-    // Process the payment safely using validatedData
-    const receipt = await PaymentService.transfer(req.user.id, validatedData);
+    // 6. Idempotency Check (Assuming middleware extracts it to req.idempotencyKey)
+    if (await PaymentService.isDuplicate(req.idempotencyKey)) {
+        return res.status(409).json({ error: 'Duplicate request detected.' });
+    }
 
+    // Process the payment safely using the strictly validated payload
+    const receipt = await PaymentService.transfer(req.user.id, validatedData, req.idempotencyKey);
     res.json(receipt);
   } catch (error) {
-    // Fail securely
+    // Fail securely without leaking stack traces
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: 'Invalid payload', details: error.errors });
     }
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Payment Error:", error); // Internal logging for debugging
+    res.status(500).json({ error: 'Internal server error' }); // Safe external response
   }
 });
 ```
-This is production-grade. The attacker has to pass the rate limiter, have a valid JWT, have the right role, and provide perfectly formatted data before the business logic even executes.
 
-## 7. Internal Working
+## 8. Internal Working
 
-How does an API Gateway protect downstream microservices? Let's visualize the security gauntlet.
+How does an API Gateway protect downstream microservices? It acts as a gauntlet, filtering out bad traffic before it ever touches business logic or the database. The React Flow below traces the exact path a request takes through the security layers.
 
 <LearningFlow
   nodes={[
-    { id: '1', type: 'tool', data: { label: 'Attacker Request' }, position: { x: 50, y: 50 } },
-    { id: '2', type: 'process', data: { label: 'API Gateway (Rate Limiter)' }, position: { x: 50, y: 150 } },
-    { id: '3', type: 'process', data: { label: 'API Gateway (JWT Validator)' }, position: { x: 50, y: 250 } },
-    { id: '4', type: 'core', data: { label: 'Microservice (Input Schema Validator)' }, position: { x: 50, y: 350 } },
-    { id: '5', type: 'data', data: { label: 'Database (Business Logic)' }, position: { x: 50, y: 450 } },
-    { id: '6', type: 'warning', data: { label: '429 Too Many Requests' }, position: { x: 250, y: 150 } },
-    { id: '7', type: 'warning', data: { label: '401 Unauthorized' }, position: { x: 250, y: 250 } },
+    { id: '1', type: 'tool', data: { label: 'Attacker / Client' }, position: { x: 50, y: 50 } },
+    { id: '2', type: 'process', data: { label: 'WAF (Web App Firewall)' }, position: { x: 50, y: 150 } },
+    { id: '3', type: 'process', data: { label: 'API Gateway (Rate Limiter)' }, position: { x: 50, y: 250 } },
+    { id: '4', type: 'process', data: { label: 'API Gateway (Auth Validator)' }, position: { x: 50, y: 350 } },
+    { id: '5', type: 'core', data: { label: 'Microservice (Schema Check)' }, position: { x: 50, y: 450 } },
+    { id: '6', type: 'data', data: { label: 'Database (Business Logic)' }, position: { x: 50, y: 550 } },
+    { id: 'w1', type: 'warning', data: { label: '403 Forbidden (Malicious IP/Payload)' }, position: { x: 400, y: 150 } },
+    { id: 'w2', type: 'warning', data: { label: '429 Too Many Requests' }, position: { x: 400, y: 250 } },
+    { id: 'w3', type: 'warning', data: { label: '401 Unauthorized' }, position: { x: 400, y: 350 } },
   ]}
   edges={[
     { id: 'e1-2', source: '1', target: '2', animated: true },
-    { id: 'e2-3', source: '2', target: '3', animated: true, label: 'Under Limit' },
-    { id: 'e2-6', source: '2', target: '6', label: 'Rate Exceeded' },
-    { id: 'e3-4', source: '3', target: '4', animated: true, label: 'Valid Token' },
-    { id: 'e3-7', source: '3', target: '7', label: 'Invalid Token' },
-    { id: 'e4-5', source: '4', target: '5', animated: true, label: 'Valid Payload' },
+    { id: 'e2-3', source: '2', target: '3', animated: true, label: 'Clean Traffic' },
+    { id: 'e2-w1', source: '2', target: 'w1', label: 'Blocked by WAF' },
+    { id: 'e3-4', source: '3', target: '4', animated: true, label: 'Under Limit' },
+    { id: 'e3-w2', source: '3', target: 'w2', label: 'Rate Exceeded' },
+    { id: 'e4-5', source: '4', target: '5', animated: true, label: 'Valid Token' },
+    { id: 'e4-w3', source: '4', target: 'w3', label: 'Invalid Token' },
+    { id: 'e5-6', source: '5', target: '6', animated: true, label: 'Valid Payload' },
   ]}
 />
 
-## 8. Performance Table
+## 9. Performance Table
 
-| API Security Check | Latency Added | Mitigation |
+Implementing security checks adds some overhead, but it is necessary for survival in production. Here is how they impact performance:
+
+| API Security Check | Latency Added | Mitigation Strategy |
 |---|---|---|
-| WAF Inspection | ~2-10ms | Offload to Edge/CDN (Cloudflare). |
-| Rate Limiting | Under 1ms | Use Redis (in-memory) instead of a relational DB. |
-| JWT Validation | Under 1ms | Fast local cryptographic check. |
-| Payload Validation | ~1-3ms | Use fast libraries (Zod, Ajv for JSON schema). |
+| **WAF Inspection** | ~2-10ms | Offload to Edge/CDN (Cloudflare, AWS WAF) so it happens close to the user. |
+| **Rate Limiting** | ~1-2ms | Use Redis (in-memory) instead of a relational DB for token buckets. |
+| **JWT Validation** | < 1ms | Fast local cryptographic check (avoid DB lookups for stateless tokens). |
+| **Payload Validation** | ~1-3ms | Use fast compiled or optimized libraries (Zod, Ajv for JSON schema). |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
-| What is BOLA (Broken Object Level Authorization)? | When an API allows a user to access an object (like a receipt) simply by guessing its ID in the URL, without checking if the user actually owns that object. |
-| Why is "Security through Obscurity" a bad idea for APIs? | Because attackers use fuzzers to find hidden endpoints. If an endpoint exists (e.g., `/api/v1/internal-admin`), they will find it. It must be secured, not just hidden. |
-| What is a replay attack and how do you prevent it in APIs? | An attacker intercepts a valid API request and resends it later to duplicate an action (like a payment). Prevent it using short-lived tokens, nonces, or idempotency keys. |
-| Why should you implement pagination on list APIs? | To prevent Denial of Service (DoS) and data scraping. If an attacker requests `limit=1000000`, your database will crash trying to fetch all records. |
-| What is Mass Assignment? | When an API takes a JSON payload and directly injects it into a database model, allowing an attacker to overwrite fields (like `isAdmin`) they shouldn't have access to. |
+| **What is BOLA (Broken Object Level Authorization)?** | BOLA (formerly Insecure Direct Object Reference or IDOR) occurs when an API allows a user to access an object (like a receipt) simply by guessing its ID in the URL (`/receipts/123`), without checking if the authenticated user actually owns that object. |
+| **Why is "Security through Obscurity" a bad idea for APIs?** | Attackers use automated fuzzers and path scanners (like DirBuster) to find hidden endpoints. If an endpoint exists (e.g., `/api/v1/internal-admin`), they will find it. Endpoints must be secured by authentication and authorization, not just hidden from the UI. |
+| **What is a replay attack and how do you prevent it?** | An attacker intercepts a valid API request (like a money transfer) and resends it later to duplicate the action. Prevent it using short-lived tokens, nonces, or enforcing Idempotency Keys in the request headers. |
+| **Why should you implement pagination on list APIs?** | To prevent Denial of Service (DoS) and data scraping. If an attacker requests `limit=1000000`, the database will choke trying to fetch and serialize all records, causing an outage. Always enforce a hard `MAX_LIMIT`. |
+| **What is the difference between Authentication (AuthN) and Authorization (AuthZ)?** | AuthN verifies *who* you are (e.g., verifying a password or JWT). AuthZ verifies *what* you are allowed to do (e.g., checking if you have the "Admin" role to delete a user). |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 **Question:** If our frontend is a React SPA, do we need to implement CORS (Cross-Origin Resource Sharing) on the API? Does CORS protect our API from hackers?
-**Answer:** You must implement CORS so legitimate browsers can make requests. However, CORS is a *browser* security feature, not an API security feature. It protects the *user*, not the server. An attacker using `curl` or Postman bypasses CORS entirely. Don't rely on CORS to secure your API.
+**Answer:** You must implement CORS so legitimate browsers can make requests. However, CORS is a *browser* security feature, not an API security feature. It protects the *user* from malicious websites, not the server. An attacker using `curl`, Python, or Postman bypasses CORS entirely. Don't rely on CORS to secure your API.
 
 **Question:** We use GraphQL instead of REST. Does that solve our API security issues?
-**Answer:** It actually introduces new ones, bro! GraphQL allows the client to dictate the query depth. An attacker can write a deeply nested query (e.g., `author -> posts -> comments -> author -> posts`) that causes a catastrophic Denial of Service on your database. You must implement Query Depth Limiting and Query Complexity Analysis.
+**Answer:** It actually introduces new ones! GraphQL allows the client to dictate the query depth. An attacker can write a deeply nested query (e.g., `author -> posts -> comments -> author -> posts`) that causes a catastrophic Denial of Service (DoS) on your database. You must implement Query Depth Limiting and Query Complexity Analysis specifically for GraphQL.
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 
-Companies like Stripe and Twilio, whose entire product is an API, treat API security as their core competency. They use **Idempotency Keys** extensively. If your server makes an API call to charge a customer, but the network drops before you get the response, you might retry the request. The Idempotency Key ensures Stripe recognizes it as a retry and doesn't charge the customer twice, preventing both accidental bugs and malicious replay attacks.
+Companies like **Stripe** and **Twilio**, whose entire product is an API, treat API security as their core competency. They use **Idempotency Keys** extensively. If your server makes an API call to charge a customer, but the network drops before you get the response, you might retry the request. The Idempotency Key ensures Stripe recognizes it as a retry and doesn't charge the customer twice, preventing both accidental bugs and malicious replay attacks. They also use sophisticated anomaly detection to automatically ban IP addresses that exhibit brute-forcing behavior.
 
-## 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
-| Validate all incoming data against a strict schema (allow-listing). | Rely on the frontend to validate data before sending it. |
-| Enforce rate limiting on all endpoints, especially authentication/OTP routes. | Allow unlimited requests assuming your infrastructure will scale. |
-| Use UUIDs (v4) for sensitive object IDs (e.g., `/users/d4e5f6...`). | Use sequential integers (`/users/5`), which makes BOLA and scraping trivial. |
-| Implement Idempotency Keys for critical state-changing actions (payments, orders). | Assume network requests will only ever happen once. |
+| **DO** validate all incoming data against a strict schema (allow-listing). | **DON'T** rely on the frontend to validate data before sending it. |
+| **DO** enforce rate limiting on all endpoints, especially authentication/OTP routes. | **DON'T** allow unlimited requests assuming your infrastructure will scale indefinitely. |
+| **DO** use UUIDs (v4) for sensitive object IDs (e.g., `/users/d4e5f6...`). | **DON'T** use sequential integers (`/users/5`), which makes BOLA and data scraping trivial. |
+| **DO** implement Idempotency Keys for critical state-changing actions (payments, orders). | **DON'T** assume network requests will only ever happen exactly once. |
 
-## 13. Production Notes
+## 14. Production Notes
 
 > ⚠️ **Warning on Versioning and Zombie APIs**
-> A massive risk in production is "Zombie APIs". You launch `v2` of your API and secure it perfectly. But you leave `v1` running in the background for "legacy support." Attackers will find `v1`, realize it lacks the new rate limiters, and exploit it. Always have a strict deprecation and sunsetting process for old API versions.
+> A massive risk in production is "Zombie APIs". You launch `v2` of your API and secure it perfectly with new rate limiters and strict RBAC. But you leave `v1` running in the background for "legacy mobile app support." Attackers will actively scan for `v1`, realize it lacks the new security measures, and exploit it to breach the database. Always have a strict deprecation, monitoring, and sunsetting process for old API versions.
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 
 | Mistake | Why it's bad | How to fix it |
 |---|---|---|
-| Exposing Stack Traces | A 500 error that returns a full Java or Node stack trace tells the attacker exactly what libraries and database you are using. | Catch all unhandled exceptions globally and return a generic `{"error": "Internal Server Error"}`. |
-| Insecure HTTP Methods | Using `GET` for state-changing operations allows them to be cached, bookmarked, and subjected to CSRF attacks. | Strictly adhere to REST semantics. Use `POST`, `PUT`, `DELETE` for state changes. |
-| Lacking Pagination Limits | Allows attackers to exhaust server memory and DB CPU. | Hardcode a maximum limit (e.g., `MAX_LIMIT = 100`) in your API handlers, even if the user requests more. |
+| **Exposing Stack Traces** | A 500 error that returns a full Java or Node stack trace tells the attacker exactly what libraries, database, and file structures you are using. | Catch all unhandled exceptions globally and return a generic `{"error": "Internal Server Error"}`. |
+| **Insecure HTTP Methods** | Using `GET` for state-changing operations allows them to be cached by CDNs, bookmarked, and subjected to CSRF attacks. | Strictly adhere to REST semantics. Use `POST`, `PUT`, `PATCH`, `DELETE` for state changes. |
+| **Lacking Pagination Limits** | Allows attackers to exhaust server memory and DB CPU by requesting infinite rows. | Hardcode a maximum limit (e.g., `MAX_LIMIT = 100`) in your API handlers, and enforce it even if the user requests more. |
 
-## 15. Related Topics
+## 16. Related Topics
 - [Authentication Deep Dive](./authentication-deep-dive.mdx)
 - [Authorization & RBAC](./authorization-rbac-abac.mdx)
 - [Threat Modeling](./threat-modeling.mdx)
 
-## 16. Top GitHub Repos
+## 17. Top GitHub Repositories
 
 | Repository | Stars | Description | Why It Matters |
 |---|---|---|---|
 | [OWASP/API-Security](https://github.com/OWASP/API-Security) | ⭐ 3.5k+ | The official OWASP API Security Top 10. | Essential reading. The risks for APIs are distinctly different from traditional web apps. |
-| [colinhacks/zod](https://github.com/colinhacks/zod) | ⭐ 30k+ | TypeScript-first schema validation with static type inference. | The modern standard for validating API input payloads safely and effectively. |
-| [TykTechnologies/tyk](https://github.com/TykTechnologies/tyk) | ⭐ 9k+ | An open source API Gateway. | Shows how rate limiting, quota enforcement, and token validation are handled at the gateway level. |
-| [stripe/stripe-node](https://github.com/stripe/stripe-node) | ⭐ 3.5k+ | Stripe Node.js Library. | Read their code to see how world-class API SDKs implement idempotency and secure retries. |
-| [roapi/roapi](https://github.com/roapi/roapi) | ⭐ 3k+ | Create APIs for static datasets without writing code. | Good reference for seeing how read-only APIs are structured securely. |
+| [colinhacks/zod](https://github.com/colinhacks/zod) | ⭐ 31k+ | TypeScript-first schema validation with static type inference. | The modern standard for validating API input payloads safely and effectively. |
+| [TykTechnologies/tyk](https://github.com/TykTechnologies/tyk) | ⭐ 9.5k+ | An open source API Gateway. | Shows how rate limiting, quota enforcement, and token validation are handled at the gateway level. |
+| [stripe/stripe-node](https://github.com/stripe/stripe-node) | ⭐ 4k+ | Stripe Node.js Library. | Read their code to see how world-class API SDKs implement idempotency and secure retries. |
