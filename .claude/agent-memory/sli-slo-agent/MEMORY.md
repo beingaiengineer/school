@@ -1,6 +1,4 @@
-# Project Memory — SLIs & SLOs Course
-
-This file captures the working agreements, implementation habits, course design, and task queue for the SLIs & SLOs course.
+# Project Execution State — SLIs & SLOs Course
 
 ## Project Goal
 
@@ -27,11 +25,72 @@ Below are the topics that make up this course. This list serves as the structura
 
 ---
 
-## Task Queue
+## Course Status
 
-> **Jules: Pick the first batch of `- [ ]` items (up to 10) under `### Next Task`. If fewer than 10, promote from `### Backlog`.**
+- **Status**: Not Started
+- **Progress**: 0 / 9
+- **Next Milestone**: Complete initial planning
 
-### Next Task
+---
+
+## Health
+
+🟢 Healthy
+- 0% complete
+- Ready for kick-off
+
+---
+
+## Current Focus
+
+Ready for next planning phase.
+
+---
+
+## Execution Board
+
+### TODO
+_Empty_
+
+### IN PROGRESS
+_Empty_
+
+### REVIEW
+_Empty_
+
+### DONE
+_Empty_
+
+---
+
+## Dependencies
+
+No active dependencies.
+
+---
+
+## Blockers
+
+No active blockers.
+
+---
+
+## Lessons Learned
+
+No reusable insights recorded yet.
+
+---
+
+## Metrics
+
+- Lessons Completed: 0
+- Lessons Remaining: 9
+- Completion %: 0.0%
+- Open Tasks: 0
+
+---
+
+## Backlog
 - [ ] [BAE-SLI-001] | Create `sli-slo-sla-explained.mdx`
 - [ ] [BAE-SLI-002] | Create `defining-slis.mdx`
 - [ ] [BAE-SLI-003] | Create `setting-slos.mdx`
@@ -42,9 +101,26 @@ Below are the topics that make up this course. This list serves as the structura
 - [ ] [BAE-SLI-008] | Create `capacity-planning.mdx`
 - [ ] [BAE-SLI-009] | Create `chaos-engineering.mdx`
 
-### Backlog
-_Empty_
+---
 
-### Completed This Cycle
+## Execution Review
+
 | BAE ID | What's Done (High Level) |
 |---|---|
+
+---
+
+## Next Improvements
+
+- [ ] Add diagrams
+- [ ] Improve engineering story
+- [ ] Expand interview questions
+- [ ] Improve SEO
+- [ ] Better analogy
+- [ ] Add benchmarks
+
+---
+
+## Automation State
+
+No automation history yet.

@@ -1,6 +1,4 @@
-# Project Memory — Release & Deployment Course
-
-This file captures the working agreements, implementation habits, course design, and task queue for the Release & Deployment course.
+# Project Execution State — Release & Deployment Course
 
 ## Project Goal
 
@@ -28,11 +26,72 @@ Below are the topics that make up this course. This list serves as the structura
 
 ---
 
-## Task Queue
+## Course Status
 
-> **Jules: Pick the first batch of `- [ ]` items (up to 10) under `### Next Task`. If fewer than 10, promote from `### Backlog`.**
+- **Status**: Not Started
+- **Progress**: 0 / 10
+- **Next Milestone**: Complete initial planning
 
-### Next Task
+---
+
+## Health
+
+🟢 Healthy
+- 0% complete
+- Ready for kick-off
+
+---
+
+## Current Focus
+
+Ready for next planning phase.
+
+---
+
+## Execution Board
+
+### TODO
+_Empty_
+
+### IN PROGRESS
+_Empty_
+
+### REVIEW
+_Empty_
+
+### DONE
+_Empty_
+
+---
+
+## Dependencies
+
+No active dependencies.
+
+---
+
+## Blockers
+
+No active blockers.
+
+---
+
+## Lessons Learned
+
+No reusable insights recorded yet.
+
+---
+
+## Metrics
+
+- Lessons Completed: 0
+- Lessons Remaining: 10
+- Completion %: 0.0%
+- Open Tasks: 0
+
+---
+
+## Backlog
 - [ ] [BAE-REL-001] | Create `deployment-fundamentals.mdx`
 - [ ] [BAE-REL-002] | Create `environments-dev-staging-prod.mdx`
 - [ ] [BAE-REL-003] | Create `deployment-strategies.mdx`
@@ -44,9 +103,26 @@ Below are the topics that make up this course. This list serves as the structura
 - [ ] [BAE-REL-009] | Create `infrastructure-as-code.mdx`
 - [ ] [BAE-REL-010] | Create `terraform-basics.mdx`
 
-### Backlog
-_Empty_
+---
 
-### Completed This Cycle
+## Execution Review
+
 | BAE ID | What's Done (High Level) |
 |---|---|
+
+---
+
+## Next Improvements
+
+- [ ] Add diagrams
+- [ ] Improve engineering story
+- [ ] Expand interview questions
+- [ ] Improve SEO
+- [ ] Better analogy
+- [ ] Add benchmarks
+
+---
+
+## Automation State
+
+No automation history yet.

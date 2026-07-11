@@ -1,6 +1,4 @@
-# Project Memory — API Concepts & FastAPI Course
-
-This file captures the working agreements, implementation habits, course design, and task queue for the API Concepts & FastAPI course.
+# Project Execution State — API Concepts & FastAPI Course
 
 ## Project Goal
 
@@ -30,11 +28,72 @@ Below are the topics that make up this course. This list serves as the structura
 
 ---
 
-## Task Queue
+## Course Status
 
-> **Jules: Pick the first batch of `- [ ]` items (up to 10) under `### Next Task`. If fewer than 10, promote from `### Backlog`.**
+- **Status**: Not Started
+- **Progress**: 0 / 12
+- **Next Milestone**: Complete initial planning
 
-### Next Task
+---
+
+## Health
+
+🟢 Healthy
+- 0% complete
+- Ready for kick-off
+
+---
+
+## Current Focus
+
+Ready for next planning phase.
+
+---
+
+## Execution Board
+
+### TODO
+_Empty_
+
+### IN PROGRESS
+_Empty_
+
+### REVIEW
+_Empty_
+
+### DONE
+_Empty_
+
+---
+
+## Dependencies
+
+No active dependencies.
+
+---
+
+## Blockers
+
+No active blockers.
+
+---
+
+## Lessons Learned
+
+No reusable insights recorded yet.
+
+---
+
+## Metrics
+
+- Lessons Completed: 0
+- Lessons Remaining: 12
+- Completion %: 0.0%
+- Open Tasks: 0
+
+---
+
+## Backlog
 - [ ] [BAE-FAS-001] | Create `what-is-an-api.mdx`
 - [ ] [BAE-FAS-002] | Create `rest-api-design.mdx`
 - [ ] [BAE-FAS-003] | Create `fastapi-fundamentals.mdx`
@@ -45,11 +104,29 @@ Below are the topics that make up this course. This list serves as the structura
 - [ ] [BAE-FAS-008] | Create `middleware-and-cors.mdx`
 - [ ] [BAE-FAS-009] | Create `error-handling-in-apis.mdx`
 - [ ] [BAE-FAS-010] | Create `background-tasks.mdx`
-
-### Backlog
 - [ ] [BAE-FAS-011] | Create `websockets.mdx`
 - [ ] [BAE-FAS-012] | Create `rate-limiting.mdx`
 
-### Completed This Cycle
+---
+
+## Execution Review
+
 | BAE ID | What's Done (High Level) |
 |---|---|
+
+---
+
+## Next Improvements
+
+- [ ] Add diagrams
+- [ ] Improve engineering story
+- [ ] Expand interview questions
+- [ ] Improve SEO
+- [ ] Better analogy
+- [ ] Add benchmarks
+
+---
+
+## Automation State
+
+No automation history yet.

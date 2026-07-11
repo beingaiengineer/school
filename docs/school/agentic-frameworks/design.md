@@ -299,6 +299,6 @@ Each subdirectory must contain a `_category_.json`:
 ```
 
 ## Page Section Template (16 Sections)
-Every page in this course follows the 15-section template from `CLAUDE.md` PLUS one additional section:
+Every page in this course follows the 16-section template from `CONTENT.md` PLUS one additional section:
 
 **Section 16: Top GitHub Repos** — A table of 5–10 top-starred GitHub repos related to the topic, with columns: Repository (linked), Stars, Description, Why It Matters. See `agentic-frameworks-agent.md` for full rules.

@@ -1,6 +1,4 @@
-# Project Memory — OOP & Design Patterns Course
-
-This file captures the working agreements, implementation habits, course design, and task queue for the OOP & Design Patterns course.
+# Project Execution State — OOP & Design Patterns Course
 
 ## Project Goal
 
@@ -27,11 +25,72 @@ Below are the topics that make up this course. This list serves as the structura
 
 ---
 
-## Task Queue
+## Course Status
 
-> **Jules: Pick the first batch of `- [ ]` items (up to 10) under `### Next Task`. If fewer than 10, promote from `### Backlog`.**
+- **Status**: Not Started
+- **Progress**: 0 / 9
+- **Next Milestone**: Complete initial planning
 
-### Next Task
+---
+
+## Health
+
+🟢 Healthy
+- 0% complete
+- Ready for kick-off
+
+---
+
+## Current Focus
+
+Ready for next planning phase.
+
+---
+
+## Execution Board
+
+### TODO
+_Empty_
+
+### IN PROGRESS
+_Empty_
+
+### REVIEW
+_Empty_
+
+### DONE
+_Empty_
+
+---
+
+## Dependencies
+
+No active dependencies.
+
+---
+
+## Blockers
+
+No active blockers.
+
+---
+
+## Lessons Learned
+
+No reusable insights recorded yet.
+
+---
+
+## Metrics
+
+- Lessons Completed: 0
+- Lessons Remaining: 9
+- Completion %: 0.0%
+- Open Tasks: 0
+
+---
+
+## Backlog
 - [ ] [BAE-OOP-001] | Create `oop-in-production.mdx`
 - [ ] [BAE-OOP-002] | Create `classes-and-objects-real-world.mdx`
 - [ ] [BAE-OOP-003] | Create `inheritance-vs-composition.mdx`
@@ -42,9 +101,26 @@ Below are the topics that make up this course. This list serves as the structura
 - [ ] [BAE-OOP-008] | Create `dependency-injection.mdx`
 - [ ] [BAE-OOP-009] | Create `clean-architecture.mdx`
 
-### Backlog
-_Empty_
+---
 
-### Completed This Cycle
+## Execution Review
+
 | BAE ID | What's Done (High Level) |
 |---|---|
+
+---
+
+## Next Improvements
+
+- [ ] Add diagrams
+- [ ] Improve engineering story
+- [ ] Expand interview questions
+- [ ] Improve SEO
+- [ ] Better analogy
+- [ ] Add benchmarks
+
+---
+
+## Automation State
+
+No automation history yet.

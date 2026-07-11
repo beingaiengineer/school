@@ -1,6 +1,4 @@
-# Project Memory — Software Testing Course
-
-This file captures the working agreements, implementation habits, course design, and task queue for the Software Testing course.
+# Project Execution State — Software Testing Course
 
 ## Project Goal
 
@@ -28,11 +26,72 @@ Below are the topics that make up this course. This list serves as the structura
 
 ---
 
-## Task Queue
+## Course Status
 
-> **Jules: Pick the first batch of `- [ ]` items (up to 10) under `### Next Task`. If fewer than 10, promote from `### Backlog`.**
+- **Status**: Not Started
+- **Progress**: 0 / 10
+- **Next Milestone**: Complete initial planning
 
-### Next Task
+---
+
+## Health
+
+🟢 Healthy
+- 0% complete
+- Ready for kick-off
+
+---
+
+## Current Focus
+
+Ready for next planning phase.
+
+---
+
+## Execution Board
+
+### TODO
+_Empty_
+
+### IN PROGRESS
+_Empty_
+
+### REVIEW
+_Empty_
+
+### DONE
+_Empty_
+
+---
+
+## Dependencies
+
+No active dependencies.
+
+---
+
+## Blockers
+
+No active blockers.
+
+---
+
+## Lessons Learned
+
+No reusable insights recorded yet.
+
+---
+
+## Metrics
+
+- Lessons Completed: 0
+- Lessons Remaining: 10
+- Completion %: 0.0%
+- Open Tasks: 0
+
+---
+
+## Backlog
 - [ ] [BAE-SOF-001] | Create `testing-pyramid.mdx`
 - [ ] [BAE-SOF-002] | Create `unit-testing-with-pytest.mdx`
 - [ ] [BAE-SOF-003] | Create `pytest-fixtures-and-parametrize.mdx`
@@ -44,9 +103,26 @@ Below are the topics that make up this course. This list serves as the structura
 - [ ] [BAE-SOF-009] | Create `load-testing.mdx`
 - [ ] [BAE-SOF-010] | Create `testing-best-practices.mdx`
 
-### Backlog
-_Empty_
+---
 
-### Completed This Cycle
+## Execution Review
+
 | BAE ID | What's Done (High Level) |
 |---|---|
+
+---
+
+## Next Improvements
+
+- [ ] Add diagrams
+- [ ] Improve engineering story
+- [ ] Expand interview questions
+- [ ] Improve SEO
+- [ ] Better analogy
+- [ ] Add benchmarks
+
+---
+
+## Automation State
+
+No automation history yet.

@@ -1,6 +1,4 @@
-# Project Memory — Agentic Frameworks Course
-
-This file captures the working agreements, implementation habits, and task queue for the Agentic Frameworks course.
+# Project Execution State — Agentic Frameworks Course
 
 ## Project Goal
 
@@ -14,39 +12,46 @@ The content should teach AI agent engineering in a practical, engineering-focuse
 
 ---
 
-## Research Requirements
+## Course Design & Outline
 
-For every framework deep-dive, the content must be backed by:
-- **Official docs review**: Read the framework's official documentation
-- **GitHub analysis**: Stars, contributors, release cadence, open issues
-- **Community sentiment**: Reddit, HackerNews, Discord feedback
-- **Production case studies**: Real companies using it at scale
-- **Comparison context**: How it stacks against alternatives
-
-Do NOT write generic "feature list" pages. Write opinionated, engineer-to-engineer analysis.
+Outline not defined.
 
 ---
 
-## React Flow Diagram Guidelines
+## Course Status
 
-Same as the Python course — use the `<LearningFlow>` component:
-- Component path: `src/components/LearningFlow/index.tsx`
-- Styles: `src/components/LearningFlow/styles.module.css`
-
-For agentic framework topics, diagrams should focus on:
-- Agent loop lifecycles (think → act → observe)
-- Multi-agent communication flows
-- Tool invocation pipelines
-- State machine graphs
-- Protocol handshakes (MCP client-server, A2A agent cards)
+- **Status**: In Progress
+- **Progress**: 147 / 175
+- **Next Milestone**: Publish next batch
 
 ---
 
-## Task Queue
+## Health
 
-> **Jules: Pick the first batch of `- [ ]` items (up to 10) under `### Next Task`. If fewer than 10, promote from `### Backlog`.**
+🔵 In Progress
+- 84% complete
+- On track
 
-### Next Task
+---
+
+## Current Focus
+
+Ready for next planning phase.
+
+---
+
+## Execution Board
+
+### TODO
+_Empty_
+
+### IN PROGRESS
+_Empty_
+
+### REVIEW
+_Empty_
+
+### DONE
 - [x] [BAE-AF-001] | Create `_category_.json` files for all 17 categories
 - [x] [BAE-AF-002] | Create `intro/what-are-ai-agents.mdx`
 - [x] [BAE-AF-003] | Create `intro/agent-vs-chatbot-vs-rag.mdx`
@@ -87,7 +92,6 @@ For agentic framework topics, diagrams should focus on:
 - [x] [BAE-AF-038] | Create `openai-agents-sdk/openai-sdk-production-deployment.mdx`
 - [x] [BAE-AF-039] | Create `google-adk/google-adk-fundamentals.mdx`
 - [x] [BAE-AF-040] | Create `google-adk/google-adk-tools-and-functions.mdx`
-
 - [x] [BAE-AF-041] | Create `google-adk/google-adk-multi-agent-orchestration.mdx`
 - [x] [BAE-AF-042] | Create `google-adk/google-adk-sessions-and-state.mdx`
 - [x] [BAE-AF-043] | Create `google-adk/google-adk-callbacks-and-hooks.mdx`
@@ -98,7 +102,6 @@ For agentic framework topics, diagrams should focus on:
 - [x] [BAE-AF-048] | Create `autogen/autogen-code-execution.mdx`
 - [x] [BAE-AF-049] | Create `autogen/autogen-production-deployment.mdx`
 - [x] [BAE-AF-050] | Create `pydantic-ai/pydantic-ai-fundamentals.mdx`
-
 - [x] [BAE-AF-051] | Create `pydantic-ai/pydantic-ai-type-safe-agents.mdx`
 - [x] [BAE-AF-052] | Create `pydantic-ai/pydantic-ai-tools-and-dependencies.mdx`
 - [x] [BAE-AF-053] | Create `pydantic-ai/pydantic-ai-structured-output.mdx`
@@ -109,7 +112,6 @@ For agentic framework topics, diagrams should focus on:
 - [x] [BAE-AF-058] | Create `semantic-kernel/semantic-kernel-memory-and-embeddings.mdx`
 - [x] [BAE-AF-059] | Create `semantic-kernel/semantic-kernel-production-deployment.mdx`
 - [x] [BAE-AF-060] | Create `emerging-frameworks/smolagents-huggingface.mdx`
-
 - [x] [BAE-AF-081] | Create `memory-and-state/long-term-memory-persistence.mdx`
 - [x] [BAE-AF-082] | Create `memory-and-state/vector-store-memory.mdx`
 - [x] [BAE-AF-083] | Create `memory-and-state/conversation-management.mdx`
@@ -119,17 +121,6 @@ For agentic framework topics, diagrams should focus on:
 - [x] [BAE-AF-087] | Create `tools-and-actions/api-tools-rest-graphql.mdx`
 - [x] [BAE-AF-088] | Create `tools-and-actions/database-tools.mdx`
 - [x] [BAE-AF-089] | Create `tools-and-actions/code-execution-sandboxes.mdx`
-- [ ] [BAE-AF-090] | Create `tools-and-actions/tool-error-handling-and-retries.mdx`
-
-### Backlog
-
-#### Batch 4 — CrewAI + OpenAI SDK
-
-#### Batch 5 — Google ADK + AutoGen
-
-#### Batch 6 — Pydantic AI + Semantic Kernel
-
-#### Batch 7 — Emerging Frameworks
 - [x] [BAE-AF-061] | Create `emerging-frameworks/agno-formerly-phidata.mdx`
 - [x] [BAE-AF-062] | Create `emerging-frameworks/llamaindex-agents-and-workflows.mdx`
 - [x] [BAE-AF-063] | Create `emerging-frameworks/haystack-agents.mdx`
@@ -140,8 +131,106 @@ For agentic framework topics, diagrams should focus on:
 - [x] [BAE-AF-068] | Create `protocols/mcp-popular-servers.mdx`
 - [x] [BAE-AF-069] | Create `protocols/mcp-server-development.mdx`
 - [x] [BAE-AF-070] | Create `protocols/a2a-protocol-deep-dive.mdx`
+- [x] LangGraph Memory (langchain-langgraph/langgraph-memory.mdx)
+- [x] LangGraph Human in Loop (langchain-langgraph/langgraph-human-in-loop.mdx)
+- [x] LangGraph Multi-Agent (langchain-langgraph/langgraph-multi-agent.mdx)
+- [x] LangSmith Observability (langchain-langgraph/langsmith-observability.mdx)
+- [x] LangGraph Production (langchain-langgraph/langgraph-production-deployment.mdx)
+- [x] CrewAI Fundamentals (crewai/crewai-fundamentals.mdx)
+- [x] CrewAI Agents & Roles (crewai/crewai-agents-and-roles.mdx)
+- [x] CrewAI Tasks & Tools (crewai/crewai-tasks-and-processes.mdx)
+- [x] CrewAI Flows (crewai/crewai-flows-and-pipelines.mdx)
+- [x] CrewAI Memory (crewai/crewai-memory-system.mdx)
+- [x] CrewAI Multi-Agent (crewai/crewai-multi-agent-crews.mdx)
+- [x] CrewAI Production (crewai/crewai-production-deployment.mdx)
+- [x] OpenAI SDK Fundamentals (openai-agents-sdk/openai-sdk-fundamentals.mdx)
+- [x] OpenAI SDK Tools (openai-agents-sdk/openai-sdk-tools-and-functions.mdx)
+- [x] OpenAI SDK Handoffs (openai-agents-sdk/openai-sdk-handoffs.mdx)
+- [x] OpenAI SDK Guardrails (openai-agents-sdk/openai-sdk-guardrails.mdx)
+- [x] OpenAI SDK Tracing (openai-agents-sdk/openai-sdk-tracing.mdx)
+- [x] OpenAI SDK Production (openai-agents-sdk/openai-sdk-production-deployment.mdx)
+- [x] Google ADK Fundamentals (google-adk/google-adk-fundamentals.mdx)
+- [x] Google ADK Tools (google-adk/google-adk-tools-and-functions.mdx)
+- [x] Google ADK Multi-Agent (google-adk/google-adk-multi-agent-orchestration.mdx)
+- [x] Google ADK Sessions (google-adk/google-adk-sessions-and-state.mdx)
+- [x] Google ADK Callbacks (google-adk/google-adk-callbacks-and-hooks.mdx)
+- [x] Google ADK Production (google-adk/google-adk-production-deployment.mdx)
+- [x] AutoGen Fundamentals (autogen/autogen-fundamentals.mdx)
+- [x] AutoGen Agents (autogen/autogen-conversable-agents.mdx)
+- [x] AutoGen Group Chat (autogen/autogen-group-chat-patterns.mdx)
+- [x] AutoGen Code Execution (autogen/autogen-code-execution.mdx)
+- [x] AutoGen Production (autogen/autogen-production-deployment.mdx)
+- [x] Pydantic AI Fundamentals (pydantic-ai/pydantic-ai-fundamentals.mdx)
+- [x] Pydantic AI Type Safety (pydantic-ai/pydantic-ai-type-safe-agents.mdx)
+- [x] Pydantic AI Tools (pydantic-ai/pydantic-ai-tools-and-dependencies.mdx)
+- [x] Pydantic AI Structured Output (pydantic-ai/pydantic-ai-structured-output.mdx)
+- [x] Pydantic AI Production (pydantic-ai/pydantic-ai-production-deployment.mdx)
+- [x] Semantic Kernel Fundamentals (semantic-kernel/semantic-kernel-fundamentals.mdx)
+- [x] Semantic Kernel Plugins (semantic-kernel/semantic-kernel-plugins-and-functions.mdx)
+- [x] Semantic Kernel Planners (semantic-kernel/semantic-kernel-planners.mdx)
+- [x] Semantic Kernel Memory (semantic-kernel/semantic-kernel-memory-and-embeddings.mdx)
+- [x] Semantic Kernel Production (semantic-kernel/semantic-kernel-production-deployment.mdx)
+- [x] Smolagents (emerging-frameworks/smolagents-huggingface.mdx)
+- [x] Agno (emerging-frameworks/agno-formerly-phidata.mdx)
+- [x] LlamaIndex Agents (emerging-frameworks/llamaindex-agents-and-workflows.mdx)
+- [x] Haystack Agents (emerging-frameworks/haystack-agents.mdx)
+- [x] Mastra (emerging-frameworks/mastra-typescript-agents.mdx)
+- [x] Camel AI (emerging-frameworks/camel-ai.mdx)
+- [x] MetaGPT (emerging-frameworks/metagpt.mdx)
+- [x] MCP Protocol (protocols/mcp-protocol-deep-dive.mdx)
+- [x] MCP Servers (protocols/mcp-popular-servers.mdx)
+- [x] MCP Building Servers (protocols/mcp-server-development.mdx)
+- [x] A2A Protocol (protocols/a2a-protocol-deep-dive.mdx)
+- [x] A2A Agent Cards (protocols/a2a-agent-cards.mdx)
+- [x] MCP vs A2A (protocols/mcp-vs-a2a-when-to-use.mdx)
+- [x] Multi-Agent Patterns (multi-agent-systems/multi-agent-patterns-overview.mdx)
+- [x] Orchestrator Worker (multi-agent-systems/orchestrator-worker-pattern.mdx)
+- [x] Supervisor Pattern (multi-agent-systems/supervisor-pattern.mdx)
+- [x] Hierarchical Agents (multi-agent-systems/hierarchical-agent-teams.mdx)
+- [x] Agent Communication (multi-agent-systems/agent-communication-protocols.mdx)
+- [x] Multi-Agent Debugging (multi-agent-systems/multi-agent-debugging.mdx)
+- [x] Agent Memory Types (memory-and-state/agent-memory-types-overview.mdx)
+- [x] Short-Term Memory (memory-and-state/short-term-memory-context-window.mdx)
+- [x] Vector Store Memory (memory-and-state/vector-store-memory.mdx)
+- [x] Conversation Management (memory-and-state/conversation-management.mdx)
+- [x] State Persistence (memory-and-state/state-persistence-and-checkpointing.mdx)
+- [x] Tool Design Principles (tools-and-actions/tool-design-principles.mdx)
+- [x] Function Calling (tools-and-actions/function-calling-deep-dive.mdx)
+- [x] API Tools (tools-and-actions/api-tools-rest-graphql.mdx)
+- [x] Database Tools (tools-and-actions/database-tools.mdx)
+- [x] Tool Error Handling (tools-and-actions/tool-error-handling-and-retries.mdx)
 
-#### Batch 8 — Protocols + Multi-Agent
+---
+
+## Dependencies
+
+No active dependencies.
+
+---
+
+## Blockers
+
+No active blockers.
+
+---
+
+## Lessons Learned
+
+No reusable insights recorded yet.
+
+---
+
+## Metrics
+
+- Lessons Completed: 147
+- Lessons Remaining: 28
+- Completion %: 84.0%
+- Open Tasks: 0
+
+---
+
+## Backlog
+- [ ] [BAE-AF-090] | Create `tools-and-actions/tool-error-handling-and-retries.mdx`
 - [ ] [BAE-AF-071] | Create `protocols/a2a-agent-cards.mdx`
 - [ ] [BAE-AF-072] | Create `protocols/mcp-vs-a2a-when-to-use.mdx`
 - [ ] [BAE-AF-073] | Create `multi-agent-systems/multi-agent-patterns-overview.mdx`
@@ -162,12 +251,6 @@ For agentic framework topics, diagrams should focus on:
 - [ ] [BAE-AF-088] | Create `tools-and-actions/database-tools.mdx`
 - [ ] [BAE-AF-089] | Create `tools-and-actions/code-execution-sandboxes.mdx`
 - [ ] [BAE-AF-090] | Create `tools-and-actions/tool-error-handling-and-retries.mdx`
-
-#### Batch 9 — Memory + Tools
-
-#### Batch 10 — Production
-
-#### Batch 11 — Interview Prep + Best Practices
 - [ ] [BAE-AF-101] | Create `interview-prep/agent-coding-rounds.mdx`
 - [ ] [BAE-AF-102] | Create `interview-prep/agent-system-design.mdx`
 - [ ] [BAE-AF-103] | Create `best-practices/framework-selection-guide.mdx`
@@ -176,7 +259,10 @@ For agentic framework topics, diagrams should focus on:
 - [ ] [BAE-AF-106] | Create `best-practices/agent-anti-patterns.mdx`
 - [ ] [BAE-AF-107] | Create `best-practices/future-of-agents.mdx`
 
-### Completed This Cycle
+---
+
+## Execution Review
+
 | BAE ID | What's Done (High Level) |
 |---|---|
 | `[BAE-AF-1]` | Created intro categories and first 9 concepts including ReAct pattern. |
@@ -189,146 +275,20 @@ For agentic framework topics, diagrams should focus on:
 | `[BAE-AF-081 to BAE-AF-090]` | Created memory persistence concepts and tool/action design principles. |
 
 | `[BAE-AF-071 to BAE-AF-080]` | Created Protocols and Multi-Agent Systems concepts. |
+
 ---
 
-# Course Roadmap & Progress
+## Next Improvements
 
-## 1. Intro
-- [ ] What Are AI Agents (intro/what-are-ai-agents.mdx)
-- [ ] Agent vs Chatbot (intro/agent-vs-chatbot-vs-rag.mdx)
-- [ ] Anatomy of an Agent (intro/anatomy-of-an-agent.mdx)
-- [ ] Agent Types (intro/agent-types-and-taxonomies.mdx)
-- [ ] How Agents Think (intro/how-agents-think.mdx)
-- [ ] Agent Ecosystem Landscape (intro/agent-ecosystem-landscape-2026.mdx)
-- [ ] Choosing a Framework (intro/choosing-a-framework.mdx)
-- [ ] Your First Agent (intro/your-first-agent.mdx)
+- [ ] Add diagrams
+- [ ] Improve engineering story
+- [ ] Expand interview questions
+- [ ] Improve SEO
+- [ ] Better analogy
+- [ ] Add benchmarks
 
-## 2. Architecture Patterns
-- [ ] ReAct Pattern (architecture-patterns/react-pattern.mdx)
-- [ ] Plan and Execute (architecture-patterns/plan-and-execute.mdx)
-- [ ] Reflection Pattern (architecture-patterns/reflection-and-reflexion.mdx)
-- [ ] Tool Use Pattern (architecture-patterns/tool-use-pattern.mdx)
-- [ ] Routing Pattern (architecture-patterns/routing-pattern.mdx)
-- [ ] Parallelization Pattern (architecture-patterns/parallelization-pattern.mdx)
-- [ ] Human in the Loop (architecture-patterns/human-in-the-loop.mdx)
-- [ ] Agent Architectures Compared (architecture-patterns/agent-architectures-compared.mdx)
+---
 
-## 3. LangChain & LangGraph
-- [ ] LangChain Fundamentals (langchain-langgraph/langchain-fundamentals.mdx)
-- [ ] LangGraph Intro (langchain-langgraph/langgraph-intro.mdx)
-- [ ] LangGraph State Machines (langchain-langgraph/langgraph-state-machines.mdx)
-- [x] LangGraph Memory (langchain-langgraph/langgraph-memory.mdx)
-- [x] LangGraph Human in Loop (langchain-langgraph/langgraph-human-in-loop.mdx)
-- [x] LangGraph Multi-Agent (langchain-langgraph/langgraph-multi-agent.mdx)
-- [x] LangSmith Observability (langchain-langgraph/langsmith-observability.mdx)
-- [x] LangGraph Production (langchain-langgraph/langgraph-production-deployment.mdx)
+## Automation State
 
-## 4. CrewAI
-- [x] CrewAI Fundamentals (crewai/crewai-fundamentals.mdx)
-- [x] CrewAI Agents & Roles (crewai/crewai-agents-and-roles.mdx)
-- [x] CrewAI Tasks & Tools (crewai/crewai-tasks-and-processes.mdx)
-- [x] CrewAI Flows (crewai/crewai-flows-and-pipelines.mdx)
-- [x] CrewAI Memory (crewai/crewai-memory-system.mdx)
-- [x] CrewAI Multi-Agent (crewai/crewai-multi-agent-crews.mdx)
-- [x] CrewAI Production (crewai/crewai-production-deployment.mdx)
-
-## 5. OpenAI Agents SDK
-- [x] OpenAI SDK Fundamentals (openai-agents-sdk/openai-sdk-fundamentals.mdx)
-- [x] OpenAI SDK Tools (openai-agents-sdk/openai-sdk-tools-and-functions.mdx)
-- [x] OpenAI SDK Handoffs (openai-agents-sdk/openai-sdk-handoffs.mdx)
-- [x] OpenAI SDK Guardrails (openai-agents-sdk/openai-sdk-guardrails.mdx)
-- [x] OpenAI SDK Tracing (openai-agents-sdk/openai-sdk-tracing.mdx)
-- [x] OpenAI SDK Production (openai-agents-sdk/openai-sdk-production-deployment.mdx)
-
-## 6. Google ADK
-- [x] Google ADK Fundamentals (google-adk/google-adk-fundamentals.mdx)
-- [x] Google ADK Tools (google-adk/google-adk-tools-and-functions.mdx)
-- [x] Google ADK Multi-Agent (google-adk/google-adk-multi-agent-orchestration.mdx)
-- [x] Google ADK Sessions (google-adk/google-adk-sessions-and-state.mdx)
-- [x] Google ADK Callbacks (google-adk/google-adk-callbacks-and-hooks.mdx)
-- [x] Google ADK Production (google-adk/google-adk-production-deployment.mdx)
-
-## 7. AutoGen
-- [x] AutoGen Fundamentals (autogen/autogen-fundamentals.mdx)
-- [x] AutoGen Agents (autogen/autogen-conversable-agents.mdx)
-- [x] AutoGen Group Chat (autogen/autogen-group-chat-patterns.mdx)
-- [x] AutoGen Code Execution (autogen/autogen-code-execution.mdx)
-- [x] AutoGen Production (autogen/autogen-production-deployment.mdx)
-
-## 8. Pydantic AI
-- [x] Pydantic AI Fundamentals (pydantic-ai/pydantic-ai-fundamentals.mdx)
-- [x] Pydantic AI Type Safety (pydantic-ai/pydantic-ai-type-safe-agents.mdx)
-- [x] Pydantic AI Tools (pydantic-ai/pydantic-ai-tools-and-dependencies.mdx)
-- [x] Pydantic AI Structured Output (pydantic-ai/pydantic-ai-structured-output.mdx)
-- [x] Pydantic AI Production (pydantic-ai/pydantic-ai-production-deployment.mdx)
-
-## 9. Semantic Kernel
-- [x] Semantic Kernel Fundamentals (semantic-kernel/semantic-kernel-fundamentals.mdx)
-- [x] Semantic Kernel Plugins (semantic-kernel/semantic-kernel-plugins-and-functions.mdx)
-- [x] Semantic Kernel Planners (semantic-kernel/semantic-kernel-planners.mdx)
-- [x] Semantic Kernel Memory (semantic-kernel/semantic-kernel-memory-and-embeddings.mdx)
-- [x] Semantic Kernel Production (semantic-kernel/semantic-kernel-production-deployment.mdx)
-
-## 10. Emerging Frameworks
-- [x] Smolagents (emerging-frameworks/smolagents-huggingface.mdx)
-- [x] Agno (emerging-frameworks/agno-formerly-phidata.mdx)
-- [x] LlamaIndex Agents (emerging-frameworks/llamaindex-agents-and-workflows.mdx)
-- [x] Haystack Agents (emerging-frameworks/haystack-agents.mdx)
-- [x] Mastra (emerging-frameworks/mastra-typescript-agents.mdx)
-- [x] Camel AI (emerging-frameworks/camel-ai.mdx)
-- [x] MetaGPT (emerging-frameworks/metagpt.mdx)
-
-## 11. Protocols
-- [x] MCP Protocol (protocols/mcp-protocol-deep-dive.mdx)
-- [x] MCP Servers (protocols/mcp-popular-servers.mdx)
-- [x] MCP Building Servers (protocols/mcp-server-development.mdx)
-- [x] A2A Protocol (protocols/a2a-protocol-deep-dive.mdx)
-- [x] A2A Agent Cards (protocols/a2a-agent-cards.mdx)
-- [x] MCP vs A2A (protocols/mcp-vs-a2a-when-to-use.mdx)
-
-## 12. Multi-Agent Systems
-- [x] Multi-Agent Patterns (multi-agent-systems/multi-agent-patterns-overview.mdx)
-- [x] Orchestrator Worker (multi-agent-systems/orchestrator-worker-pattern.mdx)
-- [x] Supervisor Pattern (multi-agent-systems/supervisor-pattern.mdx)
-- [x] Hierarchical Agents (multi-agent-systems/hierarchical-agent-teams.mdx)
-- [x] Agent Communication (multi-agent-systems/agent-communication-protocols.mdx)
-- [x] Multi-Agent Debugging (multi-agent-systems/multi-agent-debugging.mdx)
-
-## 13. Memory & State
-- [x] Agent Memory Types (memory-and-state/agent-memory-types-overview.mdx)
-- [x] Short-Term Memory (memory-and-state/short-term-memory-context-window.mdx)
-- [ ] Long-Term Memory (memory-and-state/long-term-memory-persistence.mdx)
-- [x] Vector Store Memory (memory-and-state/vector-store-memory.mdx)
-- [x] Conversation Management (memory-and-state/conversation-management.mdx)
-- [x] State Persistence (memory-and-state/state-persistence-and-checkpointing.mdx)
-
-## 14. Tools & Actions
-- [x] Tool Design Principles (tools-and-actions/tool-design-principles.mdx)
-- [x] Function Calling (tools-and-actions/function-calling-deep-dive.mdx)
-- [x] API Tools (tools-and-actions/api-tools-rest-graphql.mdx)
-- [x] Database Tools (tools-and-actions/database-tools.mdx)
-- [ ] Code Execution Tools (tools-and-actions/code-execution-sandboxes.mdx)
-- [x] Tool Error Handling (tools-and-actions/tool-error-handling-and-retries.mdx)
-
-## 15. Production
-- [ ] Agent Evaluation (production/agent-evaluation-frameworks.mdx)
-- [ ] Agent Observability (production/agent-observability-and-tracing.mdx)
-- [ ] Agent Guardrails (production/agent-guardrails-and-safety.mdx)
-- [ ] Agent Security (production/agent-security-threats.mdx)
-- [ ] Agent Cost Optimization (production/agent-cost-optimization.mdx)
-- [ ] Agent Deployment (production/agent-deployment-patterns.mdx)
-- [ ] Agent Scaling (production/agent-scaling-strategies.mdx)
-
-## 16. Interview Prep
-- [ ] Agent Interview Questions (interview-prep/agent-interview-questions.mdx)
-- [ ] Framework Comparison Questions (interview-prep/framework-comparison-questions.mdx)
-- [ ] Agent Design Rounds (interview-prep/agent-design-rounds.mdx)
-- [ ] Agent Coding Rounds (interview-prep/agent-coding-rounds.mdx)
-- [ ] Agent System Design (interview-prep/agent-system-design.mdx)
-
-## 17. Best Practices
-- [ ] Framework Selection Guide (best-practices/framework-selection-guide.mdx)
-- [ ] Agent Design Patterns (best-practices/agent-design-patterns.mdx)
-- [ ] Agent Testing (best-practices/agent-testing.mdx)
-- [ ] Agent Anti-Patterns (best-practices/agent-anti-patterns.mdx)
-- [ ] Future of Agents (best-practices/future-of-agents.mdx)
+No automation history yet.

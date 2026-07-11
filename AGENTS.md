@@ -13,7 +13,7 @@ Any autonomous agent (Jules, Paperclip, etc.) operating in this repository must 
 2. **`SOUL.md`** — Teaching philosophy, voice, and Indian analogies.
 3. **`HEARTBEAT.md`** — Execution checklist for every session.
 4. **`TOOLS.md`** — Tool knowledge and stack context.
-5. **`CONTENT.md`** — The 15-section lesson template, diagram rules, and code standards.
+5. **`CONTENT.md`** — The 16-section lesson template, diagram rules, and code standards.
 6. **`DESIGN.md`** — UI tokens, layout, and components.
 7. **`QUALITY.md`** — Validation gates, thresholds, and checklists.
 8. **`<Agent-Specific>.md`** (e.g. `CLAUDE.md`, `JULES.md`) — Rules for the specific AI agent.

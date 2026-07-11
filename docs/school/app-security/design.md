@@ -21,7 +21,7 @@ The course must be organized under `docs/school/app-security/`.
 
 ## Content Requirements
 
-Every topic page must follow the global BAE School 15-section template in `CLAUDE.md`, the platform voice in `soul.md`, and the course-specific rules in `.claude/agents/app-security-agent.md`.
+Every topic page must follow the global BAE School 16-section template in `CONTENT.md`, the platform voice in `SOUL.md`, and the course-specific rules in `.claude/agents/app-security-agent.md`.
 
 Each page must also include the course-specific `## Top GitHub Repos` section required by the agent instructions.
 

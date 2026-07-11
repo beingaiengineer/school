@@ -1,6 +1,4 @@
-# Project Memory — Requirements & Estimation Course
-
-This file captures the working agreements, implementation habits, course design, and task queue for the Requirements & Estimation course.
+# Project Execution State — Requirements & Estimation Course
 
 ## Project Goal
 
@@ -28,11 +26,72 @@ Below are the topics that make up this course. This list serves as the structura
 
 ---
 
-## Task Queue
+## Course Status
 
-> **Jules: Pick the first batch of `- [ ]` items (up to 10) under `### Next Task`. If fewer than 10, promote from `### Backlog`.**
+- **Status**: Not Started
+- **Progress**: 0 / 10
+- **Next Milestone**: Complete initial planning
 
-### Next Task
+---
+
+## Health
+
+🟢 Healthy
+- 0% complete
+- Ready for kick-off
+
+---
+
+## Current Focus
+
+Ready for next planning phase.
+
+---
+
+## Execution Board
+
+### TODO
+_Empty_
+
+### IN PROGRESS
+_Empty_
+
+### REVIEW
+_Empty_
+
+### DONE
+_Empty_
+
+---
+
+## Dependencies
+
+No active dependencies.
+
+---
+
+## Blockers
+
+No active blockers.
+
+---
+
+## Lessons Learned
+
+No reusable insights recorded yet.
+
+---
+
+## Metrics
+
+- Lessons Completed: 0
+- Lessons Remaining: 10
+- Completion %: 0.0%
+- Open Tasks: 0
+
+---
+
+## Backlog
 - [ ] [BAE-REQ-001] | Create `requirement-gathering.mdx`
 - [ ] [BAE-REQ-002] | Create `product-requirement-documents.mdx`
 - [ ] [BAE-REQ-003] | Create `writing-user-stories.mdx`
@@ -44,9 +103,26 @@ Below are the topics that make up this course. This list serves as the structura
 - [ ] [BAE-REQ-009] | Create `writing-rfcs.mdx`
 - [ ] [BAE-REQ-010] | Create `architecture-decision-records.mdx`
 
-### Backlog
-_Empty_
+---
 
-### Completed This Cycle
+## Execution Review
+
 | BAE ID | What's Done (High Level) |
 |---|---|
+
+---
+
+## Next Improvements
+
+- [ ] Add diagrams
+- [ ] Improve engineering story
+- [ ] Expand interview questions
+- [ ] Improve SEO
+- [ ] Better analogy
+- [ ] Add benchmarks
+
+---
+
+## Automation State
+
+No automation history yet.

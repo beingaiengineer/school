@@ -5,7 +5,7 @@ This file contains rules specifically for the Claude AI agent operating within t
 For all other repository instructions, refer to the following canonical sources:
 - **`AGENTS.md`**: Bootstrap sequence, repository workflow, and Git/PR conventions.
 - **`SOUL.md`**: Teaching philosophy, voice ("bro"), and Indian analogies.
-- **`CONTENT.md`**: The 15-section lesson template, diagram rules, and code standards.
+- **`CONTENT.md`**: The 16-section lesson template, diagram rules, and code standards.
 - **`DESIGN.md`**: UI tokens, layout, and components.
 - **`QUALITY.md`**: Validation gates, thresholds, and checklists.
 

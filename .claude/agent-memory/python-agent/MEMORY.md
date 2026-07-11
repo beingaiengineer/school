@@ -1,6 +1,4 @@
-# Project Memory
-
-This file captures the working agreements and implementation habits for future sessions on this repo.
+# Project Execution State — Course
 
 ## Project Goal
 
@@ -15,216 +13,221 @@ The content should teach technology topics (starting with Python) in a practical
 
 ---
 
-## Python Topic Page Structure
+## Course Design & Outline
 
-Each Python topic page should follow the required 15-section structure:
-1. Quick Summary
-2. Real-World Analogy
-3. Concept Explanation
-4. Syntax Table
-5. Beginner Example
-6. Real-World Engineering Example
-7. Internal Working
-8. Performance Table
-9. Top Interview Questions
-10. Tricky Questions & Edge Cases
-11. Real-World Usage
-12. Best Practices
-13. Production Notes
-14. Common Mistakes
-15. Related Topics
+Outline not defined.
 
 ---
 
-## Tone Habit
+## Course Status
 
-Use a natural "bro" mentor feel.
-
-Good:
-- "Bro, this is where Python shines in real teams."
-- "Bro, explain references before saying mutable."
-
-Avoid:
-- using "bro" in every sentence
-- sounding cringe
-- sounding robotic
-- academic filler
-
-The tone should be friendly, practical, confident, and engineering-focused.
+- **Status**: In Progress
+- **Progress**: 143 / 286
+- **Next Milestone**: Publish next batch
 
 ---
 
-## Content Quality Habit
+## Health
 
-For every topic:
-- explain why, not just how
-- use tables
-- include code
-- include real-world engineering examples
-- include performance notes
-- include production notes
-- include interview traps
-- include common mistakes
-- keep sections concise
+🔵 In Progress
+- 50% complete
+- On track
 
 ---
 
-## React Flow Diagram Habit
+## Current Focus
 
-The user does not want all diagrams to look the same.
-
-**MANDATORY:** React Flow diagrams must be included on every single page and concept. They must be highly unique, clean, and use real-world examples/analogies to make the concepts incredibly easy to understand.
-
-React Flow diagrams must be topic-specific.
-
-Use the official React Flow concepts:
-- nodes represent real concepts
-- handles show connection points
-- edges show relationships
-- labels explain transitions
-- different layouts should match the topic
-- use different node kinds and edge types where useful
-
-Current reusable component paths:
-- [LearningFlow/index.tsx](../../../src/components/LearningFlow/index.tsx)
-- [LearningFlow/styles.module.css](../../../src/components/LearningFlow/styles.module.css)
-
-It supports:
-- custom node positions
-- node kinds: `core`, `process`, `data`, `tool`, `warning`, `output`
-- labelled edges
-- edge types: `default`, `smoothstep`, `step`, `straight`
-- arrows
-- optional minimap
-
-Do not use the old generic `steps` style for important diagrams unless the topic is truly linear.
-
-Examples already implemented:
-- `what-is-python.mdx`: hub-and-spoke ecosystem
-- `setup-python.mdx`: environment isolation
-- `python-execution-flow.mdx`: parser/bytecode/runtime branching
-- `first-python-program.mdx`: feedback loop
+Ready for next planning phase.
 
 ---
 
-## Interview Prep Habit
+## Execution Board
 
-The user wants interview prep to be serious and code-heavy.
+### TODO
+_Empty_
 
-There is an interactive quiz component:
-- [PythonInterviewPrep/index.tsx](../../../src/components/PythonInterviewPrep/index.tsx)
-- stores progress in browser `localStorage`
-- validates answers
-- explains correct answers
+### IN PROGRESS
+_Empty_
 
-There is also a cheat sheet table component:
-- [InterviewCheatSheet/index.tsx](../../../src/components/InterviewCheatSheet/index.tsx)
-- [InterviewCheatSheet/styles.module.css](../../../src/components/InterviewCheatSheet/styles.module.css)
+### REVIEW
+_Empty_
 
-Required table shape:
-| Question / Example Question | Answer | Explanation & Tricks |
-|---|---|---|
-
-Important correction:
-- The user rejected generated/repetitive concept tables.
-- The "Top Python Interview Questions" table must be hand-curated and mostly code/output/fix/debug questions.
-- Do not create foolish repeated rows like "Explain X", "How does X matter", "Follow-up X" for the main top interview table.
-
-For interview prep tables:
-- prefer code snippets in the first column
-- include output questions
-- include fix-the-bug questions
-- include code review questions
-- include real tricks and traps
-- keep answers direct
-- explain the why
+### DONE
+- [x] What is Python (intro/what-is-python.mdx)
+- [x] Setup Python (intro/setup-python.mdx)
+- [x] Python Execution Flow (intro/python-execution-flow.mdx)
+- [x] First Python Program (intro/first-python-program.mdx)
+- [x] Variables (fundamentals/variables.mdx)
+- [x] Data Types (fundamentals/data-types.mdx)
+- [x] Operators (fundamentals/operators.mdx)
+- [x] Input / Output (fundamentals/input-output.mdx)
+- [x] Type Conversion (fundamentals/type-conversion.mdx)
+- [x] Comments & Docstrings (fundamentals/comments-docstrings.mdx)
+- [x] If-Else (control-flow/if-else.mdx)
+- [x] Nested Conditions (control-flow/nested-conditions.mdx)
+- [x] Loops (control-flow/loops.mdx)
+- [x] Break, Continue, Pass (control-flow/break-continue-pass.mdx)
+- [x] Pattern Programs (control-flow/pattern-programs.mdx)
+- [x] Match-Case (control-flow/match-case.mdx)
+- [x] Functions Basics (functions/functions-basics.mdx)
+- [x] Arguments & Parameters (functions/arguments-parameters.mdx)
+- [x] Return Values (functions/return-values.mdx)
+- [x] Lambda Functions (functions/lambda-functions.mdx)
+- [x] Recursion (functions/recursion.mdx)
+- [x] Decorators (functions/decorators.mdx)
+- [x] Generators (functions/generators.mdx)
+- [x] Iterators (functions/iterators.mdx)
+- [x] Closures (functions/closures.mdx)
+- [x] Lists (collections/lists.mdx)
+- [x] Tuples (collections/tuples.mdx)
+- [x] Sets (collections/sets.mdx)
+- [x] Dictionaries (collections/dictionaries.mdx)
+- [x] List Comprehension (collections/list-comprehension.mdx)
+- [x] Dictionary Comprehension (collections/dictionary-comprehension.mdx)
+- [x] Collections Module (collections/collections-module.mdx)
+- [x] Deque (collections/deque.mdx)
+- [x] Counter (collections/counter.mdx)
+- [x] Defaultdict (collections/defaultdict.mdx)
+- [x] String Basics (strings/string-basics.mdx)
+- [x] String Methods (strings/string-methods.mdx)
+- [x] String Formatting (strings/string-formatting.mdx)
+- [x] Regex (strings/regex.mdx)
+- [x] Unicode (strings/unicode.mdx)
+- [x] F-Strings (strings/f-strings.mdx)
+- [x] Classes & Objects (oops/classes-objects.mdx)
+- [x] Constructors (oops/constructors.mdx)
+- [x] Inheritance (oops/inheritance.mdx)
+- [x] Polymorphism (oops/polymorphism.mdx)
+- [x] Encapsulation (oops/encapsulation.mdx)
+- [x] Abstraction (oops/abstraction.mdx)
+- [x] Magic Methods (oops/magic-methods.mdx)
+- [x] Dataclasses (oops/dataclasses.mdx)
+- [x] SOLID Principles (oops/solid-principles.mdx)
+- [x] Composition vs Inheritance (oops/composition-vs-inheritance.mdx)
+- [x] Exceptions (error-handling/exceptions.mdx)
+- [x] Custom Exceptions (error-handling/custom-exceptions.mdx)
+- [x] Logging (error-handling/logging.mdx)
+- [x] Debugging (error-handling/debugging.mdx)
+- [x] Production Debugging (error-handling/production-debugging.mdx)
+- [x] Reading Files (file-handling/reading-files.mdx)
+- [x] Writing Files (file-handling/writing-files.mdx)
+- [x] CSV Files (file-handling/csv-files.mdx)
+- [x] JSON Files (file-handling/json-files.mdx)
+- [x] Pathlib (file-handling/pathlib.mdx)
+- [x] File Best Practices (file-handling/file-best-practices.mdx)
+- [x] Modules (modules-packages/modules.mdx)
+- [x] Packages (modules-packages/packages.mdx)
+- [x] Virtual Environments (modules-packages/virtual-environments.mdx)
+- [x] Pip (modules-packages/pip.mdx)
+- [x] Pyproject.toml (modules-packages/pyproject-toml.mdx)
+- [x] Dependency Management (modules-packages/dependency-management.mdx)
+- [x] Memory Management (advanced-python/memory-management.mdx)
+- [x] Garbage Collection (advanced-python/garbage-collection.mdx)
+- [x] Shallow vs Deep Copy (advanced-python/shallow-vs-deep-copy.mdx)
+- [x] Mutability (advanced-python/mutability.mdx)
+- [x] Context Managers (advanced-python/context-managers.mdx)
+- [x] Descriptors (advanced-python/descriptors.mdx)
+- [x] Metaclasses (advanced-python/metaclasses.mdx)
+- [x] Monkey Patching (advanced-python/monkey-patching.mdx)
+- [x] Dynamic Typing (advanced-python/dynamic-typing.mdx)
+- [x] Python Internals (advanced-python/python-internals.mdx)
+- [x] Threading (concurrency/threading.mdx)
+- [x] Multiprocessing (concurrency/multiprocessing.mdx)
+- [x] Asyncio (concurrency/asyncio.mdx)
+- [x] Async/Await (concurrency/async-await.mdx)
+- [x] Race Conditions (concurrency/race-conditions.mdx)
+- [x] Queues (concurrency/queues.mdx)
+- [x] Locks & Semaphores (concurrency/locks-semaphores.mdx)
+- [x] GIL (concurrency/gil.mdx)
+- [x] Requests Library (api-development/requests-library.mdx)
+- [x] REST API Basics (api-development/rest-api-basics.mdx)
+- [x] FastAPI (api-development/fastapi.mdx)
+- [x] Flask (api-development/flask.mdx)
+- [x] Authentication (api-development/authentication.mdx)
+- [x] Middleware (api-development/middleware.mdx)
+- [x] API Versioning (api-development/api-versioning.mdx)
+- [x] Rate Limiting (api-development/rate-limiting.mdx)
+- [x] SQLite (databases/sqlite.mdx)
+- [x] PostgreSQL (databases/postgresql.mdx)
+- [x] SQLAlchemy (databases/sqlalchemy.mdx)
+- [x] ORM vs Raw SQL (databases/orm-vs-raw-sql.mdx)
+- [x] Transactions (databases/transactions.mdx)
+- [x] Indexing (databases/indexing.mdx)
+- [x] Connection Pooling (databases/connection-pooling.mdx)
+- [x] Pytest (testing/pytest.mdx)
+- [x] Unit Testing (testing/unit-testing.mdx)
+- [x] Mocking (testing/mocking.mdx)
+- [x] Integration Testing (testing/integration-testing.mdx)
+- [x] Load Testing (testing/load-testing.mdx)
+- [x] Test Best Practices (testing/test-best-practices.mdx)
+- [x] Profiling (performance/profiling.mdx)
+- [x] Memory Optimization (performance/memory-optimization.mdx)
+- [x] Caching (performance/caching.mdx)
+- [x] Lazy Loading (performance/lazy-loading.mdx)
+- [x] Vectorization (performance/vectorization.mdx)
+- [x] NumPy Performance (performance/numpy-performance.mdx)
+- [x] Performance Best Practices (performance/performance-best-practices.mdx)
+- [x] Python Architecture (system-design/python-architecture.mdx)
+- [x] Scalable Python (system-design/scalable-python.mdx)
+- [x] Event-Driven Systems (system-design/event-driven-systems.mdx)
+- [x] Queue Systems (system-design/queue-systems.mdx)
+- [x] Distributed Systems (system-design/distributed-systems.mdx)
+- [x] Microservices (system-design/microservices.mdx)
+- [x] Production Patterns (system-design/production-patterns.mdx)
+- [x] Python for AI (ai-engineering/python-for-ai.mdx)
+- [x] NumPy (ai-engineering/numpy.mdx)
+- [x] Pandas (ai-engineering/pandas.mdx)
+- [x] LLM Basics (ai-engineering/llm-basics.mdx)
+- [x] RAG Pipelines (ai-engineering/rag-pipelines.mdx)
+- [x] Vector Databases (ai-engineering/vector-databases.mdx)
+- [x] AI Agents (ai-engineering/ai-agents.mdx)
+- [x] Async AI Workflows (ai-engineering/async-ai-workflows.mdx)
+- [x] AI Observability (ai-engineering/ai-observability.mdx)
+- [x] Top Python Interview Questions (interview-prep/top-python-interview-questions.mdx)
+- [x] Tricky Python Questions (interview-prep/tricky-python-questions.mdx)
+- [x] Debugging Rounds (interview-prep/debugging-rounds.mdx)
+- [x] Coding Round Patterns (interview-prep/coding-round-patterns.mdx)
+- [x] System Design Rounds (interview-prep/system-design-rounds.mdx)
+- [x] Senior Python Questions (interview-prep/senior-python-questions.mdx)
+- [x] Clean Code (best-practices/clean-code.mdx)
+- [x] Project Structure (best-practices/project-structure.mdx)
+- [x] Coding Standards (best-practices/coding-standards.mdx)
+- [x] Security Best Practices (best-practices/security-best-practices.mdx)
+- [x] Production Checklists (best-practices/production-checklists.mdx)
+- [x] Scalability Guidelines (best-practices/scalability-guidelines.mdx)
+- [x] Engineering Principles (best-practices/engineering-principles.mdx)
 
 ---
 
-## Current Interview Prep Status
+## Dependencies
 
-Pages under [interview-prep](../../../docs/school/python/interview-prep/) exist.
-
-The top questions page has been replaced with a curated 50-question code-heavy table.
-
-Other interview prep pages still use generated code-heavy patterns. They may need the same curated treatment later if the user asks.
+No active dependencies.
 
 ---
 
-## Repo Cleanup Decisions
+## Blockers
 
-Removed Docusaurus starter/sample content:
-- `docs/intro.mdx`
-- `docs/tutorial-basics/`
-- `docs/tutorial-extras/`
-- `blog/`
-- `src/pages/markdown-page.mdx`
-- `src/components/HomepageFeatures/`
-- Docusaurus sample images
-
-Current site config:
-- title: `BAE School`
-- blog disabled
-- sidebar id: `pythonSidebar` (supports additional course sidebars under a general Courses dropdown)
-- homepage points to BAE School Course Catalog, Python Course, and Interview Prep
-
-Keep:
-- `docs/school/python/`
-- `CLAUDE.md`
-- `design.md`
-- `scripts/`
-- custom components under `src/components/`
+No active blockers.
 
 ---
 
-## Validation Habit
+## Lessons Learned
 
-After meaningful edits, run:
-```bash
-npm run typecheck
-npm run build
-```
-
-Known harmless warning:
-Docusaurus may fail its update check due to local config-store permissions. This is unrelated to content/build correctness.
+No reusable insights recorded yet.
 
 ---
 
-## Editing Habit
+## Metrics
 
-Use `apply_patch` for file edits.
-
-Do not overwrite user work casually.
-
-Before deleting files:
-- audit first
-- confirm they are boilerplate or unwanted
-- verify paths are inside the workspace
+- Lessons Completed: 143
+- Lessons Remaining: 143
+- Completion %: 50.0%
+- Open Tasks: 0
 
 ---
 
-## Current User Preferences
-
-- Work topic by topic when creating course content.
-- Create PR's once 5 topics are done.
-- Always create a new git branch for work.
-- Pull Requests must have a clear, descriptive summary.
-- Content should have "bro feel."
-- Avoid very lengthy topic pages.
-- Diagrams should be professional and topic-specific.
-- Interview prep must be code-heavy, not theory-heavy.
-- The user prefers direct correction and practical output.
-
----
-
-## Task Queue
-
-> **Jules: Pick the first `- [ ]` under `### Next Task`. If empty, promote from `### Backlog`.**
-
-### Next Task
+## Backlog
 - [ ] [BAE-REVIEW-001] | **Audit & rewrite** `intro/what-is-python.mdx`
-
-### Backlog
 - [ ] [BAE-REVIEW-002] | Audit `intro/setup-python.mdx`
 - [ ] [BAE-REVIEW-003] | Audit `intro/python-execution-flow.mdx`
 - [ ] [BAE-REVIEW-004] | Audit `intro/first-python-program.mdx`
@@ -368,195 +371,26 @@ Before deleting files:
 - [ ] [BAE-REVIEW-142] | Audit `best-practices/scalability-guidelines.mdx`
 - [ ] [BAE-REVIEW-143] | Audit `best-practices/engineering-principles.mdx`
 
-### Completed This Cycle
+---
+
+## Execution Review
+
 | BAE ID | What's Done (High Level) |
 |---|---|
 
 ---
 
-# BAE School Roadmap & Progress
+## Next Improvements
 
-This checklist tracks the implementation of BAE School playbook topics. Completed topics have comprehensive, production-grade content. Pending topics currently have boilerplate placeholder files.
+- [ ] Add diagrams
+- [ ] Improve engineering story
+- [ ] Expand interview questions
+- [ ] Improve SEO
+- [ ] Better analogy
+- [ ] Add benchmarks
 
-## 1. Intro
-- [x] What is Python (intro/what-is-python.mdx)
-- [x] Setup Python (intro/setup-python.mdx)
-- [x] Python Execution Flow (intro/python-execution-flow.mdx)
-- [x] First Python Program (intro/first-python-program.mdx)
+---
 
-## 2. Fundamentals
-- [x] Variables (fundamentals/variables.mdx)
-- [x] Data Types (fundamentals/data-types.mdx)
-- [x] Operators (fundamentals/operators.mdx)
-- [x] Input / Output (fundamentals/input-output.mdx)
-- [x] Type Conversion (fundamentals/type-conversion.mdx)
-- [x] Comments & Docstrings (fundamentals/comments-docstrings.mdx)
+## Automation State
 
-## 3. Control Flow
-- [x] If-Else (control-flow/if-else.mdx)
-- [x] Nested Conditions (control-flow/nested-conditions.mdx)
-- [x] Loops (control-flow/loops.mdx)
-- [x] Break, Continue, Pass (control-flow/break-continue-pass.mdx)
-- [x] Pattern Programs (control-flow/pattern-programs.mdx)
-- [x] Match-Case (control-flow/match-case.mdx)
-
-## 4. Functions
-- [x] Functions Basics (functions/functions-basics.mdx)
-- [x] Arguments & Parameters (functions/arguments-parameters.mdx)
-- [x] Return Values (functions/return-values.mdx)
-- [x] Lambda Functions (functions/lambda-functions.mdx)
-- [x] Recursion (functions/recursion.mdx)
-- [x] Decorators (functions/decorators.mdx)
-- [x] Generators (functions/generators.mdx)
-- [x] Iterators (functions/iterators.mdx)
-- [x] Closures (functions/closures.mdx)
-
-## 5. Collections
-- [x] Lists (collections/lists.mdx)
-- [x] Tuples (collections/tuples.mdx)
-- [x] Sets (collections/sets.mdx)
-- [x] Dictionaries (collections/dictionaries.mdx)
-- [x] List Comprehension (collections/list-comprehension.mdx)
-- [x] Dictionary Comprehension (collections/dictionary-comprehension.mdx)
-- [x] Collections Module (collections/collections-module.mdx)
-- [x] Deque (collections/deque.mdx)
-- [x] Counter (collections/counter.mdx)
-- [x] Defaultdict (collections/defaultdict.mdx)
-
-## 6. Strings
-- [x] String Basics (strings/string-basics.mdx)
-- [x] String Methods (strings/string-methods.mdx)
-- [x] String Formatting (strings/string-formatting.mdx)
-- [x] Regex (strings/regex.mdx)
-- [x] Unicode (strings/unicode.mdx)
-- [x] F-Strings (strings/f-strings.mdx)
-
-## 7. OOPs
-- [x] Classes & Objects (oops/classes-objects.mdx)
-- [x] Constructors (oops/constructors.mdx)
-- [x] Inheritance (oops/inheritance.mdx)
-- [x] Polymorphism (oops/polymorphism.mdx)
-- [x] Encapsulation (oops/encapsulation.mdx)
-- [x] Abstraction (oops/abstraction.mdx)
-- [x] Magic Methods (oops/magic-methods.mdx)
-- [x] Dataclasses (oops/dataclasses.mdx)
-- [x] SOLID Principles (oops/solid-principles.mdx)
-- [x] Composition vs Inheritance (oops/composition-vs-inheritance.mdx)
-
-## 8. Error Handling
-- [x] Exceptions (error-handling/exceptions.mdx)
-- [x] Custom Exceptions (error-handling/custom-exceptions.mdx)
-- [x] Logging (error-handling/logging.mdx)
-- [x] Debugging (error-handling/debugging.mdx)
-- [x] Production Debugging (error-handling/production-debugging.mdx)
-
-## 9. File Handling
-- [x] Reading Files (file-handling/reading-files.mdx)
-- [x] Writing Files (file-handling/writing-files.mdx)
-- [x] CSV Files (file-handling/csv-files.mdx)
-- [x] JSON Files (file-handling/json-files.mdx)
-- [x] Pathlib (file-handling/pathlib.mdx)
-- [x] File Best Practices (file-handling/file-best-practices.mdx)
-
-## 10. Modules & Packages
-- [x] Modules (modules-packages/modules.mdx)
-- [x] Packages (modules-packages/packages.mdx)
-- [x] Virtual Environments (modules-packages/virtual-environments.mdx)
-- [x] Pip (modules-packages/pip.mdx)
-- [x] Pyproject.toml (modules-packages/pyproject-toml.mdx)
-- [x] Dependency Management (modules-packages/dependency-management.mdx)
-
-## 11. Advanced Python
-- [x] Memory Management (advanced-python/memory-management.mdx)
-- [x] Garbage Collection (advanced-python/garbage-collection.mdx)
-- [x] Shallow vs Deep Copy (advanced-python/shallow-vs-deep-copy.mdx)
-- [x] Mutability (advanced-python/mutability.mdx)
-- [x] Context Managers (advanced-python/context-managers.mdx)
-- [x] Descriptors (advanced-python/descriptors.mdx)
-- [x] Metaclasses (advanced-python/metaclasses.mdx)
-- [x] Monkey Patching (advanced-python/monkey-patching.mdx)
-- [x] Dynamic Typing (advanced-python/dynamic-typing.mdx)
-- [x] Python Internals (advanced-python/python-internals.mdx)
-
-## 12. Concurrency
-- [x] Threading (concurrency/threading.mdx)
-- [x] Multiprocessing (concurrency/multiprocessing.mdx)
-- [x] Asyncio (concurrency/asyncio.mdx)
-- [x] Async/Await (concurrency/async-await.mdx)
-- [x] Race Conditions (concurrency/race-conditions.mdx)
-- [x] Queues (concurrency/queues.mdx)
-- [x] Locks & Semaphores (concurrency/locks-semaphores.mdx)
-- [x] GIL (concurrency/gil.mdx)
-
-## 13. API Development
-- [x] Requests Library (api-development/requests-library.mdx)
-- [x] REST API Basics (api-development/rest-api-basics.mdx)
-- [x] FastAPI (api-development/fastapi.mdx)
-- [x] Flask (api-development/flask.mdx)
-- [x] Authentication (api-development/authentication.mdx)
-- [x] Middleware (api-development/middleware.mdx)
-- [x] API Versioning (api-development/api-versioning.mdx)
-- [x] Rate Limiting (api-development/rate-limiting.mdx)
-
-## 14. Databases
-- [x] SQLite (databases/sqlite.mdx)
-- [x] PostgreSQL (databases/postgresql.mdx)
-- [x] SQLAlchemy (databases/sqlalchemy.mdx)
-- [x] ORM vs Raw SQL (databases/orm-vs-raw-sql.mdx)
-- [x] Transactions (databases/transactions.mdx)
-- [x] Indexing (databases/indexing.mdx)
-- [x] Connection Pooling (databases/connection-pooling.mdx)
-
-## 15. Testing
-- [x] Pytest (testing/pytest.mdx)
-- [x] Unit Testing (testing/unit-testing.mdx)
-- [x] Mocking (testing/mocking.mdx)
-- [x] Integration Testing (testing/integration-testing.mdx)
-- [x] Load Testing (testing/load-testing.mdx)
-- [x] Test Best Practices (testing/test-best-practices.mdx)
-
-## 16. Performance
-- [x] Profiling (performance/profiling.mdx)
-- [x] Memory Optimization (performance/memory-optimization.mdx)
-- [x] Caching (performance/caching.mdx)
-- [x] Lazy Loading (performance/lazy-loading.mdx)
-- [x] Vectorization (performance/vectorization.mdx)
-- [x] NumPy Performance (performance/numpy-performance.mdx)
-- [x] Performance Best Practices (performance/performance-best-practices.mdx)
-
-## 17. System Design
-- [x] Python Architecture (system-design/python-architecture.mdx)
-- [x] Scalable Python (system-design/scalable-python.mdx)
-- [x] Event-Driven Systems (system-design/event-driven-systems.mdx)
-- [x] Queue Systems (system-design/queue-systems.mdx)
-- [x] Distributed Systems (system-design/distributed-systems.mdx)
-- [x] Microservices (system-design/microservices.mdx)
-- [x] Production Patterns (system-design/production-patterns.mdx)
-
-## 18. AI Engineering
-- [x] Python for AI (ai-engineering/python-for-ai.mdx)
-- [x] NumPy (ai-engineering/numpy.mdx)
-- [x] Pandas (ai-engineering/pandas.mdx)
-- [x] LLM Basics (ai-engineering/llm-basics.mdx)
-- [x] RAG Pipelines (ai-engineering/rag-pipelines.mdx)
-- [x] Vector Databases (ai-engineering/vector-databases.mdx)
-- [x] AI Agents (ai-engineering/ai-agents.mdx)
-- [x] Async AI Workflows (ai-engineering/async-ai-workflows.mdx)
-- [x] AI Observability (ai-engineering/ai-observability.mdx)
-
-## 19. Interview Prep
-- [x] Top Python Interview Questions (interview-prep/top-python-interview-questions.mdx)
-- [x] Tricky Python Questions (interview-prep/tricky-python-questions.mdx)
-- [x] Debugging Rounds (interview-prep/debugging-rounds.mdx)
-- [x] Coding Round Patterns (interview-prep/coding-round-patterns.mdx)
-- [x] System Design Rounds (interview-prep/system-design-rounds.mdx)
-- [x] Senior Python Questions (interview-prep/senior-python-questions.mdx)
-
-## 20. Best Practices
-- [x] Clean Code (best-practices/clean-code.mdx)
-- [x] Project Structure (best-practices/project-structure.mdx)
-- [x] Coding Standards (best-practices/coding-standards.mdx)
-- [x] Security Best Practices (best-practices/security-best-practices.mdx)
-- [x] Production Checklists (best-practices/production-checklists.mdx)
-- [x] Scalability Guidelines (best-practices/scalability-guidelines.mdx)
-- [x] Engineering Principles (best-practices/engineering-principles.mdx)
+No automation history yet.
