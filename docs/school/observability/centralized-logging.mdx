@@ -19,7 +19,9 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ## 2. Engineering Story
 
-A team of engineers recently faced a critical challenge related to this concept. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing this concept, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+A fintech company suffered a data breach. The security team knew the attack started sometime on Tuesday between 2pm and 6pm — but each of their 50 microservices wrote logs to local files on their own VMs. To piece together what happened, an engineer had to SSH into 50 different servers, download 50 different log files, manually correlate timestamps across them, and try to trace the attacker's path. It took 11 days to produce the incident report.
+
+They implemented centralized logging with the ELK stack (Elasticsearch, Logstash, Kibana). Every service now shipped structured JSON logs to a single Logstash pipeline, indexed into Elasticsearch. A week after setup, when their staging environment showed anomalous API calls, the security analyst traced the full request chain across 12 services in 4 minutes — just by filtering on the `correlation_id` field in Kibana. Centralized logging doesn't just help you after a breach; it's what separates a 4-minute investigation from an 11-day one.
 
 ## 3. Real-World Analogy
 

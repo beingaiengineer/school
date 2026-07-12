@@ -19,7 +19,9 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ## 2. Engineering Story
 
-A team of engineers recently faced a critical challenge related to Input, detail: Receive data, x: 0, y: 0, kind: data },. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing Input, detail: Receive data, x: 0, y: 0, kind: data },, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+A large bank deployed a Semantic Kernel-based internal compliance assistant. It worked perfectly in their dev environment — a single developer machine running locally against the Azure OpenAI endpoint. Production was a different story. They deployed it as an Azure Function and within hours it was failing under load: rate limit errors from Azure OpenAI, plugin calls timing out, and kernel instances being created and discarded on every function invocation.
+
+The platform team did a proper production hardening pass. They registered the `Kernel` as a singleton in Azure's dependency injection container so it was initialized once, not per request. They configured Azure OpenAI's retry policy with exponential backoff. They split expensive plugin calls into async operations with timeouts. They added Application Insights telemetry to track every kernel invocation. After two weeks of hardening, the assistant handled 500 concurrent compliance queries per minute with 99.9% uptime. The lesson: a demo that works on a laptop and a production system that survives enterprise load are two completely different engineering challenges.
 
 ## 3. Real-World Analogy
 

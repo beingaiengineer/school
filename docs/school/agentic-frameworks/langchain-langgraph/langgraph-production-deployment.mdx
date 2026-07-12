@@ -19,7 +19,9 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ## 2. Engineering Story
 
-A team of engineers recently faced a critical challenge related to this concept. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing this concept, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+A startup demoed their LangGraph agent to investors on a laptop: flawless. They deployed it to production behind a FastAPI app running on Gunicorn with 4 workers. Within an hour, users were reporting that the agent "forgot" their previous messages halfway through conversations. Sometimes it crashed entirely.
+
+The post-mortem revealed two bugs. First, they were using `MemorySaver` — state stored in RAM — but Gunicorn spun up 4 separate Python processes. A user's first request hit Worker 1, their second hit Worker 3. Different process, different memory, gone. Second, they had no `thread_id` isolation, so concurrent users were occasionally reading each other's state. The fixes: replace `MemorySaver` with `AsyncPostgresSaver` so all workers share a single persistent store, and enforce a unique `thread_id` per user session. Deploying agents to production is not like deploying a REST API — statefulness changes everything about how you architect the infrastructure.
 
 ## 3. Real-World Analogy
 

@@ -19,7 +19,9 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ## 2. Engineering Story
 
-A team of engineers recently faced a critical challenge related to this concept. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing this concept, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+An insurtech company built one massive LangGraph agent to handle all customer interactions — policy quotes, claims filing, document uploads, and billing queries. The agent had 14 tools and a system prompt that was 2,000 tokens long. Response quality was erratic: when a user asked about a claim, the agent occasionally confused it with a billing query and gave the wrong answer. Token costs were spiraling because every single request dragged the full context of all 14 tools into the LLM.
+
+A senior architect proposed a supervisor-worker pattern. The new `SupervisorAgent` read the user's intent and routed to specialized sub-agents: `ClaimsAgent`, `BillingAgent`, and `PolicyAgent`. Each sub-agent had only 3-4 focused tools and a compact, targeted system prompt. Response accuracy shot up to 96%. Token costs dropped by 60% because each agent only loaded the tools relevant to its domain. The team's lesson: one confused generalist is worse than three sharp specialists.
 
 ## 3. Real-World Analogy
 

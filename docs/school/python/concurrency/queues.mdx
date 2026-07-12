@@ -20,7 +20,11 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ## 2. Engineering Story
 
-A team of engineers recently faced a critical challenge related to Producer Thread, label: q.put(data) }, position: { x: 100, y: 150 } },. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing Producer Thread, label: q.put(data) }, position: { x: 100, y: 150 } },, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+The data pipeline for an e-commerce company's order processing service had a subtle bug that took three weeks to find. The system used 4 worker threads to process incoming orders from a shared Python list. Most of the time it worked perfectly. But occasionally — maybe once every few thousand orders — two workers would pull the **same order** from the list and process it twice. The customer would receive two confirmation emails and get charged once, but the inventory would be decremented twice.
+
+The bug was `list.pop()`. Even though a single `pop()` call looks atomic in Python source code, under the hood it's multiple bytecode instructions — and the GIL can switch threads between them. One thread reads the list length, another thread also reads it before the first one finishes the pop, and both end up acting on the same item.
+
+The fix was a one-line change: replace `shared_list` with `queue.Queue()`. The `Queue` class is built on top of a `Lock` internally, making every `put()` and `get()` truly atomic and thread-safe. No more duplicate orders. No more corrupted inventory. The rule of thumb is now tattooed on every new engineer's onboarding doc: **if threads share data, use `queue.Queue`. Never use a plain list.**
 
 ## 3. Real-World Analogy
 

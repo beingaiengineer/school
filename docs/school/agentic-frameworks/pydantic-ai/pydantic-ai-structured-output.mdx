@@ -19,7 +19,9 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ## 2. Engineering Story
 
-A team of engineers recently faced a critical challenge related to Input, detail: Receive data, x: 0, y: 0, kind: data },. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing Input, detail: Receive data, x: 0, y: 0, kind: data },, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+A backend team built an invoice extraction pipeline where GPT-4o read scanned PDFs and returned invoice details. Their first version parsed the model's response with `response.split("\n")` and `if "amount" in line`. It worked on clean invoices but catastrophically failed on anything formatted differently — returning `None` for amounts, crashing on missing fields, silently dropping line items.
+
+They switched to PydanticAI with a typed result model: `class Invoice(BaseModel): vendor: str; total: float; line_items: list[LineItem]`. Now, if the LLM's response didn't validate against the schema, PydanticAI automatically re-prompted the model with the validation error — up to 3 times — until it returned a valid structure. Extraction accuracy jumped from 71% to 98%. Structured output didn't just make the code cleaner; it made the entire pipeline reliable by turning model output into a contract, not a guess.
 
 ## 3. Real-World Analogy
 

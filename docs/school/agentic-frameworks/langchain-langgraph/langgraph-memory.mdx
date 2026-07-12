@@ -19,7 +19,9 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ## 2. Engineering Story
 
-A team of engineers recently faced a critical challenge related to this concept. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing this concept, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+A telecom company deployed a LangGraph-based customer support agent. Users would open the chat, explain their issue, then get transferred to a billing specialist — who would open a new chat window with the same agent. And the agent had completely forgotten everything. "Hi! How can I help you today?" The customer had to repeat their entire problem from scratch. Fury ensued. The net promoter score dropped eight points in two weeks.
+
+The root cause: the team had used `MemorySaver` — an in-memory checkpointer that only persists for the lifetime of the Python process. Each new API request (including the specialist's window) was a fresh process, fresh memory, fresh start. The fix was switching to `AsyncPostgresSaver`. Now every graph step is checkpointed to a Postgres row keyed by `thread_id`. When the specialist opens their window, they pass the same `thread_id`, the graph resumes exactly where it left off, and the agent greets the specialist with a full summary of what the customer already explained. Stateful agents require persistent checkpointers — there is no shortcut.
 
 ## 3. Real-World Analogy
 

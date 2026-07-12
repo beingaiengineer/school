@@ -19,7 +19,9 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ## 2. Engineering Story
 
-A team of engineers recently faced a critical challenge related to Input, detail: Receive data, x: 0, y: 0, kind: data },. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing Input, detail: Receive data, x: 0, y: 0, kind: data },, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+A fintech startup's LLM-powered advisory agent was returning financial recommendations as raw strings. They parsed them with regex — `re.search(r"invest \$(\d+)", response)` — and it worked until the model phrased things differently. "Put $500 into ETFs" matched. "I'd recommend a $500 ETF allocation" didn't. Silent failures, wrong advice going to users, and one angry compliance officer.
+
+They migrated to PydanticAI and defined a typed `Agent[None, InvestmentAdvice]` where `InvestmentAdvice` was a strict Pydantic model with `amount: Decimal`, `asset_class: Literal["ETF", "Bond", "Stock"]`, and `risk_level: int`. Now mypy caught type mismatches at development time, not in production. If the model returned an invalid asset class, PydanticAI rejected it before it ever touched the business logic. The compliance officer stopped getting angry. Type-safe agents aren't about bureaucracy — they're about catching the model's inconsistency at the boundary before it becomes a business problem.
 
 ## 3. Real-World Analogy
 

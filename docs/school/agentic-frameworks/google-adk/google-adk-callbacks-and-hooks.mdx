@@ -18,7 +18,9 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ## 2. Engineering Story
 
-A team of engineers recently faced a critical challenge related to this concept. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing this concept, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+A healthcare company deployed a Google ADK-based agent to answer patient queries. Three weeks after launch, their compliance team raised a red flag: patients were occasionally including their Aadhaar numbers and phone numbers in free-text questions, and those strings were being logged verbatim in Cloud Logging — a HIPAA violation waiting to happen.
+
+The engineering team's first instinct was to modify the agent's core logic to scrub PII before logging. But that would mean weaving PII detection into every tool and every response handler — messy, error-prone, and hard to audit. Instead, they registered a single `before_model_callback` and `after_agent_callback` in Google ADK. The before-hook redacted PII from the user's input before it ever touched the model. The after-hook scrubbed the response before it was logged. Zero changes to the agent's business logic. The callbacks acted like airport security — a checkpoint layer independent of what's on the plane. Compliance was achieved in one afternoon, not a sprint.
 
 ## 3. Real-World Analogy
 Like setting an alarm clock. You tell the clock (the system) to wake you up (the callback) when a specific time happens (the event).

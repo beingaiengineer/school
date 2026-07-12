@@ -20,7 +20,11 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ## 2. Engineering Story
 
-A team of engineers recently faced a critical challenge related to The GIL, label: Global Lock }, position: { x: 400, y: 50 } },. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing The GIL, label: Global Lock }, position: { x: 400, y: 50 } },, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+It was a classic "why is this so slow?" moment. A senior engineer at a data analytics startup had just finished writing a Python script to crunch through 10 million rows of sales data. Being clever, she split the data into 8 chunks and ran 8 threads in parallel — one for each CPU core on the server. She expected the job to run 8x faster.
+
+It ran at the same speed as a single thread. Maybe even slightly slower.
+
+She spent two full days in denial, profiling, and rewriting the threading logic. She Googled. She posted on StackOverflow. Then a grizzled senior engineer walked by, glanced at her screen, and said three words: "That's the GIL." For CPU-bound work — pure Python number crunching — threads don't help because CPython only lets **one thread execute bytecode at a time**, regardless of how many cores you have. The fix? Switch from `threading` to `multiprocessing`. Each process gets its own interpreter and its own GIL, so they truly run in parallel. The job then ran in one-eighth the time. Two days of pain, solved in 30 seconds once you understand what the GIL actually is.
 
 ## 3. Real-World Analogy
 

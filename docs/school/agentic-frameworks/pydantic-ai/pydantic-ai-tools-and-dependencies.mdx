@@ -19,7 +19,9 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ## 2. Engineering Story
 
-A team of engineers recently faced a critical challenge related to Input, detail: Receive data, x: 0, y: 0, kind: data },. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing Input, detail: Receive data, x: 0, y: 0, kind: data },, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+A dev team built a PydanticAI agent that needed to call their internal Postgres database to look up user account balances. Their first instinct was to use a global database connection — a classic Python anti-pattern. In testing it worked fine; under concurrent load in production, connections were being shared across async calls, causing intermittent data corruption and `connection already closed` errors.
+
+PydanticAI's dependency injection system was the clean fix. They defined a `Deps` dataclass containing a fresh `asyncpg` connection, and passed it via `RunContext[Deps]` into each tool. Now each agent run got its own isolated database connection, scoped to the lifetime of that run and cleaned up automatically. Unit testing became trivial too — they injected a mock `Deps` with a fake database, no real Postgres needed. Dependencies in PydanticAI aren't just about convenience; they're the idiomatic way to keep agent tools testable, stateless, and production-safe.
 
 ## 3. Real-World Analogy
 
