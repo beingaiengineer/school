@@ -19,7 +19,9 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ## 2. Engineering Story
 
-A team of engineers recently faced a critical challenge related to Input, detail: Receive data, x: 0, y: 0, kind: data },. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing Input, detail: Receive data, x: 0, y: 0, kind: data },, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+A team ran their PydanticAI agent perfectly in local tests with `asyncio.run()`. When they deployed it behind a FastAPI endpoint and load-tested it with 50 concurrent users, half the requests silently returned empty responses. No errors in the logs. Just empty.
+
+The problem: they were sharing a single `Agent` instance across requests without an async-safe HTTP client, and the underlying `httpx.AsyncClient` was being used across event loops in ways that caused silent request drops. They also had no retry logic — if the OpenAI API returned a 429 rate-limit response, the agent just gave up. The fix involved creating a fresh `Agent` per request context (lightweight, PydanticAI agents are just config objects), wrapping calls in a proper retry decorator, and configuring `result_retries=3` so the agent would re-prompt the model if validation failed. Production AI is not a demo — concurrency, retries, and structured error handling are mandatory, not optional.
 
 ## 3. Real-World Analogy
 

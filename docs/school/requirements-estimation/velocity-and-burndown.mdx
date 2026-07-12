@@ -1,0 +1,184 @@
+---
+sidebar_position: 7
+sidebar_label: "Velocity & Burndown"
+---
+
+# Velocity & Burndown
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Velocity & Burndown Charts |
+| Difficulty | Intermediate |
+| Used For | Tracking sprint progress and predicting future delivery capacity. |
+| Common Mistake | Using velocity to compare different teams or punish developers. |
+| Core Metrics | Story points completed per sprint, remaining work over time. |
+
+## 2. Engineering Story
+
+You're three days into a two-week sprint, and the product manager asks, "Are we going to hit our deadline?" Without data, you can only guess. You say "probably," but deep down, you know half the stories are blocked and QA hasn't started testing. The sprint ends, you miss the target, and stakeholders are furious. To stop guessing and start predicting, engineering teams need a mathematical way to measure the actual speed of work (Velocity) and visualize if they are on pace to finish the current commitment (Burndown).
+
+## 3. Real-World Analogy
+
+Imagine a Swiggy delivery rider tracking their evening shift goals in a bustling city like Bangalore.
+
+| Delivery Rider Scenario | Agile Equivalent |
+|---|---|
+| Delivering 5 orders per hour | **Velocity** (Points delivered per sprint) |
+| 15 orders left to deliver by 10 PM | **Sprint Backlog** (Total points committed) |
+| Checking the app to see remaining deliveries dropping over time | **Burndown Chart** (Tracking remaining work) |
+| A massive traffic jam at Silk Board causing a delay | **Sprint Blocker** (Impediment) |
+| Predicting shift end based on past delivery speed | **Capacity Planning** (Using average velocity) |
+
+Bro, velocity is just knowing your average speed. The burndown chart is looking at the map to see how far you are from the destination before the shift ends.
+
+## 4. Concept Explanation
+
+Velocity is the average amount of work a team successfully completes in a sprint, usually measured in story points. It is a lagging indicator—it tells you how fast you *were* moving. 
+
+A burndown chart is a visual representation of work left to do versus time. It plots the total remaining story points day by day throughout the sprint. 
+
+Velocity is for planning the *next* sprint. The burndown chart is for surviving the *current* sprint. Use velocity to say "no" to greedy product managers who want to stuff more tickets into the sprint. Do not use velocity as a performance metric to fire engineers—it is a planning tool, not a weapon.
+
+## 5. Metrics Formula Table
+
+| Metric | Formula / Measurement | Purpose |
+|---|---|---|
+| **Sprint Velocity** | Sum of points for *Completed* stories only. | Measure actual output for one sprint. |
+| **Average Velocity** | (Velocity 1 + Velocity 2 + Velocity 3) / 3 | Predict capacity for upcoming sprints. |
+| **Ideal Burndown Rate** | Total Sprint Points / Number of Sprint Days | The straight diagonal line on a burndown chart. |
+| **Actual Burndown Rate** | Total Points - Points completed on Day X | The real, jagged line showing actual progress. |
+
+## 6. Beginner Example
+
+Here is a raw calculation of sprint metrics. A team commits to 40 points for a two-week (10 working days) sprint.
+
+```json
+// Sprint Planning Snapshot
+{
+  "sprintLengthDays": 10,
+  "committedPoints": 40,
+  "completedPoints": 35, // 5 points rolled over, they count as 0!
+  "velocityForSprint": 35,
+  "idealDailyBurn": 4.0 // 40 points / 10 days
+}
+```
+
+## 7. Real-World Engineering Example
+
+In a production setting, nobody calculates velocity by hand. We use APIs from Jira or Linear to extract this data and plot it in Grafana for engineering leadership.
+
+```python
+import requests
+
+def calculate_average_velocity(jira_board_id, token):
+    # Fetch the last 3 completed sprints
+    url = f"https://your-domain.atlassian.net/rest/agile/1.0/board/{jira_board_id}/sprint?state=closed"
+    headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
+    
+    response = requests.get(url, headers=headers).json()
+    last_three_sprints = response['values'][-3:]
+    
+    total_velocity = 0
+    for sprint in last_three_sprints:
+        # Get completed points per sprint
+        metrics_url = f"{url.split('?')[0]}/{sprint['id']}/metrics"
+        metrics = requests.get(metrics_url, headers=headers).json()
+        total_velocity += metrics['completed_story_points']
+        
+    return total_velocity / 3 # The rolling average velocity
+```
+
+Bro, real teams automate this so they don't spend hours building PowerPoint slides for sprint reviews.
+
+## 8. Internal Working
+
+Here is how the lifecycle of story points flows into your velocity and burndown metrics over a sprint.
+
+```jsx
+<LearningFlow 
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Sprint Backlog (40 Pts)' } },
+    { id: '2', type: 'process', data: { label: 'Daily Standup & Work' } },
+    { id: '3', type: 'data', data: { label: 'Burndown Line Drops' } },
+    { id: '4', type: 'warning', data: { label: 'Spillover (5 Pts)' } },
+    { id: '5', type: 'output', data: { label: 'Velocity Metric (35 Pts)' } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'pulls tickets', animated: true },
+    { id: 'e2-3', source: '2', target: '3', label: 'ticket moved to Done' },
+    { id: 'e2-4', source: '2', target: '4', label: 'blocked / unfinished' },
+    { id: 'e3-5', source: '3', target: '5', label: 'adds to metric' },
+    { id: 'e4-5', source: '4', target: '5', label: 'yields 0 points', style: { strokeDasharray: '5,5' } }
+  ]}
+/>
+```
+
+## 9. Performance Table
+
+A burndown chart is a diagnostic tool. Here is how to read its "performance".
+
+| Chart Pattern | Meaning | Action Required |
+|---|---|---|
+| **Flat line, then massive drop** | Team updates Jira only on the last day. | Enforce daily ticket updates during standup. |
+| **Line goes UP mid-sprint** | Scope creep. PM added tickets mid-flight. | Push back. Lock the sprint backlog. |
+| **Consistent gap above ideal line** | Over-commitment or hidden blockers. | Reduce point capacity for the next sprint. |
+| **Early finish (hits 0 early)** | Under-commitment or points were inflated. | Pull in tickets from the backlog. |
+
+## 10. Top Interview Questions
+
+| Question | Answer | Difficulty |
+|---|---|---|
+| What happens to the velocity if a 5-point story is 90% done at sprint end? | It counts as 0 points towards velocity. We only count fully completed ("Done") stories. | Beginner |
+| How do you handle velocity when key engineers are on vacation? | You do not change the definition of a story point. Instead, you reduce the *capacity* for that sprint and plan for a lower expected velocity. | Intermediate |
+| If Team A has a velocity of 50 and Team B has 20, is Team A faster? | No. Story points are relative and arbitrary to each team. You cannot compare velocity across different teams. | Intermediate |
+| What is "Goodhart's Law" in the context of velocity? | "When a measure becomes a target, it ceases to be a good measure." If you force teams to increase velocity, they will just inflate story point estimates. | Advanced |
+| How does technical debt impact the burndown chart? | It causes the actual burndown line to plateau because developers get stuck on unexpected complexities, delaying ticket completion. | Advanced |
+
+## 11. Tricky Questions & Edge Cases
+
+**What if a massive production bug interrupts the sprint?**
+Do not assign story points to unexpected production bugs during the sprint. Log the time spent on the bug. The burndown chart will naturally flatten out (as planned work is ignored), and your velocity will drop. This accurate drop in velocity correctly reflects your true capacity to build features while maintaining a fragile system.
+
+## 12. Real-World Usage
+
+At massive tech organizations like Spotify or Atlassian, velocity isn't manually debated—it is baked into their CI/CD and issue-tracking integrations. If a Jira ticket is merged to the `main` branch via GitHub Actions, webhooks automatically transition the ticket to "Done," instantly updating the burndown chart. Engineering managers look at cross-sprint velocity trends over a quarter to predict roadmap delivery dates for VPs and executives.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use a rolling average of the last 3 sprints to predict future capacity. | Don't use your highest-ever sprint velocity to plan the next one. |
+| Keep the sprint scope completely locked once the sprint starts. | Don't allow PMs to sneak in "just one quick ticket" mid-sprint. |
+| Discuss burndown chart anomalies in the sprint retrospective. | Don't panic and yell at the team during daily standup if the burndown line is flat. |
+
+## 14. Production Notes
+
+:::warning[Goodhart's Law & The Point Inflation Trap]
+Bro, the biggest mistake leadership makes is tying developer bonuses or performance reviews to velocity. If management demands higher velocity, developers will simply start estimating 3-point tasks as 5-point tasks to game the system. This is called point inflation. Velocity is a capacity planning metric, not a performance metric. Protect your team from this trap.
+:::
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| **Giving Partial Credit**<br/>Awarding 3 points out of 5 because a ticket is "mostly done". | Give 0 points. It either ships to production or it doesn't. Carry the 5 points to the next sprint. |
+| **Cross-Team Comparison**<br/>"Team Alpha burns 100 points, why are you only burning 40?" | Educate stakeholders that points are arbitrary baseline numbers unique to each team's baseline ticket. |
+| **Phantom Updates**<br/>Updating 15 tickets to "Done" on the last Friday of the sprint. | Update tickets daily so the burndown chart actually reflects reality during the sprint. |
+
+## 16. Related Topics
+
+- [Estimation Techniques](./estimation-techniques.mdx)
+- [Planning Poker](./planning-poker.mdx)
+- [Writing User Stories](./writing-user-stories.mdx)
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [go-jira/jira](https://github.com/go-jira/jira) | ⭐ 2.5k+ | Simple Jira command line client in Go. | Great for writing CI/CD scripts to automatically fetch velocity metrics. |
+| [grafana/grafana](https://github.com/grafana/grafana) | ⭐ 60k+ | The open and composable observability and data visualization platform. | Top-tier companies pull Jira/Linear data into Grafana to build beautiful real-time velocity dashboards. |
+| [airbytehq/airbyte](https://github.com/airbytehq/airbyte) | ⭐ 12k+ | Data integration platform for syncing data from APIs. | Used by data engineers to pull sprint data from Jira into Snowflake to analyze long-term engineering velocity. |
+| [linear/linear](https://github.com/linearhq/linear) | ⭐ N/A | (Private Repo, but API SDK available) Linear issue tracker. | Modern engineering teams use Linear's built-in, automated cycle velocity metrics instead of manual Jira charts. |
+| [claudiajs/claudia](https://github.com/claudiajs/claudia) | ⭐ 3.5k+ | Deploy Node.js projects to AWS Lambda. | Many teams automate their burndown alerts using Lambda functions triggered by issue trackers. |

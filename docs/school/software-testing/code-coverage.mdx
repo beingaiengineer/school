@@ -1,0 +1,187 @@
+---
+sidebar_position: 8
+sidebar_label: "Code Coverage"
+---
+
+import { LearningFlow } from '@site/src/components/LearningFlow';
+
+# Code Coverage
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Code Coverage |
+| Difficulty | Beginner |
+| Used For | Measuring the percentage of your source code that is executed by your automated tests. |
+| Common Mistake | Treating 100% coverage as proof that the code is bug-free. |
+| Performance | Running tests with coverage enabled slows down test execution by 10-30%. |
+
+## 2. Engineering Story
+
+A rapidly growing AI startup mandated a strict "100% Test Coverage" rule for their microservices. The team spent weeks writing tests to hit every single line of code, including auto-generated boilerplate and simple getters/setters. They celebrated their 100% badge. 
+
+The next day, a major bug hit production. A user's profile was deleted instead of deactivated. The team checked the tests: the `delete_user` function was fully covered! But how? Bro, the test literally called the function, but there were *no assertions*. The test executed the line, but didn't verify if it did the right thing. The team learned that coverage measures execution, not correctness.
+
+## 3. Real-World Analogy
+
+Imagine a security guard patrolling an office building at night.
+
+| Office Patrol | Code Coverage Equivalent |
+|---|---|
+| Walking into the cafeteria and turning on the lights | **Line Coverage** (Did the test hit this line of code?) |
+| Checking both the front door and the back emergency exit | **Branch Coverage** (Did the test hit both `if` and `else`?) |
+| Scanning every single room on all 10 floors | **100% Coverage** |
+| Walking into a room, seeing a thief, and walking away | **High Coverage, Low Quality Assertions** |
+
+A guard visiting every room (100% coverage) doesn't guarantee the building is safe if the guard doesn't actually check for problems (assertions) while in the room.
+
+## 4. Concept Explanation
+
+**Code Coverage** is a software metric used to measure how many lines, blocks, or arcs of your code are executed while the automated tests are running. 
+
+In Python, the standard tool is `coverage.py`, often used via the Pytest plugin `pytest-cov`. It generates reports (in terminal, HTML, or XML) showing exactly which lines of code your tests missed.
+
+**When to use:** In CI/CD pipelines to ensure new pull requests don't decrease the overall testing percentage (e.g., failing a build if coverage drops below 80%).
+**When NOT to use:** As the sole metric of developer productivity or code quality.
+
+## 5. Syntax Table
+
+| Command | Usage | Explanation |
+|---|---|---|
+| **Install** | `pip install pytest-cov` | Installs the Pytest plugin for coverage. |
+| **Run Basic** | `pytest --cov=my_app` | Runs tests and prints a terminal coverage report for `my_app`. |
+| **Branch Coverage** | `pytest --cov=my_app --cov-branch` | Also checks if both `True/False` branches of `if` statements were hit. |
+| **HTML Report** | `pytest --cov=my_app --cov-report=html` | Generates a clickable webpage showing exact missed lines in red. |
+
+## 6. Beginner Example
+
+Let's look at some code and see how coverage applies.
+
+```python
+# calculator.py
+def complex_math(a, b, mode):
+    if mode == "add":
+        return a + b
+    elif mode == "sub":
+        return a - b
+    else:
+        return 0
+
+# test_calculator.py
+from calculator import complex_math
+
+def test_add():
+    assert complex_math(2, 3, "add") == 5
+```
+
+If we run `pytest --cov=calculator`, the report will show:
+- Total lines: 6
+- Missed lines: 3 (the `elif` block and the `else` block)
+- Coverage: 50%
+
+To get 100% coverage, we must write tests that trigger the `"sub"` mode and an unknown mode.
+
+## 7. Real-World Engineering Example
+
+In production, you often configure coverage in a `.coveragerc` or `pyproject.toml` file to ignore boilerplate files (like migrations or settings) that don't need testing.
+
+```toml
+# pyproject.toml
+[tool.coverage.run]
+branch = true
+source = ["my_api_package"]
+omit = [
+    "*/migrations/*",
+    "*/tests/*",
+    "*/__init__.py",
+    "my_api_package/settings.py"
+]
+
+[tool.coverage.report]
+fail_under = 85
+show_missing = true
+```
+When a developer runs `pytest --cov`, if the overall coverage is 84%, the command will exit with an error code, failing the CI/CD pipeline and preventing the PR from merging.
+
+## 8. Internal Working
+
+`coverage.py` uses a feature provided by the Python interpreter via `sys.settrace()`. It registers a trace function that the Python VM calls for every single line of code executed.
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'tool', data: { label: 'Start pytest-cov' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Injects sys.settrace() into Python VM' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'core', data: { label: 'Tests Execute App Code' }, position: { x: 250, y: 200 } },
+    { id: '4', type: 'data', data: { label: 'Tracer Logs Executed Line Numbers' }, position: { x: 250, y: 300 } },
+    { id: '5', type: 'output', data: { label: 'Generate Coverage Report' }, position: { x: 250, y: 400 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'hooks VM' },
+    { id: 'e2-3', source: '2', target: '3', label: 'runs' },
+    { id: 'e3-4', source: '3', target: '4', label: 'records hits' },
+    { id: 'e4-5', source: '4', target: '5', label: 'calculates %' }
+  ]}
+/>
+
+## 9. Performance Table
+
+| Metric | With Coverage OFF | With Coverage ON |
+|---|---|---|
+| **Execution Time** | Base Time (e.g., 10s) | +10% to 30% slower (e.g., 13s) |
+| **Memory Overhead** | Normal | Higher (Needs to store execution paths) |
+| **CI/CD Value** | Low (Did tests pass?) | Very High (Are we missing edge cases?) |
+
+## 10. Top Interview Questions
+
+| Question | Answer | Level |
+|---|---|---|
+| **What does 100% Code Coverage mean?** | It means every line of code was executed during tests. It does NOT mean the code is bug-free or tested correctly. | Beginner |
+| **What is Branch Coverage?** | Line coverage only checks if a line ran. Branch coverage ensures that both the True and False outcomes of an `if` statement were tested. | Intermediate |
+| **How does `coverage.py` track execution?** | It uses the Python `sys.settrace()` facility to hook into the interpreter and record line numbers as they execute. | Advanced |
+| **Why might you exclude files from a coverage report?** | Files like DB migrations, config settings, and 3rd-party library code don't contain business logic and will artificially lower or skew your coverage score. | Beginner |
+| **Is 100% coverage a good goal?** | Usually, no. Reaching 80-90% covers the core logic. Pushing from 90% to 100% often requires immense effort writing low-value tests for obscure error handling that rarely occurs. | Intermediate |
+
+## 11. Tricky Questions & Edge Cases
+
+- **"My coverage is 100%, but I have bugs. Why?"** Because you didn't test state combinations. If `x` can be 1 to 10, and you only tested `x=1`, you hit the line of code (100% coverage), but you missed the bug that happens when `x=5`.
+- **`pragma: no cover`:** You can add `# pragma: no cover` to the end of a line in Python, and the coverage tool will literally ignore it in its math. Unethical developers use this to artificially inflate their coverage scores to bypass CI checks. Bro, don't do this.
+
+## 12. Real-World Usage
+
+Every major open-source repository (like Django, Pandas) uses tools like **Codecov** or **Coveralls**. When you submit a PR to these repos, a bot automatically comments on your PR saying "Coverage decreased by 0.5%". This ensures that the massive codebase doesn't slowly rot away as developers add new features without corresponding tests.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| **DO** set a reasonable `fail_under` threshold in your CI pipeline (e.g., 80%). | **DON'T** mandate 100% coverage across the board. It leads to toxic test-writing habits. |
+| **DO** use HTML reports locally (`--cov-report=html`) to visually see exactly which lines are red (untested). | **DON'T** trust coverage numbers blindly. Code review the actual assertions in the tests. |
+| **DO** exclude test files themselves from the coverage calculation. | **DON'T** deploy to production if core payment/auth logic has low coverage. |
+
+## 14. Production Notes
+
+> **Warning: The Assertion-Free Test Trap**  
+> `def test_delete(): delete_user(1)`. This test will give you coverage for the entire `delete_user` function. But there is no `assert` statement! If the function is secretly broken but doesn't raise an exception, the test will pass and coverage will be high. Coverage tools cannot measure the quality of your assertions.
+
+## 15. Common Mistakes
+
+| Mistake | Bad Practice | The Fix |
+|---|---|---|
+| **Chasing 100%** | Spending 3 days mocking `sys.exit()` just to test a catastrophic failure script. | Accept 90% coverage and spend that time writing a good E2E test instead. |
+| **Not using Branch Coverage** | Relying purely on line coverage. | Always use `--cov-branch`. An `if` without an `else` might have 100% line coverage but 50% branch coverage. |
+| **Ignoring the HTML Report** | Looking at the 85% terminal output and guessing what is missing. | Run the HTML report, click the files, and look at the highlighted red lines. |
+
+## 16. Related Topics
+
+- Unit Testing with Pytest
+- Test-Driven Development (TDD)
+- CI/CD Pipelines
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [nedbat/coveragepy](https://github.com/nedbat/coveragepy) | ⭐ 3k+ | The core Python coverage tool | The engine that powers all coverage measurement in Python. |
+| [pytest-dev/pytest-cov](https://github.com/pytest-dev/pytest-cov) | ⭐ 2.5k+ | Pytest plugin for coverage | The standard way you run coverage during your Pytest runs. |
+| [codecov/codecov-action](https://github.com/codecov/codecov-action) | ⭐ 4k+ | GitHub Action for Codecov | Used in almost every major open-source repo to upload and display coverage diffs on Pull Requests. |

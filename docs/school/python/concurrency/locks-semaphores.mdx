@@ -20,7 +20,11 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ## 2. Engineering Story
 
-A team of engineers recently faced a critical challenge related to Semaphore (Counter = 2), label: Controls access }, position: { x: 400, y: 50 } },. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing Semaphore (Counter = 2), label: Controls access }, position: { x: 400, y: 50 } },, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+It was 3 AM and PagerDuty was screaming. The on-call engineer for a ride-sharing backend pulled up the dashboard to find the entire driver-matching service had frozen solid. No errors. No crashes. Just... nothing happening. Thousands of driver location updates were piling up, requests were timing out, and the queue was growing at 10,000 entries per minute.
+
+After 40 minutes of panic, she found it: a Lock that was never released. A junior engineer had added a `threading.Lock()` to protect the in-memory driver registry, but wrapped it in a `try` block without a `finally` clause. When an uncaught exception fired inside the critical section, the thread died holding the lock. Every other thread that tried to acquire the lock then blocked forever — a classic deadlock.
+
+The fix was two lines: move the lock to a `with` statement (a context manager that guarantees release even on exception). The lesson? Never, ever manually call `lock.acquire()` and `lock.release()` in production. Always use `with lock:` — it's the programming equivalent of a circuit breaker. After the incident review, the team also added a `Semaphore` to cap the number of threads that could touch the driver registry concurrently, preventing any future thread storm from taking the entire service down.
 
 ## 3. Real-World Analogy
 

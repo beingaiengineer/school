@@ -19,7 +19,9 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ## 2. Engineering Story
 
-A team of engineers recently faced a critical challenge related to this concept. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing this concept, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+A DevOps team deployed their Node.js API to Kubernetes. The pods started, Kubernetes marked them as "Running," and the load balancer began sending traffic. But 20% of requests were returning 503 errors. Users were hitting a broken endpoint. Engineers were confused — the pods looked healthy.
+
+The root cause: the app took 25 seconds to warm up (loading ML models into memory), but Kubernetes thought a "Running" pod was a "ready" pod. The load balancer was routing traffic to pods that were still initializing. The fix was a readiness probe: `readinessProbe: httpGet: path: /health/ready`. Now, Kubernetes only added a pod to the load balancer's rotation after `/health/ready` returned 200 — which only happened once the ML models were fully loaded. The same team then added a liveness probe on `/health/live` so Kubernetes could automatically restart pods that had deadlocked. Health checks are not a nice-to-have — they are the mechanism by which Kubernetes knows whether your application is fit for service, not just whether its process is running.
 
 ## 3. Real-World Analogy
 

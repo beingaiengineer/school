@@ -19,7 +19,9 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ## 2. Engineering Story
 
-A team of engineers recently faced a critical challenge related to this concept. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing this concept, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+A startup was building a code review agent using LangChain LCEL. The pipeline was linear: `receive_pr | analyze_code | write_review | post_comment`. It worked perfectly until they tried to add self-correction — if the review contained an error, the agent should re-analyze and fix it before posting.
+
+In LCEL, a linear chain can't loop back. They tried hacking it with nested chains and conditional branches, and the code became a nightmare of lambdas and `RunnableBranch` acrobatics. A senior engineer stopped them: "This is a graph problem, not a chain problem." They rewrote it in LangGraph as a directed graph with a `critic` node that could route back to the `analyzer` node if confidence was low. The cycle was native, clean, and fully controllable. LangGraph exists precisely for when your logic needs to go backwards.
 
 ## 3. Real-World Analogy
 

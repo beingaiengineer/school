@@ -19,7 +19,9 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ## 2. Engineering Story
 
-A team of engineers recently faced a critical challenge related to this concept. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing this concept, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+A product team's LangGraph-based document drafting agent was producing poor-quality output for about 15% of requests. Users complained, but the logs showed nothing useful — just "generation complete." The engineers had no idea which node in the graph was failing, what prompt was being sent, or whether the LLM was returning bad JSON that the parser was silently swallowing.
+
+They enabled LangSmith by setting two environment variables. Instantly, every single run appeared in the LangSmith dashboard as a full trace — every node, every LLM call, the exact prompt tokens sent, the raw response received, and the latency of each step. Within 10 minutes they found the culprit: the `outline_generator` node had a prompt with a malformed instruction that occasionally caused the model to return a response with an extra markdown fence, which broke the downstream JSON parser silently. They fixed the prompt, the failure rate dropped to 0%. LangSmith turned "the agent is just bad sometimes" from a mystery into a precise, debuggable failure with an exact root cause.
 
 ## 3. Real-World Analogy
 

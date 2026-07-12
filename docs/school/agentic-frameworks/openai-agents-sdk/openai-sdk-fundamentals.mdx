@@ -16,7 +16,9 @@ sidebar_label: "OpenAI SDK Fundamentals"
 
 ## 2. Engineering Story
 
-A team of engineers recently faced a critical challenge related to this concept. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing this concept, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+A customer support platform needed to build a triage-then-specialist agent flow: a front-desk agent that understands the user's problem and hands off to either a `billing_agent` or a `technical_agent`. They started with a custom LangChain implementation but spent two weeks fighting with context window management, handoff serialization, and guardrail injection for each sub-agent.
+
+A developer suggested trying the OpenAI Agents SDK, which had `handoffs` as a first-class primitive. In under 200 lines, they defined three `Agent` objects with their own instructions and tools, wired them together with `handoffs=[billing_agent, technical_agent]`, and the SDK handled context passing, agent switching, and run lifecycle automatically. The entire triage flow worked in a day. The SDK didn't give them flexibility of a graph — but for a clean linear handoff pattern backed by OpenAI models, it was the right tool for the job.
 
 ## 3. Real-World Analogy
 ![Real-World Analogy](../assets/openai-agents-sdk/openai-sdk-fundamentals.png)

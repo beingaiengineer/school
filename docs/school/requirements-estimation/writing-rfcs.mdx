@@ -1,0 +1,194 @@
+---
+sidebar_position: 9
+sidebar_label: "Writing RFCs"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Writing RFCs (Request for Comments)
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Writing RFCs (Design Docs) |
+| Difficulty | Intermediate |
+| Used For | Aligning engineering teams on technical design *before* writing code |
+| Common Mistake | Writing the code first, then writing the RFC to justify it |
+| Impact | Saves weeks of wasted engineering effort |
+
+## 2. Engineering Story
+
+A junior engineer spent three weeks building a brand-new real-time notification service. They used WebSockets, spun up a dedicated Redis cluster, and wrote beautiful, deeply nested Go code. They opened a massive 5,000-line Pull Request.
+
+The tech lead left a single comment: *"We can't deploy this. Our mobile apps don't support WebSockets yet, and our infrastructure team is currently migrating away from Redis to a managed cloud cache. Did you write an RFC?"* 
+
+The engineer had to scrap three weeks of work. Bro, skipping the design document is the fastest way to rewrite your entire project. If they had written a one-page RFC, this fatal flaw would have been caught on day one.
+
+## 3. Real-World Analogy
+
+Think of writing an RFC like planning to build a multi-story house in India. You don't just buy 100 bags of cement and start laying bricks. First, the architect draws a blueprint and shows it to the family and the building contractor.
+
+| House Building Step | Engineering Equivalent |
+|---|---|
+| Drawing the blueprint | Writing the Draft RFC |
+| Family reviewing room sizes | Stakeholders reviewing business logic |
+| Contractor checking pillars | Senior engineers reviewing system design |
+| Changing blueprint on paper | Updating RFC based on feedback |
+| Laying the first brick | Writing the first line of code |
+
+## 4. Concept Explanation
+
+An RFC (Request for Comments) is a technical design document written *before* implementation begins. It proposes a solution to a specific problem and invites critique from the engineering team.
+
+It exists to catch architectural mistakes when they are cheapest to fix: on paper. You use an RFC when you are introducing a new tool, making a massive database migration, or building a complex new feature. You do NOT use an RFC for small bug fixes or routine UI tweaks.
+
+## 5. RFC Structure Table
+
+A standard engineering RFC generally follows this structure.
+
+| Section | Purpose |
+|---|---|
+| **Context** | What problem are we solving? Why do we need to solve it now? |
+| **Proposed Solution** | The technical design (architecture, APIs, data models). |
+| **Alternatives Considered** | What else did you try? Why were they rejected? |
+| **Security & Privacy** | Are there data compliance risks? How do we handle auth? |
+| **Rollout Plan** | How do we deploy this safely without downtime? |
+
+## 6. Beginner Example
+
+A minimal RFC for a very scoped problem. Keep it direct and easy to read.
+
+```markdown
+# RFC: Add Redis Caching to `/api/v1/products`
+
+**Context:** Our product listing API takes 2.5 seconds to load during peak hours. Database CPU hits 90%.
+**Proposed Solution:** Introduce a Redis cache layer for the endpoint with a 5-minute TTL.
+**Alternatives Considered:** 
+- Upgrading DB instance (rejected: too expensive).
+- In-memory Node.js cache (rejected: doesn't scale across our 5 Kubernetes pods).
+**Rollout:** Deploy Redis. Add cache logic behind a feature flag. Ramp up traffic over 2 days.
+```
+
+## 7. Real-World Engineering Example
+
+A production-style snippet from an RFC migrating a legacy system.
+
+```markdown
+# RFC: Extract Payment Processing to Event-Driven Microservice
+
+## Proposed Architecture
+We will decouple the `PaymentModule` from the core monolith. 
+1. Monolith publishes `PaymentRequested` event to Kafka topic `txn.events`.
+2. New `PaymentService` (Golang) consumes event, processes via Stripe API.
+3. `PaymentService` publishes `PaymentSucceeded` or `PaymentFailed`.
+
+## Schema Design (Protobuf)
+```protobuf
+message PaymentRequested {
+  string order_id = 1;
+  int32 amount_cents = 2;
+  string currency = 3;
+}
+```
+
+## Migration Strategy
+Phase 1: Dual-write to both legacy DB and new `PaymentService` DB.
+Phase 2: Read from `PaymentService` in shadow mode (compare results, drop differences).
+Phase 3: Hard cutover.
+```
+
+## 8. Internal Working
+
+How does the RFC lifecycle flow in a real tech company? It is an iterative loop.
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'process', label: 'Identify Problem', position: { x: 50, y: 50 } },
+    { id: '2', type: 'core', label: 'Draft RFC', position: { x: 300, y: 50 } },
+    { id: '3', type: 'warning', label: 'Peer Review & Debate', position: { x: 550, y: 50 } },
+    { id: '4', type: 'data', label: 'Revise Doc', position: { x: 550, y: 150 } },
+    { id: '5', type: 'output', label: 'Approved Design', position: { x: 800, y: 50 } },
+    { id: '6', type: 'tool', label: 'Start Coding', position: { x: 800, y: 150 } },
+    { id: 'e1-2', source: '1', target: '2', label: 'needs design', animated: true },
+    { id: 'e2-3', source: '2', target: '3', label: 'submits', animated: true },
+    { id: 'e3-4', source: '3', target: '4', label: 'feedback', type: 'smoothstep' },
+    { id: 'e4-3', source: '4', target: '3', label: 'updates', type: 'smoothstep' },
+    { id: 'e3-5', source: '3', target: '5', label: 'consensus', animated: true },
+    { id: 'e5-6', source: '5', target: '6', label: 'executes', animated: true }
+  ]}
+/>
+
+## 9. Process Metrics Table
+
+Writing an RFC costs time upfront, but drastically changes project delivery metrics.
+
+| Metric | Without RFC | With RFC |
+|---|---|---|
+| **Upfront Design Time** | 0 days | 3-5 days |
+| **Code Rewrite Risk** | Extremely High (60%+) | Low (< 10%) |
+| **Review Bottleneck** | At PR stage (blocking deploy) | At Design stage (blocking code) |
+| **Team Alignment** | Poor | Excellent |
+
+## 10. Top Interview Questions
+
+| Question | Answer Summary |
+|---|---|
+| **Why write an RFC instead of just pairing on code?** | Pairing scopes context to two people. An RFC acts as historical documentation and aligns the entire organization asynchronously. |
+| **What makes a bad RFC?** | One that proposes a solution without explaining the problem, ignores edge cases, or lacks an "Alternatives Considered" section. |
+| **How do you handle disagreement in an RFC?** | Document the conflicting viewpoints objectively in the RFC, gather data to break the tie, and escalate to a staff engineer or manager if consensus fails. |
+| **Who should review an RFC?** | Immediate team members, domain experts for overlapping systems, and cross-functional stakeholders (security, infrastructure). |
+| **Should the RFC be updated after the code is shipped?** | Yes, if the implementation significantly diverged from the design, the RFC should be updated to reflect reality as a historical record. |
+
+## 11. Tricky Questions & Edge Cases
+
+**Bro, what happens when two senior engineers completely disagree on your RFC?**
+
+This is a classic trap. Engineer A wants Kafka, Engineer B wants SQS. Your RFC gets stuck in "Analysis Paralysis." The solution is to mandate a timebox (e.g., 3 days of debate), capture both sides objectively in the "Alternatives Considered" section, and have a designated decision-maker (usually the Tech Lead or Manager) make the final call based on business constraints. 
+
+## 12. Real-World Usage
+
+Top-tier companies rely heavily on written design docs:
+- **Uber**: Uses a formal RFC process globally. Every major architectural change must go through a rigid RFC template to ensure scalability across their massive microservices web.
+- **Amazon**: Famous for their "Six-Pager" narratives. No slide decks are allowed; engineers must write dense prose defending their technical choices.
+- **Open Source (React/Rust/Vue)**: Massive open-source frameworks use public RFCs to let the community debate API syntax before maintainers merge it into the core framework.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| **DO** clearly list "Alternatives Considered" to prove you researched other options. | **DON'T** write the code first and then write the RFC to justify your code. |
+| **DO** keep it concise. A good RFC can often be 1-2 pages. | **DON'T** write a 50-page novel. Nobody will read it. |
+| **DO** actively solicit feedback from people who might disagree with you. | **DON'T** merge the RFC before giving reviewers adequate time (usually 24-48 hrs). |
+
+## 14. Production Notes
+
+:::warning Analysis Paralysis
+A major operational risk with RFCs is **Analysis Paralysis**. Teams can spend 4 weeks debating the perfect schema for a feature that only takes 3 days to build. Timebox your RFC phases. An RFC is meant to catch fatal flaws, not to predict every single variable name or minor implementation detail.
+:::
+
+## 15. Common Mistakes
+
+This is a very common beginner mistake, bro. Engineers fall in love with their first idea.
+
+| Mistake | Consequence | How to Fix |
+|---|---|---|
+| **Skipping "Alternatives Considered"** | Reviewers will spend the whole time suggesting obvious alternatives instead of reviewing your actual solution. | Write down the 2-3 other ways to build it and exactly why you rejected them (e.g., cost, time, complexity). |
+| **Coding before consensus** | You build a massive PR, get rejected in code review, and throw away weeks of work. | Write the RFC first. Do not touch the codebase until the RFC is approved. |
+| **Vague Context** | Reviewers don't understand *why* this needs to be built, so they block it. | Add metrics. Instead of "API is slow," write "Endpoint X takes 4.2s at p99, causing timeouts." |
+
+## 16. Related Topics
+
+- Technical Debt Management
+- PRDs vs Engineering RFCs
+- System Design Basics
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [reactjs/rfcs](https://github.com/reactjs/rfcs) | ⭐ 4.5k+ | RFCs for changes to React | Shows how open-source giants manage feature proposals. |
+| [rust-lang/rfcs](https://github.com/rust-lang/rfcs) | ⭐ 5.5k+ | RFCs for changes to Rust | Excellent example of extremely deep, low-level technical design docs. |
+| [vuejs/rfcs](https://github.com/vuejs/rfcs) | ⭐ 1.5k+ | Vue.js RFCs | Great templates for framework API design proposals. |
+| [emberjs/rfcs](https://github.com/emberjs/rfcs) | ⭐ 1k+ | Ember.js RFCs | One of the earliest and most disciplined open-source RFC processes. |
+| [yarnpkg/rfcs](https://github.com/yarnpkg/rfcs) | ⭐ 300+ | Yarn RFCs | Good examples of tooling and package manager architecture docs. |

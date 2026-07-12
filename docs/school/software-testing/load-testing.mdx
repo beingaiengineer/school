@@ -1,0 +1,196 @@
+---
+sidebar_position: 9
+sidebar_label: "Load Testing"
+---
+
+import { LearningFlow } from '@site/src/components/LearningFlow';
+
+# Load Testing
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Load Testing & Performance Testing |
+| Difficulty | Advanced |
+| Used For | Determining how a system behaves under expected and peak user loads. |
+| Common Mistake | Running load tests from your local laptop against a production server (network bottleneck). |
+| Performance | Simulates thousands of users, pushing CPU/Memory/DB to their absolute limits. |
+
+## 2. Engineering Story
+
+An e-commerce site hyped up their "Big Billion Flash Sale" for weeks. They had 100% unit test coverage, and API tests passed instantly. At 12:00 PM, the sale went live. By 12:01 PM, the site crashed, showing a 502 Bad Gateway error.
+
+Why? Their tests were written to verify *one* user buying a product. In reality, 50,000 users tried to hit the inventory database at the exact same second. The database ran out of connections and choked. Bro, if they had run a Load Test simulating 50,000 concurrent users beforehand, they would have seen the DB crash on staging and fixed the connection pool settings before the sale.
+
+## 3. Real-World Analogy
+
+Imagine a structural engineer building a bridge.
+
+| Bridge Construction | Software Testing Equivalent |
+|---|---|
+| Checking the strength of one steel beam | **Unit Testing** |
+| Driving one car across the bridge | **Integration Testing** |
+| Parking 500 fully loaded trucks on the bridge to see if it cracks | **Load Testing** |
+| Keeping adding trucks until the bridge literally collapses | **Stress Testing** |
+
+You don't just hope the bridge holds 500 trucks because one car crossed it safely. You must physically simulate the extreme weight.
+
+## 4. Concept Explanation
+
+**Load Testing** is the process of putting demand on a software system and measuring its response. It helps identify maximum operating capacity, bottlenecks (DB, CPU, Network), and determines if the current infrastructure is sufficient.
+
+In Python, the most modern and developer-friendly tool for this is **Locust**. It allows you to write user behavior scenarios in pure Python and spin up thousands of concurrent "users" to swarm your system.
+
+**When to use:** Before launching major features, marketing campaigns, or refactoring infrastructure (like moving from AWS EC2 to Kubernetes).
+**When NOT to use:** Against an external third-party API without permission. That is literally a DDoS attack, bro.
+
+## 5. Syntax Table
+
+| Concept | Locust Syntax | Explanation |
+|---|---|---|
+| **Define Task** | `@task` | Decorates a function that simulates a user action. |
+| **Http User** | `class WebsiteUser(HttpUser):` | Defines a simulated user that makes HTTP requests. |
+| **Wait Time** | `wait_time = between(1, 5)` | Simulates user reading the page for 1-5 secs before next click. |
+| **Run Test** | `locust -f locustfile.py` | Starts the Locust web interface to configure concurrent users. |
+
+## 6. Beginner Example
+
+Writing a simple Locust script to test an API endpoint.
+
+```python
+# locustfile.py
+from locust import HttpUser, task, between
+
+class APIUser(HttpUser):
+    # Simulate a user pausing for 1 to 3 seconds between actions
+    wait_time = between(1, 3)
+
+    @task(weight=3) # This happens 3 times more often
+    def view_items(self):
+        self.client.get("/api/items")
+
+    @task(weight=1)
+    def view_single_item(self):
+        # Hitting a dynamic endpoint
+        self.client.get("/api/items/42")
+```
+Run `locust -f locustfile.py`, open `http://localhost:8089`, enter 1000 users, and hit Start. Watch the charts to see if response times spike.
+
+## 7. Real-World Engineering Example
+
+In production, you test complex user flows. For example, a user logging in, adding items to a cart, and checking out.
+
+```python
+from locust import HttpUser, task, between, SequentialTaskSet
+
+class CheckoutBehavior(SequentialTaskSet):
+    """Simulates a strict sequence: Login -> Browse -> Cart -> Checkout"""
+    
+    @task
+    def login(self):
+        # We capture the token for subsequent requests
+        res = self.client.post("/auth/login", json={"user": "test", "pass": "test"})
+        self.token = res.json().get("token")
+        
+    @task
+    def browse_products(self):
+        self.client.get("/api/products", headers={"Authorization": f"Bearer {self.token}"})
+        
+    @task
+    def add_to_cart(self):
+        self.client.post("/api/cart", json={"product_id": 101}, headers={"Authorization": f"Bearer {self.token}"})
+        
+    @task
+    def checkout(self):
+        with self.client.post("/api/checkout", headers={"Authorization": f"Bearer {self.token}"}, catch_response=True) as response:
+            if response.status_code == 200:
+                response.success()
+            else:
+                response.failure("Checkout failed under load")
+
+class ShopperUser(HttpUser):
+    wait_time = between(2, 5)
+    tasks = [CheckoutBehavior]
+```
+
+## 8. Internal Working
+
+Locust uses `gevent` (greenlets/coroutines) under the hood. Unlike thread-based tools (like JMeter) which consume massive RAM for thousands of threads, Locust can easily simulate 10,000+ concurrent users on a single machine using asynchronous I/O.
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'tool', data: { label: 'Locust Master Node' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Spawns Greenlets (Fake Users)' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'data', data: { label: 'Heavy Concurrent HTTP Traffic' }, position: { x: 250, y: 200 } },
+    { id: '4', type: 'core', data: { label: 'Target System (Staging API)' }, position: { x: 250, y: 300 } },
+    { id: '5', type: 'warning', data: { label: 'Bottleneck (DB/CPU)' }, position: { x: 250, y: 400 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'distributes work' },
+    { id: 'e2-3', source: '2', target: '3', label: 'generates' },
+    { id: 'e3-4', source: '3', target: '4', label: 'hits' },
+    { id: 'e4-5', source: '4', target: '5', label: 'exposes limits' }
+  ]}
+/>
+
+## 9. Performance Table
+
+| Tool | Language | Concurrency Model | Best For |
+|---|---|---|---|
+| **Locust** | Python | Event-loop (gevent) | Developer-written test scripts, high concurrency |
+| **k6** | JavaScript/Go | Goroutines | Extreme performance, CI/CD integration |
+| **JMeter** | Java/XML | OS Threads | Legacy enterprise, massive protocol support |
+
+## 10. Top Interview Questions
+
+| Question | Answer | Level |
+|---|---|---|
+| **What is the difference between Load Testing and Stress Testing?** | Load testing checks expected peak traffic. Stress testing pushes traffic *beyond* normal limits specifically to see at what point the system breaks. | Intermediate |
+| **Why use Locust instead of JMeter?** | Locust scenarios are written in pure Python (code-as-infrastructure) which can be version controlled easily, whereas JMeter uses clunky XML GUIs. | Intermediate |
+| **What is the 95th Percentile (p95) response time?** | It means 95% of users experienced a response time at or below this value. It's a much better metric than "Average" response time, which hides extreme spikes. | Advanced |
+| **Why shouldn't you run load tests from your laptop?** | Your home Wi-Fi and laptop CPU will bottleneck before the server does. The test will report a failure, but it's your laptop failing, not the server. Run tests from a cloud VM in the same region. | Beginner |
+| **What is a Spoke/Spike Test?** | A sudden, massive surge in traffic (like a flash sale or viral tweet), to see if auto-scaling groups can react fast enough. | Advanced |
+
+## 11. Tricky Questions & Edge Cases
+
+- **The Caching Illusion:** If your load test requests the *exact same* URL (e.g., `/api/user/1`) 10,000 times, the API's caching layer (Redis or CDN) will serve 9,999 of them instantly. Your test will say the DB is fast, but the DB wasn't even hit. You must generate random, dynamic data in your load tests to bypass caches.
+- **DDoS-ing Yourself:** If you point Locust at your production DB without informing your DevOps team or Cloud Provider (AWS), they will classify it as a DDoS attack and block your IPs.
+
+## 12. Real-World Usage
+
+Streaming platforms like Netflix use continuous load testing. They use a concept called "Chaos Engineering", where they intentionally inject massive load or kill servers in production to ensure the system is resilient. Before any major gaming launch (like a new Call of Duty), infrastructure teams run distributed Locust clusters (dozens of VMs) to simulate 1 million concurrent logins.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| **DO** run load tests on an environment that perfectly mirrors production (Staging). | **DON'T** load test an external 3rd party API (like Stripe/Twilio). Mock them out during the test, or you'll get billed. |
+| **DO** look at p95 and p99 response times. | **DON'T** look at Average response times. |
+| **DO** ramp up users gradually to see exactly when performance degrades. | **DON'T** start 10,000 users at second 0, as it will crash everything before providing useful metrics. |
+
+## 14. Production Notes
+
+> **Warning: The Database Connection Pool**  
+> 90% of web apps crash under load not because the CPU is maxed out, but because the database connection pool is exhausted. If 5,000 requests hit, and your pool only allows 100 connections, 4,900 requests will queue up and eventually timeout (HTTP 502/504). Load testing exposes this immediately.
+
+## 15. Common Mistakes
+
+| Mistake | Bad Practice | The Fix |
+|---|---|---|
+| **Testing from Laptop** | `locust -u 10000` on a 8GB MacBook on WiFi. | Deploy the Locust worker nodes to AWS EC2 instances. |
+| **Static Data** | Testing `/product/1` over and over. | Use Python's `random.randint` to test `/product/x` to bypass caches. |
+| **Ignoring the Database** | Only monitoring API response times. | During a load test, you must monitor the DB CPU, IOPS, and memory simultaneously. |
+
+## 16. Related Topics
+
+- API Testing
+- Integration Testing
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [locustio/locust](https://github.com/locustio/locust) | ⭐ 25k+ | Scalable user load testing tool | The definitive load testing tool for Python engineers. |
+| [grafana/k6](https://github.com/grafana/k6) | ⭐ 22k+ | Modern load testing for developers | Excellent alternative to Locust written in Go (uses JS for scripts) with incredible CI/CD support. |
+| [tsenart/vegeta](https://github.com/tsenart/vegeta) | ⭐ 21k+ | HTTP load testing tool and library | Command-line tool for intense, constant-rate HTTP hammering. |

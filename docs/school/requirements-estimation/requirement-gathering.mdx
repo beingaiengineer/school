@@ -1,0 +1,194 @@
+---
+sidebar_position: 1
+sidebar_label: "Requirement Gathering"
+---
+
+# Requirement Gathering
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Requirement Gathering |
+| Difficulty | Beginner |
+| Used For | Figuring out exactly what needs to be built and identifying constraints before writing any code. |
+| Common Mistake | Focusing only on "happy path" functional requirements and ignoring Non-Functional Requirements (NFRs) like scale, security, and latency. |
+| Performance | Cost of fixing a missing requirement is 100x higher in production than during the gathering phase. |
+
+## 2. Engineering Story
+
+Imagine spending three months building a state-of-the-art caching layer for a new real-time chat application. The team used Redis, implemented complex invalidation logic, and optimized it for sub-millisecond latency. On launch day, the product manager asks, "Wait, why can't users search their chat history from a year ago? The compliance team says we must store all history forever." 
+
+The engineering team freezes. They optimized for real-time ephemeral speed, not persistent long-term searchable storage. The architecture is fundamentally wrong for the actual business need.
+
+This happens all the time in the industry, bro. The code was perfect, but they built the wrong thing. Requirement gathering is the phase where we prevent this exact disaster by extracting the hidden "whys" and constraints from stakeholders before a single line of code is written.
+
+## 3. Real-World Analogy
+
+Think about getting a custom suit stitched by a local masterji (tailor) for your brother's wedding, or ordering a highly specific meal at a strict Udupi restaurant.
+
+If you just say, "Make me a blue suit," you are setting yourself up for failure. The tailor will assume the fabric, the cut, and the style. When you wear it, it might be a winter fabric in the middle of summer, or too tight to dance in. 
+
+| Tailoring Instruction | Software Engineering Equivalent |
+|---|---|
+| "I need a blue suit" | Vague Business Idea |
+| "It must be lightweight cotton for summer" | Non-Functional Requirement (NFR) |
+| "It needs four pockets for my phone and wallet" | Functional Requirement |
+| "I must be able to raise my arms for the Baraat dance" | Edge Case / Acceptance Criteria |
+| Taking exact measurements with a tape measure | Requirement Gathering Phase |
+
+Bro, requirement gathering is taking those exact measurements. If you skip this, no matter how good your coding skills are, the final product won't fit the user.
+
+## 4. Concept Explanation
+
+Requirement gathering is the structured process of discovering, analyzing, and defining what a software system must do and the constraints under which it must operate. 
+
+It exists because stakeholders (clients, PMs, sales teams) usually speak in terms of business goals ("We need more signups"), while engineers need technical specifics ("We need a scalable auth microservice supporting OAuth2"). Requirement gathering is the translation layer. 
+
+**When to use it:** Always. Whether you are building a small feature or a massive microservices architecture, you must gather requirements.
+**When NOT to use it:** Never skip it entirely, but scale it. Don't spend 3 months writing 50-page requirements for a 1-week prototype. Agile requires iterative gathering, but never *zero* gathering.
+
+## 5. Syntax Table
+
+While not a programming language, requirement gathering uses specific structures to ensure clarity. Here is the "syntax" for writing solid requirements.
+
+| Format | Structure | Best Used For |
+|---|---|---|
+| User Story | `As a [persona], I want to [action], so that [benefit].` | Agile feature development, capturing user intent. |
+| Given-When-Then (BDD) | `Given [context], When [action], Then [outcome].` | Defining exact acceptance criteria and test cases. |
+| System Shall | `The system shall [do something] under [condition].` | Strict technical constraints, compliance, and NFRs. |
+| Job To Be Done (JTBD) | `When [situation], I want to [motivation], so I can [outcome].` | Product discovery and UX requirements. |
+
+## 6. Beginner Example
+
+A beginner often writes requirements that are too vague and untestable.
+
+**Bad Requirement:**
+> "The login page should be fast and secure."
+
+**Good Requirement:**
+> "As a returning user, I want to log in using my email and password so that I can access my dashboard."
+> **NFRs:**
+> - Authentication must complete in under 500ms (p95).
+> - Passwords must be hashed using bcrypt.
+
+## 7. Real-World Engineering Example
+
+In production, requirement gathering goes deep into edge cases, failure states, and system boundaries. Here is an example of gathered requirements for a Swiggy/Zomato style food delivery payment gateway.
+
+```markdown
+# Epic: Payment Gateway Integration
+
+## Functional Requirements
+- The system must support credit cards, UPI, and net banking via Razorpay.
+- If a payment fails, the user must be redirected to the retry screen without losing their cart state.
+- The system must webhook payment confirmation to the order service within 2 seconds.
+
+## Non-Functional Requirements (NFRs)
+- **Scalability:** Must handle 10,000 concurrent payment sessions during the Diwali peak hour.
+- **Idempotency:** Re-trying a failed network request for the same order must NEVER charge the user twice.
+- **Data Retention:** PII (Personally Identifiable Information) must not be logged in standard application logs.
+
+## Edge Cases (Out of Scope for v1)
+- Partial refunds for individual items in a combo meal.
+- International credit cards requiring 3D secure fallback.
+```
+
+## 8. Internal Working
+
+Here is the lifecycle of how vague ideas turn into executed code.
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+<LearningFlow
+  elements={[
+    { id: '1', type: 'core', data: { label: 'Stakeholder Idea\n"Make it faster"' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Requirement Gathering\n(Interviews, Analysis)' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'data', data: { label: 'Functional Requirements\n(What it does)' }, position: { x: 100, y: 220 } },
+    { id: '4', type: 'warning', data: { label: 'Non-Functional Requirements\n(Scale, Latency, Security)' }, position: { x: 400, y: 220 } },
+    { id: '5', type: 'tool', data: { label: 'PRD / Jira Board\n(Documentation)' }, position: { x: 250, y: 340 } },
+    { id: '6', type: 'output', data: { label: 'Engineering Execution\n(Code & Tests)' }, position: { x: 250, y: 460 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'trigger', animated: true },
+    { id: 'e2-3', source: '2', target: '3', label: 'extracts', type: 'smoothstep' },
+    { id: 'e2-4', source: '2', target: '4', label: 'extracts', type: 'smoothstep' },
+    { id: 'e3-5', source: '3', target: '5', label: 'writes to', type: 'smoothstep' },
+    { id: 'e4-5', source: '4', target: '5', label: 'writes to', type: 'smoothstep' },
+    { id: 'e5-6', source: '5', target: '6', label: 'guides', animated: true }
+  ]}
+/>
+
+## 9. Performance Table
+
+In software engineering, the "performance" of requirement gathering is measured by the **Cost of Change Curve**. Fixing a misunderstood requirement gets exponentially more expensive later in the pipeline.
+
+| Stage of Discovery | Cost to Fix | Real-World Impact |
+|---|---|---|
+| Requirement Phase | 1x | Just updating a document or Jira ticket. (Takes minutes) |
+| Architecture/Design | 5x | Redrawing diagrams, changing API specs. (Takes hours) |
+| Development | 20x | Rewriting code, breaking tests, wasting sprint time. (Takes days) |
+| QA / Testing | 50x | Rejecting builds, deep debugging, delayed releases. (Takes weeks) |
+| Production | 100x+ | Data migration, hotfixes, angry customers, brand damage. |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| **What is the difference between Functional and Non-Functional requirements?** | Functional is *what* the system does (e.g., user logs in). Non-Functional (NFR) is *how well* it does it (e.g., login takes < 200ms, handles 1M users). |
+| **How do you handle conflicting requirements from multiple stakeholders?** | Bring stakeholders together, tie requirements back to the core business metric, and ruthlessly prioritize. If unresolved, escalate to the product owner for a final call. |
+| **What is scope creep and how do you prevent it?** | Scope creep is the continuous, uncontrolled growth of project requirements. Prevent it by having strict acceptance criteria, clear "Out of Scope" definitions, and an agreed-upon change management process. |
+| **How do you gather requirements for an API?** | Focus on consumers. Define the core entities, expected inputs/outputs, rate limits, authentication methods, and error response codes before writing code. |
+| **Why is defining "Out of Scope" just as important as "In Scope"?** | It prevents assumptions. Explicitly stating what you are *not* building (e.g., "We will support English only for v1") stops stakeholders from expecting missing features at launch. |
+
+## 11. Tricky Questions & Edge Cases
+
+- **The "Unstated" NFR:** Stakeholders rarely say "the system shouldn't crash when 50,000 people log in at once." They just assume you know that. Bro, it is your job as an engineer to ask about expected load, data growth, and SLA requirements. 
+- **The "We'll Figure It Out Later" Trap:** Starting development with half-baked requirements. This leads to spaghetti code because the architecture wasn't designed for the final feature set. Always demand a baseline PRD.
+- **Changing Requirements Mid-Sprint:** If a requirement changes after code is being written, you must halt, assess the impact (Cost of Change), and swap out equivalent story points. Do not just silently absorb the extra work.
+
+## 12. Real-World Usage
+
+Top-tier companies treat requirement gathering as the most critical phase of engineering.
+- **Amazon (PRFAQ):** Before writing code, someone must write a Press Release and FAQ for the product. If the requirement isn't compelling enough to announce to the world, they don't build it.
+- **Google (Design Docs):** Engineers write rigorous 6-pagers detailing exactly what they are building, why, and what the NFRs (latency, storage) are. This document is debated heavily before coding starts.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| **DO** ask "Why?" multiple times to get to the root business problem, not just the requested feature. | **DON'T** accept a solution masked as a requirement (e.g., "Build a Redis cache" vs "Make the page load under 1 second"). |
+| **DO** explicitly list what is Out of Scope. | **DON'T** assume non-functional requirements (scale, security) are understood by stakeholders. |
+| **DO** use wireframes or sequence diagrams to confirm understanding. | **DON'T** rely solely on verbal agreements; if it isn't documented, it doesn't exist. |
+
+## 14. Production Notes
+
+:::warning The NFR Silent Killer
+In production, functional bugs are annoying, but Non-Functional Requirement (NFR) failures are catastrophic. Missing an NFR for idempotency in a payment system means charging a user twice. Missing an NFR for database connection pooling means taking down the entire site during a traffic spike. Always prioritize gathering constraints over features.
+:::
+
+## 15. Common Mistakes
+
+| Mistake | Bad Example (Vague) | Good Example (Testable) |
+|---|---|---|
+| No measurable metrics | "The search should be fast." | "The search API must return results in < 300ms at the 99th percentile." |
+| Combining multiple things | "The user can upload an avatar, crop it, and it will sync to the CDN." | Break into three separate requirements (Upload, Crop, Sync) for independent testing. |
+| Implementation bias | "Use MongoDB to store user profiles." | "Store user profiles in a scalable database that supports document schemas." (Don't dictate tech in requirements). |
+
+## 16. Related Topics
+
+- [Product Requirement Documents (PRDs)](./product-requirement-documents)
+- [Writing User Stories](./writing-user-stories)
+- [Acceptance Criteria](./acceptance-criteria)
+
+## 17. Top GitHub Repositories
+
+Here are some open-source tools and templates used for tracking and managing requirements.
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [makeplane/plane](https://github.com/makeplane/plane) | ⭐ 25k+ | Open Source Jira alternative. | Excellent for managing user stories, epics, and requirement tracking in agile teams. |
+| [mattermost/focalboard](https://github.com/mattermost/focalboard) | ⭐ 15k+ | Open source alternative to Trello/Notion. | Useful for visual requirement gathering and kanban-style backlog management. |
+| [joaomilho/Enterprise](https://github.com/joaomilho/Enterprise) | ⭐ 5k+ | Enterprise architecture and requirement templates. | Provides a framework for writing solid enterprise-grade technical requirements. |
+| [requarks/wiki](https://github.com/requarks/wiki) | ⭐ 20k+ | Wiki.js - A modern wiki application. | Engineering teams use wikis to store PRDs, RFCs, and gathered requirements. |
+| [documenso/documenso](https://github.com/documenso/documenso) | ⭐ 7k+ | Open source document signing. | Crucial for formal requirement sign-offs from stakeholders in agency environments. |

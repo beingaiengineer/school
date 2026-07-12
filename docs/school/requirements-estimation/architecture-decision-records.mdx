@@ -1,0 +1,193 @@
+---
+sidebar_position: 10
+sidebar_label: "Architecture Decision Records"
+---
+
+# Architecture Decision Records (ADRs)
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Architecture Decision Records (ADRs) |
+| Difficulty | Beginner / Intermediate |
+| Used For | Documenting *why* a major technical decision was made. |
+| Common Mistake | Writing ADRs in a Wiki instead of keeping them in the Git repository. |
+| Performance | O(1) time to end an architecture debate. |
+
+## 2. Engineering Story
+
+You join a new team. You look at the codebase and see they are using a weird, custom-built message queue instead of Kafka. You ask the senior engineer, "Why are we doing this?" They say, "I don't know, the guy who built it left two years ago. I think there was a licensing issue back then?"
+
+Two months later, you spend weeks ripping it out for Kafka. When you push to production, the security team blocks your release. Turns out, the company has a strict compliance requirement that Kafka didn't meet, which is why the custom queue was built. 
+
+Bro, if an ADR existed, you would have known exactly why that decision was made. You would have saved weeks of useless work.
+
+## 3. Real-World Analogy
+
+Think of an ADR like an Indian joint family's WhatsApp group when deciding which car to buy. 
+
+| Family Car Decision | ADR Equivalent |
+|---|---|
+| "We need a new car because the old Maruti breaks down." | **Context** (The Problem) |
+| "Option A: Honda City, Option B: Tata Nexon EV." | **Proposed Alternatives** |
+| "Dad says EV has no charging points near the village." | **Evaluation Criteria** |
+| "We are buying Tata Nexon EV for city driving." | **Decision** |
+| Uncle complaining next Diwali: "Why didn't we buy a Maruti?" | **New engineer questioning the architecture** |
+| Forwarding the old WhatsApp message to Uncle. | **Pointing the engineer to the ADR** |
+
+The story builds curiosity; the analogy builds intuition. The whole point is to record the *why* so you do not have to argue about it later.
+
+## 4. Concept Explanation
+
+An Architecture Decision Record (ADR) is a short text document that captures a single, significant architectural decision. 
+
+It explains the context, the decision itself, and the consequences of that decision. ADRs live right next to your code in the Git repository (usually in a `docs/adrs/` folder).
+
+Use ADRs for major choices. Do not use them for tiny details like naming conventions or formatting rules. Bro, nobody needs an ADR for choosing spaces over tabs. Use them when you choose a database, pick a framework, or design a microservice boundary.
+
+## 5. Syntax Table
+
+ADRs usually follow a standard template format (like the Michael Nygard template).
+
+| Section | Purpose | Example |
+|---|---|---|
+| **Title** | The core decision being made. | `ADR-004: Use PostgreSQL for User Data` |
+| **Status** | Current state of this ADR. | Proposed, Accepted, Deprecated, Superseded |
+| **Context** | The problem being solved and constraints. | "We need a relational schema for..." |
+| **Decision** | What we chose and why. | "We will use PostgreSQL 15 because..." |
+| **Consequences**| Good and bad outcomes of this choice. | "Good: ACID compliant. Bad: Harder to scale horizontally." |
+
+## 6. Beginner Example
+
+This is what a simple, raw ADR looks like in a Markdown file.
+
+```markdown
+# ADR 001: Use React for the Frontend
+
+## Status
+Accepted
+
+## Context
+We need to build a single-page application for the new dashboard. The team has experience with Angular and React.
+
+## Decision
+We will use React. It has a larger ecosystem, and 80% of our current engineers are already familiar with it.
+
+## Consequences
+- **Positive:** Faster delivery time due to existing knowledge.
+- **Negative:** We will need to manage state manually or add Redux later.
+```
+
+## 7. Real-World Engineering Example
+
+In a production environment, ADRs handle much heavier decisions with deep trade-offs.
+
+```markdown
+# ADR 012: Migrate from REST to gRPC for Internal Microservices
+
+## Status
+Accepted
+
+## Context
+Our internal microservices currently communicate using REST over HTTP/1.1. As traffic has scaled to 10k requests per second, we are seeing high latency due to JSON serialization overhead and connection blocking.
+
+## Decision
+We will migrate all internal service-to-service communication to gRPC using Protocol Buffers. We evaluated GraphQL and Thrift but chose gRPC for its native HTTP/2 multiplexing and strict typing.
+
+## Consequences
+- **Positive:** Binary payload will reduce network bandwidth by ~40%.
+- **Positive:** Code generation ensures strict API contracts.
+- **Negative:** Harder to debug network calls (cannot just use Postman or curl easily).
+- **Negative:** Requires team training on Protobuf syntax.
+```
+
+## 8. Internal Working
+
+How does an ADR fit into the engineering lifecycle? It starts as a problem, gets debated in a Pull Request, and then becomes a permanent historical record.
+
+export const adrNodes = [
+  { id: '1', type: 'process', data: { label: 'Identify System Problem' }, position: { x: 0, y: 50 } },
+  { id: '2', type: 'data', data: { label: 'Draft ADR (Markdown)' }, position: { x: 250, y: 50 } },
+  { id: '3', type: 'tool', data: { label: 'Open Pull Request' }, position: { x: 500, y: 50 } },
+  { id: '4', type: 'warning', data: { label: 'Team Debate & Review' }, position: { x: 750, y: 50 } },
+  { id: '5', type: 'core', data: { label: 'Merge to docs/adrs/' }, position: { x: 500, y: 200 } },
+  { id: '6', type: 'output', data: { label: 'Immutable Architecture Log' }, position: { x: 500, y: 350 } }
+];
+
+export const adrEdges = [
+  { id: 'e1-2', source: '1', target: '2', animated: true, label: 'requires' },
+  { id: 'e2-3', source: '2', target: '3', animated: true, label: 'submits' },
+  { id: 'e3-4', source: '3', target: '4', animated: true, type: 'smoothstep', label: 'review' },
+  { id: 'e4-5', source: '4', target: '5', animated: true, type: 'smoothstep', label: 'accepted' },
+  { id: 'e5-6', source: '5', target: '6', animated: true, type: 'straight', label: 'becomes' }
+];
+
+<LearningFlow nodes={adrNodes} edges={adrEdges} />
+
+## 9. Process Impact Table
+
+Unlike code, ADRs don't have runtime performance. Their "performance" is measured in engineering velocity.
+
+| Phase | Time Cost | Long-term Impact |
+|---|---|---|
+| **Writing ADR** | ~30-60 mins | O(1) time to resolve future debates. |
+| **Context Switching** | Minimal | High alignment since it is stored with the code. |
+| **Onboarding** | Saves ~10 hours | New hires read the history instead of asking you. |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is an ADR? | A document capturing an important architecture decision, its context, and consequences. |
+| Why keep ADRs in Git instead of a Wiki? | To version them with the code they describe. A branch can have its own ADRs reflecting its state. |
+| Can you modify an accepted ADR? | No. Bro, ADRs are immutable. If a decision changes, write a new ADR and mark the old one as "Superseded". |
+| When should you NOT write an ADR? | For trivial decisions, formatting rules, or temporary hacks. |
+| What must every ADR include? | Context (why), Decision (what), and Consequences (the good and the bad trade-offs). |
+
+## 11. Tricky Questions & Edge Cases
+
+**What if the decision was forced by budget, not technology?**
+Document it! If you chose MySQL over Oracle because the company was broke, write that down. When the company gets funding later, the next engineer will know *why* you didn't buy the enterprise tool.
+
+**What if a new ADR completely contradicts an old one?**
+This is normal. Technology evolves. Create a new ADR (e.g., ADR-020) and update the status of the old one (e.g., ADR-005) to `Superseded by ADR-020`. 
+
+## 12. Real-World Usage
+
+Companies like Spotify, AWS, and GitHub rely heavily on ADRs. In massive microservice ecosystems, teams operate autonomously. When an incident happens, the SRE team needs to know why a specific database was chosen. Without an ADR, they are flying blind.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Keep ADRs close to the code (in the same Git repo). | DON'T hide them in Google Docs or Confluence where they get lost. |
+| Number them sequentially (`0001-use-react.md`). | DON'T overwrite old ADRs. Architecture history must be preserved. |
+| Be honest about the negative consequences. | DON'T use ADRs as a marketing pitch for your favorite tool. |
+
+## 14. Production Notes
+
+:::warning Scaling ADRs
+As your project grows past 50+ ADRs, searching through markdown files becomes difficult. At scale, use an index file (`README.md` inside your `adrs/` folder) or a tool to generate a static site for your ADRs so they remain searchable and easy to browse.
+:::
+
+## 15. Common Mistakes
+
+| Trap | Correction |
+|---|---|
+| **Writing after the fact:** Implementing the feature and then writing the ADR just to check a box. | **Write during design:** The ADR should be a Pull Request *before* the code is written, to gather feedback. |
+| **Omitting context:** "We are using Redis." (Why? Who knows.) | **Full context:** "We are using Redis because PostgreSQL could not handle 10k reads/sec for our session store." |
+| **Deleting old decisions:** Erasing ADR-002 because we no longer use that tech. | **Superseding:** Keep ADR-002, change its status to `Superseded`, and link it to the new decision. |
+
+## 16. Related Topics
+- Technical Debt Management
+- System Design Basics
+- Product Requirement Documents (PRDs)
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [npryce/adr-tools](https://github.com/npryce/adr-tools) | ⭐ 4.5k+ | CLI tools to manage Architecture Decision Records. | The standard CLI for creating and managing ADRs in your terminal. |
+| [thomwiggers/log4brains](https://github.com/thomwiggers/log4brains) | ⭐ 1.2k+ | Docs-as-code ADR manager and static site generator. | Great for publishing your ADRs into a searchable web UI for the whole company. |
+| [joelparkerhenderson/architecture-decision-record](https://github.com/joelparkerhenderson/architecture-decision-record) | ⭐ 9k+ | A massive collection of ADR templates and examples. | The best place to learn how top companies format their ADRs. |

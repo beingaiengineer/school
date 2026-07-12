@@ -21,7 +21,9 @@ Bro, at 3 AM your brain doesn't work. If you have to invent a solution while the
 
 ## 2. Engineering Story
 
-A team of engineers recently faced a critical challenge related to this concept. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing this concept, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+A junior SRE joined a team on a Thursday. On Friday night, she was added to the on-call rotation as backup. On Saturday at 2am, her first page fired — high memory usage on a Kafka consumer causing message lag. She had never touched Kafka before. She spent 40 minutes reading Kafka documentation, trying random `kafka-consumer-groups.sh` commands, and pinging her senior colleague at 2am begging for help.
+
+The senior engineer fixed it in 3 minutes: restart the consumer group and check for memory leak in the config. He stayed up for the next two hours writing a runbook for this exact scenario. Next month, when the same alert fired at 3am, the junior SRE opened the runbook: "Step 1: Confirm which consumer group is lagging using `kafka-consumer-groups.sh --describe`. Step 2: Check memory graph in Grafana. Step 3: If memory >85%, restart with `kubectl rollout restart deployment/kafka-consumer`." She resolved it in 4 minutes, alone, at 3am. A runbook is what happens when an expert's knowledge survives being an expert.
 
 ## 3. Real-World Analogy
 
@@ -173,7 +175,7 @@ Companies like Netflix and Amazon rely heavily on automated runbooks. They use t
 - Incident Response Process
 - On-Call Culture
 
-## 16. Top GitHub Repos
+## 17. Top GitHub Repos
 
 | Repository | Stars | Description | Why It Matters |
 |---|---|---|---|

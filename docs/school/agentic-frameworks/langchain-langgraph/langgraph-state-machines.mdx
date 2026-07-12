@@ -19,7 +19,9 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ## 2. Engineering Story
 
-A team of engineers recently faced a critical challenge related to this concept. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing this concept, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+A developer was building a LangGraph research agent that called multiple search tools and accumulated their results into a list. She defined her state as `{"results": list[str]}`. She ran the graph, it called three search tools, and when she printed the final state — only one result. The other two had vanished.
+
+After two hours of debugging she found the issue: without a **reducer**, LangGraph's default behavior when two nodes write to the same state key is to replace it, not append. Her second tool's result overwrote the first, the third overwrote the second. The fix was a one-line annotation: `results: Annotated[list[str], operator.add]` — this told LangGraph to use `operator.add` (list concatenation) as the reducer whenever multiple nodes write to `results`. Her three results now accumulated correctly. The lesson: LangGraph state is not a shared variable — it's an immutable value that nodes transform, and reducers define how those transformations merge.
 
 ## 3. Real-World Analogy
 

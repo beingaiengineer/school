@@ -19,7 +19,9 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ## 2. Engineering Story
 
-A team of engineers recently faced a critical challenge related to this concept. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing this concept, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+An infrastructure team set up Prometheus alerts on day one of their new Kubernetes cluster. They alerting on everything: CPU above 50%, memory above 60%, any pod restart, any request taking more than 500ms. Within two weeks, the team was receiving 300+ alerts per day. Engineers stopped reading them. Alert fatigue had set in. When a genuine disk-full event caused a database crash, the PagerDuty page was buried in 40 other alerts that no one had acknowledged.
+
+An SRE redesigned the alerting strategy from scratch using three principles: (1) only alert on symptoms users experience, not causes, (2) every alert must have a clear runbook action, (3) alerts that can't wake you up at 3am shouldn't be alerts — they should be dashboards or tickets. CPU alerts became SLO-based latency alerts. Pod restart alerts became "pod crash-looping for 10 minutes" alerts. 300 daily alerts became 8. The 8 that remained were always actionable. The team discovered that the goal of alerting isn't to know about everything — it's to know about the right things.
 
 ## 3. Real-World Analogy
 

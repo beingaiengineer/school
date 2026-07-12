@@ -19,7 +19,9 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ## 2. Engineering Story
 
-A team of engineers recently faced a critical challenge related to this concept. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing this concept, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+A ride-sharing platform's API had a mysterious latency spike: some requests to `/estimate-fare` were taking 8 seconds instead of the usual 200ms — but only for about 2% of requests. The backend was 14 microservices. Which one was slow? Engineers spent two days adding print statements, checking database query times, and restarting services one by one. Nothing helped. The slow requests remained random and unreproducible.
+
+They implemented Jaeger for distributed tracing. Every request now got a unique `trace_id` that was passed as a header through all 14 services. Within 30 minutes, they found a slow request in Jaeger's UI: the trace showed the request spending 7.8 seconds inside the `surge-pricing-service`. Drilling into that span revealed a Redis cache miss that fell back to a real-time pricing calculation with a poorly configured timeout. A 2-day mystery was solved in 30 minutes. Distributed tracing doesn't speed up your system — it makes invisible problems visible.
 
 ## 3. Real-World Analogy
 

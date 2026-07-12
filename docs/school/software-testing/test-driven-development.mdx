@@ -1,0 +1,220 @@
+---
+sidebar_position: 7
+sidebar_label: "Test-Driven Development (TDD)"
+---
+
+import { LearningFlow } from '@site/src/components/LearningFlow';
+
+# Test-Driven Development (TDD)
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Test-Driven Development (TDD) |
+| Difficulty | Advanced |
+| Used For | Writing tests *before* writing the actual application code to ensure high quality and design. |
+| Common Mistake | Writing tests after writing the code, then calling it TDD. |
+| Performance | Slows down initial development but drastically reduces debugging time later. |
+
+## 2. Engineering Story
+
+A team at a streaming giant was building a complex algorithm to calculate royalty payouts for artists based on millions of streams. The logic involved currency conversions, tax brackets, and split percentages. 
+
+They decided to write the algorithm first and add tests later. By the end of the week, the code was a massive 500-line function. When they tried to write tests, it was impossible to isolate the logic. They had to rewrite the entire system. Bro, if they had used TDD—writing a test for the tax bracket, then the code for it, then a test for currency conversion, then the code for it—the architecture would have organically shaped itself into small, testable, robust functions from day one.
+
+## 3. Real-World Analogy
+
+Imagine building a custom bookshelf for a specific corner of your room.
+
+| Bookshelf Construction | TDD Equivalent |
+|---|---|
+| Measuring the exact corner space and drawing a blueprint (the requirements) | **Writing a failing test (RED)** |
+| Cutting the wood exactly to those measurements | **Writing just enough code to make it pass (GREEN)** |
+| Sanding the wood, polishing it, and making it look beautiful | **Refactoring the code (REFACTOR)** |
+
+You don't just start blindly hammering wood together and hope it fits the corner later (which is traditional coding). You define the boundary (the test) first, and build the product to fit exactly inside it.
+
+## 4. Concept Explanation
+
+**Test-Driven Development (TDD)** is a software development process relying on software requirements being converted to test cases before software is fully developed. 
+
+It follows a strict, repeating cycle known as **Red-Green-Refactor**:
+1. **Red:** Write a test that fails (because the feature doesn't exist yet).
+2. **Green:** Write the absolute minimum code required to make the test pass.
+3. **Refactor:** Clean up the code, optimize it, and remove duplication, while ensuring the test stays green.
+
+**When to use:** For complex business logic, algorithms, calculators, and parsers where accuracy is critical.
+**When NOT to use:** UI design, rapid prototyping, or exploring unknown APIs where you don't even know what the output should look like yet.
+
+## 5. Syntax Table
+
+There is no specific syntax for TDD; it's a workflow using `pytest`.
+
+| Step | Action | Outcome |
+|---|---|---|
+| 1. Red | `pytest` runs and fails with `NameError` or `AssertionError`. | The requirement is defined. |
+| 2. Green | Add basic code (even hardcoded). `pytest` passes. | The requirement is fulfilled. |
+| 3. Refactor | Optimize code logic. `pytest` still passes. | The code is clean and safe. |
+
+## 6. Beginner Example
+
+Let's build a password validator using TDD.
+
+**Step 1: RED (Write the test first)**
+```python
+# test_password.py
+import pytest
+from password import is_valid
+
+def test_password_too_short():
+    assert is_valid("short") == False
+```
+*Result: Fails because `password.py` and `is_valid` don't exist.*
+
+**Step 2: GREEN (Write minimal code)**
+```python
+# password.py
+def is_valid(pwd):
+    return False # Just enough to pass the test!
+```
+*Result: Test passes!*
+
+**Step 3: RED (Add next requirement)**
+```python
+# test_password.py
+def test_password_valid_length():
+    assert is_valid("longpassword123") == True
+```
+*Result: Fails because our code hardcodes `False`.*
+
+**Step 4: GREEN & REFACTOR (Implement real logic)**
+```python
+# password.py
+def is_valid(pwd):
+    if len(pwd) < 8:
+        return False
+    return True
+```
+*Result: All tests pass. The code is complete and fully tested.*
+
+## 7. Real-World Engineering Example
+
+Implementing a shopping cart discount system.
+
+```python
+# 1. We write the tests describing the exact business rules FIRST.
+# test_cart.py
+from cart import Cart
+
+def test_cart_initializes_empty():
+    cart = Cart()
+    assert cart.total == 0
+
+def test_cart_adds_items():
+    cart = Cart()
+    cart.add_item("laptop", 1000)
+    assert cart.total == 1000
+
+def test_cart_applies_10_percent_discount():
+    cart = Cart()
+    cart.add_item("laptop", 1000)
+    cart.apply_discount("10_OFF")
+    assert cart.total == 900
+
+# 2. Then, we write the exact class required to make those tests pass.
+# cart.py
+class Cart:
+    def __init__(self):
+        self._items = []
+        self._discount = 0
+
+    def add_item(self, name: str, price: float):
+        self._items.append({"name": name, price: price})
+
+    def apply_discount(self, code: str):
+        if code == "10_OFF":
+            self._discount = 0.10
+
+    @property
+    def total(self):
+        subtotal = sum(item["price"] for item in self._items)
+        return subtotal * (1 - self._discount)
+```
+
+## 8. Internal Working
+
+TDD forces a specific brain pathway. Instead of thinking "How do I implement this?", you are forced to think "How will a user consume this API?" This naturally leads to better decoupled, highly cohesive system architecture.
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'warning', data: { label: '🔴 RED: Write Failing Test' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'core', data: { label: '🟢 GREEN: Write Minimum Code' }, position: { x: 250, y: 150 } },
+    { id: '3', type: 'process', data: { label: '🔵 REFACTOR: Clean & Optimize' }, position: { x: 250, y: 300 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'execute pytest', animated: true },
+    { id: 'e2-3', source: '2', target: '3', label: 'tests pass', animated: true },
+    { id: 'e3-1', source: '3', target: '1', label: 'new requirement', type: 'smoothstep' }
+  ]}
+/>
+
+## 9. Performance Table
+
+| Phase | Developer Time Spent | Long-term Maintenance Cost | Bug Rate in Prod |
+|---|---|---|---|
+| **Without TDD** | Fast initially (just coding) | Very High (Fear of refactoring) | Medium to High |
+| **With TDD** | Slower initially (writing tests) | Very Low (Safe to refactor anytime) | Extremely Low |
+
+## 10. Top Interview Questions
+
+| Question | Answer | Level |
+|---|---|---|
+| **What are the three phases of TDD?** | Red, Green, Refactor. | Beginner |
+| **Why write the test before the code?** | It forces you to clarify requirements, design the API from the consumer's perspective, and guarantees 100% test coverage. | Intermediate |
+| **Should you use TDD for everything?** | No. UI development, exploratory data science, or hacking together a prototype don't benefit much from TDD. | Intermediate |
+| **What is the "Refactor" phase for?** | Making the code readable, removing duplication, and improving architecture without altering behavior, backed by the safety net of tests. | Advanced |
+| **What is BDD (Behavior-Driven Development)?** | An extension of TDD where tests are written in plain English (e.g., Given/When/Then using tools like Behave/Cucumber) so non-technical stakeholders can read them. | Advanced |
+
+## 11. Tricky Questions & Edge Cases
+
+- **"I wrote tests after the code, and achieved 100% coverage. Is that TDD?"** No, bro. That is just standard testing. TDD is a *design process*. Writing tests after the fact often results in tests that are tightly coupled to bad architecture just to reach 100% coverage.
+- **The TDD Trap:** Writing tests that are too specific to the implementation. E.g., testing that an internal array has a specific length rather than testing the public output. When you refactor to use a dictionary instead, the test breaks, defeating the Refactor phase.
+
+## 12. Real-World Usage
+
+Companies dealing in finance, healthcare, and aviation mandate TDD. When a developer at Stripe writes logic to process a charge, they cannot afford a single bug. TDD ensures that every line of business logic was explicitly requested by a test case before it was ever typed.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| **DO** keep the Red-Green-Refactor cycle extremely short (a few minutes per cycle). | **DON'T** write 10 failing tests at once. Write one, make it pass, repeat. |
+| **DO** write tests for the public interface (methods a user will call). | **DON'T** write tests for private/internal helper functions. |
+| **DO** treat your test code with the same respect as production code. | **DON'T** skip the Refactor phase just because the test is green. Green means working, not clean. |
+
+## 14. Production Notes
+
+> **Warning: TDD Fatigue**  
+> Forcing strict TDD on a startup trying to find Product-Market Fit can kill the company. Requirements change daily. TDD shines when requirements are clear and the cost of failure is high (e.g., core domain logic), not when building temporary landing pages.
+
+## 15. Common Mistakes
+
+| Mistake | Bad Practice | The Fix |
+|---|---|---|
+| **Skipping RED** | Writing the logic first, then writing a test to prove it works. | Write the test, run it, and literally watch it fail before touching the app code. |
+| **Over-engineering in GREEN** | Writing complex abstractions immediately to make the first test pass. | Write the simplest, dumbest code (even returning a hardcoded string) to turn the test green. |
+| **Testing Implementation** | Test breaks when a variable is renamed internally. | Test *behaviors* and public outputs, not private variables. |
+
+## 16. Related Topics
+
+- Unit Testing with Pytest
+- Mocking and Patching
+- Code Coverage
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [behave/behave](https://github.com/behave/behave) | ⭐ 3.5k+ | Behavior-Driven Development | A popular tool in Python for BDD, which is the higher-level cousin of TDD using plain English scenarios. |
+| [clean-code-python](https://github.com/zedr/clean-code-python) | ⭐ 15k+ | Clean Code concepts for Python | TDD goes hand-in-hand with writing clean, SOLID code. This repo is essential reading. |

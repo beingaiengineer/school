@@ -19,7 +19,9 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ## 2. Engineering Story
 
-A team of engineers recently faced a critical challenge related to this concept. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing this concept, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+A developer at an edtech startup was building an AI tutoring feature. His pipeline was: get the student's question → summarize the textbook chapter → generate a Socratic follow-up question. He coded it as three separate `openai.chat.completions.create()` calls with manual string formatting between them. It worked, but adding a fourth step meant touching four different places in the code. When the prompt format changed, he broke two downstream steps silently.
+
+A senior engineer introduced him to LangChain's LCEL (LangChain Expression Language). They rewrote the pipeline as `summarizer | quiz_generator | feedback_formatter` — a clean pipe operator that composed the chain declaratively. Adding a new step meant appending one component. Swapping the model from GPT-4o to Claude was a one-line change. LangChain didn't add magic — it added **structure** to a mess that was quietly becoming unmaintainable.
 
 ## 3. Real-World Analogy
 

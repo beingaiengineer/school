@@ -1,0 +1,214 @@
+---
+sidebar_position: 4
+sidebar_label: "Mocking and Patching"
+---
+
+import { LearningFlow } from '@site/src/components/LearningFlow';
+
+# Mocking and Patching
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Mocking and Patching (`unittest.mock`) |
+| Difficulty | Advanced |
+| Used For | Faking external dependencies (APIs, DBs, Time) so unit tests run fast and isolated. |
+| Common Mistake | Mocking the system under test (SUT) itself, resulting in a useless test. |
+| Performance | Makes tests ultra-fast by bypassing real network/I/O bottlenecks. |
+
+## 2. Engineering Story
+
+A payment gateway integration was failing randomly in the staging environment. The engineering team wrote a suite of unit tests for their `charge_credit_card()` function. But there was a catch: the tests actually called the real Stripe sandbox API. 
+
+One day, Stripe's sandbox went down for 30 minutes. Suddenly, the entire CI/CD pipeline at the startup broke. No code could be merged because the tests were failing. Bro, tests should never depend on external network state. The team learned the hard way that they needed to "mock" the Stripe API response to ensure their logic worked independently of the internet.
+
+## 3. Real-World Analogy
+
+Imagine preparing for a high-stakes UPSC (Civil Services) interview.
+
+| UPSC Interview Preparation | Software Testing Equivalent |
+|---|---|
+| The real UPSC interview panel | The real database or external API |
+| A mock interview with your mentors | A **Mock Object** |
+| Your mentor pretending to ask a tough question | **Patching** a function to return a specific value |
+| Reviewing if you answered confidently | Asserting that the mock was called with the right arguments |
+
+You don't go to Delhi to give a real interview just to practice. You create a fake environment (mock) that mimics the real one perfectly, so you can test your responses (logic) safely and quickly.
+
+## 4. Concept Explanation
+
+**Mocking** is the process of replacing a real object or function with a fake one that simulates its behavior. 
+**Patching** is the mechanism used to temporarily replace the real object with the mock during a test.
+
+In Python, this is done using the built-in `unittest.mock` module (specifically `patch` and `MagicMock`). 
+
+**When to use:** When your code interacts with databases, third-party APIs, file systems, time/randomness, or heavy computations that you want to skip in a unit test.
+**When NOT to use:** In integration or End-to-End (E2E) tests. Mocking defeats the purpose of an integration test.
+
+## 5. Syntax Table
+
+| Tool | Syntax | Explanation |
+|---|---|---|
+| **Patch Decorator** | `@patch('module.Class.method')` | Replaces the target with a Mock for the test duration. |
+| **Set Return Value** | `mock_obj.return_value = 42` | Forces the mock to always return a specific value. |
+| **Set Exception** | `mock_obj.side_effect = Exception()` | Forces the mock to throw an error. |
+| **Assert Call** | `mock_obj.assert_called_with(x)` | Verifies the mock was called with specific arguments. |
+
+## 6. Beginner Example
+
+Let's mock a slow network call.
+
+```python
+# weather.py
+import time
+
+def get_temperature(city):
+    # Imagine this takes 5 seconds and calls an actual API
+    time.sleep(5) 
+    return 35
+
+def weather_report(city):
+    temp = get_temperature(city)
+    return f"It is {temp} degrees in {city}."
+
+# test_weather.py
+from unittest.mock import patch
+from weather import weather_report
+
+@patch('weather.get_temperature')
+def test_weather_report(mock_get_temp):
+    # 1. Arrange: Tell the mock what to return
+    mock_get_temp.return_value = 25
+    
+    # 2. Act: Call our function
+    result = weather_report("Mumbai")
+    
+    # 3. Assert: Check output and verify mock was used
+    assert result == "It is 25 degrees in Mumbai."
+    mock_get_temp.assert_called_once_with("Mumbai")
+```
+
+## 7. Real-World Engineering Example
+
+Mocking an AWS S3 upload failure to test retry or error handling logic.
+
+```python
+# uploader.py
+import boto3
+from botocore.exceptions import ClientError
+
+def upload_avatar(user_id, file_path):
+    s3 = boto3.client('s3')
+    try:
+        s3.upload_file(file_path, 'my-bucket', f"avatars/{user_id}.png")
+        return True
+    except ClientError:
+        # Log error in real life
+        return False
+
+# test_uploader.py
+from unittest.mock import patch
+from botocore.exceptions import ClientError
+from uploader import upload_avatar
+
+@patch('uploader.boto3.client')
+def test_upload_avatar_failure(mock_boto_client):
+    # Setup mock to simulate a failed upload
+    mock_s3 = mock_boto_client.return_value
+    mock_s3.upload_file.side_effect = ClientError(
+        {'Error': {'Code': '500', 'Message': 'Internal Error'}}, 
+        'upload_file'
+    )
+    
+    # Act
+    result = upload_avatar(123, "/tmp/img.png")
+    
+    # Assert
+    assert result is False
+    mock_s3.upload_file.assert_called_once_with("/tmp/img.png", "my-bucket", "avatars/123.png")
+```
+
+## 8. Internal Working
+
+When you use `@patch`, Python dynamically modifies the `sys.modules` registry or the object's dictionary at runtime, injecting the `MagicMock` object before the test runs, and restoring the original object afterward.
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Original Function (weather.get_temperature)' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'tool', data: { label: '@patch executes' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'process', data: { label: 'Replaces original with MagicMock' }, position: { x: 250, y: 200 } },
+    { id: '4', type: 'data', data: { label: 'Test Executes (fast, no network)' }, position: { x: 250, y: 300 } },
+    { id: '5', type: 'process', data: { label: 'Restores original function' }, position: { x: 250, y: 400 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'test starts' },
+    { id: 'e2-3', source: '2', target: '3', label: 'intercepts' },
+    { id: 'e3-4', source: '3', target: '4', label: 'uses mock' },
+    { id: 'e4-5', source: '4', target: '5', label: 'test ends' }
+  ]}
+/>
+
+## 9. Performance Table
+
+| Resource Mocked | Without Mocking | With Mocking |
+|---|---|---|
+| **External REST API** | ~500ms to 2s | < 1ms |
+| **Database Query** | ~50ms | < 1ms |
+| **File System Write** | ~10ms | < 1ms |
+| **`time.sleep(10)`** | 10 seconds | < 1ms (if mocked) |
+
+## 10. Top Interview Questions
+
+| Question | Answer | Level |
+|---|---|---|
+| **What is the difference between a Stub and a Mock?** | A stub just provides canned answers (state verification). A mock also verifies how it was used (behavior verification, like `assert_called_once`). | Intermediate |
+| **Where do you patch a module?** | You patch it *where it is used*, not where it is defined. If `app.py` imports `requests`, patch `app.requests`, not `requests`. | Advanced |
+| **What is the difference between `return_value` and `side_effect`?** | `return_value` returns a static value. `side_effect` can raise an exception, return values from an iterable, or call a custom function. | Intermediate |
+| **What happens if you misspell a method on a Mock object?** | By default, MagicMock creates a new mock for the misspelled method, causing false positives. Use `autospec=True` to prevent this. | Advanced |
+| **Why not mock the database in integration tests?** | Mocking hides real integration issues (like SQL syntax errors or connection timeouts). Integration tests *must* use real infrastructure. | Beginner |
+
+## 11. Tricky Questions & Edge Cases
+
+- **"I patched a function, but my test is still calling the real API!"** Bro, you patched the wrong path. This is the #1 mistake in Python testing. If `fileA.py` does `from fileB import my_func`, you must `@patch('fileA.my_func')`. If you patch `'fileB.my_func'`, `fileA` still holds the reference to the original function!
+- **Mocking `datetime`**: `datetime` is a built-in C-extension module in Python, so you can't easily patch `datetime.datetime.now()`. You have to use specialized libraries like `freezegun`.
+
+## 12. Real-World Usage
+
+In massive financial systems, you cannot test trading algorithms by placing real trades. Every single broker API call must be mocked with synthetic market data using `side_effect` to return simulated price fluctuations. This ensures the trading logic handles volatility without spending real money.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| **DO** use `autospec=True` in your patches to ensure your mock mimics the real object's signature. | **DON'T** over-mock. If you mock every single function in a test, the test becomes useless. |
+| **DO** mock side-effects like writing to disk, network calls, and `time.sleep`. | **DON'T** mock pure math or data transformation functions. Test them directly. |
+| **DO** use `pytest-mock` (the `mocker` fixture) for cleaner syntax over built-in `@patch`. | **DON'T** forget to check `assert_called_with` to verify correct data was sent to the mock. |
+
+## 14. Production Notes
+
+> **Warning: Mock Drift**  
+> If an external API changes its response structure (e.g., renames a JSON key from `user_id` to `userId`), your mock will still return the old structure. Your unit tests will pass, but production will crash. This is why you *must* have Integration/Contract tests alongside mocked Unit tests.
+
+## 15. Common Mistakes
+
+| Mistake | Bad Practice | The Fix |
+|---|---|---|
+| **Patching the Definition, Not Usage** | `@patch('requests.get')` when `my_module` imported it directly. | Patch where it's used: `@patch('my_module.requests.get')`. |
+| **Asserting on Typos** | `mock_obj.asssert_called_once()` (Notice the three 's'). MagicMock accepts it as a new attribute! | Use `autospec=True` or use `pytest-mock` which catches these errors. |
+| **Mocking the System Under Test** | Mocking the exact function you are trying to write tests for. | Only mock the *dependencies* of the function, never the function itself. |
+
+## 16. Related Topics
+
+- Unit Testing with Pytest
+- Integration Testing
+- API Testing
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [pytest-dev/pytest-mock](https://github.com/pytest-dev/pytest-mock) | ⭐ 1.5k+ | Pytest wrapper for mock | Provides the `mocker` fixture, making patching cleaner without decorators. |
+| [spulec/moto](https://github.com/spulec/moto) | ⭐ 8k+ | Mock AWS Services | Essential for mocking Boto3 calls (S3, DynamoDB) without writing manual mocks. |
+| [spulec/freezegun](https://github.com/spulec/freezegun) | ⭐ 3.5k+ | Time mocking | The standard way to mock `datetime.now()` to test time-dependent logic. |
+| [getsentry/responses](https://github.com/getsentry/responses) | ⭐ 3.5k+ | Mock requests library | Cleaner way to mock external HTTP calls specifically for the `requests` library. |

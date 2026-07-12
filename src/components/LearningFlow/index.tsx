@@ -105,7 +105,7 @@ function diagramFromSteps(steps: FlowStep[]): Diagram {
   };
 }
 
-export default function LearningFlow({steps, diagram}: LearningFlowProps) {
+export function LearningFlow({steps, diagram}: LearningFlowProps) {
   const spec = diagram ?? diagramFromSteps(steps ?? []);
   const nodes: Node<ConceptNodeData>[] = spec.nodes.map((node) => ({
     id: node.id,
@@ -163,3 +163,5 @@ export default function LearningFlow({steps, diagram}: LearningFlowProps) {
     </BrowserOnly>
   );
 }
+
+export default LearningFlow;

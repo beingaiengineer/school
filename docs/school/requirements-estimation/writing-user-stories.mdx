@@ -1,0 +1,197 @@
+---
+sidebar_position: 3
+sidebar_label: "Writing User Stories"
+---
+
+# Writing User Stories
+
+### 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Writing User Stories |
+| Difficulty | Beginner / Intermediate |
+| Used For | Translating business requirements into actionable, value-driven engineering tasks |
+| Common Mistake | Writing technical instructions ("Add a database column") instead of focusing on user value |
+| Performance | Reduces engineering rework, improves estimation accuracy, and aligns teams |
+
+### 2. Engineering Story
+
+It was Friday evening, and the deployment just finished. Rahul, a junior engineer, had perfectly completed his Jira ticket: *"Add an export to CSV button on the dashboard."* He pushed the code, merged the PR, and went home happy.
+
+Monday morning, the Product Manager panics. "Where is the PDF export? The executive users need to print these reports for their weekly strategy meetings!" 
+
+Rahul replied, "The ticket only said CSV!"
+
+The problem wasn't Rahul's code; it was the ticket itself. It focused entirely on the *implementation* (a CSV file) rather than the *business need* (printable reports for meetings). If the requirement had been written properly to identify the end-user's actual goal, the team would have realized PDF was the correct format. That's why we write User Stories, bro. We do it to build the right thing, not just to build things right.
+
+### 3. Real-World Analogy
+
+Imagine ordering food at a busy, highly efficient Udupi restaurant in Bangalore. The waiter taking your order doesn't care about the kitchen's recipes or how the stove works; he cares about what you want and why you are there.
+
+| Udupi Restaurant | User Story Equivalent |
+|---|---|
+| "As a hungry customer..." | **Role** (Who is asking for this?) |
+| "...I want a crispy Rava Dosa with extra coconut chutney..." | **Action** (What exactly do they want?) |
+| "...so that I can eat a fulfilling meal quickly before my office meeting." | **Value** (Why do they want it? What is the goal?) |
+| Waiter verifies: Dosa is crispy, chutney is extra, served in under 10 mins. | **Acceptance Criteria** (How do we know it's done?) |
+
+If you just tell the kitchen "Make batter," they don't know who it's for or what dish to prepare. User stories ensure the engineering team (the kitchen) knows exactly who they are cooking for, ensuring the final output matches the customer's expectations.
+
+### 4. Concept Explanation
+
+A User Story is a short, simple description of a software feature told from the perspective of the person who desires the new capability. It shifts the focus from writing boring technical requirements to actually discussing user needs. 
+
+Good stories follow the industry-standard **INVEST** principle:
+- **I**ndependent: Can be developed on its own without waiting on other stories.
+- **N**egotiable: It is not a rigid legal contract; it is an invitation for developers and PMs to discuss the best solution.
+- **V**aluable: Delivers actual value to the end user.
+- **E**stimable: The engineering team understands it enough to guess how long it will take.
+- **S**mall: Fits easily within a single sprint (usually 2 weeks).
+- **T**estable: Has clear, boolean acceptance criteria.
+
+### 5. Syntax Table
+
+The standard User Story template is universally recognized across the software industry.
+
+| Component | Format | Purpose |
+|---|---|---|
+| **Role** | `As a [type of user]...` | Defines the specific persona experiencing the problem (e.g., Admin, Guest). |
+| **Action** | `...I want to [perform some action]...` | Describes the feature or capability being built. |
+| **Value** | `...so that [I achieve some goal].` | Explains the business value and "why" this matters. |
+| **Acceptance Criteria** | `Given [context], When [action], Then [result]` | Boolean conditions that prove the story is complete (BDD style). |
+
+### 6. Beginner Example
+
+Here is the difference between a bad technical task and a well-written user story.
+
+**Bad (Technical Task):**
+> Create a login API endpoint and a React form with username/password fields.
+
+**Good (User Story):**
+> **Title:** User Login
+> **As a** returning customer,
+> **I want to** log into my account using my email and password,
+> **so that** I can securely access my saved payment methods.
+> 
+> **Acceptance Criteria:**
+> 1. Given I enter valid credentials, when I click "Login", then I am redirected to the dashboard.
+> 2. Given I enter an invalid password, when I click "Login", then I see a red error message saying "Invalid credentials".
+
+### 7. Real-World Engineering Example
+
+Bro, when you work at scale (like Swiggy, Uber, or a fintech app), stories aren't just about UI forms. They involve complex backend constraints. Notice how the acceptance criteria here handle system failures gracefully.
+
+**Title:** Idempotent Payment Retries
+**As a** mobile app user on a flaky 3G network,
+**I want** the app to safely auto-retry my payment if the connection drops,
+**so that** I don't accidentally get charged twice for the same food order.
+
+**Acceptance Criteria:**
+1. **Given** a payment request is fired, **When** the network times out and auto-retries, **Then** the backend must use an `idempotency_key` to ensure only one charge goes through.
+2. **Given** a duplicate charge attempt is caught, **Then** the system logs a `DuplicatePaymentAttempt` metric for Datadog without returning an error to the user.
+3. **Given** 3 consecutive network failures, **Then** show a user-friendly UI error: "Payment unconfirmed. Please check your bank statement."
+
+### 8. Internal Working
+
+How does a User Story travel from a PM's brain into a production deployment? It goes through a strict lifecycle of drafting, refinement, splitting, and execution.
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', position: { x: 0, y: 100 }, data: { label: 'Raw Idea' } },
+    { id: '2', type: 'process', position: { x: 250, y: 100 }, data: { label: 'Write Story' } },
+    { id: '3', type: 'warning', position: { x: 250, y: -20 }, data: { label: 'Too Large (Epic)' } },
+    { id: '4', type: 'process', position: { x: 500, y: 100 }, data: { label: 'Backlog Grooming' } },
+    { id: '5', type: 'data', position: { x: 750, y: 100 }, data: { label: 'Sprint Ready' } },
+    { id: '6', type: 'tool', position: { x: 750, y: 250 }, data: { label: 'Dev Cycle' } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true, label: 'drafts' },
+    { id: 'e2-3', source: '2', target: '3', label: 'if > 1 sprint' },
+    { id: 'e3-2', source: '3', target: '2', label: 'splits into' },
+    { id: 'e2-4', source: '2', target: '4', animated: true, label: 'moves to' },
+    { id: 'e4-5', source: '4', target: '5', label: 'adds criteria' },
+    { id: 'e5-6', source: '5', target: '6', animated: true, label: 'picked up' }
+  ]}
+/>
+
+### 9. Performance Table
+
+In Agile methodologies, we measure the "weight" or complexity of a story using Story Points (often a Fibonacci sequence: 1, 2, 3, 5, 8). This number represents a combination of Effort + Complexity + Risk.
+
+| Story Point | Real-World Meaning | Risk Level | Example |
+|---|---|---|---|
+| **1 Point** | Trivial change, fully understood. | Very Low | Change a button color; fix a typo in an email template. |
+| **3 Points** | Standard feature, clear API contract. | Low | Add a new CRUD endpoint with unit tests. |
+| **5 Points** | Moderate complexity, touches multiple services. | Medium | Integrate a third-party SMS gateway. |
+| **8 Points** | High complexity, unknowns exist. | High | Migrate user session logic from Redis to DynamoDB. |
+| **13+ Points** | Too big (Epic). **Must be split.** | Extreme | "Build an AI recommendation engine." |
+
+### 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| **1. What is the INVEST criteria?** | It stands for Independent, Negotiable, Valuable, Estimable, Small, and Testable. It's the gold standard checklist for a user story. |
+| **2. How is a User Story different from an Epic?** | A User Story is small enough to be completed in a single sprint. An Epic is a massive body of work (like "Revamp Checkout") that must be broken down into dozens of stories. |
+| **3. Can we write technical stories (e.g., refactoring)?** | Yes, but they must still show value. E.g., "As an engineer, I want to upgrade to React 18, so that we reduce bundle size and improve page load time by 20%." |
+| **4. What are Acceptance Criteria?** | A set of clear, testable conditions that must be met before a story is marked as "Done". They remove all ambiguity for developers and QA engineers. |
+| **5. Who writes the user stories?** | Usually the Product Manager (PM), but it is a collaborative process that is refined and finalized by the engineering team during backlog grooming. |
+
+### 11. Tricky Questions & Edge Cases
+
+**Q: What if a story has external dependencies and cannot be finished in one sprint?**
+You should split the story. Create one story for a mock/stub implementation to unblock the frontend team, and create a second story for the actual integration when the third-party API is finally ready. Never bring a story into a sprint if it violates the "Independent" rule due to external blockers.
+
+**Q: Should a user story include UI/UX wireframes?**
+Yes, but as attachments, not as a replacement for the text. The story defines the *behavior* and *business logic*; the wireframe defines the *visual layout*. If a designer changes the padding, the story's acceptance criteria shouldn't need to change.
+
+### 12. Real-World Usage
+
+Top-tier companies like Spotify, Atlassian, and Airbnb rely heavily on user stories to maintain high engineering velocity. 
+- **Spotify** uses them to align autonomous "Squads" with high-level company missions without micromanaging their technical implementations.
+- **Atlassian** (the makers of Jira) builds their entire internal workflow around BDD (Behavior-Driven Development) acceptance criteria, ensuring that automated Cypress/Selenium tests map 1:1 with user story requirements.
+
+### 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| **DO** write from the perspective of the end-user (e.g., Admin, Customer, Guest). | **DON'T** use generic personas like "As a user" if the system has multiple distinct roles. |
+| **DO** keep the scope small enough to complete in 2-3 days of dev work. | **DON'T** create a story that takes the entire 2-week sprint to finish. |
+| **DO** include clear, boolean (pass/fail) acceptance criteria. | **DON'T** assume developers know the edge cases (e.g., empty states, error states). |
+| **DO** focus heavily on the "What" and the "Why". | **DON'T** dictate the "How" (e.g., "Use a Redux thunk to fetch the data"). |
+
+### 14. Production Notes
+
+> ⚠️ **The "Horizontal vs. Vertical" Slicing Trap**
+> 
+> When breaking down large stories, junior teams often slice *horizontally* (e.g., "Story 1: Build DB schema", "Story 2: Build API", "Story 3: Build UI"). This is a massive anti-pattern. If the sprint ends after Story 2, exactly zero value is delivered to the user. 
+> 
+> Bro, always slice *vertically*. Build a complete slice of the feature from top to bottom: "Story 1: Search by Name (UI + API + DB)", "Story 2: Filter by Date (UI + API + DB)". This ensures you always ship working, testable software.
+
+### 15. Common Mistakes
+
+| Mistake | Bad Example | Corrected Example |
+|---|---|---|
+| **Dictating Tech** | "As a dev, I want to use MongoDB to save users." | "As a user, I want my profile saved quickly so I can resume my work later." |
+| **Missing the "Why"** | "As a user, I want a reset password button." | "...so that I can regain access to my account if I forget my password." |
+| **Vague Criteria** | "Make the feed load fast." | "Given a slow 3G connection, the page must become interactive in < 3 seconds." |
+
+### 16. Related Topics
+- Agile Methodologies
+- Story Point Estimation
+- Behavior-Driven Development (BDD)
+- Managing Technical Debt
+
+### 17. Top GitHub Repositories
+
+Here are the top open-source project management tools that real engineering teams use to track user stories and epics instead of Jira.
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [makeplane/plane](https://github.com/makeplane/plane) | ⭐ 25k+ | Open-source Jira alternative. | Perfect for seeing how modern user stories, cycles, and modules are structured under the hood. |
+| [AppFlowy-IO/AppFlowy](https://github.com/AppFlowy-IO/AppFlowy) | ⭐ 45k+ | Open-source Notion alternative. | Highly used for collaboratively drafting PRDs and user stories before moving them to a sprint board. |
+| [mattermost/focalboard](https://github.com/mattermost/focalboard) | ⭐ 15k+ | Trello/Asana/Notion alternative. | Shows how Kanban boards manage the complex state transitions of user stories. |
+| [Leantime/leantime](https://github.com/Leantime/leantime) | ⭐ 3k+ | Project management for non-project managers. | Focuses heavily on the "Why" and business value of tasks, exactly what user stories aim to do. |
+| [taigaio/taiga-front](https://github.com/taigaio/taiga-front) | ⭐ 6k+ | Agile project management platform. | A classic open-source tool with built-in story pointing and backlog grooming workflows. |

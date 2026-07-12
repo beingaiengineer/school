@@ -19,7 +19,9 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ## 2. Engineering Story
 
-A team of engineers recently faced a critical challenge related to this concept. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing this concept, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+A quantitative trading firm built a LangGraph agent to autonomously rebalance their portfolio. In staging it was impressive — it analyzed market data, called broker APIs, and executed trades without human intervention. Then they promoted it to production with live funds.
+
+On its third run, the agent misread a currency conversion and placed a sell order 10x larger than intended, liquidating a position worth $280,000. By the time a human noticed, the trade was done. The fix wasn't to shut down the agent — it was to add a Human-in-the-Loop checkpoint. Now, before any `execute_trade()` tool call, the graph pauses, serializes its full state to a Postgres checkpointer, and sends a Slack message to the risk desk for approval. The agent waits — indefinitely — until a human types `/approve` or `/reject`. The same autonomous intelligence, now with a human safety valve at every irreversible step.
 
 ## 3. Real-World Analogy
 

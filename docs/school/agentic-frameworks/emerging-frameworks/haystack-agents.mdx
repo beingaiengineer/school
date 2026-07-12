@@ -19,7 +19,9 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ## 2. Engineering Story
 
-A team of engineers recently faced a critical challenge related to Pipeline Start, detail: Input phase, x: 0, y: 0, kind: data },. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing Pipeline Start, detail: Input phase, x: 0, y: 0, kind: data },, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+A pharma company needed an internal Q&A system that could answer questions from thousands of clinical trial PDFs. Their first attempt — a single LLM with a PDF dump in the context window — hit the token limit on document 3 and hallucinated the rest. They needed a real retrieval pipeline.
+
+They turned to Haystack and built a proper composable pipeline: a `PDFConverter` node fed into a `DocumentSplitter`, which fed into an `EmbeddingRetriever`, which fed into a `PromptNode` that answered questions using only the retrieved chunks. Each component was independently testable, swappable, and had its own error handling. When they needed to switch from OpenAI embeddings to a self-hosted model for compliance reasons, they replaced one node without touching the rest. Haystack's pipeline abstraction turned a monolithic "just stuff it into the context" hack into an enterprise-grade document intelligence system.
 
 ## 3. Real-World Analogy
 
