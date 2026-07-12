@@ -1,0 +1,180 @@
+---
+sidebar_position: 5
+sidebar_label: "Estimation Techniques"
+---
+
+# Estimation Techniques
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Estimation Techniques |
+| Difficulty | Intermediate |
+| Used For | Predicting the effort, time, and complexity required to deliver software features. |
+| Common Mistake | Equating story points directly to hours (e.g., 1 point = 1 day) without accounting for uncertainty. |
+| Performance | O(N) where N is the number of requirements to estimate (Planning takes time!). |
+
+## 2. Engineering Story
+
+The product team at a rapidly growing fintech startup just dropped a massive feature request: "Enable multi-currency wallets." The CEO wanted it next month. The junior devs immediately started throwing out numbers: "I can do the database in 3 days," "The UI will take a week." Fast forward one month: the database schema had to be rewritten twice to support floating-point precision constraints, the third-party FX API rate-limited them, and the UI took three weeks because of missing designs. The launch was delayed, and everyone was burnt out.
+
+Why did this happen? Because they estimated in absolute time based on best-case scenarios, rather than relative complexity and risk. Software engineering is inherently unpredictable. Estimation techniques exist to give teams a structured, realistic way to measure the *size* and *uncertainty* of a task, rather than making wild guesses about time.
+
+## 3. Real-World Analogy
+
+Bro, estimating software is exactly like bargaining and buying clothes at Sarojini Nagar market in Delhi.
+
+When you walk into Sarojini, you don't instantly know how many minutes it will take to buy a jacket. Instead, you size up the task based on complexity, effort, and unknowns.
+
+| Sarojini Nagar Task | Software Estimation Equivalent |
+|---|---|
+| Buying plain white socks from a fixed-price stall | A 1-point story (T-shirt size: Small). Simple, known, zero risk. |
+| Finding a branded jacket in your specific size | A 5-point story (T-shirt size: Medium). Moderate effort, some searching, minor risk. |
+| Bargaining with a stubborn uncle for 5 lehengas | An 8-point story (T-shirt size: Large). High complexity, heavy negotiation, lots of unknowns. |
+| Knowing how much you bought last trip | Team Velocity (How much work you can handle in a sprint). |
+
+You don't measure the shopping trip in exact minutes. You measure it in effort, unknowns, and the energy required to get the job done. 
+
+## 4. Concept Explanation
+
+Estimation is the process of forecasting the effort required to complete a software task. It is not a blood oath or a strict deadline. It is a tool for capacity planning, prioritizing the backlog, and uncovering hidden complexities before writing a single line of code.
+
+Use relative estimation (like Story Points or T-Shirt sizing) when tasks have unknowns and your team needs a baseline to plan a sprint. Use absolute time estimation (hours/days) only for small, hyper-specific tasks with zero unknowns (like a minor CSS fix). Do NOT use estimation to punish developers or measure individual performance—that destroys psychological safety and leads to inflated, defensive estimates. Bro, the senior move is to estimate complexity, not hours.
+
+## 5. Estimation Frameworks Table
+
+Since estimation is a process rather than code, here are the core frameworks used in agile teams:
+
+| Framework | Unit of Measure | Best Used For |
+|---|---|---|
+| **Story Points** | Fibonacci sequence (1, 2, 3, 5, 8, 13) | Sprint planning, measuring relative complexity and risk. |
+| **T-Shirt Sizing** | XS, S, M, L, XL | High-level roadmap planning and epics before breaking them down. |
+| **Time/Hours** | Hours or Days | Sub-tasks or well-understood bug fixes. |
+| **Dot Voting** | Number of dots | Quickly prioritizing a list of items rather than estimating effort. |
+
+## 6. Beginner Example
+
+Here is a basic example of sizing a ticket using the Fibonacci sequence (Story Points). We evaluate effort, complexity, and risk.
+
+```markdown
+Ticket: Add "Forgot Password" button to Login Page
+- Effort: Low (Just a UI change)
+- Complexity: Low (Standard redirect)
+- Risk/Unknowns: None
+- Estimate: 2 Story Points
+```
+
+## 7. Real-World Engineering Example
+
+In a production system, you aren't just estimating a button. You estimate the entire slice of architecture and its deployment.
+
+```markdown
+Ticket: Implement Rate Limiting for Public API
+- Effort: Medium (Need to write Redis lua scripts, update middleware)
+- Complexity: High (Distributed system, needs to handle race conditions)
+- Risk/Unknowns: Medium (What if Redis goes down? Fallback strategy?)
+- Estimate: 8 Story Points
+
+Breakdown for Sprint (Time-boxed sub-tasks):
+- Sub-task 1: Redis Lua script for Token Bucket (3 hrs)
+- Sub-task 2: API Gateway Middleware integration (4 hrs)
+- Sub-task 3: Integration Tests & Load Testing (5 hrs)
+```
+
+## 8. Internal Working
+
+How does the estimation process flow inside a high-functioning engineering team? It starts with the Product Manager bringing raw requirements, and ends with a committed Sprint Backlog. Here is the mental compilation process of estimation:
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+<LearningFlow 
+  nodes={[
+    { id: '1', type: 'data', data: { label: 'Product Backlog' }, position: { x: 50, y: 50 } },
+    { id: '2', type: 'process', data: { label: 'Backlog Refinement' }, position: { x: 300, y: 50 } },
+    { id: '3', type: 'tool', data: { label: 'Planning Poker' }, position: { x: 550, y: 50 } },
+    { id: '4', type: 'warning', data: { label: 'High Variance (Devs Disagree)' }, position: { x: 550, y: 150 } },
+    { id: '5', type: 'process', data: { label: 'Discuss Edge Cases' }, position: { x: 300, y: 150 } },
+    { id: '6', type: 'output', data: { label: 'Sized Story (Committed)' }, position: { x: 800, y: 50 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'pick ticket', animated: true },
+    { id: 'e2-3', source: '2', target: '3', label: 'vote', type: 'smoothstep' },
+    { id: 'e3-4', source: '3', target: '4', label: 'conflict', animated: true },
+    { id: 'e4-5', source: '4', target: '5', label: 'resolve', type: 'step' },
+    { id: 'e5-3', source: '5', target: '3', label: 're-vote', type: 'smoothstep' },
+    { id: 'e3-6', source: '3', target: '6', label: 'consensus', animated: true }
+  ]}
+/>
+
+## 9. Performance Table
+
+How much time does estimation actually consume in an engineering lifecycle?
+
+| Activity | Time Complexity | Value Yield |
+|---|---|---|
+| Asynchronous sizing | O(1) per dev | Low (Misses team discussion and edge cases) |
+| Backlog Refinement | O(N) where N is tickets | High (Uncovers hidden architectural risks before coding) |
+| Planning Poker | O(N * D) where D is devs | Very High (Builds consensus, spreads system context) |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| **What is a Story Point?** | A relative unit of measure combining effort, complexity, and risk/unknowns. It is NOT equal to a specific number of hours. |
+| **Why use the Fibonacci sequence (1, 2, 3, 5, 8...)?** | To reflect that uncertainty grows exponentially with task size. The difference between an 8 and a 13 is significant, preventing false precision on large tasks. |
+| **How do you handle a 13-point story?** | A 13-point story is too large and risky for a single sprint. It must be broken down into smaller 3, 5, or 8-point stories. |
+| **What happens if an estimate is completely wrong?** | Communicate early. Agile estimates are forecasts, not contracts. Learn from the miss in the retrospective to improve future sizing. |
+| **How do you estimate technical debt?** | Treat it like any other story. Assign it points based on complexity and risk, and negotiate with Product to allocate a percentage (e.g., 20%) of sprint capacity to it. |
+
+## 11. Tricky Questions & Edge Cases
+
+- **The Senior/Junior Discrepancy:** A senior dev estimates a task as a 2. A junior dev estimates it as an 8. Bro, whose estimate do you take?
+  *Answer:* You don't just average them to a 5. You discuss *why*. The senior might know a built-in library that solves it instantly. The junior might have spotted a race condition or an environment setup nightmare the senior forgot about.
+- **Scope Creep Mid-Sprint:** A 3-point story suddenly requires a massive database migration halfway through the sprint.
+  *Answer:* Stop work. Alert the PM. Either re-estimate the ticket and drop other sprint items to accommodate the load, or split the new scope into a future ticket.
+
+## 12. Real-World Usage
+
+Top-tier tech companies like Spotify, Netflix, and Atlassian rarely do absolute time estimation for feature development.
+- **Atlassian:** Uses heavily refined Story Points integrated directly into Jira to calculate team velocity over 5-6 sprints. This allows product managers to forecast roadmaps predictably across massive distributed teams.
+- **Spotify:** Often uses "T-Shirt sizing" for squad-level epic planning, avoiding getting bogged down in micro-estimations for tasks that are inherently experimental or highly uncertain.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Estimate based on complexity, effort, and risk. | Do NOT equate 1 story point to 1 day of work. |
+| Involve the engineers who will actually write the code. | Do NOT let a manager or PM dictate the estimates. |
+| Break down any story larger than 8 points. | Do NOT accept stories with vague acceptance criteria. |
+| Use historical velocity to plan sprint capacity. | Do NOT compare the velocity of one team against another team. |
+
+## 14. Production Notes
+
+:::warning Operational Reality
+In production environments, always add a buffer for "KTLO" (Keeping The Lights On). A team's capacity is never 100% focused on feature tickets. On-call interruptions, code reviews, deploying hotfixes, and unexpected context-switching will eat 20-30% of your sprint. If you estimate assuming 40 hours of uninterrupted coding per week, you will fail every sprint.
+:::
+
+## 15. Common Mistakes
+
+| Common Trap | Why it's bad | Correct Approach |
+|---|---|---|
+| **Anchoring** | The PM says "This should be quick, right?" before voting. Engineers unconsciously lower their estimates to please them. | Everyone votes blindly at the exact same time (e.g., using Planning Poker tools). |
+| **Estimating for the "Happy Path"** | Only estimating the time to write the code, ignoring testing, deployment, and code review. | Include the entire Definition of Done (DoD) in the estimate. |
+| **Ignoring the "Bro" Factor (Overconfidence)** | Bro, we often think we are 10x devs and say "I can do this in an hour," forgetting edge cases. | Base estimates on historical data, not ego. Always add points for risk. |
+
+## 16. Related Topics
+- [Planning Poker](./planning-poker.mdx)
+- [Velocity and Burndown](./velocity-and-burndown.mdx)
+- [Writing User Stories](./writing-user-stories.mdx)
+- [Acceptance Criteria](./acceptance-criteria.mdx)
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [atlassian/react-beautiful-dnd](https://github.com/atlassian/react-beautiful-dnd) | ⭐ 30k+ | Beautiful drag-and-drop for React. | Often used to build the visual sizing and backlog tools Agile teams rely on. |
+| [mattermost/focalboard](https://github.com/mattermost/focalboard) | ⭐ 15k+ | Open source alternative to Trello/Notion. | Great reference for how estimation fields and story points are implemented in product databases. |
+| [wekan/wekan](https://github.com/wekan/wekan) | ⭐ 20k+ | Open-source kanban board. | A staple for teams visualizing workflow, tracking effort estimations, and managing WIP limits. |
+| [plankanban/planka](https://github.com/plankanban/planka) | ⭐ 3k+ | Elegant open source project board. | Useful for understanding how tasks, sub-tasks, and estimations flow in structured kanban environments. |
+| [teambition/teambition](https://github.com/teambition/teambition) | ⭐ 5k+ | Enterprise project management platform. | Shows real-world implementations of sprint planning and task estimation logic at scale. |

@@ -1,0 +1,216 @@
+---
+sidebar_position: 5
+sidebar_label: "Integration Testing"
+---
+
+import { LearningFlow } from '@site/src/components/LearningFlow';
+
+# Integration Testing
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Integration Testing |
+| Difficulty | Intermediate |
+| Used For | Verifying that different modules (like app code and a database) work correctly together. |
+| Common Mistake | Using mocks in integration tests, which defeats the purpose of testing the "integration". |
+| Performance | Slower than unit tests (seconds instead of milliseconds) due to I/O and network operations. |
+
+## 2. Engineering Story
+
+A food delivery startup launched a new feature: sending an SMS when an order is accepted. Their unit tests for the `send_sms()` function passed with flying colors because they mocked the Twilio API client. 
+
+On launch day, the feature failed silently in production. The app was passing a phone number as an integer, but the real Twilio API strictly required a string. The mocked unit test didn't care about the type, but the real API rejected it. Bro, this is why you need Integration Tests. They verify that your code doesn't just work in a vacuum, but actually communicates correctly with real infrastructure.
+
+## 3. Real-World Analogy
+
+Imagine building a custom motorcycle in a garage.
+
+| Motorcycle Build | Software Testing Equivalent |
+|---|---|
+| Testing the spark plug on a battery to see if it sparks | **Unit Test** |
+| Testing the engine block, spark plug, and fuel line together to see if it starts | **Integration Test** |
+| Riding the motorcycle on the highway at 100km/h | **E2E Test** |
+
+If you only test the spark plug (Unit Test), you don't know if the fuel line is blocked. You must connect the components (Integration Test) to prove the machine actually runs.
+
+## 4. Concept Explanation
+
+**Integration Testing** is the phase of testing where individual software modules are combined and tested as a group. It evaluates the compliance of a system with specified functional requirements when components interact.
+
+In backend engineering, this usually means testing how your Python code interacts with a real Database (PostgreSQL/MySQL), a cache (Redis), or an external API.
+
+**When to use:** When you write database queries, API endpoints, or message queue producers/consumers.
+**When NOT to use:** When you are testing pure business logic (like a mathematical calculation) that doesn't require I/O. Use a unit test instead.
+
+## 5. Syntax Table
+
+| Tool / Pattern | Usage | Explanation |
+|---|---|---|
+| **Testcontainers** | `with PostgresContainer("postgres:15"):` | Spins up a real, temporary Docker container for the test. |
+| **Pytest Fixtures** | `@pytest.fixture(scope="session")` | Used to initialize the DB connection once per test run. |
+| **Database Migrations** | `alembic upgrade head` | Run inside the test setup to prepare the DB schema. |
+| **Test Client** | `client.post('/api/users')` | Hits the API endpoint, triggering DB interactions. |
+
+## 6. Beginner Example
+
+Testing a simple database insertion using a real SQLite in-memory database.
+
+```python
+import sqlite3
+import pytest
+
+def create_user(db_conn, username):
+    db_conn.execute("INSERT INTO users (username) VALUES (?)", (username,))
+    db_conn.commit()
+
+@pytest.fixture
+def memory_db():
+    conn = sqlite3.connect(":memory:")
+    conn.execute("CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT)")
+    yield conn
+    conn.close()
+
+def test_create_user_integration(memory_db):
+    # Act
+    create_user(memory_db, "rahul_dev")
+    
+    # Assert
+    cursor = memory_db.execute("SELECT username FROM users")
+    result = cursor.fetchone()
+    assert result[0] == "rahul_dev"
+```
+
+## 7. Real-World Engineering Example
+
+In production, you don't use SQLite if your production DB is Postgres. You use **Testcontainers** to spin up a real Postgres instance dynamically.
+
+```python
+# test_db_integration.py
+import pytest
+import psycopg2
+from testcontainers.postgres import PostgresContainer
+
+# This spins up a real Postgres Docker container before tests run!
+@pytest.fixture(scope="session")
+def postgres_db():
+    with PostgresContainer("postgres:15-alpine") as postgres:
+        # Get the dynamic connection URL
+        conn = psycopg2.connect(
+            host=postgres.get_container_host_ip(),
+            port=postgres.get_exposed_port(5432),
+            user=postgres.POSTGRES_USER,
+            password=postgres.POSTGRES_PASSWORD,
+            dbname=postgres.POSTGRES_DB
+        )
+        # Create schema for tests
+        with conn.cursor() as cur:
+            cur.execute("CREATE TABLE accounts (id SERIAL, balance INT)")
+        conn.commit()
+        
+        yield conn  # Hand it to the test
+        
+        conn.close()
+
+def test_fund_transfer_integration(postgres_db):
+    """Tests if our SQL logic actually works on a real Postgres engine."""
+    with postgres_db.cursor() as cur:
+        # Setup data
+        cur.execute("INSERT INTO accounts (balance) VALUES (1000) RETURNING id")
+        account_id = cur.fetchone()[0]
+        postgres_db.commit()
+        
+        # Action: Simulate a withdrawal query
+        cur.execute("UPDATE accounts SET balance = balance - 200 WHERE id = %s", (account_id,))
+        postgres_db.commit()
+        
+        # Verify
+        cur.execute("SELECT balance FROM accounts WHERE id = %s", (account_id,))
+        new_balance = cur.fetchone()[0]
+        assert new_balance == 800
+```
+
+## 8. Internal Working
+
+Integration tests act as the glue between your application layer and the infrastructure layer.
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'tool', data: { label: 'Pytest Setup' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Docker Starts Postgres (Testcontainers)' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'core', data: { label: 'Run DB Migrations' }, position: { x: 250, y: 200 } },
+    { id: '4', type: 'core', data: { label: 'Execute API Endpoint' }, position: { x: 250, y: 300 } },
+    { id: '5', type: 'data', data: { label: 'Assert Data in Postgres' }, position: { x: 250, y: 400 } },
+    { id: '6', type: 'process', data: { label: 'Docker Destroys Container' }, position: { x: 250, y: 500 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'initializes' },
+    { id: 'e2-3', source: '2', target: '3', label: 'runs' },
+    { id: 'e3-4', source: '3', target: '4', label: 'tests' },
+    { id: 'e4-5', source: '4', target: '5', label: 'verifies' },
+    { id: 'e5-6', source: '5', target: '6', label: 'teardown' }
+  ]}
+/>
+
+## 9. Performance Table
+
+| Infrastructure | Setup Time | Query Execution Time | Cleanup Strategy |
+|---|---|---|---|
+| **SQLite (In-Memory)** | ~5ms | < 1ms | Automatic (on close) |
+| **Postgres (Testcontainers)** | ~3s to 5s | ~2ms | Container Destroyed |
+| **Shared Staging DB** | ~0s | ~100ms (Network) | Requires TRUNCATE per test |
+
+## 10. Top Interview Questions
+
+| Question | Answer | Level |
+|---|---|---|
+| **Why not use SQLite for testing if production uses Postgres?** | SQLite lacks many Postgres features (like JSONB, specific constraints, advanced locking). Tests might pass on SQLite but fail in prod. | Intermediate |
+| **What is Testcontainers?** | A library that automatically manages the lifecycle of Docker containers during automated tests, providing disposable infrastructure. | Advanced |
+| **How do you handle test data isolation in Integration tests?** | Wrap each test in a database transaction and roll it back after the test, or truncate all tables between tests. | Advanced |
+| **Should you mock the database in an integration test?** | No. If you mock the database, it becomes a unit test. Integration tests must test the real connection. | Beginner |
+| **How does integration testing differ from E2E testing?** | Integration tests check back-end components (App + DB) without the UI. E2E tests drive the actual browser/UI. | Beginner |
+
+## 11. Tricky Questions & Edge Cases
+
+- **"My integration tests pass locally, but fail in CI."** Bro, this is classic. Usually, it's because your local environment has stale test data left in the DB, while CI starts fresh. Always ensure tests are completely independent and clean up their own state.
+- **Transaction Rollback Gotcha:** If you run your integration test inside a rolled-back transaction to clean up data, but your actual application code *also* issues commits/rollbacks, the test framework's transaction might break.
+
+## 12. Real-World Usage
+
+Companies with complex microservices use Integration Testing extensively via **Contract Testing** (like Pact). Instead of spinning up 50 microservices to see if they can talk to each other, they test the "contract" (the agreed API schema) between them. For DBs, throwing away a Docker container after the test suite ensures absolute test reliability.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| **DO** test against the exact same database engine and version used in production. | **DON'T** rely on pre-existing data in the database. Insert the data you need for the test within the test itself. |
+| **DO** use Docker/Testcontainers to ensure everyone on the team has the exact same test infrastructure. | **DON'T** mock third-party libraries (like `psycopg2` or `sqlalchemy`) in an integration test. |
+| **DO** run DB migrations as part of the test suite setup to ensure the schema is up to date. | **DON'T** run integration tests on every single code save (too slow); run them before merging a PR. |
+
+## 14. Production Notes
+
+> **Warning: The Data Bleed Problem**  
+> If Test A inserts a User with ID 1, and Test B expects the database to be empty but finds User 1, Test B will randomly fail depending on execution order. You must enforce absolute data isolation, typically by truncating tables before each test runs using a `autouse=True` fixture.
+
+## 15. Common Mistakes
+
+| Mistake | Bad Practice | The Fix |
+|---|---|---|
+| **Mocking the DB** | `mock.patch('app.db.query')` in `test_integration.py` | Use a real database connection. |
+| **Hardcoding Connection Strings** | Connecting to `localhost:5432/my_db` in tests. | Use dynamic environment variables or Testcontainers to avoid conflicts on developer machines. |
+| **Not Cleaning Up** | Leaving 10,000 rows in the test database after the suite finishes. | Use a teardown fixture to truncate tables or drop the schema. |
+
+## 16. Related Topics
+
+- Mocking and Patching
+- API Testing
+- The Testing Pyramid
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [testcontainers/testcontainers-python](https://github.com/testcontainers/testcontainers-python) | ⭐ 2k+ | Python port of Testcontainers | The industry standard for spinning up throwaway Docker infrastructure in Python tests. |
+| [pact-foundation/pact-python](https://github.com/pact-foundation/pact-python) | ⭐ 1k+ | Contract Testing | Used for integration testing communication between different microservices securely. |
+| [pytest-dev/pytest-django](https://github.com/pytest-dev/pytest-django) | ⭐ 1k+ | Django testing tools | Provides excellent integration testing fixtures (like DB access) for Django apps. |

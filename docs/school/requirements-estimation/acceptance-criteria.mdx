@@ -1,0 +1,184 @@
+---
+sidebar_position: 4
+sidebar_label: "Acceptance Criteria"
+---
+
+import { LearningFlow } from '@site/src/components/LearningFlow';
+
+# Acceptance Criteria
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Acceptance Criteria (AC) |
+| Difficulty | Intermediate |
+| Used For | Defining exactly when a user story or feature is considered 100% complete and bug-free. |
+| Common Mistake | Writing AC that is too vague (e.g., "Page should load fast") instead of using testable facts (e.g., "Page loads in under 2 seconds"). |
+| Performance | Reduces bug-fixing time in later stages by catching ambiguities before coding starts. |
+
+## 2. Engineering Story
+
+It was a Tuesday afternoon, and the release was blocked. The backend team had built a beautiful, highly concurrent payment retry system. It retried failed transactions up to three times with exponential backoff. The problem? The product manager rejected the PR. "If a payment fails due to 'insufficient funds', we shouldn't retry at all," they said. 
+
+The engineers were furious. "You didn't put that in the Jira ticket!" they argued. The PM countered, "I said 'handle failed payments gracefully'!" Two weeks of engineering effort was wasted, and the codebase had to be heavily refactored. Bro, this happens every day in the industry. It's the exact reason why we don't rely on vague feelings. We rely on clear, indisputable contracts. We rely on Acceptance Criteria.
+
+## 3. Real-World Analogy
+
+Imagine ordering food at a strict, high-volume Udupi restaurant. If you just say, "I want a Dosa," you might get a plain Dosa, a Masala Dosa, or a Rava Dosa. You can't be angry when the waiter brings you something you didn't specifically ask for. 
+
+To get exactly what you want, you need clear conditions. 
+
+| Udupi Restaurant Instruction | Acceptance Criteria Equivalent |
+|---|---|
+| "The dish must be a Masala Dosa." | Positive path requirement (Feature must work). |
+| "The sambar must be served separately, not poured over it." | Constraint / Layout requirement (UI/UX condition). |
+| "If there is no potato filling left, cancel the order." | Error handling / Edge case condition. |
+| "The total bill should not exceed ₹100." | Performance / Non-functional requirement. |
+
+Bro, Acceptance Criteria is just you giving the exact "order details" to the engineering team so there's zero confusion when the "dish" (feature) is delivered.
+
+## 4. Concept Explanation
+
+Acceptance Criteria (AC) are the explicit conditions a software product must meet to be accepted by a user, customer, or system. They are a set of testable statements appended to a User Story. 
+
+Why do we need them? Because English is ambiguous. A developer reading "make the button pop" might add an animation, while the designer meant "make the button red." AC removes all assumptions. If the software passes the AC, it's done. If it doesn't, it's not. It acts as the absolute boundary of a task, preventing scope creep and ensuring that QA (Quality Assurance) knows exactly what to test.
+
+## 5. Syntax Table
+
+The most common industry standard for writing AC is **BDD (Behavior-Driven Development) format**, also known as Gherkin syntax.
+
+| Keyword | Purpose | Example |
+|---|---|---|
+| **Scenario** | Names the specific test case. | Scenario: Successful login |
+| **Given** | The initial context or state of the system. | Given the user is on the login page |
+| **When** | The action the user takes. | When the user enters correct credentials |
+| **Then** | The expected observable outcome. | Then the user is redirected to the dashboard |
+| **And / But** | Used to chain multiple conditions. | And a session token is generated |
+
+## 6. Beginner Example
+
+Here is a basic example of Acceptance Criteria for a simple User Story: "As a user, I want to reset my password so I can regain access to my account."
+
+```gherkin
+Scenario: Resetting a password with a valid email
+Given the user is on the "Forgot Password" page
+When the user enters a registered email address
+And clicks the "Send Reset Link" button
+Then the system sends a password reset email
+And the UI shows a success message: "Check your inbox!"
+```
+
+## 7. Real-World Engineering Example
+
+In production, AC must cover edge cases, technical constraints, and negative paths. 
+
+```gherkin
+Scenario: API Rate Limiting for OTP Generation
+Given the user is an unverified customer
+When the user requests an OTP for phone verification
+And the user has already requested 3 OTPs in the last 15 minutes
+Then the API should return a 429 Too Many Requests status code
+And the response body should contain {"error": "Try again in 15 minutes"}
+And no SMS should be triggered via the Twilio gateway
+And the rate-limit failure should be logged to Datadog for monitoring
+```
+Notice how this AC is highly specific, mentioning HTTP status codes, external gateways, and monitoring tools. This leaves no room for debate between Dev and QA.
+
+## 8. Internal Working
+
+How does Acceptance Criteria fit into the actual software development lifecycle? Bro, it drives the entire testing and deployment engine.
+
+```jsx
+<LearningFlow 
+  nodes={[
+    { id: '1', type: 'data', data: { label: 'User Story + AC' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'core', data: { label: 'Dev Writes Code' }, position: { x: 100, y: 100 } },
+    { id: '3', type: 'core', data: { label: 'QA Writes Tests (BDD)' }, position: { x: 400, y: 100 } },
+    { id: '4', type: 'tool', data: { label: 'CI/CD Pipeline' }, position: { x: 250, y: 200 } },
+    { id: '5', type: 'warning', data: { label: 'Tests Fail (AC not met)' }, position: { x: 100, y: 300 } },
+    { id: '6', type: 'output', data: { label: 'Tests Pass (Deploy)' }, position: { x: 400, y: 300 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'Guides Dev', animated: true },
+    { id: 'e1-3', source: '1', target: '3', label: 'Defines Tests', animated: true },
+    { id: 'e2-4', source: '2', target: '4', label: 'Commits Code' },
+    { id: 'e3-4', source: '3', target: '4', label: 'Runs CI' },
+    { id: 'e4-5', source: '4', target: '5', type: 'step' },
+    { id: 'e4-6', source: '4', target: '6', type: 'step' },
+    { id: 'e5-2', source: '5', target: '2', label: 'Rework Required', animated: true, type: 'smoothstep' }
+  ]}
+/>
+```
+
+The AC doesn't just sit in a Jira ticket; it gets converted directly into automated test scripts (using tools like Cucumber or Cypress). The CI/CD pipeline runs these tests against the code.
+
+## 9. Performance Table
+
+Writing good AC takes time upfront, but look at the "performance cost" of catching bugs at different stages.
+
+| Bug Found In... | Cost/Time to Fix | Why? |
+|---|---|---|
+| AC Review Phase | 1x (Minutes) | Just rewriting a sentence in Jira. |
+| Coding Phase | 5x (Hours) | Developer has to rewrite logic or restructure DB tables. |
+| QA Phase | 15x (Days) | Involves PR reviews, re-testing, context switching. |
+| Production | 100x+ (Weeks/Money) | Outages, data corruption, lost revenue, emergency hotfixes. |
+
+## 10. Top Interview Questions
+
+| Question | Answer | Difficulty |
+|---|---|---|
+| Who is responsible for writing Acceptance Criteria? | Usually the Product Manager or Product Owner, but it should be refined collaboratively with Devs and QA during backlog grooming. | Beginner |
+| What is the difference between Acceptance Criteria and Definition of Done (DoD)? | AC is specific to a single User Story (e.g., "Login requires 8 chars"). DoD applies to all stories globally (e.g., "Code must be peer-reviewed and have 80% test coverage"). | Intermediate |
+| How do you write testable AC? | Avoid subjective words like "fast", "beautiful", or "easy". Use absolute metrics: "renders in <200ms", "matches Figma hex codes", "takes maximum 3 clicks". | Intermediate |
+| Can Acceptance Criteria change mid-sprint? | Generally, no. Changing AC mid-sprint constitutes a scope change. The story should be blocked, re-estimated, or the new AC moved to a future ticket. | Advanced |
+| How do you handle non-functional requirements in AC? | Either write explicit non-functional AC (e.g., "API must handle 500 RPS") or add them to the global Definition of Done. | Advanced |
+
+## 11. Tricky Questions & Edge Cases
+
+**Tricky Question:** If code passes all written Acceptance Criteria but the feature is clearly unusable due to terrible UX, is the ticket "Done"?
+
+**Answer:** Technically, yes. This is a classic trap! The developer fulfilled the contract. However, in reality, this highlights a failure in the requirement-gathering process. The AC failed to include UX constraints. The immediate action is to close the ticket as 'Done' and create a new ticket for UX improvements. Bro, never keep a ticket open indefinitely because "it just doesn't feel right."
+
+## 12. Real-World Usage
+
+At companies like Stripe or Uber, AC goes far beyond just "user clicks button." Their AC includes deep technical contracts. For example, a Stripe AC for a new API endpoint will explicitly define the JSON response schema for validation failures, the exact P99 latency target, and the specific DataDog alerts that must be configured before the feature can be merged.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| **DO** write AC before a single line of code is written. | **DON'T** write AC as an afterthought just to satisfy a Jira workflow. |
+| **DO** keep AC strictly testable (Pass/Fail). | **DON'T** use ambiguous adjectives like "seamless" or "user-friendly". |
+| **DO** cover the "Unhappy Path" (errors, timeouts, empty states). | **DON'T** only write the "Happy Path" where everything works perfectly. |
+| **DO** use the Given/When/Then format for complex logic. | **DON'T** write paragraphs of dense, unstructured text. |
+
+## 14. Production Notes
+
+:::warning Technical Debt Trap
+If you accept user stories into your sprint with vague Acceptance Criteria, you are immediately taking out a high-interest loan of technical debt. Devs will make assumptions, QA will test based on different assumptions, and the inevitable conflict at the end of the sprint will result in either a delayed release or hacked-together "hotfixes" to bridge the gap. Define the exact boundaries upfront.
+:::
+
+## 15. Common Mistakes
+
+| Mistake | Bad AC Example | Corrected AC Example |
+|---|---|---|
+| **Implementation Details** (Telling *how* to code it) | "Use a Redis cache to store the user session." | "The system must load the user profile in under 50ms on subsequent visits." |
+| **Subjective Measurements** | "Search results should be accurate and fast." | "Search must return results in <200ms and sort by highest relevance score." |
+| **Missing Negative Scenarios** | "User can upload a profile picture." | "Given user uploads a >5MB image, Then show error 'File too large'." |
+
+## 16. Related Topics
+
+- [Product Requirement Documents](./product-requirement-documents)
+- [Writing User Stories](./writing-user-stories)
+- [Estimation Techniques](./estimation-techniques)
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [cucumber/cucumber-js](https://github.com/cucumber/cucumber-js) | ⭐ 8.5k | Cucumber for JavaScript | Translates Given/When/Then AC directly into automated tests. |
+| [cypress-io/cypress](https://github.com/cypress-io/cypress) | ⭐ 45k+ | Fast, easy and reliable testing for anything that runs in a browser. | Often used by QA to write E2E tests verifying AC are met. |
+| [jestjs/jest](https://github.com/jestjs/jest) | ⭐ 43k+ | Delightful JavaScript Testing. | Devs write unit/integration tests to ensure AC conditions are covered. |
+| [Behat/Behat](https://github.com/Behat/Behat) | ⭐ 3.5k | BDD framework for PHP. | Shows how BDD format is language agnostic and applies across the industry. |
+| [SeleniumHQ/selenium](https://github.com/SeleniumHQ/selenium) | ⭐ 29k+ | A browser automation framework and ecosystem. | The grandfather of automated UI testing against Acceptance Criteria. |

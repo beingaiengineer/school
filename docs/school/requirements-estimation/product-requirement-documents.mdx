@@ -1,0 +1,192 @@
+---
+sidebar_position: 2
+sidebar_label: "Product Requirement Documents"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Product Requirement Documents (PRDs)
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Product Requirement Documents (PRDs) |
+| Difficulty | Beginner |
+| Used For | Defining what to build, who it is for, and why it matters before writing any code. |
+| Common Mistake | Skipping the "Non-Goals" section, leading to infinite scope creep. |
+| Performance | Saves weeks of engineering rewrite time by spending a few days aligning stakeholders. |
+
+## 2. Engineering Story
+
+It was 2 AM on a Friday, and the engineering team at a fast-growing fintech startup was exhausted. They had just spent three weeks building a sophisticated "Auto-Invest" feature. The backend was scalable, the UI was slick, and the test coverage was 100%. 
+
+On Monday, they proudly demoed it to the product manager and the CEO. The CEO stared blankly and said, "This is great, but our users wanted auto-investment for *mutual funds*, not *digital gold*. And why doesn't it support pausing investments?"
+
+The room fell silent. Three weeks of engineering effort, thousands of lines of code, all wasted. Why? Because they started coding based on a Slack message instead of a formal document. If they had spent two days writing and reviewing a Product Requirement Document (PRD), they would have caught this misalignment before a single line of code was written. A PRD isn't just paperwork; it is the ultimate defense against building the wrong thing.
+
+## 3. Real-World Analogy
+
+Imagine your family is planning a massive Indian wedding. You have caterers, decorators, the venue manager, and relatives flying in from everywhere. 
+
+If you just tell the caterer, "Make good food," what happens? They might make paneer tikka, but half your family is strictly vegan, and the groom is allergic to nuts. Total chaos. Instead, you need a detailed plan—a "Menu Requirement Document"—specifying exactly what is needed, what is strictly prohibited (Non-Goals: no nuts!), and the expected guest count (scale). 
+
+Bro, a PRD is exactly like that master wedding plan. It ensures every team—engineering, design, and marketing—is cooking the exact same dish.
+
+| Wedding Planning | Engineering Equivalent |
+|---|---|
+| "We need food for 500 people" | **Goal:** Scale system to handle 500 TPS |
+| "No peanuts in any dish" | **Non-Goal:** Do not support legacy XML APIs |
+| The caterer, decorator, and DJ | **Stakeholders:** Backend, Frontend, and DevOps |
+| The final printed menu and schedule | **The PRD Document** |
+
+## 4. Concept Explanation
+
+A Product Requirement Document (PRD) is the foundational text of any feature or product. It explains **what** you are building, **who** you are building it for, and **why** it matters. 
+
+Notice what is missing? The **how**. A PRD does not contain database schemas, API contracts, or system architecture. That belongs in a System Design Document (SDD). The PRD's job is to secure alignment. It acts as a contract between Product Management, Engineering, and Business. Once a PRD is "frozen" or approved, engineers can safely design and execute the solution knowing the goalpost will not suddenly shift.
+
+## 5. Syntax Table
+
+Since a PRD is a document, its "syntax" is its structural sections. 
+
+| Section | Purpose | Example |
+|---|---|---|
+| **Problem Statement** | Why are we doing this? | "Users abandon carts because delivery fees are hidden." |
+| **Target Audience** | Who is this for? | "Tier-2 city users on low-end Android devices." |
+| **Goals** | What defines success? | "Increase checkout conversion by 15%." |
+| **Non-Goals** | What are we explicitly NOT doing? | "We will not build an iOS version in this phase." |
+| **User Stories** | How will users interact with it? | "As a user, I want to see the final price upfront." |
+
+## 6. Beginner Example
+
+Here is a minimal, bare-bones PRD snippet for a very simple feature.
+
+```markdown
+# PRD: "Like" Button for Blog Posts
+
+**Problem:** Users cannot express appreciation for good content.
+**Goal:** Allow logged-in users to "like" a post.
+**Non-Goal:** We are NOT adding "dislikes" or custom emoji reactions right now.
+
+**User Story:** 
+- As a logged-in user, I can click a heart icon on a blog post to like it.
+- If I click it again, it removes my like.
+
+**Success Metric:** 10% of daily active users use the like button.
+```
+
+## 7. Real-World Engineering Example
+
+In production, PRDs get much more detailed, especially around edge cases. Here is an excerpt from a real-world PRD for a "Swiggy-style Cart Abandonment System".
+
+```markdown
+# PRD: Cart Abandonment Recovery SMS
+
+**1. Problem Statement**
+Currently, 40% of users add items to the cart but do not complete the payment. 
+
+**2. Goals**
+- Send an automated SMS to users 15 minutes after cart abandonment.
+- Recover 5% of abandoned carts daily.
+
+**3. Non-Goals (Out of Scope)**
+- WhatsApp or Email notifications (SMS only for V1).
+- Dynamic discount generation (we will only send a standard reminder text).
+
+**4. Edge Cases & Constraints**
+- **Do Not Disturb (DND):** If the user abandons a cart at 11:30 PM, do NOT send the SMS at 11:45 PM. Queue it for 9:00 AM the next day.
+- **Payment In-Flight:** If the user is on the Razorpay screen but hasn't finished, wait for the webhook before marking it as "abandoned".
+```
+
+## 8. Internal Working
+
+How does a PRD move from an idea to actual shipped code? The workflow is crucial. Engineers should rarely start coding while the PRD is in the "Draft" state.
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Draft PRD\n(PM writes initial thoughts)' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Stakeholder Review\n(Eng, Design, Biz)' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'warning', data: { label: 'Negotiation & Scope Cuts' }, position: { x: 50, y: 100 } },
+    { id: '4', type: 'core', data: { label: 'Approved PRD\n(Requirements Frozen)' }, position: { x: 250, y: 200 } },
+    { id: '5', type: 'process', data: { label: 'System Design Docs\n(Engineers take over)' }, position: { x: 250, y: 300 } },
+    { id: '6', type: 'output', data: { label: 'Implementation / Coding' }, position: { x: 250, y: 400 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true, label: 'Shared with team' },
+    { id: 'e2-3', source: '2', target: '3', animated: true, label: 'Pushback' },
+    { id: 'e3-2', source: '3', target: '2', label: 'Revised' },
+    { id: 'e2-4', source: '2', target: '4', animated: true, label: 'Sign-off' },
+    { id: 'e4-5', source: '4', target: '5', animated: true, label: 'Sparks architecture' },
+    { id: 'e5-6', source: '5', target: '6', animated: true, label: 'Sprints begin' }
+  ]}
+/>
+
+## 9. Performance Table
+
+How much time does a PRD cost vs save? 
+
+| Phase | Time Spent | Impact on Project |
+|---|---|---|
+| Drafting PRD | 1-3 Days | High. Clarifies thought process. |
+| Review & Pushback | 2-4 Days | Critical. Prevents building impossible features. |
+| Engineering Rewrite (No PRD) | 2-4 **Weeks** | Disastrous. Saps team morale. |
+
+## 10. Top Interview Questions
+
+| Question | Answer | Level |
+|---|---|---|
+| What is the difference between a PRD and a System Design Doc? | A PRD defines *what* to build and *why* (business focus). A System Design Doc defines *how* to build it (technical focus like databases, APIs). | Beginner |
+| Why is the "Non-Goals" section critical in a PRD? | It prevents scope creep. Explicitly stating what will *not* be built stops stakeholders from sneaking in extra features mid-sprint. | Intermediate |
+| How do you handle a situation where requirements change after the PRD is approved? | Assess the impact on timelines and architecture. If it's a minor change, adapt. If major, halt development, revise the PRD, and get re-approval on new timelines. | Advanced |
+| What role does an engineer play during the PRD review? | Engineers must validate technical feasibility, highlight edge cases, and ensure timelines aren't wildly unrealistic. | Intermediate |
+| How detailed should User Stories be? | Detailed enough to write acceptance criteria. "User logs in" is too vague. "User logs in via OTP sent to phone within 30 seconds" is testable. | Beginner |
+
+## 11. Tricky Questions & Edge Cases
+
+- **The Vague Requirement Trap:** What if a PRD says, "The app should load instantly"? This is untestable. As an engineer, you must push back and demand a quantifiable metric: "The P99 load time of the dashboard should be under 1.5 seconds."
+- **The Solution-in-Disguise:** Sometimes PMs write PRDs that dictate technical solutions, like "Use Redis to cache the data." Bro, that's not a product requirement. The requirement is "Data must be retrieved in <50ms." The engineer decides if Redis or Memcached is the right tool.
+
+## 12. Real-World Usage
+
+Top-tier companies rely heavily on PRDs to maintain order at scale:
+- **Zomato & Swiggy:** When launching a new feature like "Group Ordering", the PRD must cover extreme edge cases (e.g., what happens if one person in the group cancels their item after the restaurant accepts the order?).
+- **Razorpay:** A PRD for a new payment method must strictly define compliance constraints, retry limits, and exact failure messages before any API is designed.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| **DO** involve engineering leads early in the PRD drafting phase to catch impossible ideas quickly. | **DON'T** treat the PRD as a one-way dictation from Product to Engineering. It is a negotiation. |
+| **DO** aggressively list "Non-Goals" to protect your sprint scope. | **DON'T** put technical implementation details (like "We will use MongoDB") in the PRD. |
+| **DO** define clear, measurable success criteria (e.g., "10% increase in conversion"). | **DON'T** write generic goals like "Make the user experience better." |
+
+## 14. Production Notes
+
+:::warning Stop Coding Without Alignment
+Bro, the senior move is to measure first, then optimize. Similarly, never write a line of production code until the PRD is reviewed and approved by all stakeholders. If you start coding based on a "quick chat" or a draft PRD, you are practically volunteering to work weekends rewriting it. Protect your time. Demand a frozen PRD.
+:::
+
+## 15. Common Mistakes
+
+| Mistake | Bad Practice | The Fix |
+|---|---|---|
+| **Missing Error States** | PRD only describes the "Happy Path" (user clicks buy, order succeeds). | Always demand PRD sections for failure states: "What happens if the payment gateway times out?" |
+| **Ignoring Scale** | PRD doesn't mention how many users will hit the feature. | Ask for expected QPS (Queries Per Second) or MAU (Monthly Active Users) to design the right architecture. |
+| **Hidden Scope Creep** | "Oh, and the feature should also work offline." | Move "Offline Support" to explicitly listed Non-Goals for Version 1. |
+
+## 16. Related Topics
+
+- System Design Documents (SDDs)
+- Agile Estimation Techniques
+- Request for Comments (RFCs)
+- Scope Creep & Technical Debt
+
+## 17. Top GitHub Repositories 
+
+While PRDs are usually internal Google Docs or Notion pages, there are great open-source templates and tools:
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [cremindes/awesome-product-management](https://github.com/cremindes/awesome-product-management) | ⭐ 4k+ | Curated list of product management resources. | Contains links to world-class PRD templates. |
+| [joelparkerhenderson/product-requirements-document](https://github.com/joelparkerhenderson/product-requirements-document) | ⭐ 1k+ | Standard PRD templates. | Great starting point for writing your first PRD. |

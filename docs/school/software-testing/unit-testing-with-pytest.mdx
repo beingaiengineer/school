@@ -1,0 +1,192 @@
+---
+sidebar_position: 2
+sidebar_label: "Unit Testing with Pytest"
+---
+
+import { LearningFlow } from '@site/src/components/LearningFlow';
+
+# Unit Testing with Pytest
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Unit Testing with Pytest |
+| Difficulty | Beginner |
+| Used For | Writing fast, isolated tests for small blocks of code (functions/classes). |
+| Common Mistake | Testing too much at once, violating the "isolated" rule of unit tests. |
+| Performance | Ultra-fast execution (~milliseconds per test). |
+
+## 2. Engineering Story
+
+It was a quiet Tuesday afternoon. The core engine team decided to refactor the tax calculation module for their e-commerce platform. The code looked cleaner, and the tech lead approved the PR. Two days later, a flood of customer complaints arrived—users from a specific region were being overcharged by 5%. 
+
+The culprit? The refactored tax module had an incorrect conditional check for that specific region. If the team had a solid suite of unit tests checking every single regional tax rule in isolation, the bug would have been caught locally before the commit even reached the repository. Bro, this is exactly why unit testing is non-negotiable.
+
+## 3. Real-World Analogy
+
+Imagine you are a quality inspector at a massive Indian spice packaging factory. 
+
+| Spice Factory Equivalent | Unit Testing Equivalent |
+|---|---|
+| Tasting a single batch of turmeric for color and aroma | Testing a single function isolated from the app |
+| Checking the expiry date printing machine in isolation | Testing a single utility class |
+| Rejecting a batch because it lacks spice | A test failing (assertion error) |
+
+You don't wait for the final biryani masala packet to be sealed and shipped to test if the turmeric is good. You test the turmeric in isolation. That's a unit test.
+
+## 4. Concept Explanation
+
+Unit testing is the practice of testing the smallest testable parts of an application (like functions or methods) individually and independently to ensure they function correctly.
+
+In Python, `pytest` is the most popular framework for this. It provides a clean, boilerplate-free way to write tests using standard `assert` statements instead of complex assertion methods.
+
+**When to use:** For every pure function, utility method, or core business logic module.
+**When NOT to use:** When you need to test the interaction with a database, external API, or complete UI flow (those are integration/E2E tests).
+
+## 5. Syntax Table
+
+| Concept | Pytest Syntax | Explanation |
+|---|---|---|
+| **Test File Name** | `test_*.py` or `*_test.py` | Pytest auto-discovers these files. |
+| **Test Function** | `def test_my_func():` | Pytest runs functions starting with `test_`. |
+| **Assertion** | `assert x == y` | Checks if a condition is true. |
+| **Exceptions** | `with pytest.raises(ValueError):` | Checks if the code raises a specific error. |
+
+## 6. Beginner Example
+
+Here is a basic function and its corresponding test.
+
+```python
+# math_utils.py
+def add(a, b):
+    return a + b
+
+# test_math_utils.py
+import pytest
+from math_utils import add
+
+def test_add_positive_numbers():
+    assert add(2, 3) == 5
+
+def test_add_negative_numbers():
+    assert add(-2, -3) == -5
+```
+
+## 7. Real-World Engineering Example
+
+In production, you often test data parsing and formatting logic.
+
+```python
+# utils.py
+def parse_indian_phone_number(phone_str: str) -> str:
+    """Normalizes Indian phone numbers to +91 format."""
+    clean_str = "".join(filter(str.isdigit, phone_str))
+    
+    if len(clean_str) == 10:
+        return f"+91{clean_str}"
+    elif len(clean_str) == 12 and clean_str.startswith("91"):
+        return f"+{clean_str}"
+    
+    raise ValueError("Invalid Indian phone number format")
+
+# test_utils.py
+import pytest
+from utils import parse_indian_phone_number
+
+def test_parse_valid_10_digit():
+    assert parse_indian_phone_number("9876543210") == "+919876543210"
+
+def test_parse_with_spaces_and_dashes():
+    assert parse_indian_phone_number("98765-43210") == "+919876543210"
+
+def test_parse_already_with_code():
+    assert parse_indian_phone_number("919876543210") == "+919876543210"
+
+def test_parse_invalid_length():
+    with pytest.raises(ValueError, match="Invalid Indian phone number"):
+        parse_indian_phone_number("12345")
+```
+
+## 8. Internal Working
+
+Pytest uses introspection and advanced AST (Abstract Syntax Tree) manipulation to provide detailed tracebacks when an `assert` statement fails.
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'data', data: { label: 'Test Files (test_*.py)' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'tool', data: { label: 'Pytest Discovery Engine' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'process', data: { label: 'AST Rewriting (for rich asserts)' }, position: { x: 250, y: 200 } },
+    { id: '4', type: 'core', data: { label: 'Test Execution Runner' }, position: { x: 250, y: 300 } },
+    { id: '5', type: 'output', data: { label: 'Terminal Output (Pass/Fail)' }, position: { x: 250, y: 400 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'finds files' },
+    { id: 'e2-3', source: '2', target: '3', label: 'parses' },
+    { id: 'e3-4', source: '3', target: '4', label: 'runs' },
+    { id: 'e4-5', source: '4', target: '5', label: 'reports' }
+  ]}
+/>
+
+## 9. Performance Table
+
+| Metric | Details |
+|---|---|
+| **Execution Time** | Extremely fast. Usually < 1ms per test. |
+| **Resource Usage** | Low memory footprint since no databases/networks are involved. |
+| **Parallelism** | Can be heavily parallelized using `pytest-xdist`. |
+
+## 10. Top Interview Questions
+
+| Question | Answer | Level |
+|---|---|---|
+| **Why use Pytest over Python's built-in `unittest`?** | Pytest requires less boilerplate, uses simple `assert` statements, and has a powerful fixture system. | Beginner |
+| **How does Pytest discover test files?** | By default, it looks for files matching `test_*.py` or `*_test.py` and functions matching `test_*`. | Beginner |
+| **How do you test that an exception is raised?** | Using the `with pytest.raises(ExceptionType):` context manager. | Intermediate |
+| **What is AST rewriting in Pytest?** | Pytest modifies the Abstract Syntax Tree before execution to capture intermediate values in `assert` statements for better error messages. | Advanced |
+| **How can you run only a specific subset of tests?** | Using markers (`@pytest.mark.skip`, `@pytest.mark.xyz`) or by using the `-k` flag to match test names. | Intermediate |
+
+## 11. Tricky Questions & Edge Cases
+
+- **"What happens if a test function doesn't start with `test_`?"** Pytest will completely ignore it during collection, even if it has assertions inside. Bro, you'll think your code is fully tested when those tests didn't even run.
+- **Testing Floating Point Math:** Never use `assert 0.1 + 0.2 == 0.3`. Floating-point arithmetic is imprecise. Use `assert math.isclose(0.1 + 0.2, 0.3)` or `pytest.approx()`.
+
+## 12. Real-World Usage
+
+Tech giants like **Dropbox** and **Mozilla** rely heavily on Pytest. In massive monolithic codebases, unit tests run on every commit. If they aren't written efficiently, CI/CD pipelines slow to a crawl, blocking hundreds of engineers. Therefore, unit tests are strictly isolated from network calls and database queries.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| **DO** write one assertion per test when possible to pinpoint failures quickly. | **DON'T** test multiple unrelated behaviors in a single test function. |
+| **DO** use descriptive test names like `test_calculate_tax_for_premium_user_returns_zero`. | **DON'T** use names like `test_tax_1` or `test_function`. |
+| **DO** structure tests using the Arrange, Act, Assert (AAA) pattern. | **DON'T** mix setup, execution, and verification logic randomly. |
+
+## 14. Production Notes
+
+> **Warning: Slow Unit Tests are a Code Smell**  
+> If your unit test suite takes minutes to run, you are probably not writing unit tests. You might be implicitly testing database connections, file I/O, or API calls. True unit tests should execute in milliseconds. Use mocking (which we cover later) to isolate logic.
+
+## 15. Common Mistakes
+
+| Mistake | Bad Practice | The Fix |
+|---|---|---|
+| **Ignoring the AAA Pattern** | Dumping all logic into one unstructured block. | Separate into Arrange (setup data), Act (call function), Assert (check result). |
+| **Not Testing Edge Cases** | Only testing the "happy path" with valid inputs. | Always test empty strings, null values, negative numbers, and boundary limits. |
+| **Silent Failures** | Catching exceptions in a test and printing "failed" without actually failing the test. | Let Pytest handle exceptions, or use `pytest.raises` to assert exceptions are thrown. |
+
+## 16. Related Topics
+
+- Pytest Fixtures and Parametrize
+- Mocking and Patching
+- Test-Driven Development (TDD)
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [pytest-dev/pytest](https://github.com/pytest-dev/pytest) | ⭐ 12k+ | The Pytest framework | The core tool for unit testing in Python. |
+| [pytest-dev/pytest-xdist](https://github.com/pytest-dev/pytest-xdist) | ⭐ 1.5k+ | Distributed testing | Used to run unit tests in parallel, slashing CI times. |
+| [pytest-dev/pytest-cov](https://github.com/pytest-dev/pytest-cov) | ⭐ 2.5k+ | Coverage plugin | Essential for measuring how much of your code is covered by unit tests. |
+| [FactoryBoy/factory_boy](https://github.com/FactoryBoy/factory_boy) | ⭐ 3.5k+ | Test fixtures replacement | Great for generating complex fake data objects for testing. |

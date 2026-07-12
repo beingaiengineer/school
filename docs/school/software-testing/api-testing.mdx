@@ -1,0 +1,221 @@
+---
+sidebar_position: 6
+sidebar_label: "API Testing"
+---
+
+import { LearningFlow } from '@site/src/components/LearningFlow';
+
+# API Testing
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | API Testing |
+| Difficulty | Intermediate |
+| Used For | Verifying HTTP requests/responses, status codes, payload structures, and authorization of endpoints. |
+| Common Mistake | Only checking if the status code is 200, ignoring the actual JSON payload structure. |
+| Performance | Fast if hitting an in-memory client (like FastAPI `TestClient`), slower if hitting a deployed staging server. |
+
+## 2. Engineering Story
+
+A rapidly scaling ride-hailing app deployed a microservice update. Their unit tests passed. However, the mobile app suddenly started crashing for thousands of users. 
+
+Why? The backend API changed a field in the JSON response from `driver_name` (string) to `driver_details` (object). The mobile app expected a string and crashed when it received an object. Bro, unit tests cannot catch this. If the team had a strict API test checking the exact JSON schema of the response, this breaking contract change would have stopped the deployment in its tracks.
+
+## 3. Real-World Analogy
+
+Imagine a busy Post Office in Mumbai.
+
+| Post Office Operation | API Testing Equivalent |
+|---|---|
+| Submitting a parcel at the counter | Sending an **HTTP Request (POST)** |
+| The clerk checking if the address format is correct | Verifying the **JSON Payload** |
+| The clerk giving you a receipt (or rejecting it) | Checking the **HTTP Status Code (200 OK vs 400 Bad Request)** |
+| Ensuring the clerk is actually a Post Office employee | Testing **Authentication/Authorization** |
+
+You are testing the transaction across the counter (the boundary), making sure the right forms are accepted and the right stamps (headers) are returned.
+
+## 4. Concept Explanation
+
+**API Testing** involves sending HTTP calls (GET, POST, PUT, DELETE) to an application's endpoints and verifying the responses. It ensures that the application exposes the correct data, handles errors properly, and honors security protocols (like JWT tokens).
+
+In Python, this is typically done using framework-specific test clients (like `TestClient` in FastAPI or `django.test.Client` in Django) which bypass the network layer, or using the `requests` library to hit a real running server.
+
+**When to use:** For every single REST or GraphQL endpoint exposed by your application.
+**When NOT to use:** When testing internal background tasks that are not exposed via HTTP.
+
+## 5. Syntax Table
+
+| Action | FastAPI `TestClient` Syntax | Explanation |
+|---|---|---|
+| **Initialize Client** | `client = TestClient(app)` | Creates a fake client to call endpoints. |
+| **Make GET Request** | `response = client.get('/users/1')` | Calls endpoint without network overhead. |
+| **Check Status** | `assert response.status_code == 200` | Verifies the HTTP status code. |
+| **Check Payload** | `assert response.json()["id"] == 1` | Parses and verifies the JSON response body. |
+
+## 6. Beginner Example
+
+Testing a simple FastAPI endpoint using its built-in `TestClient`.
+
+```python
+# main.py
+from fastapi import FastAPI, HTTPException
+
+app = FastAPI()
+
+@app.get("/ping")
+def ping():
+    return {"message": "pong"}
+
+@app.get("/items/{item_id}")
+def read_item(item_id: int):
+    if item_id > 100:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return {"item_id": item_id}
+
+# test_main.py
+from fastapi.testclient import TestClient
+from main import app
+
+client = TestClient(app)
+
+def test_ping():
+    response = client.get("/ping")
+    assert response.status_code == 200
+    assert response.json() == {"message": "pong"}
+
+def test_read_item_success():
+    response = client.get("/items/5")
+    assert response.status_code == 200
+    assert response.json()["item_id"] == 5
+
+def test_read_item_not_found():
+    response = client.get("/items/150")
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Item not found"
+```
+
+## 7. Real-World Engineering Example
+
+In production, API tests must verify complex scenarios like authentication, payload validation, and database state changes.
+
+```python
+import pytest
+from fastapi.testclient import TestClient
+from main import app, get_db
+
+# Override dependency to use a test database
+def override_get_db():
+    yield test_db_session
+
+app.dependency_overrides[get_db] = override_get_db
+client = TestClient(app)
+
+def test_create_order_authorized():
+    # 1. Setup headers with a mock JWT token
+    headers = {"Authorization": "Bearer test_valid_token_xyz"}
+    payload = {"product_id": 101, "quantity": 2}
+    
+    # 2. Hit the endpoint
+    response = client.post("/orders", json=payload, headers=headers)
+    
+    # 3. Assert Response Contract
+    assert response.status_code == 201
+    data = response.json()
+    assert "order_id" in data
+    assert data["status"] == "pending"
+    
+    # 4. (Optional) Assert DB State if this acts as an integration test too
+    # assert test_db_session.query(Order).count() == 1
+
+def test_create_order_unauthorized():
+    payload = {"product_id": 101, "quantity": 2}
+    # No headers provided!
+    response = client.post("/orders", json=payload)
+    
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Not authenticated"
+```
+
+## 8. Internal Working
+
+When using a tool like FastAPI's `TestClient` (built on Starlette/HTTPX), the request doesn't actually hit the computer's network interface (localhost port). It directly invokes the ASGI application callable in memory.
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Test Case (TestClient)' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'tool', data: { label: 'ASGI Protocol Translation' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'process', data: { label: 'FastAPI Router & Middleware' }, position: { x: 250, y: 200 } },
+    { id: '4', type: 'data', data: { label: 'Endpoint Logic (Returns JSON)' }, position: { x: 250, y: 300 } },
+    { id: '5', type: 'output', data: { label: 'Assert HTTP Response' }, position: { x: 250, y: 400 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'client.get()' },
+    { id: 'e2-3', source: '2', target: '3', label: 'no network overhead' },
+    { id: 'e3-4', source: '3', target: '4', label: 'routes' },
+    { id: 'e4-5', source: '4', target: '5', label: 'verifies' }
+  ]}
+/>
+
+## 9. Performance Table
+
+| Strategy | Speed per request | Realism | Setup Complexity |
+|---|---|---|---|
+| **TestClient (In-memory ASGI)** | ~5-10ms | High (Bypasses network but runs all middleware) | Low |
+| **Localhost Server (uvicorn)** | ~20-50ms | Very High | Medium (Need to manage background process) |
+| **Deployed Staging Server** | ~100-300ms | 100% Real | High (Needs CI/CD deployment first) |
+
+## 10. Top Interview Questions
+
+| Question | Answer | Level |
+|---|---|---|
+| **What status code should a successful POST creation return?** | `201 Created`. (Though some APIs lazily return 200). | Beginner |
+| **How do you test API endpoints that require authentication?** | Pass a test JWT token in the `headers={"Authorization": "Bearer..."}` or override the dependency injection to simulate an authenticated user. | Intermediate |
+| **Why use `TestClient` instead of the `requests` library in tests?** | `TestClient` avoids network latency and port binding issues by calling the ASGI app directly in memory, making tests significantly faster and more reliable. | Intermediate |
+| **What is Contract Testing?** | Testing that ensures the API provider (backend) and consumer (frontend/mobile) agree on the structure of the request/response payloads. | Advanced |
+| **How do you test rate limiting on an API?** | Write a test loop that hits the endpoint rapidly (e.g., 100 times) and asserts that the 101st request returns `429 Too Many Requests`. | Advanced |
+
+## 11. Tricky Questions & Edge Cases
+
+- **Testing Missing Fields:** What happens if the client sends `{}` to a POST endpoint? Your tests must explicitly verify that the API returns a `422 Unprocessable Entity` (or `400 Bad Request`) and doesn't just crash with a 500 server error.
+- **Header Case Sensitivity:** HTTP headers are technically case-insensitive, but some poorly written APIs fail if you send `authorization` instead of `Authorization`. Always test edge cases in client implementations.
+
+## 12. Real-World Usage
+
+Companies use API Testing heavily for backward compatibility. Whenever a change is pushed, the CI pipeline runs tests against the new API version using *old* payload formats to ensure the mobile app from 6 months ago won't suddenly crash when the user opens it. Tools like **Schemathesis** can automatically read an OpenAPI spec and hammer the endpoints with edge-case data.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| **DO** assert specific fields in the JSON response, not just the status code. | **DON'T** rely on the order of keys in a JSON response; JSON is unordered by definition. |
+| **DO** test failure scenarios (400, 401, 403, 404, 422). | **DON'T** only test the 200 OK "happy path". Security bugs live in the edge cases. |
+| **DO** use dependency injection (if supported by your framework) to swap out real DBs for test DBs during API tests. | **DON'T** hit third-party APIs (like Stripe) directly in your API tests; mock their responses. |
+
+## 14. Production Notes
+
+> **Warning: 500 Internal Server Errors**  
+> If an API test receives a `500 Internal Server Error`, it means your code crashed (e.g., an unhandled exception or database failure). Your API should *never* return a 500 to a bad user request; it should cleanly catch it and return a 400 or 422. A 500 in an API test is always a critical bug.
+
+## 15. Common Mistakes
+
+| Mistake | Bad Practice | The Fix |
+|---|---|---|
+| **Shallow Assertions** | `assert response.status_code == 200` (and nothing else). | Assert the payload: `assert "user_id" in response.json()`. |
+| **Testing State Without Isolation** | Test A deletes User 1. Test B tries to fetch User 1 and fails. | Reset the database between API tests or create fresh data per test. |
+| **Hardcoded Hostnames** | `requests.get("http://localhost:8000/api")` in tests. | Use an in-memory client or a configurable environment variable for the base URL. |
+
+## 16. Related Topics
+
+- Integration Testing
+- Test-Driven Development (TDD)
+- FastAPI Concepts
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [tiangolo/fastapi](https://github.com/tiangolo/fastapi) | ⭐ 65k+ | FastAPI Framework | Provides `TestClient` which is the modern standard for fast API testing in Python. |
+| [psf/requests](https://github.com/psf/requests) | ⭐ 50k+ | HTTP Library | Used when you need to run API tests against a real, deployed staging server. |
+| [schemathesis/schemathesis](https://github.com/schemathesis/schemathesis) | ⭐ 2k+ | API Testing Tool | Automatically generates and runs API tests by reading your OpenAPI (Swagger) schema to find edge cases. |

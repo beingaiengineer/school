@@ -1,0 +1,176 @@
+---
+sidebar_position: 6
+sidebar_label: "Planning Poker"
+---
+
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Planning Poker
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Planning Poker |
+| Difficulty | Beginner |
+| Used For | Team-based estimation avoiding anchoring bias |
+| Common Mistake | Averaging votes instead of discussing |
+| Performance | High accuracy, moderate time investment |
+
+## 2. Engineering Story
+
+The checkout team was constantly missing sprint deadlines. Every planning meeting, the engineering manager would read a ticket and ask the senior tech lead, "How long will this take?" The tech lead would quickly say, "Oh, that's just a 2-point ticket, easy." The juniors would quietly nod. 
+
+But when a junior developer actually picked up the task, they spent days deciphering legacy code and undocumented APIs. Because the senior anchor-dropped their estimate, no one else spoke up about their own lack of context or the hidden complexities they suspected. To fix this, the team switched to Planning Poker—forcing everyone to vote privately before revealing their estimates. Suddenly, hidden technical debt was exposed during the estimation phase, not during the final day of the sprint.
+
+## 3. Real-World Analogy
+
+Think of Planning Poker like a group of friends bargaining at Sarojini Nagar market or haggling with an auto-rickshaw driver. If the auto driver asks for ₹500, and one of your friends immediately yells out "Okay!", the negotiation is over. That first number anchored the whole group.
+
+But what if you all used Planning Poker?
+
+| Bargaining Action | Planning Poker Equivalent |
+|---|---|
+| Auto driver quotes ₹500 | Product Manager presents a large feature |
+| You secretly write ₹100 on your phone, friend writes ₹150 | Team privately picks their Fibonacci point cards |
+| You both show your phones at the same time | Team reveals votes simultaneously |
+| You explain why the trip is short; friend explains traffic | High/Low voters discuss their reasoning |
+| You agree to offer ₹120 as a group | Team reaches consensus on story points |
+
+Bro, the magic here is in the simultaneous reveal. It kills the "anchoring bias" where the loudest or most senior person decides the price for everyone.
+
+## 4. Concept Explanation
+
+Planning Poker is an agile estimation and planning technique that is consensus-based. Instead of speaking their estimates out loud, all members of the team use a deck of cards with values (usually the Fibonacci sequence: 1, 2, 3, 5, 8, 13, 21...) to secretly vote on the effort required for a user story.
+
+Once everyone has selected a card, all cards are revealed at once. If the estimates vary significantly, the highest and lowest estimators explain their reasoning, and the team re-votes until consensus is reached. This process ensures that everyone's voice is heard, uncovers hidden complexities, and builds a shared understanding of the work.
+
+## 5. Fibonacci Scale Table
+
+The scale forces relative sizing and acknowledges that bigger tasks have exponentially more uncertainty.
+
+| Point Value | Meaning in Production |
+|---|---|
+| **1** | Trivial. A simple copy change, fixing a typo, or updating a well-known config. |
+| **2** | Small feature. Straightforward logic, minimal testing required, completely understood. |
+| **3** | Medium feature. Requires some business logic changes, new tests, and maybe a minor API tweak. |
+| **5** | Large feature. Touches multiple systems (API + DB), requires coordination, and has some unknowns. |
+| **8** | Very complex. High uncertainty, risky database migrations, or dealing with legacy spaghetti code. |
+| **13+** | Epic level. Too big for a single sprint. Must be broken down into smaller tickets. |
+
+## 6. Beginner Example
+
+Imagine a Jira ticket: **"Add a 'Download as PDF' button to the invoice page."**
+
+- **Dev A (Frontend):** Votes 3 (Needs to add a button and a loading spinner).
+- **Dev B (Backend):** Votes 3 (Needs to expose an existing PDF generation endpoint).
+- **Dev C (Junior):** Votes 3 (Understands the flow).
+
+Everyone reveals a 3. Boom. Done in 30 seconds. No further discussion needed.
+
+## 7. Real-World Engineering Example
+
+Ticket: **"Migrate Payment Gateway from Stripe v2 to v3 APIs."**
+
+- **Dev A (Senior):** Votes 3. "It's just swapping out a few library calls."
+- **Dev B (Junior):** Votes 13. "I've never touched the payment module, it looks terrifying."
+- **Dev C (Mid-level):** Votes 8. "Wait, Dev A, did you forget about the webhook payload structure changes? We have to rewrite the parsing logic."
+
+**Discussion:** The senior realizes they missed the webhook changes. The junior realizes it's not a complete rewrite. 
+
+**Re-vote:** Dev A changes to 8. Dev B changes to 8. Dev C stays at 8. Consensus reached at 8 points. 
+
+## 8. Internal Working
+
+Here is the exact lifecycle of a Planning Poker round. Notice the feedback loop between disagreement and re-voting.
+
+export const pokerFlow = {
+  nodes: [
+    { id: '1', type: 'data', data: { label: 'Read Jira Ticket' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Private Voting (Fibonacci)' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'core', data: { label: 'Simultaneous Reveal' }, position: { x: 250, y: 200 } },
+    { id: '4', type: 'warning', data: { label: 'Disagreement > 1 level?' }, position: { x: 250, y: 300 } },
+    { id: '5', type: 'tool', data: { label: 'Discussion (Min/Max speak)' }, position: { x: 500, y: 200 } },
+    { id: '6', type: 'output', data: { label: 'Consensus Logged' }, position: { x: 250, y: 450 } },
+  ],
+  edges: [
+    { id: 'e1-2', source: '1', target: '2', animated: true },
+    { id: 'e2-3', source: '2', target: '3', animated: true },
+    { id: 'e3-4', source: '3', target: '4' },
+    { id: 'e4-5', source: '4', target: '5', label: 'Yes', animated: true, type: 'smoothstep' },
+    { id: 'e5-2', source: '5', target: '2', label: 'Re-vote', animated: true, type: 'smoothstep' },
+    { id: 'e4-6', source: '4', target: '6', label: 'No (Within range)', animated: true, type: 'smoothstep' },
+  ]
+};
+
+<LearningFlow {...pokerFlow} />
+
+## 9. Performance Table
+
+How does Planning Poker impact team dynamics and time over sprints?
+
+| Metric | Short-Term Impact | Long-Term Impact |
+|---|---|---|
+| **Meeting Duration** | Slower (learning the process) | Faster (team builds shared context) |
+| **Estimate Accuracy** | Moderate | High (wisdom of the crowd kicks in) |
+| **Knowledge Silos** | Instantly broken down | Eradicated |
+| **Junior Empowerment** | O(1) Immediate boost | Creates well-rounded mid-level engineers |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| **Why use the Fibonacci sequence instead of linear numbers (1,2,3,4,5)?** | As task size grows, uncertainty grows exponentially. It's impossible to tell a 20-hour task from a 21-hour task, but easy to tell an 8-point task from a 13-point task. |
+| **What do you do when the team is completely split (e.g., half vote 2, half vote 8)?** | The product manager might need to clarify the requirements. A massive split often means half the team is making an assumption the other half isn't. |
+| **Who should participate in Planning Poker?** | Only the people actually doing the work (Devs, QA, UI/UX if applicable). Product Managers and Stakeholders can explain the story but **cannot** vote. |
+| **How long should we discuss a disagreement?** | Time-box it to 1-2 minutes. If you are arguing for 15 minutes, the ticket is not well-defined enough and should be pushed back to grooming. |
+| **Does an 8-point ticket mean 8 days of work?** | No. Story points measure *effort, complexity, and uncertainty*, not exact time. Velocity (points per sprint) handles the time translation naturally. |
+
+## 11. Tricky Questions & Edge Cases
+
+- **The "HIPPO" Effect (Highest Paid Person's Opinion):** What if the CTO sits in on the meeting and says, "This should be easy," before the vote? The entire room will be anchored. *Solution: Non-participants must stay absolutely silent during the voting phase.*
+- **The "Exhaustion" Consensus:** After 1 hour of planning, people start voting '3' for everything just to end the meeting. *Solution: Break planning into smaller, 45-minute chunks.*
+- **Close but not exact:** Dev A votes 3, Dev B votes 5. Do you need to re-vote? Usually, no. The team just agrees on the higher number (5) and moves on. We only discuss major discrepancies (e.g., 2 vs 8).
+
+## 12. Real-World Usage
+
+Top tech companies like Spotify, Uber, and Atlassian use Planning Poker heavily. But for distributed, asynchronous teams, real-time poker is painful. Instead, teams use **Async Poker** Slack integrations. A bot posts the ticket, devs DM their votes to the bot over 24 hours, and the bot reveals the spread the next morning.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| **DO** ensure votes are revealed exactly simultaneously. | **DON'T** let the senior engineer speak first before the cards are turned over. |
+| **DO** let the outliers (highest and lowest votes) speak first. | **DON'T** average the scores (e.g., someone votes 5, someone votes 8, so you log 6.5). Story points must stay on the Fibonacci scale. |
+| **DO** use a timer to keep discussions short. | **DON'T** spend 10 minutes debating the difference between a 2 and a 3. |
+
+## 14. Production Notes
+
+> ⚠️ **Warning: The Fatigue Trap**  
+> Keep the meetings time-boxed, bro. Nobody wants to argue over 3 points for an hour. If a ticket causes massive debate, it's a "spike" candidate. Give a developer a time-boxed 1-day task to research the complexity, and estimate the actual work in the next sprint. Don't force a consensus on something completely unknown.
+
+## 15. Common Mistakes
+
+This is a very common beginner mistake, bro. Teams often try to shortcut the process.
+
+| Trap | What Happens | Correction |
+|---|---|---|
+| **Averaging Votes** | 3 + 8 = 5.5. The team logs a 5 without discussing the 8's concerns. | **Discuss and Re-vote.** The 8 might know about a massive security flaw the 3 missed. |
+| **Equating Points to Hours** | "1 point = 1 day." PMs start asking why an 8-point task took 10 days. | **Points = Complexity + Effort + Risk.** Let sprint velocity handle the time estimation. |
+| **Voting on Unknowns** | Team blindly votes on a feature with no design or API spec. | **Push it back.** Refuse to point tickets that lack basic acceptance criteria. |
+
+## 16. Related Topics
+- User Stories & Acceptance Criteria
+- Story Points vs Hours
+- Velocity & Sprint Planning
+- Technical Debt
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [falsandtru/sp-poker](https://github.com/falsandtru/sp-poker) | ⭐ 1k+ | Scrum planning poker web app | Open-source tool to host poker sessions without Jira plugins. |
+| [planitpoker/planitpoker](https://github.com/planitpoker/planitpoker) | ⭐ 800+ | Planning poker for distributed teams | Good reference for real-time WebSocket based async estimation. |
+| [hello-poker/hello-poker](https://github.com/hello-poker/hello-poker) | ⭐ 500+ | Minimalist planning poker | Lightweight alternative to bulky enterprise estimation tools. |
+| [TaitoUnited/planning-poker](https://github.com/TaitoUnited/planning-poker) | ⭐ 300+ | Firebase-backed poker | Shows real-time socket architecture for voting and state sync. |
+| [chuhlomin/planning-poker](https://github.com/chuhlomin/planning-poker) | ⭐ 250+ | CLI planning poker | For terminal-loving devs who want to estimate from their shell. |
