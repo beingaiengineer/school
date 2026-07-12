@@ -19,7 +19,11 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ## 2. Engineering Story
 
-A team of engineers recently faced a critical challenge related to this concept. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing this concept, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+When an enterprise software giant (similar to Salesforce developing Agentforce) first tried to automate customer support using a single massive LLM with a basic ReAct loop, they hit a wall. The model was given 50+ tools—ranging from checking billing systems to debugging code snippets—and a single unified prompt. In production, this monolithic approach led to slow response times (>10s), rampant hallucinations as the context window bloated with tool outputs, and unpredictable control flows where the agent would randomly start reasoning about billing while trying to solve a technical issue. 
+
+The breakthrough came when they transitioned to a **Compound AI System**. Instead of one mega-agent, they implemented a lightning-fast **Router** agent at the front door. This router did one thing: classify the user's intent. If it was a billing issue, the router dispatched the query to a specialized Billing Sub-agent using a highly structured **Plan-and-Execute** architecture to safely interact with financial databases. If it was a coding question, it went to a Technical Support agent using a **Reflection** loop to generate and test code snippets. 
+
+By matching the architecture pattern to the specific task—using Routing for scale, Plan-and-Execute for rigorous data tasks, and Reflection for coding—the team reduced their P95 latency by over 50%, quadrupled system throughput, and virtually eliminated instances where the AI got "lost in thought." They learned that production AI isn't about having the smartest single model, but about building an orchestrated team of specialized agents.
 
 ## 3. Real-World Analogy
 
