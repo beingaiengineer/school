@@ -19,7 +19,11 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 Bro, SQLite is the most widely deployed database in the world. It is a full SQL database that lives entirely inside a single file on your hard drive. Python comes with it built-in, meaning you can start writing SQL instantly without installing a separate database server.
 
-## 2. Real-World Analogy
+## 2. Engineering Story
+
+A team of engineers recently faced a critical challenge related to SQLite Execution Flow,. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing SQLite Execution Flow,, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+
+## 3. Real-World Analogy
 
 Think of SQLite like a high-quality ledger book sitting on your desk.
 
@@ -28,7 +32,7 @@ However, if three of your coworkers (threads/processes) try to write in the exac
 
 PostgreSQL, on the other hand, is like a corporate bank with 50 tellers. It takes time to set up the building, but it handles hundreds of people simultaneously.
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 
 SQLite is a C-language library that implements a small, fast, self-contained, high-reliability, full-featured, SQL database engine.
 
@@ -43,7 +47,7 @@ You should use SQLite for:
 
 Bro, you should NOT use SQLite for high-traffic web apps where multiple users write data at the same time.
 
-## 4. Syntax Table
+## 5. Syntax Table
 
 | Operation | Code Example |
 |---|---|
@@ -56,7 +60,7 @@ Bro, you should NOT use SQLite for high-traffic web apps where multiple users wr
 | Commit Transaction | `conn.commit()` |
 | Close Connection | `conn.close()` |
 
-## 5. Beginner Example
+## 6. Beginner Example
 
 Let's create a database file, make a table, insert data, and read it back.
 
@@ -97,7 +101,7 @@ Output:
 
 Bro, if you look in your folder, you will see a literal file named `school.db`. That is your database.
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 In the real world, you use `Context Managers` (the `with` statement) to ensure database connections are always closed, even if your code crashes.
 
@@ -128,7 +132,7 @@ def get_user_by_id(user_id: int):
         return None
 ```
 
-## 7. Internal Working
+## 8. Internal Working
 
 How does Python talk to a file using SQL?
 
@@ -155,7 +159,7 @@ How does Python talk to a file using SQL?
 
 Because there is no server, the SQLite engine runs *inside* your Python memory space. When you execute an `INSERT`, SQLite places a lock on the `app.db` file at the OS level. If another Python script tries to write at that exact moment, it gets a "Database is locked" error.
 
-## 8. Performance Table
+## 9. Performance Table
 
 | Feature | Performance / Limitation |
 |---|---|
@@ -164,7 +168,7 @@ Because there is no server, the SQLite engine runs *inside* your Python memory s
 | Concurrency | Terrible. Only ONE process can write at a time. |
 | Maximum Size | ~140 Terabytes (Yes, terabytes) |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
@@ -173,7 +177,7 @@ Because there is no server, the SQLite engine runs *inside* your Python memory s
 | What is `:memory:` in SQLite? | It creates a database entirely in RAM. It's lightning-fast, perfect for running automated test suites, but disappears when the script ends. |
 | Does SQLite enforce data types? | Historically, no (Flexible Typing). You could put text in an integer column. Newer versions introduced STRICT mode. |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 ### SQL Injection with String Formatting
 
@@ -196,7 +200,7 @@ cursor.execute("SELECT * FROM users WHERE name = ?", (name,))
 
 If you do an `INSERT` or `UPDATE` but forget to call `conn.commit()`, the data will mysteriously disappear when your script ends. Python does not auto-commit by default.
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 
 | Domain | Real-World Usage |
 |---|---|
@@ -204,7 +208,7 @@ If you do an `INSERT` or `UPDATE` but forget to call `conn.commit()`, the data w
 | Automated Testing | Overriding the production Postgres connection string to `sqlite:///:memory:` so tests run instantly without needing a DB server. |
 | Edge Devices | IoT devices (like Raspberry Pi) storing sensor data locally when the internet goes down. |
 
-## 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
@@ -212,19 +216,19 @@ If you do an `INSERT` or `UPDATE` but forget to call `conn.commit()`, the data w
 | Set `conn.row_factory = sqlite3.Row` for dictionary-like results | Rely on confusing tuple indices `row[4]` |
 | Close cursors and connections in `finally` blocks or context managers | Leave connections open forever |
 
-## 13. Production Notes
+## 14. Production Notes
 
 > ⚠ Production Note:
 > If you MUST use SQLite in a multi-threaded web app (like a small internal dashboard), you can enable Write-Ahead Logging (WAL). Execute `PRAGMA journal_mode=WAL;`. This changes how SQLite locks the file, allowing multiple readers to read *while* someone is writing. It massively improves concurrency.
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 
 | Mistake | Why It Hurts |
 |---|---|
 | Passing a single value to execute without a comma | `cursor.execute(..., (user_id))` fails because Python evaluates `(5)` as an int, not a tuple. You must use a trailing comma: `(user_id,)`. |
 | Ignoring backups | Because it's a file, if it gets corrupted or accidentally deleted, it's gone. Always copy the `.db` file elsewhere. |
 
-## 15. Related Topics
+## 16. Related Topics
 
 - PostgreSQL (The step-up from SQLite)
 - ORM vs Raw SQL

@@ -14,7 +14,11 @@ sidebar_label: "Production Deployment"
 | Common Mistake | Running the synchronous SDK loop inside the main thread of a web server. |
 | Performance | Requires asynchronous architecture to prevent HTTP timeouts. |
 
-## 2. Real-World Analogy
+## 2. Engineering Story
+
+A team of engineers recently faced a critical challenge related to this concept. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing this concept, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+
+## 3. Real-World Analogy
 ![Real-World Analogy](../assets/openai-agents-sdk/openai-sdk-production-deployment.png)
 
 Bro, writing a Python script on your laptop to talk to OpenAI is like practicing guitar in your bedroom. It's fun and easy. Deploying that code to production is like playing a live concert in a stadium. Now you have to worry about the sound system (server infrastructure), security (API keys), hecklers (prompt injections), and the fact that you can't just stop playing if you make a mistake (error handling).
@@ -25,12 +29,12 @@ Bro, writing a Python script on your laptop to talk to OpenAI is like practicing
 | Wait 10 seconds for reply | Async task queue with WebSockets |
 | Hardcoded `.env` | HashiCorp Vault / AWS Secrets |
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 The OpenAI Agents SDK is synchronous by default, meaning `client.run()` blocks the thread until the agent finishes thinking and calling tools. In production, web servers like FastAPI or Express handle many users at once. If one user's agent takes 15 seconds to run, a synchronous server will freeze and ignore other users.
 
 To deploy safely, you must wrap the agent execution in asynchronous task queues (like Celery) or use async endpoints, stream the results via Server-Sent Events (SSE) or WebSockets, and handle API rate limits gracefully.
 
-## 4. Syntax Table
+## 5. Syntax Table
 | Concept | Infrastructure | Description |
 |---|---|---|
 | Web Server | FastAPI (Python) | The entry point for your UI to talk to the agent. |
@@ -38,7 +42,7 @@ To deploy safely, you must wrap the agent execution in asynchronous task queues 
 | State Management | Redis / PostgreSQL | Stores the conversation history. |
 | Deployment | Docker + Kubernetes | Containerizes the app for scaling. |
 
-## 5. Beginner Example
+## 6. Beginner Example
 Here is the naive way people try to deploy it. **Don't do this for heavy agents**, but it shows the basic API wrapping.
 
 ```python
@@ -64,7 +68,7 @@ async def chat_endpoint(request: ChatRequest):
     return {"reply": response.messages[-1]["content"]}
 ```
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 Bro, the real way to do this is using the asynchronous OpenAI client and streaming the response back using Server-Sent Events (SSE) so the user sees the text appearing instantly.
 
 ```python
@@ -99,7 +103,7 @@ async def chat_stream_endpoint(request: ChatRequest):
     return StreamingResponse(agent_stream(request.message), media_type="text/event-stream")
 ```
 
-## 7. Internal Working
+## 8. Internal Working
 In a proper production architecture, the HTTP request simply adds a job to a queue. A pool of worker servers picks up the jobs, runs the heavy OpenAI SDK loop, and pushes updates to a database or directly to the client via WebSockets.
 
 import LearningFlow from '@site/src/components/LearningFlow';
@@ -119,14 +123,14 @@ import LearningFlow from '@site/src/components/LearningFlow';
   ]}
 />
 
-## 8. Performance Table
+## 9. Performance Table
 | Bottleneck | Risk | Solution |
 |---|---|---|
 | OpenAI API Latency | High (2-10s) | Stream responses to UI immediately. |
 | Concurrent Connections | Medium | Use Asyncio/FastAPI, avoid synchronous blocking. |
 | Context Window Size | High (cost & speed) | Implement a sliding window to forget old messages. |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 | Question | Answer |
 |---|---|
 | Why use WebSockets or SSE for agents? | Because LLM agents are slow. HTTP requests will timeout, leaving the user staring at a loading spinner. Streaming provides instant UX feedback. |
@@ -134,33 +138,33 @@ import LearningFlow from '@site/src/components/LearningFlow';
 | What happens to memory if the server restarts? | If you store `messages` in a Python list in RAM, it's gone. You must persist conversation history to a database like PostgreSQL or Redis. |
 | How do you scale this? | Because agents are stateless between runs, you can horizontally scale your worker nodes (e.g., in Kubernetes) as long as state is in a shared database. |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 Bro, what if your agent's tool needs to run a database query that takes 30 seconds?
 **The Fix:** The OpenAI API has a strict timeout. If your local tool takes too long, the OpenAI connection drops. Your tools must be fast, or you must decouple the long-running task (e.g., the agent says "I started the query, check back later") instead of waiting inline.
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 Top startups deploy their agents behind API gateways (like Kong or Cloudflare) to manage rate limiting and DDOS protection, before routing the request to a Kubernetes cluster running FastAPI and async Celery workers.
 
-## 12. Best Practices
+## 13. Best Practices
 | DO | DON'T |
 |---|---|
 | Use `.env` and Secrets Managers for API keys. | Hardcode `sk-...` in your git repo. |
 | Implement strict timeouts on your tool functions. | Let a tool hang forever, freezing the agent. |
 | Persist conversation state to a database. | Store state in global Python variables. |
 
-## 13. Production Notes
+## 14. Production Notes
 :::warning
 Security is your biggest threat in production. Ensure your agent cannot be prompt-injected into calling a destructive tool. Apply principle of least privilege to the database credentials your tools use.
 :::
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 | Mistake | Fix |
 |---|---|
 | Synchronous blocking | Use `AsyncOpenAI` or background task queues. |
 | Infinite retry loops | Set a hard `max_retries` on tool failures so you don't burn tokens on a broken API. |
 | Forgetting Observability | You must integrate LangSmith/Helicone before deploying, or you will be blind to errors. |
 
-## 15. Related Topics
+## 16. Related Topics
 - Observability and Tracing
 - Streaming Responses
 - Agent Scaling Strategies

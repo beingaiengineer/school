@@ -9,10 +9,14 @@ import LearningFlow from '@site/src/components/LearningFlow';
 ## 1. Quick Summary
 Bro, dependency management is how you control the external libraries (like `requests` or `pandas`) your project needs to run. It ensures that your code works exactly the same on your machine, your coworker's machine, and in production, without different package versions breaking things.
 
-## 2. Real-World Analogy
+## 2. Engineering Story
+
+A team of engineers recently faced a critical challenge related to Manifest File, detail: pyproject.toml (Broad Rules), x: 0, y: 50, kind: data },. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing Manifest File, detail: pyproject.toml (Broad Rules), x: 0, y: 50, kind: data },, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+
+## 3. Real-World Analogy
 Imagine baking a highly specific cake. If the recipe just says "use flour," one baker might use all-purpose, another bread flour, and your cake gets ruined. Dependency management is writing a recipe that says: "Use exactly King Arthur All-Purpose Flour, Version 2.0." It guarantees the end result is always identical.
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 When you build Python apps, you rely on other people's code (dependencies). But those dependencies have their own dependencies (sub-dependencies). If you aren't careful, installing a package will upgrade a sub-dependency that breaks a *different* package you rely on.
 
 Modern dependency management solves this using two main files:
@@ -35,7 +39,7 @@ Modern dependency management solves this using two main files:
   }}
 />
 
-## 4. Syntax Table
+## 5. Syntax Table
 
 Here are the most common tools used for dependency management in Python today:
 
@@ -46,7 +50,7 @@ Here are the most common tools used for dependency management in Python today:
 | **Pipenv** | Bridges pip and virtual environments. | `Pipfile.lock` | `pipenv install X` |
 | **uv** | Extremely fast Rust-based modern alternative. | `uv.lock` | `uv add X` |
 
-## 5. Beginner Example
+## 6. Beginner Example
 Here is the old-school, but still common, way using `pip` and a `requirements.txt` file.
 
 ```bash
@@ -65,7 +69,7 @@ pip freeze > requirements.txt
 pip install -r requirements.txt
 ```
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 Bro, in production teams, we usually use a tool like **Poetry** because it handles resolution automatically and separates dev tools from production tools.
 
 ```bash
@@ -92,7 +96,7 @@ uvicorn = "^0.23.2"
 pytest = "^7.4.3"
 ```
 
-## 7. Internal Working
+## 8. Internal Working
 When you run a modern dependency manager (like `poetry add X`), it performs a complex mathematical operation called **Dependency Resolution**.
 
 1. It checks the version you want for package `X`.
@@ -100,7 +104,7 @@ When you run a modern dependency manager (like `poetry add X`), it performs a co
 3. It compares those sub-packages against the packages *already* in your project.
 4. If `X` requires `urllib3 < 2.0` but another package requires `urllib3 > 2.0`, it will throw a **Dependency Conflict Error**. It prevents you from breaking your environment *before* it installs anything.
 
-## 8. Performance Table
+## 9. Performance Table
 
 | Tool | Resolution Speed | Ease of CI/CD | Notes |
 |---|---|---|---|
@@ -108,7 +112,7 @@ When you run a modern dependency manager (like `poetry add X`), it performs a co
 | **Poetry** | Slower | High | Excellent strict lockfile, but resolving complex trees takes time. |
 | **uv** | Extremely Fast | High | Written in Rust, currently replacing many older tools. |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer | Explanation |
 |---|---|---|
@@ -116,31 +120,31 @@ When you run a modern dependency manager (like `poetry add X`), it performs a co
 | What is the difference between `pyproject.toml` and `poetry.lock`? | Intent vs. Reality. | `pyproject.toml` says "I want Flask 2.x". The `.lock` file says "You will get exactly Flask 2.1.3 and these exact 5 sub-dependencies." |
 | What is a dependency conflict? | When two packages require incompatible versions of the same sub-package. | e.g., Package A needs `requests==2.20` and Package B needs `requests==2.30`. The resolver cannot satisfy both. |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 **Q: I ran `pip install` on my server and my app broke, but it works locally!**
 Bro, this happens when you don't use a lockfile. If your local machine installed `pandas 1.5` a month ago, but today the server runs `pip install pandas`, the server gets `pandas 2.0`. Features changed, and your app crashed. Always use `pip install -r requirements.txt` or `poetry install` in production.
 
 **Q: Should I commit my lockfile to git?**
 **YES.** If you are building an application (like a web server or CLI app), you must commit the lockfile to ensure the team and CI/CD use the exact same versions. If you are building a *library* meant to be installed by others, you generally do *not* commit the lockfile, to allow the library to be tested against various versions.
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 - **Dockerizing Apps:** Copying the lockfile into a Docker container and installing from it guarantees the image is identical every time you build it.
 - **Security Audits:** Tools like Dependabot scan your lockfile to see if you are using a specific sub-dependency version that has a known vulnerability.
 
-## 12. Best Practices
+## 13. Best Practices
 - **Separate Dev and Prod:** Never install `pytest` or `black` in your production Docker image. Use dependency groups to isolate them.
 - **Pin Everything in Prod:** Never use floating versions (like `requests>=2.0`) in production. Always deploy from a locked file.
 - **Update Intentionally:** Don't just blindly update dependencies. Run a command like `poetry update` on a new branch, run your tests, and review the changes.
 
-## 13. Production Notes
+## 14. Production Notes
 In a real CI/CD pipeline, the build step should *never* resolve dependencies. It should strictly read the lockfile. In Poetry, you use `poetry install --no-root --only main` to ensure it only installs the exact production versions and errors out if the lockfile is out of sync with `pyproject.toml`.
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 - **Manually editing the lockfile:** Never do this. If there is a merge conflict in a lockfile, delete the lockfile, run the resolver again (e.g., `poetry lock`), and commit the new one.
 - **Forgetting to update the lockfile:** You added a package to `pyproject.toml` manually but forgot to run `poetry lock`. Now CI fails.
 - **Global Installs:** Using `pip install` outside of a virtual environment.
 
-## 15. Related Topics
+## 16. Related Topics
 - **Virtual Environments:** The isolated folders where your managed dependencies actually live.
 - **Pyproject Toml:** The modern file used to declare top-level dependency rules.
 - **Pip:** The underlying package installer used by almost all Python dependency managers.

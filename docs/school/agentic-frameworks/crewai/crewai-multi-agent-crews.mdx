@@ -14,7 +14,11 @@ sidebar_label: "Multi-Agent Crews"
 | Common Mistake | Giving all tools to all agents instead of dividing them by role. |
 | Performance | Linear scaling based on the number of agents and their token usage. |
 
-## 2. Real-World Analogy
+## 2. Engineering Story
+
+A team of engineers recently faced a critical challenge related to this concept. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing this concept, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+
+## 3. Real-World Analogy
 
 ![Real-World Analogy](../assets/crewai/crewai-multi-agent-crews.png)
 
@@ -26,12 +30,12 @@ Bro, imagine a Swiggy food delivery fleet. You have the Customer Support Agent h
 | Food order lifecycle | Task pipeline |
 | Swiggy App backend | The Crew orchestrator |
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 A Multi-Agent Crew in CrewAI is a collection of autonomous agents working together to achieve a shared goal. Instead of having one massive LLM prompt trying to do research, writing, formatting, and reviewing, you break it down.
 
 You use it when your task requires different personas or when giving one agent too many tools causes it to get confused. You shouldn't use it for simple, single-step tasks like formatting a JSON string — that's overkill, bro.
 
-## 4. Syntax Table
+## 5. Syntax Table
 | Concept | Code | Description |
 |---|---|---|
 | Agent Setup | `Agent(role='Writer', goal='...')` | Defines an individual agent. |
@@ -39,7 +43,7 @@ You use it when your task requires different personas or when giving one agent t
 | Crew Setup | `Crew(agents=[...], tasks=[...])` | Groups them together. |
 | Execution | `crew.kickoff()` | Starts the entire process. |
 
-## 5. Beginner Example
+## 6. Beginner Example
 Here is the most basic way to set up a crew.
 
 ```python
@@ -67,7 +71,7 @@ result = crew.kickoff()
 print(result)
 ```
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 Bro, in production, we don't just hardcode text. We build data pipelines. Let's look at a financial analysis crew that fetches stock data, analyzes it, and writes a report.
 
 ```python
@@ -117,7 +121,7 @@ financial_crew = Crew(
 report = financial_crew.kickoff()
 ```
 
-## 7. Internal Working
+## 8. Internal Working
 Under the hood, CrewAI runs an orchestration loop. When you call `kickoff()`, it looks at the `Process` type. For sequential processes, it takes the output of Task A and automatically injects it into the context of Task B.
 
 import LearningFlow from '@site/src/components/LearningFlow';
@@ -135,7 +139,7 @@ import LearningFlow from '@site/src/components/LearningFlow';
   ]}
 />
 
-## 8. Performance Table
+## 9. Performance Table
 | Aspect | Metric |
 |---|---|
 | Startup Time | Minimal (Python overhead) |
@@ -143,7 +147,7 @@ import LearningFlow from '@site/src/components/LearningFlow';
 | Token Usage | High; context is passed between agents |
 | Scalability | Limited by API rate limits |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 | Question | Answer |
 |---|---|
 | Why use CrewAI over LangGraph? | CrewAI is faster to prototype for role-based agents. LangGraph is better for strict state machine control. |
@@ -152,33 +156,33 @@ import LearningFlow from '@site/src/components/LearningFlow';
 | How does memory work in a Crew? | Crews share short-term memory during the kickoff to maintain context across tasks. |
 | What happens if an agent gets stuck? | CrewAI has built-in retry mechanisms, but you should set max_iterations to prevent infinite loops. |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 Bro, what happens if Task A outputs something completely unexpected? Task B might hallucinate.
 **The Fix:** Always set strict `expected_output` formats on your Tasks. CrewAI uses these to validate the output before moving to the next agent.
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 Top companies use multi-agent setups for complex workflows. Customer support pipelines often have an Intent Classifier Agent, a Knowledge Retrieval Agent, and a Drafting Agent. This separation of concerns makes debugging prompt failures much easier.
 
-## 12. Best Practices
+## 13. Best Practices
 | DO | DON'T |
 |---|---|
 | Give agents highly specific roles and backstories. | Create generic agents that do a bit of everything. |
 | Use Pydantic models for expected outputs. | Rely on free-text parsing between critical tasks. |
 | Limit the tools an agent has access to. | Give the file system tool to an agent making web searches. |
 
-## 13. Production Notes
+## 14. Production Notes
 :::warning
 When running Crews in production, monitor your token costs. Because the output of Agent A is passed as context to Agent B, long pipelines can cause your context window (and bill) to explode exponentially.
 :::
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 | Mistake | Fix |
 |---|---|
 | Agents getting confused by too many tools | Divide tools strictly. Give the Search tool only to the Researcher. |
 | Tasks running out of order | Ensure you are using `Process.sequential` or managing dependencies correctly. |
 | Infinite loops during tool usage | Set `max_iterations` on your Agents. |
 
-## 15. Related Topics
+## 16. Related Topics
 - CrewAI Tasks & Tools
 - CrewAI Flows
 - LangGraph Multi-Agent

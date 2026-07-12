@@ -16,13 +16,17 @@ import LearningFlow from '@site/src/components/LearningFlow';
 | Common Mistake | Inheriting from `BaseException` instead of `Exception` |
 | Performance | Same overhead as standard exceptions |
 
-## 2. Real-World Analogy
+## 2. Engineering Story
+
+A team of engineers recently faced a critical challenge related to this concept. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing this concept, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+
+## 3. Real-World Analogy
 
 Bro, imagine working at a bank. If a customer tries to withdraw $10,000 but only has $50 in their account, the ATM shouldn't just show a generic "System Error 500." It should show an "Insufficient Funds Error."
 
 Python gives you generic errors like `ValueError`, but sometimes you need to create your own "Insufficient Funds Error" to make your code's intentions crystal clear. That's a Custom Exception.
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 
 Custom Exceptions are user-defined classes that inherit from Python's built-in `Exception` class.
 
@@ -44,7 +48,7 @@ Instead of raising a generic `ValueError` when business logic fails, you define 
   ]}
 />
 
-## 4. Syntax Table
+## 5. Syntax Table
 
 | Operation | Syntax |
 |---|---|
@@ -53,7 +57,7 @@ Instead of raising a generic `ValueError` when business logic fails, you define 
 | Catch Exception | `except MyError as e:` |
 | Custom Init | `def __init__(self, msg, code):`<br/>&nbsp;&nbsp;&nbsp;&nbsp;`super().__init__(msg)` |
 
-## 5. Beginner Example
+## 6. Beginner Example
 
 Let's build that bank example.
 
@@ -76,7 +80,7 @@ except InsufficientFundsError as e:
     print(f"Transaction failed, bro: {e}")
 ```
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 In production, custom exceptions often hold extra metadata (like HTTP status codes or internal error codes) so that a central error handler can format the response automatically.
 
@@ -117,13 +121,13 @@ print(handle_request(99))
 # Output: {'error': True, 'code': 'USER_NOT_FOUND', 'message': 'User with ID 99 was not found.', 'http_status': 404}
 ```
 
-## 7. Internal Working
+## 8. Internal Working
 
 When you inherit from `Exception`, your custom class inherits the `__init__` and `__str__` methods of the base class. The base `Exception` class stores any arguments passed to it in a tuple called `self.args`. When Python prints the traceback, it automatically calls `__str__` on your exception object, which by default prints whatever is inside `self.args`.
 
 By overriding `__init__`, you can attach custom attributes (like `status_code` above) to the exception object before it gets thrown up the call stack.
 
-## 8. Performance Table
+## 9. Performance Table
 
 | Operation | Complexity | Note |
 |---|---|---|
@@ -131,7 +135,7 @@ By overriding `__init__`, you can attach custom attributes (like `status_code` a
 | Raising Custom Error | Slow | Same cost as raising a built-in exception (stack unwinding) |
 | Adding Metadata | O(1) | Setting attributes inside `__init__` is extremely fast |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
@@ -139,7 +143,7 @@ By overriding `__init__`, you can attach custom attributes (like `status_code` a
 | Which base class should you inherit from? | Always inherit from `Exception`, never from `BaseException`. `BaseException` includes system-level events like `KeyboardInterrupt`, which you usually don't want to catch by accident. |
 | Can you have a hierarchy of custom exceptions? | Yes! It's best practice to define a `BaseAppError(Exception)` and have all your specific errors (`UserError`, `DatabaseError`) inherit from it. |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 Bro, what happens if you forget to call `super().__init__()` in your custom exception?
 
@@ -157,31 +161,31 @@ except BadError as e:
 
 **Trick:** It prints `Caught: ` (an empty string)! The base `Exception` class relies on `super().__init__()` to populate `self.args` and format the default `__str__`. If you don't call it, your exception will print completely blank in the terminal traceback, making debugging a nightmare.
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 
 Companies use custom exceptions for:
 - **Boto3 (AWS SDK):** Has specific exceptions like `botocore.exceptions.ClientError`.
 - **SQLAlchemy:** Raises custom `sqlalchemy.exc.IntegrityError` when a database unique constraint is violated.
 - **Microservices:** Defining a shared package of `DomainExceptions` so all services raise the exact same error types.
 
-## 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
 | Name exceptions ending with `Error` (e.g., `TimeoutError`). | Don't name them `Exception` (e.g., `TimeoutException` is mostly a Java convention). |
 | Create a Base Exception class for your specific module/app. | Don't create a custom exception if a built-in one perfectly describes the exact programmatic error (e.g., `TypeError` for wrong variable types). |
 
-## 13. Production Notes
+## 14. Production Notes
 
 > ⚠ Production Note:
 In large codebases, never raise raw `Exception("message")`. Always use custom exceptions or specific built-ins. Raw `Exceptions` force the caller to use a bare `except Exception:` block, which will accidentally catch unrelated errors (like `NameError` typos) and swallow them, hiding critical bugs.
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 
 - **Reinventing the Wheel:** Creating a `FileNotFoundErrorCustom` when Python already has `FileNotFoundError`. Only create custom exceptions for your *business domain logic*.
 - **Empty Custom Exceptions Everywhere:** Creating 50 different custom exception files that just say `pass` and never actually using them to differentiate error handling logic.
 
-## 15. Related Topics
+## 16. Related Topics
 
 - Exceptions (try/except)
 - Logging

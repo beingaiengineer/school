@@ -16,11 +16,15 @@ import LearningFlow from '@site/src/components/LearningFlow';
 | Common Mistake | Using regular classes instead of ABC (Abstract Base Classes) |
 | Performance | Minimal overhead from ABCMeta metaclass |
 
-## 2. Real-World Analogy
+## 2. Engineering Story
+
+A team of engineers recently faced a critical challenge related to this concept. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing this concept, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+
+## 3. Real-World Analogy
 
 Bro, think of a coffee machine in your office pantry. You press a button for "Cappuccino," and it gives you coffee. You don't need to know how it grinds the beans, boils the water, or mixes the milk. The coffee machine *abstracts* the complex brewing process away from you. All you care about is the interface: the button.
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 
 Abstraction is a core OOP concept that focuses on hiding the internal complexities of an object and only revealing the necessary interactions. In Python, abstraction is typically implemented using Abstract Base Classes (ABCs) from the `abc` module.
 
@@ -46,7 +50,7 @@ This enforces a strict contract, bro. If a subclass doesn't implement the abstra
   ]}
 />
 
-## 4. Syntax Table
+## 5. Syntax Table
 
 | Operation | Syntax |
 |---|---|
@@ -54,7 +58,7 @@ This enforces a strict contract, bro. If a subclass doesn't implement the abstra
 | Define Abstract Class | `class MyClass(ABC):` |
 | Define Abstract Method | `@abstractmethod` <br/> `def my_method(self): pass` |
 
-## 5. Beginner Example
+## 6. Beginner Example
 
 Let's look at a simple example of shapes.
 
@@ -86,7 +90,7 @@ dog.sleep()              # Output: Sleeping... Zzz
 
 Bro, notice how `Animal` forces `Dog` and `Cat` to implement `make_sound()`, but allows them to share the `sleep()` implementation.
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 In production systems, abstraction is heavily used for defining plugins, drivers, or handlers. For example, a payment processing system might support multiple payment gateways.
 
@@ -132,13 +136,13 @@ def checkout(gateway: PaymentGateway, amount: float):
 checkout(StripeGateway(), 100.0)
 ```
 
-## 7. Internal Working
+## 8. Internal Working
 
 Python doesn't have true interfaces like Java. Instead, it uses the `abc` module, which utilizes a metaclass called `ABCMeta`. When a class has `ABCMeta` as its metaclass and defines methods with the `@abstractmethod` decorator, Python registers these methods.
 
 During instantiation (`__new__`), Python checks if the class or any of its parent classes have unimplemented abstract methods. If any are found, it raises a `TypeError` preventing the creation of the object.
 
-## 8. Performance Table
+## 9. Performance Table
 
 | Operation | Complexity | Note |
 |---|---|---|
@@ -146,7 +150,7 @@ During instantiation (`__new__`), Python checks if the class or any of its paren
 | Method Call | O(1) | Normal method resolution order (MRO) applies |
 | Memory Overhead | Minimal | Negligible overhead from storing `__abstractmethods__` set |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
@@ -156,7 +160,7 @@ During instantiation (`__new__`), Python checks if the class or any of its paren
 | Can you instantiate an abstract class? | No, attempting to instantiate a class with at least one unimplemented abstract method raises a `TypeError`. |
 | Difference between Encapsulation and Abstraction? | Encapsulation hides data (using private/protected attributes). Abstraction hides complexity by defining strict contracts (interfaces). |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 Bro, look out for this tricky interview question. What happens if you define an `__init__` in an abstract class?
 
@@ -181,32 +185,32 @@ db.connect() # This works perfectly!
 
 **Trick:** Yes, abstract classes can have `__init__` methods! Subclasses must still call `super().__init__()` if they override it, or they'll inherit it normally. You just can't instantiate the abstract class *itself*.
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 
 Companies use abstraction for:
 - **Cloud Providers:** An abstract `Storage` class with `upload()` and `download()`, implemented by `S3Storage` and `GCSStorage`.
 - **Database ORMs:** Defining abstract database drivers that enforce `execute_query()`.
 - **AI Pipelines:** Abstract `Model` classes enforcing `train()` and `predict()` methods for different machine learning algorithms.
 
-## 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
 | Use `abc` module to strictly enforce contracts. | Don't rely on raising `NotImplementedError` in regular base classes if you want strict enforcement at instantiation time. |
 | Keep abstract base classes focused and small (Interface Segregation Principle). | Don't create massive "god" abstract classes with dozens of abstract methods. |
 
-## 13. Production Notes
+## 14. Production Notes
 
 > ⚠ Production Note:
 Relying solely on `raise NotImplementedError("Subclass must implement")` inside a normal class is an older Python pattern. It only fails when the method is *called*. Using `ABC` and `@abstractmethod` fails fast at *instantiation*, which is much safer for production systems. It prevents a half-baked object from causing a crash deep within your application pipeline.
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 
 - **Forgetting to inherit from `ABC`:** Just using `@abstractmethod` without inheriting from `ABC` does nothing. The class will still be instantiable!
 - **Not implementing all abstract methods:** Leaving out even one abstract method makes the subclass abstract.
 - **Using `NotImplemented` instead of `NotImplementedError`:** Returning `NotImplemented` is for rich comparisons (`__eq__`), while `NotImplementedError` is an exception you raise.
 
-## 15. Related Topics
+## 16. Related Topics
 
 - Inheritance
 - Polymorphism

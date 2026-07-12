@@ -16,7 +16,11 @@ import LearningFlow from '@site/src/components/LearningFlow';
 | Common Mistake | Trying to manage agent state manually instead of using Google ADK's native session management. |
 | Performance | Depends on the framework and underlying LLM latency. |
 
-## 2. Real-World Analogy
+## 2. Engineering Story
+
+A team of engineers recently faced a critical challenge related to this concept. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing this concept, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+
+## 3. Real-World Analogy
 Bro, think of it like managing a large Indian wedding. You need coordination, tools, and a clear plan.
 
 ![Real World Analogy](./images/google-adk-multi-agent-orchestration/analogy.png)
@@ -27,16 +31,16 @@ Bro, think of it like managing a large Indian wedding. You need coordination, to
 | Caterer | Tool |
 | Guest List | Memory/State |
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 Google ADK provides native tools to orchestrate multiple agents. Unlike other frameworks where you have to build the routing logic from scratch, Google ADK offers built-in orchestrator components that can coordinate task delegation among worker agents using Vertex AI under the hood.
 
-## 4. Syntax Table
+## 5. Syntax Table
 | Action | Code Example |
 |---|---|
 | Create Orchestrator | `orchestrator = adk.Orchestrator(agents=[agent1, agent2])` |
 | Run Workflow | `orchestrator.execute(task="Summarize data")` |
 
-## 5. Beginner Example
+## 6. Beginner Example
 ```python
 import google_adk as adk
 
@@ -49,7 +53,7 @@ team = adk.Orchestrator(agents=[researcher, writer])
 team.execute("Research AI trends and write a blog.")
 ```
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 ```python
 def customer_support_workflow(ticket_data):
     triage_agent = adk.Agent(role="triage")
@@ -60,19 +64,19 @@ def customer_support_workflow(ticket_data):
     return router.process(ticket_data)
 ```
 
-## 7. Internal Working
+## 8. Internal Working
 Here is how it works under the hood. The flow represents the lifecycle of the agent's execution process.
 
 <LearningFlow />
 
-## 8. Performance Table
+## 9. Performance Table
 | Operation | Complexity |
 |---|---|
 | Initialization | O(1) |
 | Tool Execution | O(N) where N is payload size |
 | State Update | O(1) |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 | Question | Answer |
 |---|---|
 | How does ADK handle agent handoffs? | Through native `Router` and `Orchestrator` classes that manage state transfer implicitly. |
@@ -81,29 +85,29 @@ Here is how it works under the hood. The flow represents the lifecycle of the ag
 | When should you NOT use this? | When a simple direct LLM call or basic script would suffice. |
 | How does it scale? | By distributing agent workloads across serverless functions or containerized environments. |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 Watch out for concurrency issues, bro. If multiple agents try to update the same shared state without proper locking mechanisms, you'll run into race conditions that are a nightmare to debug.
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 Used by top tech companies for internal tooling, customer support automation, and complex data pipeline orchestration. For instance, tech teams use these patterns to orchestrate delivery logistics dynamically based on real-time traffic data.
 
-## 12. Best Practices
+## 13. Best Practices
 | DO | DON'T |
 |---|---|
 | Write comprehensive unit tests for individual agent tools | Skip error handling and assume the LLM will always return the perfect format |
 | Use structured logging to trace agent decision paths | Hardcode sensitive API keys directly in the agent's configuration |
 | Implement clear guardrails and timeout limits | Let an agent run indefinitely in an unbounded loop |
 
-## 13. Production Notes
+## 14. Production Notes
 Warning: Always monitor memory usage and LLM token limits in production. A rogue agent stuck in a loop can quickly rack up massive API bills. Implement hard limits and alerting.
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 | Mistake | Fix |
 |---|---|
 | Ignoring logs | Add structured logging to track every step of the agent's thought process |
 | Assuming perfect output | Use tools like Pydantic to strictly validate output schemas before proceeding |
 
-## 15. Related Topics
+## 16. Related Topics
 - Framework Architecture Patterns
 - Production Deployment Strategies
 - Agent Observability

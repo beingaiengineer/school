@@ -16,11 +16,15 @@ import LearningFlow from '@site/src/components/LearningFlow';
 | Common Mistake | Using them for regular application logic instead of core object behavior |
 | Performance | Fast, as they hook directly into Python's C-level evaluation |
 
-## 2. Real-World Analogy
+## 2. Engineering Story
+
+A team of engineers recently faced a critical challenge related to this concept. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing this concept, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+
+## 3. Real-World Analogy
 
 Bro, think of magic methods like customized physical buttons on a smart home device. Every device has standard expected behaviors when you "press the power button" or "turn the volume knob." Magic methods are how you tell Python what exactly should happen inside *your specific object* when someone "presses the power button" (like using the `+` operator or calling `len()`).
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 
 Magic methods, often called **dunder methods** (double underscore), are special methods in Python that start and end with double underscores, like `__init__` or `__str__`.
 
@@ -44,7 +48,7 @@ By implementing these methods in your custom classes, you can make your objects 
   ]}
 />
 
-## 4. Syntax Table
+## 5. Syntax Table
 
 | Operation | Trigger | Magic Method |
 |---|---|---|
@@ -56,7 +60,7 @@ By implementing these methods in your custom classes, you can make your objects 
 | Equality | `obj1 == obj2` | `__eq__(self, other)` |
 | Indexing | `obj[key]` | `__getitem__(self, key)` |
 
-## 5. Beginner Example
+## 6. Beginner Example
 
 Let's say we have a `Wallet` class and we want to be able to add two wallets together using the `+` operator.
 
@@ -82,7 +86,7 @@ print(w3)         # Output: Wallet with $150
 
 Bro, notice how `w1 + w2` didn't crash? That's the magic of `__add__`.
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 In engineering, you often build custom data structures that need to behave like Python lists or dictionaries. Let's build a custom `ConfigReader` that behaves like a dictionary but converts all keys to lowercase for safety.
 
@@ -111,13 +115,13 @@ print(config["TIMEOUT"])  # Output: 30
 print("HOST" in config)   # Output: False
 ```
 
-## 7. Internal Working
+## 8. Internal Working
 
 Python is highly object-oriented at its C core. When the interpreter sees an operator like `+`, it doesn't immediately know what to do. It looks at the type of the left operand. If that type implements the corresponding slot function (in C, this is `tp_as_number->nb_add`), Python calls it.
 
 If the left operand doesn't know how to add the right operand, it returns a special singleton called `NotImplemented`. Python will then check if the right operand has an `__radd__` (reverse add) method to try and salvage the operation before giving up and throwing a `TypeError`.
 
-## 8. Performance Table
+## 9. Performance Table
 
 | Magic Method | Complexity | Note |
 |---|---|---|
@@ -125,7 +129,7 @@ If the left operand doesn't know how to add the right operand, it returns a spec
 | `__eq__` | O(1) to O(n) | Depends on what you are comparing |
 | `__getitem__` | O(1) | Assuming dictionary or list internal lookup |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
@@ -135,7 +139,7 @@ If the left operand doesn't know how to add the right operand, it returns a spec
 | What does returning `NotImplemented` do? | It tells Python "I don't know how to handle this operation with this type, try the reverse method on the other object." |
 | What is `__new__` vs `__init__`? | `__new__` actually creates and allocates the object (returns it). `__init__` only initializes the already created object. |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 Bro, what happens if you compare a custom object to an integer, but your object only knows how to compare to itself?
 
@@ -156,31 +160,31 @@ print(s == 10) # Output: False
 
 **Trick:** By returning `NotImplemented` instead of raising an error or returning `False` manually, you give Python the chance to ask the integer `10` if *it* knows how to compare itself to a `Score`. The integer doesn't know either, so Python safely resolves the `==` to `False` by falling back to identity checks, avoiding a crash.
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 
 Companies use magic methods for:
 - **ORMs (Django/SQLAlchemy):** Overriding `__getattr__` and `__setattr__` to track when a database model field is changed.
 - **Pathlib:** Overriding `__truediv__` (`/`) so you can join file paths elegantly: `path = folder / "file.txt"`.
 - **Data Science (Pandas):** Overriding `__getitem__` so you can filter dataframes easily: `df[df['age'] > 20]`.
 
-## 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
 | Implement `__repr__` for all classes to make debugging easier. | Don't use magic methods for non-standard behaviors (e.g., using `__add__` to delete something). |
 | Return `NotImplemented` from comparison methods if types don't match. | Don't raise `TypeError` inside `__eq__`. |
 
-## 13. Production Notes
+## 14. Production Notes
 
 > ⚠ Production Note:
 Be extremely careful when overriding `__getattr__` or `__getattribute__`. They are powerful but can lead to infinite recursion if you accidentally trigger attribute lookups inside them while trying to access internal state. Always use `super().__getattribute__('attr_name')` inside them to fetch internal state safely.
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 
 - **Returning values from `__init__`:** `__init__` must return `None`. If you try to `return True` or `return self`, Python will throw a `TypeError`.
 - **Confusing `__getattr__` with `__getattribute__`:** `__getattr__` is only called as a fallback when an attribute is *not found*. `__getattribute__` is called for *every single* attribute access, making it much more dangerous.
 
-## 15. Related Topics
+## 16. Related Topics
 
 - Classes & Objects
 - Operator Overloading

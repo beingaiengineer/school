@@ -16,11 +16,15 @@ import LearningFlow from '@site/src/components/LearningFlow';
 | Common Mistake | Using mutable default arguments like `[]` or `{}` directly |
 | Performance | Similar to regular classes, slightly faster object creation if `slots=True` is used |
 
-## 2. Real-World Analogy
+## 2. Engineering Story
+
+A team of engineers recently faced a critical challenge related to this concept. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing this concept, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+
+## 3. Real-World Analogy
 
 Bro, imagine you are filling out a shipping label for a courier service. The form has predefined fields: Name, Address, Weight, and Tracking ID. You just write the data in the boxes. You don't need to write a complex instruction manual on *how* to fill the boxes. A dataclass in Python is exactly this: a clean, built-in form for storing data without writing all the boring `__init__` and `__repr__` boilerplate yourself.
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 
 Introduced in Python 3.7, the `@dataclass` decorator from the `dataclasses` module automatically generates special methods for your class, such as `__init__()`, `__repr__()`, and `__eq__()`, based on class attributes with type hints.
 
@@ -42,7 +46,7 @@ Instead of writing 10 lines of setup code just to store a few variables, you can
   ]}
 />
 
-## 4. Syntax Table
+## 5. Syntax Table
 
 | Operation | Syntax |
 |---|---|
@@ -52,7 +56,7 @@ Instead of writing 10 lines of setup code just to store a few variables, you can
 | Default Factory (Mutable) | `items: list = field(default_factory=list)` |
 | Read-Only (Immutable) | `@dataclass(frozen=True)` |
 
-## 5. Beginner Example
+## 6. Beginner Example
 
 Let's see how much boilerplate a dataclass saves.
 
@@ -89,7 +93,7 @@ print(p1)          # Output: Product(name='Laptop', price=1200.5)
 print(p1 == p2)    # Output: True
 ```
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 In backend engineering, we often fetch data from APIs or databases and need to parse it into structured objects.
 
@@ -121,13 +125,13 @@ session.roles.append("admin")
 print(f"Is Admin: {session.is_admin()}") # Output: Is Admin: True
 ```
 
-## 7. Internal Working
+## 8. Internal Working
 
 The `@dataclass` decorator uses metaprogramming. When Python reads your class definition, the decorator inspects the class attributes and their type annotations (using `__annotations__`). It then dynamically generates the AST (Abstract Syntax Tree) for `__init__`, `__repr__`, `__eq__`, etc., and injects them into your class dictionary.
 
 It essentially writes the boilerplate code for you at runtime just before the class object is fully created.
 
-## 8. Performance Table
+## 9. Performance Table
 
 | Feature | Performance Note |
 |---|---|
@@ -135,7 +139,7 @@ It essentially writes the boilerplate code for you at runtime just before the cl
 | Memory Usage | Same as regular classes, using `__dict__` |
 | `slots=True` (Python 3.10+) | Significantly reduces memory usage and speeds up attribute access |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
@@ -144,7 +148,7 @@ It essentially writes the boilerplate code for you at runtime just before the cl
 | Why must you use `default_factory` for lists or dicts? | If you do `items: list = []`, the exact same list object is shared across all instances of the class, causing unexpected mutations. |
 | Can a dataclass inherit from another dataclass? | Yes, attributes from the base class will be ordered before attributes from the subclass in the generated `__init__`. |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 Bro, look out for attribute ordering when using inheritance.
 
@@ -164,14 +168,14 @@ class Child(Base):
 
 **Trick:** In python, arguments without default values cannot follow arguments with default values. Because `Child` inherits `name="Unknown"` from `Base`, and then defines `age` (without a default), the generated `__init__` would look like `__init__(self, id, name="Unknown", age)`. This is invalid Python syntax! You must give `age` a default value, or remove the default from `name`.
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 
 Companies use dataclasses for:
 - **API Responses:** Structuring JSON payloads returned from requests.
 - **Configurations:** Creating strongly-typed configuration objects instead of passing raw dictionaries around.
 - **Data Pipelines:** Passing structured records through ETL (Extract, Transform, Load) pipelines before saving to a database.
 
-## 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
@@ -179,17 +183,17 @@ Companies use dataclasses for:
 | Use `frozen=True` if the data shouldn't change after creation. | Don't use dataclasses if your class requires complex, multi-step initialization logic. |
 | Use type hints for all attributes (it's required). | Don't forget that dataclasses don't strictly enforce types at runtime; they just use the hints for generation. |
 
-## 13. Production Notes
+## 14. Production Notes
 
 > ⚠ Production Note:
 If you are creating millions of dataclass objects (like parsing a massive CSV or processing high-volume streams), use `@dataclass(slots=True)` (available in Python 3.10+). It prevents the creation of the dynamic `__dict__` for each instance, drastically reducing memory consumption and slightly improving attribute access speed.
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 
 - **Forgetting Type Annotations:** If you write `name = "John"` without a type hint (like `name: str = "John"`), the dataclass decorator will completely ignore it and won't add it to `__init__`.
 - **Assuming Strict Typing:** Dataclasses do *not* validate types. `Product(name=123, price="expensive")` will not raise an error. If you need strict runtime validation, use Pydantic instead.
 
-## 15. Related Topics
+## 16. Related Topics
 
 - Classes & Objects
 - Magic Methods

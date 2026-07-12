@@ -18,7 +18,11 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ---
 
-## 2. Real-World Analogy
+## 2. Engineering Story
+
+A team of engineers recently faced a critical challenge related to The Event Loop, label: Manages all tasks in 1 Thread },. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing The Event Loop, label: Manages all tasks in 1 Thread },, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+
+## 3. Real-World Analogy
 
 Think of Asyncio like a master chess player playing 50 games simultaneously at a tournament, bro.
 
@@ -29,7 +33,7 @@ He is only one guy (one thread), but he handles 50 games concurrently because he
 
 ---
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 
 `asyncio` is a library to write **concurrent code using the async/await syntax**.
 Unlike Threading, which relies on the Operating System to switch between threads (which uses memory and CPU overhead), Asyncio runs entirely in a **single thread** using an **Event Loop**.
@@ -39,7 +43,7 @@ This is called **cooperative multitasking**, because the functions explicitly yi
 
 ---
 
-## 4. Syntax Table
+## 5. Syntax Table
 
 | Operation | Example |
 |---|---|
@@ -50,7 +54,7 @@ This is called **cooperative multitasking**, because the functions explicitly yi
 
 ---
 
-## 5. Beginner Example
+## 6. Beginner Example
 
 Bro, let's see how the Event Loop switches tasks when it hits `await`.
 
@@ -90,7 +94,7 @@ Because they waited together, the total time was 2 seconds, not 3!
 
 ---
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 In production, Asyncio is heavily used for making non-blocking HTTP requests. Standard `requests` blocks the thread, so we use `aiohttp` or `httpx`.
 
@@ -124,7 +128,7 @@ asyncio.run(main())
 
 ---
 
-## 7. Internal Working
+## 8. Internal Working
 
 <LearningFlow
   elements={[
@@ -166,7 +170,7 @@ The task then yields control back to the Event Loop. The Event Loop instantly gr
 
 ---
 
-## 8. Performance Table
+## 9. Performance Table
 
 | Mechanism | Memory Overhead | Max Concurrent Connections | CPU Efficiency |
 |---|---|---|---|
@@ -175,7 +179,7 @@ The task then yields control back to the Event Loop. The Event Loop instantly gr
 
 ---
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
@@ -186,7 +190,7 @@ The task then yields control back to the Event Loop. The Event Loop instantly gr
 
 ---
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 Bro, what is wrong with this code?
 
@@ -210,7 +214,7 @@ async def main():
 
 ---
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 
 - **High-Concurrency Web Frameworks:** FastAPI and Starlette are built entirely on Asyncio, allowing them to handle thousands of requests per second on a single server.
 - **WebSockets:** Chat applications where the server needs to keep 10,000 open connections simultaneously without spawning 10,000 threads.
@@ -218,7 +222,7 @@ async def main():
 
 ---
 
-## 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
@@ -227,14 +231,14 @@ async def main():
 
 ---
 
-## 13. Production Notes
+## 14. Production Notes
 
 > ⚠ Production Note:
 > Asyncio is contagious. Once you make your top-level function `async`, everything all the way down to your database drivers must be async. If you use a blocking database driver (like standard `psycopg2` or `SQLAlchemy` sync engine) inside a FastAPI route, under high load, your event loop will block, and your application's performance will plummet. Always ensure your entire stack (HTTP client, DB driver, Redis client) is async-native.
 
 ---
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 
 - **Forgetting `await`:** Calling `make_tea()` without `await`. It just returns a coroutine object and does absolutely nothing. Python will warn you: `RuntimeWarning: coroutine 'make_tea' was never awaited`.
 - **Blocking the Loop:** Running a heavy JSON parsing operation or regex on a massive string inside an async function. It blocks other tasks.
@@ -242,7 +246,7 @@ async def main():
 
 ---
 
-## 15. Related Topics
+## 16. Related Topics
 
 - Async/Await Syntax
 - FastAPI
