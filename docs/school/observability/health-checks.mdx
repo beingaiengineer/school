@@ -19,7 +19,7 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ## 2. Engineering Story
 
-A team of engineers recently faced a critical challenge related to this concept. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing this concept, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+A classic modern engineering failure involves misunderstanding the difference between "Liveness" and "Readiness" health checks in Kubernetes. A major SaaS company once configured their application so that its "Liveness" probe (which tells Kubernetes if the app is frozen and needs to be rebooted) checked the connection to the backend database. One day, the database experienced a minor, 5-second network hiccup. Because the Liveness probe failed, Kubernetes assumed every single web server in the cluster was dead and rebooted all of them simultaneously. This caused a massive, self-inflicted total system outage. The lead engineer realized the critical error: a web server is still "alive" even if the database is slow; it should just return a 503 error temporarily. By changing the database check to a "Readiness" probe (which simply stops routing traffic to the pod until it recovers) and keeping the "Liveness" probe extremely simple (e.g., just returning an HTTP 200), they prevented minor downstream hiccups from ever triggering catastrophic, cascading restarts again.
 
 ## 3. Real-World Analogy
 

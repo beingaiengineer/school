@@ -19,7 +19,7 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ## 2. Engineering Story
 
-A team of engineers recently faced a critical challenge related to this concept. Their existing processes were failing under the load of thousands of concurrent users, and manual workarounds were causing major delays in deployment. By deeply understanding and correctly implementing this concept, the lead engineer was able to architect a solution that not only resolved the immediate bottleneck but also paved the way for massive scalability. This transformation turned a chaotic, error-prone system into a resilient, automated powerhouse.
+A fast-growing fintech startup recently learned a painful lesson about "high cardinality" in metrics. Wanting extreme visibility, an engineer added a `user_id` tag to their `http_requests_total` metric. This worked fine in staging with 50 test users. But when pushed to production, the app suddenly saw 500,000 unique users. Their Prometheus server attempted to create a new, separate time-series in memory for every single user ID. Within minutes, Prometheus consumed all 64GB of available RAM and OOM-killed (Out Of Memory), completely blinding the engineering team during a high-traffic period. The team learned the hard way: metrics are for aggregate trends, not individual tracing. By removing the unbounded `user_id` label and replacing it with bounded labels like `status_code` and `endpoint`, they restored their dashboards and moved the user-level tracking to their structured logging system where it belonged.
 
 ## 3. Real-World Analogy
 
