@@ -17,7 +17,11 @@ import LearningFlow from '@site/src/components/LearningFlow';
 | Common Mistake | Using these tools without understanding the underlying commit graph. |
 | Performance | Operations like `bisect` save hours of manual debugging. |
 
-## 2. Real-World Analogy
+## 2. Engineering Story
+
+A critical bug was discovered in production: user passwords were no longer hashing correctly. The team panicked. The bug didn't exist two weeks ago, but since then, there had been over 500 commits merged from 20 different developers. No one knew which commit introduced the flaw. Manually checking out and testing each commit would take days. The lead engineer stepped in, ran `git bisect`, and within 8 automated steps, pinpointed the exact 3-line commit that broke the hashing. Understanding advanced Git operations turned a multi-day nightmare into a 10-minute fix.
+
+## 3. Real-World Analogy
 
 Bro, think of standard Git like driving a reliable sedan to work. Advanced Git is like having a mechanic's toolset in the trunk when the car breaks down on the highway.
 
@@ -28,13 +32,13 @@ Bro, think of standard Git like driving a reliable sedan to work. Advanced Git i
 | Shoving your messy desk into a drawer before the boss walks in | `git stash` (saving uncommitted work temporarily) |
 | Cutting the phonebook in half repeatedly to find a name | `git bisect` (binary search to find which commit caused a bug) |
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 
 As you grow into a senior engineer, you will inevitably destroy your local repository, lose code, or face a production bug where nobody knows when it was introduced.
 
 Advanced operations give you surgical precision over the Git history. You can grab individual commits across branches without merging (`cherry-pick`), you can find commits that you thought you deleted (`reflog`), you can park half-finished work safely (`stash`), and you can mathematically prove exactly which commit broke the app (`bisect`).
 
-## 4. Syntax Table
+## 5. Syntax Table
 
 | Command | What it does |
 |---|---|
@@ -44,7 +48,7 @@ Advanced operations give you surgical precision over the Git history. You can gr
 | `git reflog` | Shows a log of *every* movement of the HEAD pointer (even deleted branches). |
 | `git bisect start` | Starts a binary search through history to find a bug. |
 
-## 5. Beginner Example
+## 6. Beginner Example
 
 You are working on a complex feature, and a critical bug is reported in production. You need to switch to `main` to fix it, but you have half-written code you don't want to commit yet.
 
@@ -61,7 +65,7 @@ git checkout feature/complex-logic
 git stash pop
 ```
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 The `git bisect` command is pure magic for debugging. Assume the app is broken on `main` right now, but you know it was working perfectly last Friday (on tag `v1.0`). There are 500 commits between now and last Friday.
 
@@ -90,7 +94,7 @@ git bisect good
 git bisect reset
 ```
 
-## 7. Internal Working
+## 8. Internal Working
 
 To understand `reflog`, you must realize that Git rarely actually deletes data immediately. When you "delete" a branch or run `git reset --hard`, Git just moves pointers. The commits themselves still exist on your hard drive until Git's garbage collector (`git gc`) runs (usually 30-90 days later).
 
@@ -112,7 +116,7 @@ The `reflog` is literally a diary of where your `HEAD` pointer has been.
   ]}
 />
 
-## 8. Performance Table
+## 9. Performance Table
 
 | Command | Performance | Note |
 |---|---|---|
@@ -120,7 +124,7 @@ The `reflog` is literally a diary of where your `HEAD` pointer has been.
 | `git cherry-pick` | O(1) | Same speed as a standard commit. |
 | `git bisect` | O(log N) | Mathematically the fastest way to search history. 1000 commits = ~10 tests. |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
@@ -129,7 +133,7 @@ The `reflog` is literally a diary of where your `HEAD` pointer has been.
 | Can you cherry-pick a merge commit? | Yes, but you must specify which parent branch to use as the mainline using the `-m` flag (e.g., `git cherry-pick -m 1 <hash>`). |
 | What happens if you `git stash` but your files are untracked (new files)? | By default, Git ignores untracked files. You must use `git stash -u` (include untracked) to stash new files. |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 **Bro, I used `git stash pop` and I got a merge conflict! Where did my stash go?**
 When `stash pop` results in a conflict, Git applies the changes to your working directory but *does not* remove the stash from the stash list. It keeps it safe. You must resolve the conflict, commit, and then manually run `git stash drop` to clean up the stack.
@@ -137,35 +141,35 @@ When `stash pop` results in a conflict, Git applies the changes to your working 
 **If I cherry-pick a commit, is it the exact same commit?**
 No. It has the same *changes* and the same *message*, but because its parent has changed, the SHA-1 hash is completely different.
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 
 **Cherry-picking** is heavily used in Release Management. Imagine `main` is unstable, but you need to release a critical hotfix to production immediately. You branch off the stable production tag, fix the bug, and deploy. But now `main` doesn't have the bugfix! You use `git cherry-pick <bugfix-hash>` while on `main` to pull that exact fix over without merging the old production branch.
 
-## 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
 | Use `git stash` for temporary context switching. | Don't use `git stash` as a long-term backup strategy. Stashes are easy to forget and lose. Just commit to a WIP branch. |
 | Use `git bisect run <script>` to fully automate the binary search process using a test script. | Don't manually test 50 commits if you have a unit test that proves the bug. |
 
-## 13. Production Notes
+## 14. Production Notes
 
 > **Warning: Overusing Cherry-Pick**
 > If you find yourself using `cherry-pick` every single day, your branching strategy is broken. Cherry-picking duplicates changes in your Git history (different hashes, same code). When those branches eventually merge later, you will face horrific, confusing merge conflicts.
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 
 | Mistake | Fix |
 |---|---|
 | Running `git bisect` and forgetting to stop | If your branch looks crazy and detached, run `git bisect reset` to return to where you started. |
 | Forgetting what is in the stash | Run `git stash list` to see the stack, and `git stash show -p stash@{0}` to see the actual diff. |
 
-## 15. Related Topics
+## 16. Related Topics
 - git-rebase-vs-merge
 - branching-strategies
 - merge-conflicts
 
-## Top GitHub Repos
+## 17. Top GitHub Repositories
 
 | Repository | Stars | Description | Why It Matters |
 |---|---|---|---|

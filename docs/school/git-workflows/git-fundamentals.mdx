@@ -17,7 +17,11 @@ import LearningFlow from '@site/src/components/LearningFlow';
 | Common Mistake | Editing `.git` directory manually or confusing staging with committing. |
 | Performance | O(1) for most local operations (commits, branches). |
 
-## 2. Real-World Analogy
+## 2. Engineering Story
+
+Before Git, a game development studio used a shared network drive to store their code. Every folder was named something like `Game_Final`, `Game_Final_v2`, and `Game_Final_USE_THIS_ONE`. One day, two developers edited the physics engine file at the same time. When they saved, one developer's changes silently overwrote the other's. Three weeks of work were permanently lost because there was no history, no tracking, and no way to merge parallel changes. The studio realized they needed a system that could track every single change, who made it, and allow multiple people to work on the exact same file safely.
+
+## 3. Real-World Analogy
 
 Bro, think of Git like taking a series of snapshots of your house while you renovate it.
 
@@ -28,13 +32,13 @@ Bro, think of Git like taking a series of snapshots of your house while you reno
 | Taking a photo of the completed room and saving it in an album | Committing the changes (`git commit`) |
 | Sharing your photo album with your family online | Pushing to a Remote Repository (`git push`) |
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 
 Git is a distributed version control system. It exists so that you can track exactly what changed in your code, who changed it, and why. Without it, you are just renaming files like `app_final_v2_really_final.js`.
 
 In a corporate environment, Git gives you the safety net to experiment without breaking the production code. Every developer has a full copy of the entire history locally, which means you can work offline and operations are incredibly fast. The key to mastering Git is understanding its three states: Modified (Working Directory), Staged (Staging Area/Index), and Committed (Local Repository).
 
-## 4. Syntax Table
+## 5. Syntax Table
 
 | Command | What it does |
 |---|---|
@@ -47,7 +51,7 @@ In a corporate environment, Git gives you the safety net to experiment without b
 | `git pull` | Downloads and merges changes from the remote repository. |
 | `git log` | Shows the commit history. |
 
-## 5. Beginner Example
+## 6. Beginner Example
 
 Let's say you just created a new Python script. Here is how you save it to Git.
 
@@ -68,7 +72,7 @@ git add main.py
 git commit -m "feat: add main script"
 ```
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 In production, you never commit directly to the `main` branch. You create a feature branch, do your work, stage specific files (not just `git add .`), commit with a descriptive message, and push.
 
@@ -93,7 +97,7 @@ git commit -m "feat(auth): implement JWT based login
 git push -u origin feature/user-authentication
 ```
 
-## 7. Internal Working
+## 8. Internal Working
 
 Under the hood, Git is a key-value data store. When you commit, Git doesn't save a "diff" (what changed); it takes a snapshot of exactly what all files look like at that moment.
 
@@ -117,7 +121,7 @@ If a file didn't change, Git just stores a reference to the previous identical f
   ]}
 />
 
-## 8. Performance Table
+## 9. Performance Table
 
 | Operation | Time Complexity | Note |
 |---|---|---|
@@ -126,7 +130,7 @@ If a file didn't change, Git just stores a reference to the previous identical f
 | `git clone` | O(N) | N is the size of the repo history. Can be slow for massive monorepos. |
 | `git status` | O(N) | N is the number of files in the working directory. |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
@@ -136,7 +140,7 @@ If a file didn't change, Git just stores a reference to the previous identical f
 | Explain the staging area (index). | It's a buffer between the working directory and the repo. It lets you selectively choose which changes will be in the next commit. |
 | How do you change the message of the very last commit? | `git commit --amend -m "New message"` (only do this if you haven't pushed!). |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 **What happens if you accidentally delete the `.git` hidden folder?**
 Bro, you just deleted all your Git history. Your code files are still there in the working directory, but it is no longer a Git repository. It's just a regular folder now.
@@ -144,11 +148,11 @@ Bro, you just deleted all your Git history. Your code files are still there in t
 **Can you commit an empty folder?**
 No. Git tracks file contents, not directories. If you need an empty folder, the standard trick is to add an empty hidden file inside it named `.gitkeep`.
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 
 Companies like Netflix and Uber rely on Git for everything. Their CI/CD pipelines are triggered entirely by Git events. When a developer pushes a commit or merges a branch, the Git server fires a webhook to systems like Jenkins or GitHub Actions, which then run tests, build Docker images, and deploy the code to AWS or Kubernetes. Git isn't just for code; it's the control plane for modern infrastructure (GitOps).
 
-## 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
@@ -156,12 +160,12 @@ Companies like Netflix and Uber rely on Git for everything. Their CI/CD pipeline
 | Commit often and keep commits small and logically grouped. | Don't commit everything at the end of the week in one massive commit. |
 | Review your changes with `git diff` before staging. | Don't blindly run `git add .` without checking what you are adding. |
 
-## 13. Production Notes
+## 14. Production Notes
 
 > **Warning: Large Files**
 > Do not commit large binary files (like `.mp4` videos, massive `.csv` datasets, or compiled `.jar` files) to Git. Git keeps a copy of every version of every file forever. Committing large binaries will cause your repository size to bloat exponentially, slowing down `git clone` for everyone on your team. Use `.gitignore` for build artifacts and Git LFS (Large File Storage) for necessary large media.
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 
 | Mistake | Fix |
 |---|---|
@@ -169,12 +173,12 @@ Companies like Netflix and Uber rely on Git for everything. Their CI/CD pipeline
 | Committing secrets (API keys, passwords) | Use tools like BFG Repo-Cleaner or `git filter-repo` to rewrite history and remove them, then rotate the keys immediately. |
 | Adding files you didn't mean to (`git add .`) | Unstage them using `git reset HEAD <file>`. |
 
-## 15. Related Topics
+## 16. Related Topics
 - branching-strategies
 - pull-requests
 - conventional-commits
 
-## Top GitHub Repos
+## 17. Top GitHub Repositories
 
 | Repository | Stars | Description | Why It Matters |
 |---|---|---|---|
