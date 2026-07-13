@@ -222,8 +222,8 @@ No reusable insights recorded yet.
 
 ## Metrics
 
-- Lessons Completed: 157
-- Lessons Remaining: 18
+- Lessons Completed: 167
+- Lessons Remaining: 8
 - Completion %: 89.7%
 - Open Tasks: 0
 

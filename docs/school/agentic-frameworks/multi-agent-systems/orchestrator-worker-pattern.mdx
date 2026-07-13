@@ -137,7 +137,22 @@ Standard pattern in enterprise AI systems where security dictates that only spec
 - Supervisor Pattern
 - Hierarchical Agent Teams
 
-## 17. Top GitHub Repositories
+
+### Advanced Orchestrator Considerations
+
+While the Orchestrator-Worker pattern simplifies task distribution, the orchestrator itself can easily become a single point of failure or a critical performance bottleneck.
+
+If the orchestrator is overwhelmed with managing state, delegating tasks, and synthesizing results, the overall system latency will spike.
+
+To build a highly scalable orchestrator, consider these advanced concepts:
+
+1. **Stateless Orchestration:** Offload the memory and conversation state to an external database (like Redis or PostgreSQL). The orchestrator should simply wake up, read the state, dispatch the next worker, and go back to sleep.
+2. **Asynchronous Dispatching:** The orchestrator should not block while waiting for a worker. It should fire off tasks asynchronously and use callbacks or webhooks to resume when the workers finish.
+3. **Dynamic Worker Scaling:** In cloud environments (like AWS or Kubernetes), the orchestrator can dynamically provision new worker instances if a large batch of sub-tasks is detected, shutting them down to save costs once the batch completes.
+
+By optimizing the orchestrator, you ensure the agent team can scale horizontally to handle massive parallel workloads.
+
+### Top GitHub Repositories
 
 | Repository | Stars | Description |
 |---|---|---|

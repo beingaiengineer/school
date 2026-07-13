@@ -135,7 +135,22 @@ Enterprise teams mandate tools like LangSmith, Arize Phoenix, or Datadog LLM Obs
 - Orchestrator Worker Pattern
 - State Persistence And Checkpointing
 
-## 17. Top GitHub Repositories
+
+### Additional Debugging Context
+
+Debugging multi-agent systems requires shifting your mindset from "tracing deterministic functions" to "auditing probabilistic conversations."
+
+When an agent fails, the root cause is rarely a straightforward `NullPointerException`. Instead, it is usually a compounding series of minor misunderstandings or context degradations over several turns of dialogue.
+
+Advanced debugging workflows include:
+
+1. **Replay Capabilities:** The ability to replay an exact conversation from a specific checkpoint, replacing a human input or tweaking the system prompt to observe how the agents' trajectory changes.
+2. **Shadow Deployments:** Running a new version of the agent team alongside the production version, feeding both teams the same user prompts, and automatically comparing their outputs and tool execution paths for regressions.
+3. **Guardrail Validations:** Injecting strict assertions in between agent handoffs. For instance, if Agent A is supposed to extract JSON and pass it to Agent B, a middleware guardrail should validate the JSON schema before Agent B is ever invoked.
+
+By treating agents more like loosely coupled microservices and less like standard Python functions, debugging becomes a structured process of auditing inputs and outputs.
+
+### Top GitHub Repositories
 
 | Repository | Stars | Description |
 |---|---|---|
