@@ -1,0 +1,142 @@
+---
+sidebar_position: 182
+sidebar_label: "Multi Agent Debugging"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Multi Agent Debugging
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Multi Agent Debugging |
+| Difficulty | Advanced |
+| Used For | Figuring out why your agent system went rogue or got stuck in a loop. |
+| Common Mistake | Relying purely on `console.log()` to debug non-deterministic LLM chains. |
+| Performance | Evaluated based on token usage and latency. |
+
+## 2. Engineering Story
+
+Bro, debugging standard code is easy—if x is 5, it crashes. Debugging agents is a nightmare. Agent A hallucinated a JSON structure, passed it to Agent B, who then called an API with garbage data and deleted a database record. Where did it fail? If you just use console logs, you'll be scrolling for days. We need observability.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: Reviewing airplane Black Box data. */}
+
+| Investigation | Agent System |
+|---|---|
+| Cockpit Voice Recorder | LLM Prompts & Responses |
+| Flight Data Recorder | State / Context JSON Dumps |
+| ATC Radar | Tracing tools (LangSmith/Phoenix) |
+
+## 4. Concept Explanation
+
+Multi-agent systems are highly non-deterministic. A tiny change in a prompt can alter the entire execution graph. Debugging requires Tracing (recording every LLM call, input, and output), State Checkpointing (saving the graph state at every node), and specialized visualization tools to see the exact execution path.
+
+## 5. Syntax Table
+
+| Tool Type | Use Case |
+|---|---|
+| Tracing (LangSmith) | View exact prompts, token counts, and latency per agent. |
+| Checkpointing | Rewind a graph to a specific state and replay it. |
+
+## 6. Beginner Example
+
+```typescript
+// The bad way:
+console.log("Agent A output:", result);
+
+// The good way: Use a tracing wrapper
+import { wrapOpenAI } from "langsmith/wrappers";
+const client = wrapOpenAI(new OpenAI());
+```
+
+## 7. Real-World Engineering Example
+
+```typescript
+import { StateGraph, MemorySaver } from "@langchain/langgraph";
+
+// Checkpointing allows you to pause, debug, and resume workflows
+const checkpointer = new MemorySaver();
+
+const app = workflow.compile({ checkpointer });
+
+// Run the graph with a thread_id
+const config = { configurable: { thread_id: "debug_session_1" } };
+await app.invoke(initialState, config);
+
+// If it fails, you can inspect the exact state at the failure point
+const state = await app.getState(config);
+console.log("State at failure:", state.values);
+```
+
+## 8. Internal Working
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Node Executed' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'data', data: { label: 'Save Checkpoint' }, position: { x: 450, y: 0 } },
+    { id: '3', type: 'warning', data: { label: 'Error Occurs' }, position: { x: 250, y: 100 } },
+    { id: '4', type: 'tool', data: { label: 'Developer Replays from Checkpoint' }, position: { x: 250, y: 200 } },
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true },
+    { id: 'e1-3', source: '1', target: '3', animated: true },
+    { id: 'e3-4', source: '3', target: '4', animated: true },
+    { id: 'e4-2', source: '4', target: '2', animated: true, label: 'fetches state' },
+  ]}
+/>
+
+## 9. Performance Table
+
+| Feature | Overhead |
+|---|---|
+| Full Tracing | Adds network latency (sending logs to backend) |
+| Checkpointing | Adds DB write latency at every node |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| How do you debug a hallucination deep in a multi-agent chain? | Use tracing tools to inspect the exact prompt and context provided to that specific agent. |
+| What is Time Travel debugging? | Using checkpoints to rewind the agent's state, fix a prompt, and resume execution. |
+
+## 11. Tricky Questions & Edge Cases
+
+Bro, when you modify a prompt to fix a bug in Agent C, you might inadvertently break Agent A if they share a base prompt. Always use regression testing alongside your debugging.
+
+## 12. Real-World Usage
+
+Enterprise teams mandate tools like LangSmith, Arize Phoenix, or Datadog LLM Observability before deploying any multi-agent system.
+
+## 13. Best Practices
+
+| Do | Don't |
+|---|---|
+| Use Checkpointers to allow human-in-the-loop debugging | Rely on reading terminal stdout |
+
+## 14. Production Notes
+
+<Admonition type="warning" title="Production Scaling Warning">
+  When implementing Multi Agent Debugging in production, always monitor system boundaries—whether it's token limits, database connections, or API rate limits.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Missing Thread IDs | Always pass a unique Thread ID or Trace ID through your entire multi-agent system so you can tie the logs together. |
+
+## 16. Related Topics
+
+- Orchestrator Worker Pattern
+- State Persistence And Checkpointing
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description |
+|---|---|---|
+| [langchain-ai/langsmith-sdk](https://github.com/langchain-ai/langsmith-sdk) | ⭐ 1k+ | Essential tracing for LangChain/LangGraph |

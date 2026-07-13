@@ -1,0 +1,146 @@
+---
+sidebar_position: 175
+sidebar_label: "Supervisor Pattern"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Supervisor Pattern
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Supervisor Pattern |
+| Difficulty | Intermediate |
+| Used For | Dynamic routing of conversation or tasks based on the current state. |
+| Common Mistake | Allowing the supervisor to do the actual work instead of just picking the next node. |
+| Performance | Evaluated based on token usage and latency. |
+
+## 2. Engineering Story
+
+Bro, imagine a call center router. You call in, and it asks, 'Press 1 for Sales, 2 for Support.' The router doesn't solve your issue; it just looks at your intent and transfers you. In an agent graph, a Supervisor is an LLM whose only job is to look at the conversation history and output a single word: the name of the next agent to take over.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A Traffic Cop at a busy intersection. */}
+
+| Real World | Agent System |
+|---|---|
+| Traffic Cop | Supervisor Node |
+| North/South Traffic | Agent A |
+| East/West Traffic | Agent B |
+
+## 4. Concept Explanation
+
+The Supervisor Pattern is a specific implementation of a routing node in a State Graph (like LangGraph). The Supervisor is given a list of available agents and their descriptions. At each step, it evaluates the shared state and outputs a structured response indicating `NEXT_AGENT` or `FINISH`.
+
+## 5. Syntax Table
+
+| Component | Description |
+|---|---|
+| Workers | Standard agents that perform tasks and update state. |
+| Supervisor | LLM forced to output a constrained enum of agent names. |
+
+## 6. Beginner Example
+
+```typescript
+// Conceptual routing
+const nextNode = await supervisorLLM.predict("Who should act next? [Coder, Tester, FINISH]");
+if (nextNode === "FINISH") return state;
+return graph.routeTo(nextNode);
+```
+
+## 7. Real-World Engineering Example
+
+```typescript
+import { z } from "zod";
+import { ChatOpenAI } from "@langchain/openai";
+
+const members = ["Researcher", "Coder", "Reviewer"];
+const systemPrompt = `You are a supervisor. Given the conversation, who should act next?
+Choose from: ${members.join(", ")}. If the task is fully complete, choose FINISH.`;
+
+const routingSchema = z.object({
+  next: z.enum(["Researcher", "Coder", "Reviewer", "FINISH"]),
+});
+
+const supervisorAgent = new ChatOpenAI({ modelName: "gpt-4" }).withStructuredOutput(routingSchema);
+
+// Usage inside a graph node
+async function supervisorNode(state) {
+  const result = await supervisorAgent.invoke([
+    { role: "system", content: systemPrompt },
+    ...state.messages
+  ]);
+  return { nextAgent: result.next };
+}
+```
+
+## 8. Internal Working
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Supervisor' }, position: { x: 250, y: 50 } },
+    { id: '2', type: 'process', data: { label: 'Worker 1' }, position: { x: 100, y: 150 } },
+    { id: '3', type: 'process', data: { label: 'Worker 2' }, position: { x: 400, y: 150 } },
+    { id: '4', type: 'output', data: { label: 'End' }, position: { x: 250, y: 250 } },
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true, label: 'routes' },
+    { id: 'e2-1', source: '2', target: '1', animated: true, label: 'returns state' },
+    { id: 'e1-3', source: '1', target: '3', animated: true, label: 'routes' },
+    { id: 'e3-1', source: '3', target: '1', animated: true, label: 'returns state' },
+    { id: 'e1-4', source: '1', target: '4', animated: true, label: 'FINISH' },
+  ]}
+/>
+
+## 9. Performance Table
+
+| Issue | Mitigation |
+|---|---|
+| Latency | Supervisor adds 1 extra LLM call per step. Use a fast model (e.g., GPT-4o-mini). |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why use structured output for the Supervisor? | To guarantee it returns an exact node name that the graph engine can evaluate. |
+
+## 11. Tricky Questions & Edge Cases
+
+Bro, if your workers don't update the state clearly, the supervisor will get confused and might just route the task back to the same worker infinitely. Workers must return 'Task X complete'.
+
+## 12. Real-World Usage
+
+Extensively used in LangGraph to create flexible, non-deterministic workflows that don't require rigid sequential chains.
+
+## 13. Best Practices
+
+| Do | Don't |
+|---|---|
+| Use structured output (JSON/Tools) | Let the supervisor chat free-form |
+
+## 14. Production Notes
+
+<Admonition type="warning" title="Production Scaling Warning">
+  When implementing Supervisor Pattern in production, always monitor system boundaries—whether it's token limits, database connections, or API rate limits.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Expensive Models | Don't use heavy reasoning models for simple routing decisions. |
+
+## 16. Related Topics
+
+- Orchestrator Worker Pattern
+- Agent Communication Protocols
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description |
+|---|---|---|
+| [langchain-ai/langgraph](https://github.com/langchain-ai/langgraph) | ⭐ 10k+ | The absolute standard for this pattern. |

@@ -1,0 +1,144 @@
+---
+sidebar_position: 174
+sidebar_label: "Orchestrator Worker Pattern"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Orchestrator Worker Pattern
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Orchestrator Worker Pattern |
+| Difficulty | Intermediate |
+| Used For | Handling complex requests that require multiple distinct skills to run in parallel or sequence. |
+| Common Mistake | Making the orchestrator do actual work instead of just planning and routing. |
+| Performance | Evaluated based on token usage and latency. |
+
+## 2. Engineering Story
+
+Bro, think about a construction site. The architect (Orchestrator) doesn't pour concrete or install plumbing. They look at the blueprint, break the project into tasks, and hire a plumber and a mason (Workers) to do the actual job. If the architect tries to lay bricks, the whole project stalls. In AI, your Orchestrator should only plan, route, and synthesize.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A wedding planner managing vendors. */}
+
+| Wedding Planner | Agent System |
+|---|---|
+| The Planner | Orchestrator Agent |
+| The Florist / Caterer | Worker Agents (Tools) |
+| The Schedule | The Execution Plan |
+
+## 4. Concept Explanation
+
+In this pattern, the Orchestrator receives the user prompt, formulates an execution plan, and calls specialized Worker agents as tools. The workers execute their specific tasks (e.g., search web, write code) and return the results to the Orchestrator. The Orchestrator synthesizes the final response.
+
+## 5. Syntax Table
+
+| Role | Responsibility |
+|---|---|
+| Orchestrator | Planning, Delegation, Synthesis. |
+| Worker | Execution, Tool calling, specific domain logic. |
+
+## 6. Beginner Example
+
+```typescript
+async function orchestrator(query) {
+  const plan = await plannerAgent.run(query);
+  const data = await searchWorker.run(plan.step1);
+  const code = await codeWorker.run(data);
+  return await synthesisAgent.run(code);
+}
+```
+
+## 7. Real-World Engineering Example
+
+```typescript
+import { Agent } from "my-framework";
+
+const webScraperWorker = new Agent({
+  name: "WebScraper",
+  instructions: "You scrape websites and return raw text.",
+  tools: [scrapeTool]
+});
+
+const orchestrator = new Agent({
+  name: "Orchestrator",
+  instructions: "You are the project manager. Break down the user query and use your workers to get the data. Do NOT browse the web yourself.",
+  // Workers are passed in as callable tools!
+  tools: [webScraperWorker.asTool()]
+});
+
+const result = await orchestrator.execute("Summarize the latest news on AI.");
+```
+
+## 8. Internal Working
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'User Request' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Orchestrator (Plans)' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'process', data: { label: 'Worker A (Search)' }, position: { x: 100, y: 200 } },
+    { id: '4', type: 'process', data: { label: 'Worker B (Code)' }, position: { x: 400, y: 200 } },
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true },
+    { id: 'e2-3', source: '2', target: '3', animated: true, label: 'delegates' },
+    { id: 'e2-4', source: '2', target: '4', animated: true, label: 'delegates' },
+    { id: 'e3-2', source: '3', target: '2', animated: true, label: 'results' },
+    { id: 'e4-2', source: '4', target: '2', animated: true, label: 'results' },
+  ]}
+/>
+
+## 9. Performance Table
+
+| Operation | Latency | Tokens |
+|---|---|---|
+| Delegation | Medium | High (Orchestrator context grows) |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why treat workers as tools? | It allows the orchestrator to use standard function calling to trigger complex multi-step processes. |
+| What is the bottleneck? | The orchestrator's context window filling up with raw worker outputs. |
+
+## 11. Tricky Questions & Edge Cases
+
+Bro, if a worker returns a 10,000-word essay, the Orchestrator will run out of tokens instantly. Workers must summarize their outputs or pass references (like file paths) back to the Orchestrator.
+
+## 12. Real-World Usage
+
+Standard pattern in enterprise AI systems where security dictates that only specific workers can access specific databases.
+
+## 13. Best Practices
+
+| Do | Don't |
+|---|---|
+| Make workers return concise, structured JSON | Let workers return massive raw context |
+
+## 14. Production Notes
+
+<Admonition type="warning" title="Production Scaling Warning">
+  When implementing Orchestrator Worker Pattern in production, always monitor system boundaries—whether it's token limits, database connections, or API rate limits.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Bloated Orchestrator | Keep the orchestrator's prompt focused purely on planning and routing, not domain knowledge. |
+
+## 16. Related Topics
+
+- Supervisor Pattern
+- Hierarchical Agent Teams
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description |
+|---|---|---|
+| [crewAIInc/crewAI](https://github.com/crewAIInc/crewAI) | ⭐ 15k+ | Excellent implementation of tasks and delegation |

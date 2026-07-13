@@ -1,0 +1,151 @@
+---
+sidebar_position: 176
+sidebar_label: "Hierarchical Agent Teams"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Hierarchical Agent Teams
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Hierarchical Agent Teams |
+| Difficulty | Advanced |
+| Used For | Massive, enterprise-level agentic applications requiring distinct departments. |
+| Common Mistake | Putting 50 agents under a single supervisor, causing context collapse. |
+| Performance | Evaluated based on token usage and latency. |
+
+## 2. Engineering Story
+
+Bro, imagine a company with 500 engineers. You don't have 500 engineers reporting directly to the CEO. The CEO talks to VPs, VPs talk to Directors, and Directors manage the engineers. In agentic frameworks, when you have dozens of specialized agents, a single Supervisor will fail because its context window gets overwhelmed. You need Hierarchical Teams.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: Corporate Management Structure. */}
+
+| Corporate Structure | Agent System |
+|---|---|
+| CEO | Top-Level Orchestrator |
+| VP of Engineering | Dev Team Supervisor |
+| Frontend Engineer | Specialist Worker Agent |
+
+## 4. Concept Explanation
+
+Hierarchical Agent Teams involve nesting graphs within graphs (subgraphs). A top-level supervisor routes a complex query to a mid-level supervisor, which then routes it to specific workers. This isolates context windows—the top supervisor only sees the summarized output of the sub-teams, not the gritty details of every tool call.
+
+## 5. Syntax Table
+
+| Concept | Implementation Pattern |
+|---|---|
+| Top Graph | Routes to Sub-graphs as if they were nodes. |
+| Sub-graph | A self-contained StateGraph with its own local state. |
+
+## 6. Beginner Example
+
+```typescript
+// Conceptual Hierarchy
+const devTeam = createSubGraph(["Coder", "Reviewer"]);
+const marketingTeam = createSubGraph(["Copywriter", "SEO"]);
+
+const topLevel = new Graph();
+topLevel.addNode("Dev", devTeam);
+topLevel.addNode("Marketing", marketingTeam);
+```
+
+## 7. Real-World Engineering Example
+
+```typescript
+import { StateGraph } from "@langchain/langgraph";
+
+// 1. Create the Research Sub-team
+const researchTeam = new StateGraph({ /* local state */ });
+researchTeam.addNode("WebSearch", searchAgent);
+researchTeam.addNode("Summarizer", summarizeAgent);
+// ... compile research sub-graph
+
+// 2. Create the Writing Sub-team
+const writingTeam = new StateGraph({ /* local state */ });
+writingTeam.addNode("Draft", draftAgent);
+writingTeam.addNode("Edit", editAgent);
+// ... compile writing sub-graph
+
+// 3. Top-Level Supervisor
+const enterpriseGraph = new StateGraph({ /* global state */ });
+enterpriseGraph.addNode("ResearchDept", researchTeam.compile());
+enterpriseGraph.addNode("WritingDept", writingTeam.compile());
+enterpriseGraph.addEdge("ResearchDept", "WritingDept");
+
+export const system = enterpriseGraph.compile();
+```
+
+## 8. Internal Working
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Top Supervisor' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Dev Supervisor' }, position: { x: 100, y: 100 } },
+    { id: '3', type: 'process', data: { label: 'Marketing Supervisor' }, position: { x: 400, y: 100 } },
+    { id: '4', type: 'tool', data: { label: 'Coder Agent' }, position: { x: 50, y: 200 } },
+    { id: '5', type: 'tool', data: { label: 'SEO Agent' }, position: { x: 450, y: 200 } },
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true },
+    { id: 'e1-3', source: '1', target: '3', animated: true },
+    { id: 'e2-4', source: '2', target: '4', animated: true },
+    { id: 'e3-5', source: '3', target: '5', animated: true },
+  ]}
+/>
+
+## 9. Performance Table
+
+| Benefit | Trade-off |
+|---|---|
+| Context Isolation | Harder to debug state across boundaries |
+| High Scalability | Increased latency due to nested LLM routing |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why use hierarchical teams? | To prevent context window exhaustion and maintain focus in specialized agent groups. |
+| What is context isolation? | Ensuring the top supervisor doesn't see the raw tool outputs of bottom-tier workers. |
+
+## 11. Tricky Questions & Edge Cases
+
+Bro, passing state between nested graphs is a nightmare if you don't define clean schemas. The sub-graph must accept the global state, do its thing, and return a clean patch to the global state.
+
+## 12. Real-World Usage
+
+Large-scale AI software engineering systems (like SWE-agent or enterprise internal tools).
+
+## 13. Best Practices
+
+| Do | Don't |
+|---|---|
+| Summarize sub-graph outputs | Leak 100 lines of logs to the top supervisor |
+
+## 14. Production Notes
+
+<Admonition type="warning" title="Production Scaling Warning">
+  When implementing Hierarchical Agent Teams in production, always monitor system boundaries—whether it's token limits, database connections, or API rate limits.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Flat State | Use nested state objects so sub-teams have local scratchpads. |
+
+## 16. Related Topics
+
+- Supervisor Pattern
+- Multi-Agent Patterns Overview
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description |
+|---|---|---|
+| [langchain-ai/langgraph](https://github.com/langchain-ai/langgraph) | ⭐ 10k+ | Excellent support for compiled sub-graphs |

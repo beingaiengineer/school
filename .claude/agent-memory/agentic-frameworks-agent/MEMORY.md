@@ -222,24 +222,26 @@ No reusable insights recorded yet.
 
 ## Metrics
 
-- Lessons Completed: 147
-- Lessons Remaining: 28
-- Completion %: 84.0%
+- Lessons Completed: 157
+- Lessons Remaining: 18
+- Completion %: 89.7%
 - Open Tasks: 0
 
 ---
 
+### Next Task
+- [x] [BAE-AF-090] | Create `tools-and-actions/tool-error-handling-and-retries.mdx`
+- [x] [BAE-AF-071] | Create `protocols/a2a-agent-cards.mdx`
+- [x] [BAE-AF-072] | Create `protocols/mcp-vs-a2a-when-to-use.mdx`
+- [x] [BAE-AF-073] | Create `multi-agent-systems/multi-agent-patterns-overview.mdx`
+- [x] [BAE-AF-074] | Create `multi-agent-systems/orchestrator-worker-pattern.mdx`
+- [x] [BAE-AF-075] | Create `multi-agent-systems/supervisor-pattern.mdx`
+- [x] [BAE-AF-076] | Create `multi-agent-systems/hierarchical-agent-teams.mdx`
+- [x] [BAE-AF-077] | Create `multi-agent-systems/agent-communication-protocols.mdx`
+- [x] [BAE-AF-078] | Create `multi-agent-systems/multi-agent-debugging.mdx`
+- [x] [BAE-AF-079] | Create `memory-and-state/agent-memory-types-overview.mdx`
+
 ## Backlog
-- [ ] [BAE-AF-090] | Create `tools-and-actions/tool-error-handling-and-retries.mdx`
-- [ ] [BAE-AF-071] | Create `protocols/a2a-agent-cards.mdx`
-- [ ] [BAE-AF-072] | Create `protocols/mcp-vs-a2a-when-to-use.mdx`
-- [ ] [BAE-AF-073] | Create `multi-agent-systems/multi-agent-patterns-overview.mdx`
-- [ ] [BAE-AF-074] | Create `multi-agent-systems/orchestrator-worker-pattern.mdx`
-- [ ] [BAE-AF-075] | Create `multi-agent-systems/supervisor-pattern.mdx`
-- [ ] [BAE-AF-076] | Create `multi-agent-systems/hierarchical-agent-teams.mdx`
-- [ ] [BAE-AF-077] | Create `multi-agent-systems/agent-communication-protocols.mdx`
-- [ ] [BAE-AF-078] | Create `multi-agent-systems/multi-agent-debugging.mdx`
-- [ ] [BAE-AF-079] | Create `memory-and-state/agent-memory-types-overview.mdx`
 - [ ] [BAE-AF-080] | Create `memory-and-state/short-term-memory-context-window.mdx`
 - [ ] [BAE-AF-081] | Create `memory-and-state/long-term-memory-persistence.mdx`
 - [ ] [BAE-AF-082] | Create `memory-and-state/vector-store-memory.mdx`
@@ -250,7 +252,7 @@ No reusable insights recorded yet.
 - [ ] [BAE-AF-087] | Create `tools-and-actions/api-tools-rest-graphql.mdx`
 - [ ] [BAE-AF-088] | Create `tools-and-actions/database-tools.mdx`
 - [ ] [BAE-AF-089] | Create `tools-and-actions/code-execution-sandboxes.mdx`
-- [ ] [BAE-AF-090] | Create `tools-and-actions/tool-error-handling-and-retries.mdx`
+- [x] [BAE-AF-090] | Create `tools-and-actions/tool-error-handling-and-retries.mdx`
 - [ ] [BAE-AF-101] | Create `interview-prep/agent-coding-rounds.mdx`
 - [ ] [BAE-AF-102] | Create `interview-prep/agent-system-design.mdx`
 - [ ] [BAE-AF-103] | Create `best-practices/framework-selection-guide.mdx`
@@ -258,6 +260,12 @@ No reusable insights recorded yet.
 - [ ] [BAE-AF-105] | Create `best-practices/agent-testing.mdx`
 - [ ] [BAE-AF-106] | Create `best-practices/agent-anti-patterns.mdx`
 - [ ] [BAE-AF-107] | Create `best-practices/future-of-agents.mdx`
+- [ ] Add diagrams
+- [ ] Improve engineering story
+- [ ] Expand interview questions
+- [ ] Improve SEO
+- [ ] Better analogy
+- [ ] Add benchmarks
 
 ---
 
@@ -280,12 +288,6 @@ No reusable insights recorded yet.
 
 ## Next Improvements
 
-- [ ] Add diagrams
-- [ ] Improve engineering story
-- [ ] Expand interview questions
-- [ ] Improve SEO
-- [ ] Better analogy
-- [ ] Add benchmarks
 
 ---
 

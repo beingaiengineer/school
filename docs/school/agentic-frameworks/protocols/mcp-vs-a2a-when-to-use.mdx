@@ -1,0 +1,137 @@
+---
+sidebar_position: 169
+sidebar_label: "MCP Vs A2A When To Use"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# MCP Vs A2A When To Use
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | MCP Vs A2A When To Use |
+| Difficulty | Advanced |
+| Used For | Architecting the integration layer of your AI systems. |
+| Common Mistake | Using heavy multi-agent protocols when a simple MCP tool server would suffice. |
+| Performance | Evaluated based on token usage and latency. |
+
+## 2. Engineering Story
+
+Bro, imagine you are building an AI assistant that needs to read from a Postgres database. Do you build an entire 'Database Expert Agent' (A2A) to talk to your main agent, or do you just give your main agent a 'Postgres Tool' (MCP)? Choosing the wrong architecture here is like buying an 18-wheeler truck just to pick up groceries. Let's break down when to use which protocol.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: Choosing between a Universal Adapter vs Hiring a Translator. */}
+
+| Scenario | Protocol |
+|---|---|
+| You plug your laptop into a foreign socket | MCP (Standardizing tool connections) |
+| You hire a French translator to negotiate a deal | A2A (Agents talking to agents) |
+
+## 4. Concept Explanation
+
+The Model Context Protocol (MCP) focuses on standardizing how AI models connect to data sources and tools (Client-Server). It's about giving an agent hands and eyes. Agent-to-Agent (A2A) protocols focus on how autonomous entities collaborate, negotiate, and delegate tasks to each other (Peer-to-Peer or Hierarchical). Use MCP to connect an agent to an API. Use A2A to connect an agent to another agent.
+
+## 5. Syntax Table
+
+| Protocol | Focus Area |
+|---|---|
+| MCP | Standardizing Tool/Resource APIs (SSE, stdio). |
+| A2A | Standardizing Agent Communication, State, and Handoffs. |
+
+## 6. Beginner Example
+
+```typescript
+// MCP Mindset: Give the agent a tool
+agent.addTool(new MCPServerTool("postgres_read"));
+
+// A2A Mindset: Delegate to a specialist agent
+agent.delegateTask("Analyze sales data", sqlSpecialistAgent);
+```
+
+## 7. Real-World Engineering Example
+
+```typescript
+// In a real system, they often co-exist.
+// An Orchestrator Agent (A2A) delegates to a Data Agent.
+// The Data Agent uses an MCP Server to talk to Snowflake.
+
+const dataAgent = new Agent({
+  name: "DataAnalyst",
+  // Using MCP for tool integration
+  tools: [await connectMCPServer("snowflake-server")]
+});
+
+const orchestrator = new SupervisorAgent();
+// Using A2A for task routing
+orchestrator.registerAgent(dataAgent);
+orchestrator.routeTask("Get Q3 revenue");
+```
+
+## 8. Internal Working
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Main Agent' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'tool', data: { label: 'MCP Server (DB)' }, position: { x: 100, y: 150 } },
+    { id: '3', type: 'process', data: { label: 'Specialist Agent (A2A)' }, position: { x: 400, y: 150 } },
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true, label: 'Tool Call' },
+    { id: 'e1-3', source: '1', target: '3', animated: true, label: 'Task Delegation' },
+  ]}
+/>
+
+## 9. Performance Table
+
+| Aspect | MCP | A2A |
+|---|---|---|
+| Latency | Lower (Direct API call) | Higher (LLM to LLM communication) |
+| Complexity | Low (Just parsing JSON) | High (Requires state tracking) |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| When should I use MCP? | When you need to connect an agent to a static data source, API, or local file system. |
+| When should I use A2A? | When a task requires multiple distinct reasoning steps by differently prompted specialists. |
+
+## 11. Tricky Questions & Edge Cases
+
+Bro, you don't have to choose just one. The most robust systems use A2A for high-level reasoning and routing, while the individual worker agents use MCP to securely access local or enterprise data.
+
+## 12. Real-World Usage
+
+Anthropic's Claude Desktop heavily uses MCP. CrewAI and AutoGen heavily rely on A2A principles.
+
+## 13. Best Practices
+
+| Do | Don't |
+|---|---|
+| Use MCP for deterministic API interactions | Build a whole agent just to execute a SQL query |
+
+## 14. Production Notes
+
+<Admonition type="warning" title="Production Scaling Warning">
+  When implementing MCP Vs A2A When To Use in production, always monitor system boundaries—whether it's token limits, database connections, or API rate limits.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Over-agentification | Default to providing tools (MCP) first. Only split into multiple agents (A2A) if the system prompt becomes too massive or reasoning fails. |
+
+## 16. Related Topics
+
+- MCP Protocol Deep Dive
+- Orchestrator Worker Pattern
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description |
+|---|---|---|
+| [modelcontextprotocol/servers](https://github.com/modelcontextprotocol/servers) | ⭐ 5k+ | Official MCP servers |

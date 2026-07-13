@@ -220,3 +220,13 @@ When generating images in the interactive session, ensure:
 2. **Character**: The main character is Bae, a cute baby elephant drawn in black and white, wearing a backward baseball cap and oversized thick-rimmed glasses.
 3. **Format**: PNG, saved to the target paths specified in the queue.
 
+| BAE-AF-090 | `docs/school/agentic-frameworks/tools-and-actions/tool-error-handling-and-retries.mdx` | A highly relatable Indian real-world scenario (like a tea shop or dabbawala system) explaining Tool Error Handling And Retries. |
+| BAE-AF-071 | `docs/school/agentic-frameworks/protocols/a2a-agent-cards.mdx` | A highly relatable Indian real-world scenario (like a tea shop or dabbawala system) explaining A2A Agent Cards. |
+| BAE-AF-072 | `docs/school/agentic-frameworks/protocols/mcp-vs-a2a-when-to-use.mdx` | A highly relatable Indian real-world scenario (like a tea shop or dabbawala system) explaining Mcp Vs A2A When To Use. |
+| BAE-AF-073 | `docs/school/agentic-frameworks/multi-agent-systems/multi-agent-patterns-overview.mdx` | A highly relatable Indian real-world scenario (like a tea shop or dabbawala system) explaining Multi Agent Patterns Overview. |
+| BAE-AF-074 | `docs/school/agentic-frameworks/multi-agent-systems/orchestrator-worker-pattern.mdx` | A highly relatable Indian real-world scenario (like a tea shop or dabbawala system) explaining Orchestrator Worker Pattern. |
+| BAE-AF-075 | `docs/school/agentic-frameworks/multi-agent-systems/supervisor-pattern.mdx` | A highly relatable Indian real-world scenario (like a tea shop or dabbawala system) explaining Supervisor Pattern. |
+| BAE-AF-076 | `docs/school/agentic-frameworks/multi-agent-systems/hierarchical-agent-teams.mdx` | A highly relatable Indian real-world scenario (like a tea shop or dabbawala system) explaining Hierarchical Agent Teams. |
+| BAE-AF-077 | `docs/school/agentic-frameworks/multi-agent-systems/agent-communication-protocols.mdx` | A highly relatable Indian real-world scenario (like a tea shop or dabbawala system) explaining Agent Communication Protocols. |
+| BAE-AF-078 | `docs/school/agentic-frameworks/multi-agent-systems/multi-agent-debugging.mdx` | A highly relatable Indian real-world scenario (like a tea shop or dabbawala system) explaining Multi Agent Debugging. |
+| BAE-AF-079 | `docs/school/agentic-frameworks/memory-and-state/agent-memory-types-overview.mdx` | A highly relatable Indian real-world scenario (like a tea shop or dabbawala system) explaining Agent Memory Types Overview. |

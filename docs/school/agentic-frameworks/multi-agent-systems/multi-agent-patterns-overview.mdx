@@ -1,0 +1,151 @@
+---
+sidebar_position: 173
+sidebar_label: "Multi Agent Patterns Overview"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Multi Agent Patterns Overview
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Multi Agent Patterns Overview |
+| Difficulty | Intermediate |
+| Used For | Designing the architecture of a multi-agent application. |
+| Common Mistake | Throwing 5 agents into a group chat without a defined hierarchy or protocol. |
+| Performance | Evaluated based on token usage and latency. |
+
+## 2. Engineering Story
+
+Bro, if you put five senior engineers in a room and tell them to 'build a product' without a manager, a product owner, or a defined workflow, they will just argue about tech stacks for a month. The same happens with LLM agents. Multi-agent systems require architectural patterns—like supervisors, sequential chains, or map-reduce—to actually get work done.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: Organizing a kitchen staff. */}
+
+| Kitchen Setup | Agent Pattern |
+|---|---|
+| Head Chef dictating orders | Supervisor Pattern |
+| Prep -> Cook -> Plate | Sequential Workflow |
+| 3 Chefs making 300 samosas | Map-Reduce / Parallelization |
+
+## 4. Concept Explanation
+
+Multi-agent patterns are architectural blueprints for routing tasks, sharing state, and managing execution flow between multiple autonomous agents. As tasks get too complex for a single agent's context window, you split the work. The pattern you choose dictates how these sub-agents communicate.
+
+## 5. Syntax Table
+
+| Pattern | Description |
+|---|---|
+| Sequential | Agent A -> Agent B -> Agent C. |
+| Supervisor | Supervisor routes to workers based on intent. |
+| Map-Reduce | Break into chunks, process parallel, summarize. |
+
+## 6. Beginner Example
+
+```typescript
+// Conceptual Sequential Pattern
+const resultA = await agentA.run(input);
+const resultB = await agentB.run(resultA);
+console.log("Final Output:", resultB);
+```
+
+## 7. Real-World Engineering Example
+
+```typescript
+import { StateGraph } from "@langchain/langgraph";
+
+// Setting up a basic Supervisor workflow graph
+const workflow = new StateGraph({
+  channels: {
+    messages: {
+      value: (x, y) => x.concat(y),
+      default: () => [],
+    },
+    nextAgent: {
+      value: (x, y) => y,
+      default: () => "Researcher",
+    }
+  }
+});
+
+workflow.addNode("Supervisor", supervisorAgent);
+workflow.addNode("Researcher", researchAgent);
+workflow.addNode("Coder", codingAgent);
+
+// Edges dictate the pattern
+workflow.addEdge("Researcher", "Supervisor");
+workflow.addEdge("Coder", "Supervisor");
+workflow.addConditionalEdges("Supervisor", (state) => state.nextAgent);
+```
+
+## 8. Internal Working
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Supervisor' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Agent 1' }, position: { x: 100, y: 150 } },
+    { id: '3', type: 'process', data: { label: 'Agent 2' }, position: { x: 400, y: 150 } },
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true },
+    { id: 'e2-1', source: '2', target: '1', animated: true },
+    { id: 'e1-3', source: '1', target: '3', animated: true },
+    { id: 'e3-1', source: '3', target: '1', animated: true },
+  ]}
+/>
+
+## 9. Performance Table
+
+| Pattern | Latency | Token Cost |
+|---|---|---|
+| Sequential | High (Waiting) | Medium |
+| Parallel | Low | High |
+| Supervisor | Medium | Very High (Supervisor sees all) |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why use multi-agent instead of one big agent? | To bypass context limits and give agents highly specific, focused system prompts. |
+| What is the biggest challenge? | Managing state and preventing endless conversation loops. |
+
+## 11. Tricky Questions & Edge Cases
+
+Bro, beware of the 'Polite Loop'. If two conversational agents are instructed to be helpful, they might get stuck in an endless loop of 'Thank you', 'No, thank you'. Always enforce strict stop conditions.
+
+## 12. Real-World Usage
+
+Used in AI software houses (like MetaGPT) to simulate PMs, Designers, and Engineers working together.
+
+## 13. Best Practices
+
+| Do | Don't |
+|---|---|
+| Keep agent roles incredibly narrow | Create 'do-it-all' agents inside a multi-agent system |
+
+## 14. Production Notes
+
+<Admonition type="warning" title="Production Scaling Warning">
+  When implementing Multi Agent Patterns Overview in production, always monitor system boundaries—whether it's token limits, database connections, or API rate limits.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Unbounded graphs | Always have a defined 'END' node in your state graph. |
+
+## 16. Related Topics
+
+- Supervisor Pattern
+- Orchestrator Worker Pattern
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description |
+|---|---|---|
+| [langchain-ai/langgraph](https://github.com/langchain-ai/langgraph) | ⭐ 10k+ | The standard for defining agent graphs |

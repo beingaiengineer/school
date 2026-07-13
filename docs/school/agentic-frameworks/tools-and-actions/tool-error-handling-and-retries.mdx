@@ -1,0 +1,155 @@
+---
+sidebar_position: 208
+sidebar_label: "Tool Error Handling And Retries"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Tool Error Handling And Retries
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Tool Error Handling And Retries |
+| Difficulty | Intermediate |
+| Used For | Preventing agent loops and crashes during external API/tool calls. |
+| Common Mistake | Allowing the LLM to hallucinate arguments indefinitely on failure. |
+| Performance | Evaluated based on token usage and latency. |
+
+## 2. Engineering Story
+
+Bro, imagine you're running a high-scale customer support agent. It tries to refund a user via a payment API, but the API times out. Without proper error handling, the agent might either crash, tell the user the refund failed permanently, or worse, try to blindly call it 100 times, burning through your API rate limits. We need a systematic way to handle tool failures.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A food delivery guy (the agent) trying to deliver to a customer (the tool). */}
+
+| Swiggy Delivery | Agentic System |
+|---|---|
+| Customer's phone is switched off | Tool execution fails / Times out |
+| Call the customer again after 5 mins | Implement a Retry mechanism |
+| Call customer support for a fallback | Return structured error to LLM for reasoning |
+
+## 4. Concept Explanation
+
+When an LLM decides to call a tool, it's stepping out of its deterministic reasoning environment into the messy real world of network latency, bad arguments, and API outages. Tool error handling involves catching these failures, preventing infinite retry loops, and giving the LLM enough context (e.g., 'API rate limited, try again in 60s') so it can decide the next best action.
+
+## 5. Syntax Table
+
+| Concept | Implementation Pattern |
+|---|---|
+| Standard Try/Catch | Wrap tool execution in try-catch blocks. |
+| Exponential Backoff | Use libraries to retry with increasing delays. |
+| LLM Fallback | Return the exact error string back to the LLM as observation. |
+
+## 6. Beginner Example
+
+```typescript
+async function safeToolCall(args: any) {
+  try {
+    return await executeTool(args);
+  } catch (error) {
+    // Return error to LLM instead of throwing
+    return `Error: ${error.message}. Please adjust your arguments and try again.`;
+  }
+}
+```
+
+## 7. Real-World Engineering Example
+
+```typescript
+import { retry } from 'async-retry';
+
+async function robustToolExecution(toolName: string, args: Record<string, any>) {
+  return await retry(async (bail) => {
+    try {
+      const result = await runExternalTool(toolName, args);
+      return { success: true, data: result };
+    } catch (e) {
+      if (e.status === 400) {
+        // Bad request from LLM, do not retry, just return error
+        bail(new Error(`Bad Arguments provided: ${e.message}`));
+      }
+      throw e; // Retry on 5xx or network errors
+    }
+  }, {
+    retries: 3,
+    factor: 2,
+    minTimeout: 1000,
+  });
+}
+```
+
+## 8. Internal Working
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'LLM Generates Tool Call' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Execute Tool' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'warning', data: { label: 'Error Occurs (500)' }, position: { x: 450, y: 100 } },
+    { id: '4', type: 'process', data: { label: 'Retry Policy' }, position: { x: 450, y: 200 } },
+    { id: '5', type: 'output', data: { label: 'Return Error as Observation' }, position: { x: 250, y: 250 } },
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true },
+    { id: 'e2-3', source: '2', target: '3', animated: true, label: 'fails' },
+    { id: 'e3-4', source: '3', target: '4', animated: true },
+    { id: 'e4-2', source: '4', target: '2', animated: true, label: 'retry' },
+    { id: 'e4-5', source: '4', target: '5', animated: true, label: 'max retries hit' },
+  ]}
+/>
+
+## 9. Performance Table
+
+| Operation | Impact |
+|---|---|
+| Excessive Retries | Latency spikes, Token waste if LLM is in the loop |
+| Graceful Degradation | High reliability, low cost |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why not just throw an error on tool failure? | Because it crashes the agent. You want to pass the error to the LLM so it can reason and recover. |
+| What is an LLM retry loop? | When an LLM repeatedly calls a tool with the same bad arguments, expecting a different result. |
+| How do you prevent retry loops? | Set a strict `max_iterations` counter on the agent framework. |
+
+## 11. Tricky Questions & Edge Cases
+
+Bro, if you return a raw stack trace to an LLM, it might get confused or hallucinate a fix that doesn't exist. Always sanitize your error messages so they are actionable for the LLM.
+
+## 12. Real-World Usage
+
+Used extensively in systems like AutoGPT or Devin, where agents must recover from failed compilation steps or 404 API errors gracefully.
+
+## 13. Best Practices
+
+| Do | Don't |
+|---|---|
+| Return structured error messages to the LLM | Throw raw exceptions that crash the process |
+| Implement exponential backoff for network errors | Allow infinite tool retries |
+
+## 14. Production Notes
+
+<Admonition type="warning" title="Production Scaling Warning">
+  When implementing Tool Error Handling And Retries in production, always monitor system boundaries—whether it's token limits, database connections, or API rate limits.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Unhandled Rejections | Always wrap tool executions in robust try/catch blocks that return stringified errors. |
+
+## 16. Related Topics
+
+- Function Calling Deep Dive
+- Agent Debugging
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description |
+|---|---|---|
+| [langchain-ai/langgraph](https://github.com/langchain-ai/langgraph) | ⭐ 10k+ | Great built-in tool error handling strategies |
