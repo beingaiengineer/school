@@ -139,7 +139,22 @@ Extensively used in LangGraph to create flexible, non-deterministic workflows th
 - Orchestrator Worker Pattern
 - Agent Communication Protocols
 
-## 17. Top GitHub Repositories
+
+### Supervisor Edge Cases
+
+The Supervisor pattern excels at quality control, but it introduces unique failure modes that must be carefully managed in production environments.
+
+A common anti-pattern is the "Infinite Revision Loop." If the Supervisor demands a level of quality that the Worker is fundamentally incapable of achieving (due to LLM limitations or missing tools), the two agents will endlessly pass the task back and forth, consuming massive amounts of tokens and time.
+
+To prevent infinite loops, production Supervisor implementations require:
+
+1. **Max Iteration Caps:** A hard limit on the number of revision cycles. If the limit is reached, the Supervisor must either accept the best-effort result, flag the task for human intervention, or intentionally fail the workflow.
+2. **Progressive Degradation:** If the Worker fails to improve after two revisions, the Supervisor might dynamically simplify its prompt or lower its quality threshold to ensure the system can eventually produce an output.
+3. **Clear Rubrics:** The Supervisor should not rely on vague criteria like "make it better." It must evaluate the Worker's output against a strict, objective rubric (e.g., "Does the code compile?", "Are there exactly 5 paragraphs?").
+
+By establishing strict boundaries, you ensure the Supervisor pattern remains a productive quality gate rather than a resource drain.
+
+### Top GitHub Repositories
 
 | Repository | Stars | Description |
 |---|---|---|

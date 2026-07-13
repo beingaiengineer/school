@@ -130,7 +130,20 @@ LangGraph relies heavily on the Redux-like Shared State protocol.
 - Multi-Agent Patterns Overview
 - Short-Term Memory
 
-## 17. Top GitHub Repositories
+
+### Additional Communication Notes
+
+In massive multi-agent systems, communication costs can become the primary bottleneck. As agents exchange more messages to achieve consensus or pass intermediate context, latency and LLM token costs grow rapidly.
+
+To mitigate this, production systems often adopt the following advanced communication optimizations:
+
+1. **Message Batching:** Instead of sending single responses per action, agents queue up a series of internal thoughts and actions, dispatching them as a single comprehensive block to the orchestrator.
+2. **Context Compression:** Before an agent forwards a long document to another agent, an intermediate "summarizer" agent shrinks the payload, ensuring the receiving agent doesn't blow out its context window.
+3. **Structured Schemas (JSON/Pydantic):** Forcing agents to communicate strictly in predefined JSON schemas guarantees that downstream agents can parse the message deterministically without relying on fragile string matching or regex.
+
+Ultimately, the goal of a robust agent communication protocol is to minimize the amount of "chatter" required to reach a highly confident outcome.
+
+### Top GitHub Repositories
 
 | Repository | Stars | Description |
 |---|---|---|
