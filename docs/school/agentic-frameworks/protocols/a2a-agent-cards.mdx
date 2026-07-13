@@ -1,0 +1,152 @@
+---
+sidebar_position: 166
+sidebar_label: "A2A Agent Cards"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# A2A Agent Cards
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | A2A Agent Cards |
+| Difficulty | Intermediate |
+| Used For | Allowing agents to discover and interact with each other in a multi-agent system. |
+| Common Mistake | Creating vague agent cards that lead to incorrect tool usage by other agents. |
+| Performance | Evaluated based on token usage and latency. |
+
+## 2. Engineering Story
+
+Bro, imagine you're at a massive tech conference, and you need a backend engineer who knows Rust. You wouldn't just yell 'Who knows Rust?!' to 5,000 people. You look at their name badges or LinkedIn profiles. In a multi-agent system, when Agent A needs Agent B to do a task, it needs to know what Agent B is capable of. That's exactly what an Agent Card does—it's a LinkedIn profile for AI agents.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: Visiting a specialist doctor based on their business card. */}
+
+| Real World | Agent System |
+|---|---|
+| Doctor's Specialization (Cardiologist) | Agent's Primary Role (Data Analyst) |
+| Required Documents (Blood Report) | Required Input Schema (JSON Data) |
+| Doctor's Prescription | Expected Output Schema |
+
+## 4. Concept Explanation
+
+An Agent Card is a machine-readable document (usually JSON or YAML) that describes an agent's identity, role, capabilities (tools), input requirements, and output formats. It standardizes how agents advertise themselves in an Agent-to-Agent (A2A) network, allowing orchestrators or peer agents to dynamically route tasks to the right specialist.
+
+## 5. Syntax Table
+
+| Concept | Implementation Pattern |
+|---|---|
+| Metadata | Name, Description, Version. |
+| Capabilities | List of supported functions or tools. |
+| IO Schemas | JSON Schema defining what the agent accepts and returns. |
+
+## 6. Beginner Example
+
+```json
+{
+  "name": "sql_analyst",
+  "description": "Translates natural language to SQL and executes it.",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "question": { "type": "string" }
+    }
+  }
+}
+```
+
+## 7. Real-World Engineering Example
+
+```typescript
+import { z } from "zod";
+
+export const ReviewerAgentCard = {
+  identity: {
+    id: "pr_reviewer_v1",
+    name: "Code Review Specialist",
+    description: "Analyzes pull requests for security vulnerabilities and style violations.",
+  },
+  capabilities: ["github_read", "github_comment", "ast_analysis"],
+  io: {
+    inputSchema: z.object({
+      repo_url: z.string().url(),
+      pr_number: z.number()
+    }),
+    outputSchema: z.object({
+      status: z.enum(["approved", "changes_requested"]),
+      comments: z.array(z.string())
+    })
+  }
+};
+```
+
+## 8. Internal Working
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Task Router Agent' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'data', data: { label: 'Agent Registry (Cards)' }, position: { x: 450, y: 0 } },
+    { id: '3', type: 'process', data: { label: 'Agent Card: Data Analyst' }, position: { x: 250, y: 150 } },
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true, label: 'Look up capabilities' },
+    { id: 'e2-1', source: '2', target: '1', animated: true, label: 'Returns matching card' },
+    { id: 'e1-3', source: '1', target: '3', animated: true, label: 'Dispatches task' },
+  ]}
+/>
+
+## 9. Performance Table
+
+| Operation | Impact |
+|---|---|
+| Card Parsing | O(1) - Fast lookup if stored in memory/DB. |
+| Context Size | Very low impact, passes structured JSON. |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is an Agent Card? | A standardized schema defining an agent's capabilities and IO interfaces. |
+| Why are they necessary for A2A? | Without them, dynamic task routing and discovery is impossible. |
+| How do they differ from OpenAPI specs? | They define agent behaviors and roles, not just static API endpoints. |
+
+## 11. Tricky Questions & Edge Cases
+
+Bro, if you update an agent's capability but forget to update its card, other agents will try to send it tasks it can't handle, leading to systemic failure. Always version your cards.
+
+## 12. Real-World Usage
+
+Enterprise multi-agent frameworks use these registries to dynamically spawn and kill agents based on incoming task requirements, similar to Kubernetes pods.
+
+## 13. Best Practices
+
+| Do | Don't |
+|---|---|
+| Use strict JSON Schema for inputs/outputs | Use free-form text descriptions for IO |
+
+## 14. Production Notes
+
+<Admonition type="warning" title="Production Scaling Warning">
+  When implementing A2A Agent Cards in production, always monitor system boundaries—whether it's token limits, database connections, or API rate limits.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Vague Descriptions | Be highly specific. 'Writes Python scripts' is better than 'Does coding'. |
+
+## 16. Related Topics
+
+- A2A Protocol Deep Dive
+- Orchestrator Worker Pattern
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description |
+|---|---|---|
+| [camel-ai/camel](https://github.com/camel-ai/camel) | ⭐ 4k+ | Uses role-playing frameworks heavily reliant on agent profiles |

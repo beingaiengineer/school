@@ -1,0 +1,153 @@
+---
+sidebar_position: 186
+sidebar_label: "Agent Memory Types Overview"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Agent Memory Types Overview
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Agent Memory Types Overview |
+| Difficulty | Beginner |
+| Used For | Deciding how your agent will retain context over a single conversation versus a lifetime. |
+| Common Mistake | Stuffing a massive PDF into the short-term context window instead of using RAG. |
+| Performance | Evaluated based on token usage and latency. |
+
+## 2. Engineering Story
+
+Bro, if you meet a guy at a party and he tells you his name, you remember it for the evening (Short-Term). If you meet him a year later and remember his name, that's Long-Term. If you know that 'fire is hot', that's Semantic. AI agents need the exact same memory hierarchy, otherwise they either forget everything instantly, or they get so overwhelmed with data they go broke paying for tokens.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: Human Memory Systems. */}
+
+| Human Memory | Agent Memory | Tech Stack |
+|---|---|---|
+| Working Memory (holding a phone number) | Short-Term Memory | LLM Context Window |
+| Remembering a past conversation | Episodic / Long-Term | Database (Postgres/Redis) |
+| Knowing facts / concepts | Semantic Memory | Vector DB (Pinecone/Milvus) |
+
+## 4. Concept Explanation
+
+Memory is how an agent maintains state. **Short-term memory** is simply the array of messages passed to the LLM in the current API call (bound by the context window). **Long-term/Episodic memory** involves persisting those conversations to a database so they can be retrieved later. **Semantic memory** uses embeddings to retrieve factual knowledge (RAG) relevant to the current task.
+
+## 5. Syntax Table
+
+| Memory Type | Implementation |
+|---|---|
+| Short-Term | `messages` array in API call. |
+| Long-Term | Saving `messages` to SQL by `session_id`. |
+| Semantic | Vector DB similarity search before prompting. |
+
+## 6. Beginner Example
+
+```typescript
+// Short-Term Memory (Context Window)
+const history = [
+  { role: "user", content: "Hi, I'm Alice." },
+  { role: "assistant", content: "Hello Alice!" },
+  { role: "user", content: "What is my name?" }
+];
+// The agent knows the name because it's in the array.
+const response = await llm.invoke(history);
+```
+
+## 7. Real-World Engineering Example
+
+```typescript
+// Complex Memory Orchestration
+async function agentWithMemory(userId: string, query: string) {
+  // 1. Fetch Semantic Memory (Facts)
+  const facts = await vectorDb.search(query, { filter: { userId } });
+
+  // 2. Fetch Long-Term Episodic Memory (Recent chat history)
+  const recentChats = await sqlDb.getRecentMessages(userId, 5);
+
+  // 3. Construct Short-Term Memory (Context Window)
+  const prompt = [
+    { role: "system", content: `Facts: ${facts}
+` },
+    ...recentChats,
+    { role: "user", content: query }
+  ];
+
+  const response = await llm.invoke(prompt);
+
+  // 4. Save new interaction to Long-Term memory
+  await sqlDb.saveMessages(userId, query, response);
+  return response;
+}
+```
+
+## 8. Internal Working
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'User Query' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'data', data: { label: 'Vector DB (Semantic)' }, position: { x: 100, y: 100 } },
+    { id: '3', type: 'data', data: { label: 'SQL DB (Episodic)' }, position: { x: 400, y: 100 } },
+    { id: '4', type: 'process', data: { label: 'Construct Prompt (Short-Term)' }, position: { x: 250, y: 200 } },
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true },
+    { id: 'e1-3', source: '1', target: '3', animated: true },
+    { id: 'e2-4', source: '2', target: '4', animated: true },
+    { id: 'e3-4', source: '3', target: '4', animated: true },
+  ]}
+/>
+
+## 9. Performance Table
+
+| Memory | Token Cost | Storage Cost |
+|---|---|---|
+| Short-Term | High (charged per API call) | None |
+| Semantic | Low (only relevant info injected) | Medium (Vector DB hosting) |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why not just put everything in the context window? | Huge context windows (e.g., 1M tokens) are expensive, slow, and models suffer from 'lost in the middle' syndrome where they ignore data in the center of the prompt. |
+| What is Semantic Memory? | Retrieving facts based on meaning (embeddings) rather than exact keyword matches. |
+
+## 11. Tricky Questions & Edge Cases
+
+Bro, if your agent summarizes history to save tokens, it will slowly lose granular details over time. It's like a game of telephone. Always keep the raw logs in a database, even if you feed summaries to the LLM.
+
+## 12. Real-World Usage
+
+Memory systems are the core differentiator between a generic chatbot and a personalized AI companion (like ChatGPT's 'Memory' feature).
+
+## 13. Best Practices
+
+| Do | Don't |
+|---|---|
+| Summarize old conversations | Pass a 100-turn chat history into every request |
+
+## 14. Production Notes
+
+<Admonition type="warning" title="Production Scaling Warning">
+  When implementing Agent Memory Types Overview in production, always monitor system boundaries—whether it's token limits, database connections, or API rate limits.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Mixing State and Facts | Keep user preferences (Episodic) separate from company documentation (Semantic). |
+
+## 16. Related Topics
+
+- Vector Store Memory
+- Conversation Management
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description |
+|---|---|---|
+| [mem0ai/mem0](https://github.com/mem0ai/mem0) | ⭐ 20k+ | Standardized memory layer for AI agents |

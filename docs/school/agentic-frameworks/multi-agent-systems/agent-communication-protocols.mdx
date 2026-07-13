@@ -1,0 +1,137 @@
+---
+sidebar_position: 178
+sidebar_label: "Agent Communication Protocols"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Agent Communication Protocols
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Agent Communication Protocols |
+| Difficulty | Intermediate |
+| Used For | Ensuring agents have the right context without overwhelming their prompts. |
+| Common Mistake | Passing the entire raw chat history to every single agent in the system. |
+| Performance | Evaluated based on token usage and latency. |
+
+## 2. Engineering Story
+
+Bro, if a junior dev asks a senior dev for help, they don't hand over 400 pages of server logs and say 'Read this.' They summarize the issue. When agents communicate, they shouldn't dump their entire context window on each other. We need defined protocols—shared state, message passing, or pub/sub—to communicate efficiently.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: Office communication mediums. */}
+
+| Real World | Agent Protocol |
+|---|---|
+| Google Doc everyone edits | Shared State / Blackboard |
+| Direct Slack Message | Message Passing (P2P) |
+| Email to a mailing list | Pub/Sub Broadcasting |
+
+## 4. Concept Explanation
+
+Agents must share information. The two main ways are **Shared State** (all agents read/write to a central JSON object, common in LangGraph) and **Message Passing** (agents send specific, targeted messages to one another, common in Actor models).
+
+## 5. Syntax Table
+
+| Protocol | Best For |
+|---|---|
+| Shared State (Blackboard) | Sequential graphs, single source of truth. |
+| Message Passing | Swarms, asynchronous specialized tasks. |
+
+## 6. Beginner Example
+
+```typescript
+// Message Passing Example
+const message = { to: "DatabaseAgent", task: "Query users", context: "Need active users" };
+router.dispatch(message);
+```
+
+## 7. Real-World Engineering Example
+
+```typescript
+// Shared State Example (LangGraph style)
+import { StateGraph } from "@langchain/langgraph";
+
+// Define the global blackboard
+const AgentState = {
+  messages: { value: (x, y) => x.concat(y), default: () => [] },
+  scratchpad: { value: (x, y) => ({...x, ...y}), default: () => ({}) }
+};
+
+const workflow = new StateGraph({ channels: AgentState });
+
+workflow.addNode("AgentA", async (state) => {
+  // Read from shared state, return updates
+  return { scratchpad: { agentA_done: true } };
+});
+```
+
+## 8. Internal Working
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'data', data: { label: 'Global State Object' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Agent A' }, position: { x: 100, y: 150 } },
+    { id: '3', type: 'process', data: { label: 'Agent B' }, position: { x: 400, y: 150 } },
+  ]}
+  edges={[
+    { id: 'e2-1', source: '2', target: '1', animated: true, label: 'writes update' },
+    { id: 'e1-3', source: '1', target: '3', animated: true, label: 'reads state' },
+  ]}
+/>
+
+## 9. Performance Table
+
+| Protocol | Memory Usage | Complexity |
+|---|---|---|
+| Shared State | High (grows over time) | Low (easy to reason) |
+| Message Passing | Low (ephemeral) | High (tracing is hard) |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the Blackboard pattern? | A shared memory space where all agents can read and write data to collaborate. |
+| Why avoid dumping all messages to every agent? | It wastes tokens, increases latency, and confuses specialized agents with irrelevant context. |
+
+## 11. Tricky Questions & Edge Cases
+
+Bro, in a shared state, if two agents write to the same key simultaneously (parallel execution), you get a race condition. Always use reducers to merge state safely.
+
+## 12. Real-World Usage
+
+LangGraph relies heavily on the Redux-like Shared State protocol.
+
+## 13. Best Practices
+
+| Do | Don't |
+|---|---|
+| Filter messages before passing to a worker | Pass the raw 50-turn chat history to a code formatter |
+
+## 14. Production Notes
+
+<Admonition type="warning" title="Production Scaling Warning">
+  When implementing Agent Communication Protocols in production, always monitor system boundaries—whether it's token limits, database connections, or API rate limits.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| State Bloat | Periodically summarize and clear older messages from the shared state. |
+
+## 16. Related Topics
+
+- Multi-Agent Patterns Overview
+- Short-Term Memory
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description |
+|---|---|---|
+| [langchain-ai/langgraph](https://github.com/langchain-ai/langgraph) | ⭐ 10k+ | Demonstrates the Shared State protocol |
