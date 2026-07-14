@@ -1,0 +1,159 @@
+---
+sidebar_position: 199
+sidebar_label: "Tool Design Principles"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Tool Design Principles
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Tool Design Principles |
+| Difficulty | Intermediate |
+| Used For | Advanced agentic system design and architecture |
+| Common Mistake | Implementing without proper production guardrails |
+| Performance | Varies by implementation, usually O(1) or O(N) |
+
+## 2. Engineering Story
+
+Bro, you give your agent a tool called `manage_database`. The agent tries to use it and accidentally drops the users table. You get fired. The production problem isn't that the LLM is stupid; it's that your tool design was horrific. You gave it a god-mode tool with vague parameters instead of specific, constrained, safe actions. Designing tools for AI agents is different from writing standard Python functions. You need strict schemas, robust error handling, and extremely clear descriptions so the LLM knows exactly when and how to use it.
+
+## 3. Real-World Analogy
+
+Let's look at a common Indian scenario to understand this concept, bro. Think about a regular customer at a local chai tapri (tea shop).
+
+| Tea Shop Scenario | AI Agent Equivalent |
+|---|---|
+| The chaiwala gets a button that says 'Make Tea' instead of a button that says 'Control Everything' | Single Responsibility Principle for tools |
+
+The story builds curiosity; the analogy builds intuition. The chaiwala is the agent.
+
+## 4. Concept Explanation
+
+Tool Design Principles dictate how we build functions that LLMs will execute via function calling. It involves applying the Single Responsibility Principle, using strong typing (Pydantic), writing highly descriptive docstrings, and failing gracefully. Why does it exist? LLMs are probabilistic. They will hallucinate arguments if you don't constrain them. Good tool design drastically reduces errors. When to use it? Whenever you expose external actions to an agent. When NOT to use it? Never skip good design.
+
+## 5. Syntax Table
+
+Here are the key syntax options and usage patterns:
+
+| Pattern | Code Snippet | Use Case |
+|---|---|---|
+| Initialize | `agent.init()` | Start the system |
+| Use | `agent.run(task)` | Execute something |
+| Close | `agent.close()` | Clean up resources |
+
+## 6. Beginner Example
+
+A minimal, clear code snippet showing basic usage. Keep it direct and easy to read.
+
+```python
+# BAD: LLM won't know what this does
+def update_db(query):
+    pass
+
+# GOOD: Explicitly defined for LLMs
+def get_user_email(user_id: int) -> str:
+    """Fetches the email address for a given user ID."""
+    return "user@example.com"
+```
+
+## 7. Real-World Engineering Example
+
+Show production-style code representing actual system scenarios, like this production-grade implementation.
+
+```python
+from pydantic import BaseModel, Field
+import logging
+
+logger = logging.getLogger(__name__)
+
+class RefundInput(BaseModel):
+    order_id: str = Field(description="The unique 8-character alphanumeric order ID")
+    amount: float = Field(description="The amount to refund in USD, must be greater than 0")
+    reason: str = Field(description="A short explanation of why the refund is issued")
+
+def process_refund(inputs: RefundInput) -> str:
+    """
+    Processes a refund for a customer.
+    Only use this tool when the customer explicitly asks for their money back.
+    """
+    if inputs.amount <= 0:
+        return "Error: Refund amount must be positive."
+
+    logger.info(f"Processing refund of {inputs.amount} for {inputs.order_id}")
+    # API call to payment gateway goes here
+    return f"Successfully refunded ${inputs.amount}"
+```
+
+## 8. Internal Working
+
+Explain how the runtime or engine handles this under the hood. The system compiles the tools, attaches them to the context, and sends them to the LLM.
+
+<LearningFlow steps={[
+  { id: 'start', type: 'core', position: { x: 0, y: 0 }, data: { label: 'User Input' } },
+  { id: 'process', type: 'process', position: { x: 200, y: 0 }, data: { label: 'Agent Engine' } },
+  { id: 'tool', type: 'tool', position: { x: 400, y: 0 }, data: { label: 'Execution / Memory' } },
+  { id: 'output', type: 'output', position: { x: 600, y: 0 }, data: { label: 'Final Result' } }
+]} />
+
+## 9. Performance Table
+
+List time/space complexity of common operations.
+
+| Operation | Time Complexity | Space Complexity |
+|---|---|---|
+| Initialization | O(1) | O(1) |
+| Execution | O(N) | O(N) |
+| Cleanup | O(1) | O(1) |
+
+## 10. Top Interview Questions
+
+| Why are docstrings so important for agent tools? | The docstring is literally injected into the prompt. It's how the LLM decides if and when to use the tool. | Beginner |
+| Why use Pydantic for tool inputs? | It enforces strict typing and validation, rejecting hallucinations before they hit your execution logic. | Intermediate |
+| What happens if a tool throws an unhandled exception? | The agentic loop crashes. Tools must catch exceptions and return them as strings so the agent can retry. | Advanced |
+| What are the alternatives? | Depending on the exact need, standard APIs or simpler prompt engineering might suffice. | Intermediate |
+| How do you debug it? | By using tracing tools like LangSmith or Arize Phoenix to inspect the exact payloads and intermediate steps. | Advanced |
+
+## 11. Tricky Questions & Edge Cases
+
+Include tricky conceptual questions. What happens if the LLM hallucinates a tool call? It will crash if you don't have guardrails. What if the memory is too large? The context window overflows and the API rejects the request.
+
+## 12. Real-World Usage
+
+Describe where top-tier tech companies apply this. Companies like OpenAI and Anthropic use these patterns for their official assistants. Swiggy uses agentic workflows for dynamic customer support routing based on order state.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Do use guardrails | Don't let agents execute raw code unchecked |
+| Do limit context size | Don't stuff everything into the prompt |
+| Do monitor errors | Don't ignore agent hallucinations |
+
+## 14. Production Notes
+
+<Admonition type="caution" title="Production Warning">
+When scaling this in production, watch out for context window token limits and API rate limits. Memory leaks can happen if you don't clear conversational state for long-running agents. Security boundaries are critical when executing generated code or DB queries.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Returning complex objects/classes from tools | Return strings or JSON so the LLM can read it | `return json.dumps(result)` |
+
+## 16. Related Topics
+- Agent Frameworks Basics
+- LangChain vs CrewAI
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [langchain-ai/langchain](https://github.com/langchain-ai/langchain) | ⭐ 90k+ | Building applications with LLMs | Industry standard for tools and memory |
+| [microsoft/autogen](https://github.com/microsoft/autogen) | ⭐ 30k+ | Multi-agent framework | Great for complex agent flows |
+| [joaomdmoura/crewAI](https://github.com/joaomdmoura/crewAI) | ⭐ 15k+ | Role-playing agents | Excellent role-based memory handling |
+| [run-llama/llama_index](https://github.com/run-llama/llama_index) | ⭐ 35k+ | Data framework for LLMs | Best for RAG and vector memory |
+| [phidatahq/phidata](https://github.com/phidatahq/phidata) | ⭐ 10k+ | Memory and tools for agents | Focuses heavily on state and DB tools |
