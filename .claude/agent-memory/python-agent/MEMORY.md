@@ -53,6 +53,16 @@ _Empty_
 _Empty_
 
 ### DONE
+- [x] [BAE-REVIEW-011] | Audit `control-flow/if-else.mdx`
+- [x] [BAE-REVIEW-012] | Audit `control-flow/nested-conditions.mdx`
+- [x] [BAE-REVIEW-013] | Audit `control-flow/loops.mdx`
+- [x] [BAE-REVIEW-014] | Audit `control-flow/break-continue-pass.mdx`
+- [x] [BAE-REVIEW-015] | Audit `control-flow/pattern-programs.mdx`
+- [x] [BAE-REVIEW-016] | Audit `control-flow/match-case.mdx`
+- [x] [BAE-REVIEW-017] | Audit `functions/functions-basics.mdx`
+- [x] [BAE-REVIEW-018] | Audit `functions/arguments-parameters.mdx`
+- [x] [BAE-REVIEW-019] | Audit `functions/return-values.mdx`
+- [x] [BAE-REVIEW-020] | Audit `functions/lambda-functions.mdx`
 - [x] What is Python (intro/what-is-python.mdx)
 - [x] Setup Python (intro/setup-python.mdx)
 - [x] Python Execution Flow (intro/python-execution-flow.mdx)
@@ -219,24 +229,14 @@ No reusable insights recorded yet.
 
 ## Metrics
 
-- Lessons Completed: 143
-- Lessons Remaining: 143
-- Completion %: 50.0%
+- Lessons Completed: 153
+- Lessons Remaining: 133
+- Completion %: 53.5%
 - Open Tasks: 0
 
 ---
 
 ## Backlog
-- [ ] [BAE-REVIEW-011] | Audit `control-flow/if-else.mdx`
-- [ ] [BAE-REVIEW-012] | Audit `control-flow/nested-conditions.mdx`
-- [ ] [BAE-REVIEW-013] | Audit `control-flow/loops.mdx`
-- [ ] [BAE-REVIEW-014] | Audit `control-flow/break-continue-pass.mdx`
-- [ ] [BAE-REVIEW-015] | Audit `control-flow/pattern-programs.mdx`
-- [ ] [BAE-REVIEW-016] | Audit `control-flow/match-case.mdx`
-- [ ] [BAE-REVIEW-017] | Audit `functions/functions-basics.mdx`
-- [ ] [BAE-REVIEW-018] | Audit `functions/arguments-parameters.mdx`
-- [ ] [BAE-REVIEW-019] | Audit `functions/return-values.mdx`
-- [ ] [BAE-REVIEW-020] | Audit `functions/lambda-functions.mdx`
 - [ ] [BAE-REVIEW-021] | Audit `functions/recursion.mdx`
 - [ ] [BAE-REVIEW-022] | Audit `functions/decorators.mdx`
 - [ ] [BAE-REVIEW-023] | Audit `functions/generators.mdx`
@@ -367,6 +367,16 @@ No reusable insights recorded yet.
 
 | BAE ID | What's Done (High Level) |
 |---|---|
+| BAE-REVIEW-011 | Rewrote control-flow/if-else.mdx |
+| BAE-REVIEW-012 | Rewrote control-flow/nested-conditions.mdx |
+| BAE-REVIEW-013 | Rewrote control-flow/loops.mdx |
+| BAE-REVIEW-014 | Rewrote control-flow/break-continue-pass.mdx |
+| BAE-REVIEW-015 | Rewrote control-flow/pattern-programs.mdx |
+| BAE-REVIEW-016 | Rewrote control-flow/match-case.mdx |
+| BAE-REVIEW-017 | Rewrote functions/functions-basics.mdx |
+| BAE-REVIEW-018 | Rewrote functions/arguments-parameters.mdx |
+| BAE-REVIEW-019 | Rewrote functions/return-values.mdx |
+| BAE-REVIEW-020 | Rewrote functions/lambda-functions.mdx |
 | BAE-REVIEW-001 | Rewrote what-is-python.mdx |
 | BAE-REVIEW-002 | Rewrote setup-python.mdx |
 | BAE-REVIEW-003 | Rewrote python-execution-flow.mdx |

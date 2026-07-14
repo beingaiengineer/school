@@ -2,9 +2,11 @@
 sidebar_position: 3
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Return Values
 
-# 1. Quick Summary
+## 1. Quick Summary
 
 | Area | Details |
 |---|---|
@@ -16,19 +18,25 @@ sidebar_position: 3
 
 ---
 
-# 2. Real-World Analogy
+## 2. Engineering Story
 
-Bro, think of a function like giving money to a cashier at a store.
+In a service-oriented architecture, a function that successfully charges a user's credit card but only prints 'Success' to the console is a critical failure. The broader application needs a standardized way to receive computed data or status flags back from the processing layer so it can make downstream decisions, like sending a confirmation email or updating the database state. Returning values is how isolated systems communicate their results.
 
-You hand them 20 dollars (Arguments). The cashier processes the transaction (Execution). Then, the cashier hands you a receipt and your change (The Return Value).
 
-If the cashier just shouts "TRANSACTION COMPLETE!" (like a `print()` statement), but doesn't actually hand you your change or receipt, you can't put that change in your wallet to use later.
+## 3. Real-World Analogy
 
-`print()` just shows data to the human looking at the screen. `return` hands the data back to the program so it can be used in the next step.
+Think of giving your clothes to an Indian Dhobi (Laundry), bro.
 
----
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: An Indian Dhobi handing back a stack of neatly ironed clothes to a customer. */}
 
-# 3. Concept Explanation
+| Laundry Process | Python Equivalent |
+|---|---|
+| Handing over a bag of dirty clothes | Passing arguments |
+| The washing and ironing process | Function execution |
+| Getting a stack of clean, folded clothes back | Return value |
+
+
+## 4. Concept Explanation
 
 The `return` statement is how a function sends a result back to whoever called it.
 
@@ -40,7 +48,7 @@ If a function does not have a `return` statement, it automatically returns a spe
 
 ---
 
-# 4. Syntax Table
+## 5. Syntax Table
 
 | Concept | Example |
 |---|---|
@@ -51,7 +59,7 @@ If a function does not have a `return` statement, it automatically returns a spe
 
 ---
 
-# 5. Beginner Example
+## 6. Beginner Example
 
 Let's see the difference between returning and printing.
 
@@ -72,7 +80,7 @@ If `add_numbers` used `print(result)` instead of `return result`, `total` would 
 
 ---
 
-# 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 In backend APIs, functions constantly return dictionaries or JSON data.
 
@@ -94,7 +102,26 @@ if response["status"] == 200:
 
 ---
 
-# 7. Internal Working
+## 8. Internal Working
+
+
+<LearningFlow
+  diagram={{
+    title: 'Execution flow of a function',
+    height: 400,
+    nodes: [
+      {id: 'call', title: 'Function Call', detail: 'Program pauses current state', x: 260, y: 20, kind: 'core'},
+      {id: 'scope', title: 'Local Scope Created', detail: 'Variables are isolated', x: 260, y: 120, kind: 'process'},
+      {id: 'exec', title: 'Execute Logic', detail: 'Runs function body', x: 260, y: 220, kind: 'process'},
+      {id: 'return', title: 'Return Value', detail: 'Sends data back to caller', x: 260, y: 320, kind: 'output'},
+    ],
+    edges: [
+      {source: 'call', target: 'scope', label: 'invoke'},
+      {source: 'scope', target: 'exec', label: 'setup done'},
+      {source: 'exec', target: 'return', label: 'done executing'},
+    ],
+  }}
+/>
 
 When a function executes, Python allocates a "frame" on the call stack. This frame holds all the local variables for that function.
 
@@ -107,7 +134,7 @@ Because Python uses pass-by-object-reference, returning a massive list of 1 mill
 
 ---
 
-# 8. Performance Table
+## 9. Performance Table
 
 | Action | Complexity | Note |
 |---|---|---|
@@ -117,7 +144,7 @@ Because Python uses pass-by-object-reference, returning a massive list of 1 mill
 
 ---
 
-# 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
@@ -128,7 +155,7 @@ Because Python uses pass-by-object-reference, returning a massive list of 1 mill
 
 ---
 
-# 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 Look at this code, bro. Can you return multiple items? Yes! But what data type is it actually returning?
 
@@ -148,7 +175,7 @@ Python tricks you into thinking you are returning two separate values, but inter
 
 ---
 
-# 11. Real-World Usage
+## 12. Real-World Usage
 
 - **Validation Logic:** Returning `True` or `False` to indicate if a string is a valid email address.
 - **Data Pipelines:** Returning a cleaned Pandas DataFrame so the next function in the pipeline can process it.
@@ -156,7 +183,7 @@ Python tricks you into thinking you are returning two separate values, but inter
 
 ---
 
-# 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
@@ -165,7 +192,7 @@ Python tricks you into thinking you are returning two separate values, but inter
 
 ---
 
-# 13. Production Notes
+## 14. Production Notes
 
 > ⚠ **Production Note:**
 > Bro, embrace the **Early Return** pattern (also called Guard Clauses). Instead of wrapping your entire function logic inside an `if is_valid:` block, check for errors at the top and `return` immediately. This keeps your main logic un-indented and much easier to read.
@@ -189,7 +216,7 @@ Python tricks you into thinking you are returning two separate values, but inter
 
 ---
 
-# 14. Common Mistakes
+## 15. Common Mistakes
 
 - **Confusing `print` and `return`:** Wondering why `x = my_func()` results in `x` being `None` when you clearly saw the answer printed on the screen.
 - **Unreachable Code:** Putting logic *after* the `return` statement.
@@ -201,7 +228,7 @@ Python tricks you into thinking you are returning two separate values, but inter
 
 ---
 
-# 15. Related Topics
+## 16. Related Topics
 
 - Tuples (used for multiple returns)
 - Exceptions (an alternative to returning error codes)

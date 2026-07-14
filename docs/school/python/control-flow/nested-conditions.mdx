@@ -19,21 +19,31 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 Bro, nested conditions are just `if` statements inside `if` statements. They help you build decision trees.
 
-## 2. Real-World Analogy
+## 2. Engineering Story
 
-Think of a bank loan approval process.
+In modern microservices, authorizing an API request isn't a flat process. First, you verify if the JWT token is valid. But that's not enough—if valid, you then inspect if the token contains the required scope for the specific endpoint. And if it does, you still need to check if the user has exceeded their API rate limit. This hierarchical validation, where one check only makes sense if the previous check passed, is an everyday production scenario that requires multi-level decision making.
 
-First, the bank checks if your credit score is good (`if score > 700:`).
-Only if that is true, they look deeper and check if your income is high enough (`if income > 50000:`).
-They don't bother checking your income if your credit score is already terrible.
 
-## 3. Concept Explanation
+## 3. Real-World Analogy
+
+Think of the loan approval process at an SBI Bank branch, bro.
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A bank teller at an Indian SBI bank branch looking at a customer's documents. */}
+
+| Bank Process | Python Equivalent |
+|---|---|
+| Check if customer has an account | Outer `if` |
+| Check if CIBIL score is above 750 | Inner `if` |
+| Tell customer to come after lunch | Inner `else` |
+
+
+## 4. Concept Explanation
 
 You can put an `if` statement inside the indented block of another `if`, `elif`, or `else`.
 
 This is useful when the second question only makes sense to ask if the first question was true. However, deep nesting makes code incredibly hard to read. As an engineer, you should strive to keep your code as "flat" as possible.
 
-## 4. Syntax Table
+## 5. Syntax Table
 
 | Concept | Syntax |
 |---|---|
@@ -42,7 +52,7 @@ This is useful when the second question only makes sense to ask if the first que
 | Inner Else | `    else:` |
 | Outer Else | `else:` |
 
-## 5. Beginner Example
+## 6. Beginner Example
 
 ```python
 is_weekend = True
@@ -62,7 +72,7 @@ else:
 Let's watch YouTube at home.
 ```
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 Bro, imagine you are writing an API endpoint for an e-commerce checkout.
 
@@ -82,7 +92,7 @@ def process_checkout(user, cart):
 
 While this works, it's considered **bad practice** because of the deep indentation. Let's fix it in the Best Practices section below using "Guard Clauses".
 
-## 7. Internal Working
+## 8. Internal Working
 
 <LearningFlow
   diagram={{
@@ -110,14 +120,14 @@ Python evaluates the outer `if` condition. If it's `False`, Python skips the ent
 If the outer `if` is `True`, Python enters the block and evaluates the inner `if` normally.
 This behaves similarly to the `and` operator's short-circuiting behavior.
 
-## 8. Performance Table
+## 9. Performance Table
 
 | Operation | Complexity | Note |
 |---|---|---|
 | Nested Ifs | O(1) | Checking booleans is instantaneous |
 | Deep nesting | O(1) | But human readability drops to O(n!) |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
@@ -126,7 +136,7 @@ This behaves similarly to the `and` operator's short-circuiting behavior.
 | What is Arrow Code? | Code that is indented so many times it looks like `>`. It is an anti-pattern. |
 | How do you avoid nested ifs? | Use `and` operators, or use early returns (Guard Clauses). |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 What happens if you mess up the indentation?
 
@@ -144,14 +154,14 @@ else:
 
 Wait, is the second `if` nested? **No.** Because `if y > 10:` is on the same indentation level as `if x > 5:`, they are independent sequential checks, not nested. Indentation is everything in Python.
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 
 Where do we see nesting?
 - **JSON Parsing:** `if "user" in data: if "id" in data["user"]:`
 - **Game Dev:** `if collision: if enemy_type == "boss":`
 - **Permissions:** `if user.is_admin: if action == "delete":`
 
-## 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
@@ -159,7 +169,7 @@ Where do we see nesting?
 | Use `and` if both conditions lead to the same result | Use nested ifs when a simple `and` would work |
 | Extract deep logic into a separate helper function | Write 100-line `if` blocks |
 
-## 13. Production Notes
+## 14. Production Notes
 
 > ⚠ Production Note:
 > Always refactor deeply nested conditions into Guard Clauses to keep your functions flat and testable.
@@ -183,13 +193,14 @@ def process_checkout(user, cart):
 ```
 Notice how much easier this is to read? Bro, this is how you write production code.
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 
 - Incorrect indentation changing the logic entirely.
 - Using nested `if`s when `elif` was the right choice.
 - Creating Arrow Code that takes 5 minutes to figure out which `else` belongs to which `if`.
 
-## 15. Related Topics
+## 16. Related Topics
+
 - If Else
 - Operators (specifically `and` / `or`)
 - Functions (Early Returns)
