@@ -17,7 +17,11 @@ import LearningFlow from '@site/src/components/LearningFlow';
 | Common Mistake | Using it without understanding the underlying execution graph |
 | Performance | Scales horizontally if deployed stateless |
 
-## 2. Real-World Analogy
+## 2. Engineering Story
+
+Bro, you are designing a multi-agent system where a researcher agent needs to pass data to a writer agent, which then hands off the draft to a reviewer agent. In a naive implementation, you might just have them call each other's APIs directly using raw JSON over HTTP. But what happens when the researcher agent crashes mid-thought? Or when the reviewer agent needs to request clarification from the writer? Without a standardized Agent-to-Agent (A2A) protocol, your system quickly devolves into a tangled web of brittle, undocumented point-to-point connections. As an engineer, you need a formal contract that defines how agents discover each other, negotiate capabilities, exchange state, and handle errors gracefully. Standardized A2A protocols solve this by providing a unified communication layer, ensuring your swarm operates reliably at scale.
+
+## 3. Real-World Analogy
 
 Bro, think of it like this:
 
@@ -29,24 +33,24 @@ Bro, think of it like this:
 
 {/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: Two corporate departments with different internal systems communicating seamlessly via official email memos, representing the Agent-to-Agent (A2A) protocol. */}
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 
 Bro, the Agent-to-Agent (A2A) protocol is about inter-agent communication. While MCP connects agents to tools, A2A connects agents to OTHER agents. It defines standard message formats so a LangGraph agent can confidently delegate a task to a CrewAI agent. It's crucial to understand when to use this versus standard scripts.
 
-## 4. Syntax Table
+## 5. Syntax Table
 
 | Concept | Syntax | Description |
 |---|---|---|
 | Initialize | `init()` | Bootstraps the setup |
 | Execute | `run()` | Triggers the main loop |
 
-## 5. Beginner Example
+## 6. Beginner Example
 
 ```python
 message = A2AMessage(sender='agent_a', receiver='agent_b', task='analyze')
 ```
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 ```python
 async def delegate_task(peer_id, payload):
@@ -54,7 +58,7 @@ async def delegate_task(peer_id, payload):
     return await a2a_client.send(peer_id, request)
 ```
 
-## 7. Internal Working
+## 8. Internal Working
 
 Bro, here is exactly how A2A Protocol Deep Dive orchestrates data internally.
 
@@ -72,51 +76,51 @@ Bro, here is exactly how A2A Protocol Deep Dive orchestrates data internally.
   }}
 />
 
-## 8. Performance Table
+## 9. Performance Table
 
 | Operation | Time Complexity | Space Complexity |
 |---|---|---|
 | Setup | O(1) | O(1) |
 | Invocation | O(N) | O(N) |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
-| What makes A2A Protocol Deep Dive unique? | Its specific approach to state and tooling. |
-| When should I avoid it? | When a simple rule-based script is enough. |
-| How do you handle errors? | Try-catch blocks and explicit retry policies. |
-| Does it support streaming? | Yes, natively via async generators. |
-| How to test it? | Mock the LLM responses. |
+| Q: What is the main difference between A2A and MCP? | A: A2A focuses on direct communication between peer agents, while MCP connects agents to data sources and tools. |
+| Q: How do A2A protocols handle capabilities negotiation? | A: Agents exchange capabilities payloads (often via 'Agent Cards') during the handshake phase to determine supported features. |
+| Q: What transport layers are typical for A2A? | A: They commonly use WebSockets for real-time bidirectional communication, or HTTP/REST for asynchronous message passing. |
+| Q: How do you handle deadlocks in A2A? | A: By implementing strict timeouts, state tracking, and fallback mechanisms when awaiting a peer's response. |
+| Q: Are A2A protocols standardized? | A: While there are emerging standards, many organizations still build custom A2A protocols tailored to their specific orchestrator architectures. |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 Bro, what happens if the LLM hallucinates a tool call? A2A Protocol Deep Dive has specific guardrails, but you must configure them properly or you'll get infinite loops.
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 
 Tech giants are adopting A2A Protocol Deep Dive for their internal developer platforms and automated ops pipelines.
 
-## 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
 | Do set strict timeouts | Don't let agents run forever |
 | Do validate outputs strongly | Don't trust LLM JSON natively |
 
-## 13. Production Notes
+## 14. Production Notes
 
 :::warning
 Bro, in production, always ensure you have LangSmith or similar observability attached. You need to see the traces!
 :::
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 
 | Mistake | Fix |
 |---|---|
 | Missing type schemas | Use Pydantic models for all tool inputs |
 
-## 15. Related Topics
+## 16. Related Topics
 
 - [What Are AI Agents](../intro/what-are-ai-agents.mdx)
 
