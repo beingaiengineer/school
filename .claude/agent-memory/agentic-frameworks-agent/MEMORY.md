@@ -222,15 +222,14 @@ No reusable insights recorded yet.
 
 ## Metrics
 
-- Lessons Completed: 167
+- Lessons Completed: 177
 - Lessons Remaining: 8
-- Completion %: 89.7%
+- Completion %: 95.6%
 - Open Tasks: 0
 
 ---
 
 ### Next Task
-- [x] [BAE-AF-090] | Create `tools-and-actions/tool-error-handling-and-retries.mdx`
 - [x] [BAE-AF-071] | Create `protocols/a2a-agent-cards.mdx`
 - [x] [BAE-AF-072] | Create `protocols/mcp-vs-a2a-when-to-use.mdx`
 - [x] [BAE-AF-073] | Create `multi-agent-systems/multi-agent-patterns-overview.mdx`
@@ -240,18 +239,17 @@ No reusable insights recorded yet.
 - [x] [BAE-AF-077] | Create `multi-agent-systems/agent-communication-protocols.mdx`
 - [x] [BAE-AF-078] | Create `multi-agent-systems/multi-agent-debugging.mdx`
 - [x] [BAE-AF-079] | Create `memory-and-state/agent-memory-types-overview.mdx`
-
+- [x] [BAE-AF-080] | Create `memory-and-state/short-term-memory-context-window.mdx`
+- [x] [BAE-AF-081] | Create `memory-and-state/long-term-memory-persistence.mdx`
+- [x] [BAE-AF-082] | Create `memory-and-state/vector-store-memory.mdx`
+- [x] [BAE-AF-083] | Create `memory-and-state/conversation-management.mdx`
+- [x] [BAE-AF-084] | Create `memory-and-state/state-persistence-and-checkpointing.mdx`
+- [x] [BAE-AF-085] | Create `tools-and-actions/tool-design-principles.mdx`
+- [x] [BAE-AF-086] | Create `tools-and-actions/function-calling-deep-dive.mdx`
+- [x] [BAE-AF-087] | Create `tools-and-actions/api-tools-rest-graphql.mdx`
+- [x] [BAE-AF-088] | Create `tools-and-actions/database-tools.mdx`
+- [x] [BAE-AF-089] | Create `tools-and-actions/code-execution-sandboxes.mdx`
 ## Backlog
-- [ ] [BAE-AF-080] | Create `memory-and-state/short-term-memory-context-window.mdx`
-- [ ] [BAE-AF-081] | Create `memory-and-state/long-term-memory-persistence.mdx`
-- [ ] [BAE-AF-082] | Create `memory-and-state/vector-store-memory.mdx`
-- [ ] [BAE-AF-083] | Create `memory-and-state/conversation-management.mdx`
-- [ ] [BAE-AF-084] | Create `memory-and-state/state-persistence-and-checkpointing.mdx`
-- [ ] [BAE-AF-085] | Create `tools-and-actions/tool-design-principles.mdx`
-- [ ] [BAE-AF-086] | Create `tools-and-actions/function-calling-deep-dive.mdx`
-- [ ] [BAE-AF-087] | Create `tools-and-actions/api-tools-rest-graphql.mdx`
-- [ ] [BAE-AF-088] | Create `tools-and-actions/database-tools.mdx`
-- [ ] [BAE-AF-089] | Create `tools-and-actions/code-execution-sandboxes.mdx`
 - [x] [BAE-AF-090] | Create `tools-and-actions/tool-error-handling-and-retries.mdx`
 - [ ] [BAE-AF-101] | Create `interview-prep/agent-coding-rounds.mdx`
 - [ ] [BAE-AF-102] | Create `interview-prep/agent-system-design.mdx`
