@@ -230,3 +230,13 @@ When generating images in the interactive session, ensure:
 | BAE-AF-077 | `docs/school/agentic-frameworks/multi-agent-systems/agent-communication-protocols.mdx` | A highly relatable Indian real-world scenario (like a tea shop or dabbawala system) explaining Agent Communication Protocols. |
 | BAE-AF-078 | `docs/school/agentic-frameworks/multi-agent-systems/multi-agent-debugging.mdx` | A highly relatable Indian real-world scenario (like a tea shop or dabbawala system) explaining Multi Agent Debugging. |
 | BAE-AF-079 | `docs/school/agentic-frameworks/memory-and-state/agent-memory-types-overview.mdx` | A highly relatable Indian real-world scenario (like a tea shop or dabbawala system) explaining Agent Memory Types Overview. |
+| BAE-REVIEW-011 | `docs/school/python/control-flow/if-else.mdx` | An Indian Train Ticket Examiner (TTE) checking tickets on a sleeper class train. |
+| BAE-REVIEW-012 | `docs/school/python/control-flow/nested-conditions.mdx` | A bank teller at an Indian SBI bank branch looking at a customer's documents. |
+| BAE-REVIEW-013 | `docs/school/python/control-flow/loops.mdx` | An Indian mom making rotis (chapatis) continuously in a busy kitchen. |
+| BAE-REVIEW-014 | `docs/school/python/control-flow/break-continue-pass.mdx` | Mumbai traffic police at a night checkpoint (Naka Bandi) checking cars. |
+| BAE-REVIEW-015 | `docs/school/python/control-flow/pattern-programs.mdx` | Tent house workers arranging rows of chairs in a triangle pattern for an Indian wedding. |
+| BAE-REVIEW-016 | `docs/school/python/control-flow/match-case.mdx` | A postmaster at an Indian post office sorting letters into different city bins based on PIN codes. |
+| BAE-REVIEW-017 | `docs/school/python/functions/functions-basics.mdx` | A waiter at an Indian highway Dhaba taking an order to the kitchen. |
+| BAE-REVIEW-018 | `docs/school/python/functions/arguments-parameters.mdx` | A customer asking for specific ginger and less sugar in their tea at an Indian Chai Tapri. |
+| BAE-REVIEW-019 | `docs/school/python/functions/return-values.mdx` | An Indian Dhobi handing back a stack of neatly ironed clothes to a customer. |
+| BAE-REVIEW-020 | `docs/school/python/functions/lambda-functions.mdx` | A contractor hiring a daily-wage laborer at an Indian Naka for a quick, specific job. |

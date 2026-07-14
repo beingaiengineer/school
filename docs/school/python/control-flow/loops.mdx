@@ -19,22 +19,32 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 Bro, writing the same code 10 times is terrible. Loops let you write the code once and tell Python to repeat it for you.
 
-## 2. Real-World Analogy
+## 2. Engineering Story
 
-Think of an automated car wash.
+Imagine writing a background worker that processes millions of event logs from a high-traffic web server. We need to parse each line, extract the IP address, and insert it into a database. Hardcoding the logic for every single log line is physically impossible. Engineers need a language construct that can repeatedly execute the same block of processing logic over a dynamically sized collection of data until the task queue is empty, ensuring efficient CPU utilization.
 
-A **`for` loop** is like a factory assembly line. "For every car in the queue, wash it, dry it, and send it out." You know exactly how many cars there are.
 
-A **`while` loop** is like filling a bucket with a hose. "While the bucket is not full, keep the water running." You don't know exactly how many seconds it will take; you just wait for the condition to change.
+## 3. Real-World Analogy
 
-## 3. Concept Explanation
+Think of an Indian mom making rotis for a large family dinner, bro.
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: An Indian mom making rotis (chapatis) continuously in a busy kitchen. */}
+
+| Roti Process | Python Equivalent |
+|---|---|
+| Making rotis until the dough runs out | `while` loop |
+| Serving one roti to each family member | `for` loop over a collection |
+| The dough container | The iterable |
+
+
+## 4. Concept Explanation
 
 Python has two main loops:
 
 1. **`for` loop:** Used for iterating over a sequence (like a list, tuple, dictionary, set, or string). You use this 95% of the time.
 2. **`while` loop:** Used to execute a block of statements repeatedly as long as a condition is true. Use this when you don't know in advance how many times you need to loop.
 
-## 4. Syntax Table
+## 5. Syntax Table
 
 | Loop Type | Syntax | Example |
 |---|---|---|
@@ -42,7 +52,7 @@ Python has two main loops:
 | `for` with range | `for i in range(n):` | `for i in range(5):` |
 | `while` loop | `while condition:` | `while count < 10:` |
 
-## 5. Beginner Example
+## 6. Beginner Example
 
 **Using a `for` loop:**
 
@@ -76,7 +86,7 @@ Eating mango
 Go!
 ```
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 Bro, in a real system, you use loops to process batches of data from a database or an API.
 
@@ -95,7 +105,7 @@ def process_emails(email_list):
 ```
 This processes a list of emails one by one and safely skips the ones that fail.
 
-## 7. Internal Working
+## 8. Internal Working
 
 <LearningFlow
   diagram={{
@@ -125,7 +135,7 @@ The loop repeatedly calls a hidden `__next__()` method on the iterator to get th
 
 A `while` loop simply evaluates its boolean condition. If `True`, it runs the block and jumps back to the top. If `False`, it jumps past the block.
 
-## 8. Performance Table
+## 9. Performance Table
 
 | Operation | Complexity | Note |
 |---|---|---|
@@ -133,7 +143,7 @@ A `while` loop simply evaluates its boolean condition. If `True`, it runs the bl
 | `for` over dictionary keys | O(n) | Iterates over hash keys |
 | Nested `for` loops | O(n * m) | Be careful, O(N²) can crash servers if N is huge. |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
@@ -142,7 +152,7 @@ A `while` loop simply evaluates its boolean condition. If `True`, it runs the bl
 | What happens if you modify a list while iterating over it? | Bugs! Never modify a list you are currently looping over. Loop over a copy instead. |
 | When should you use `while True:`? | Usually for daemon threads or main game loops, combined with a `break` condition inside. |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 What does the `else` do here?
 
@@ -162,14 +172,14 @@ else:
 
 Bro, Python is one of the only languages with a `for...else` construct. The `else` block executes *only* if the loop completed normally without hitting a `break` statement. It's incredibly useful for search operations.
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 
 Where do we use loops?
 - **Data Engineering:** Looping through thousands of CSV rows to clean data.
 - **Web Scraping:** Looping through pagination URLs (`while next_page_exists:`).
 - **Retry Logic:** `while retries < 3:` trying to connect to a flaky API.
 
-## 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
@@ -177,20 +187,21 @@ Where do we use loops?
 | Use `enumerate(items)` if you need the index | Manually maintain an index counter `i += 1` inside a `for` loop |
 | Ensure `while` loops have a clear exit condition | Create infinite loops by forgetting `count -= 1` |
 
-## 13. Production Notes
+## 14. Production Notes
 
 > ⚠ Production Note:
 > Watch out for O(N²) nested loops on big datasets.
 
 If you have a list of 10,000 users and a list of 10,000 orders, and you do a nested `for` loop to match them, your server will do 100,000,000 checks and likely timeout. In production, use dictionaries (Hash Maps) for lookups instead of nested loops.
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 
 - Forgetting to increment/decrement the counter in a `while` loop (infinite loop!).
 - Modifying a dictionary (adding/removing keys) while iterating over it (Python throws a `RuntimeError`).
 - Writing C-style loops using `range(len(list))` instead of iterating directly.
 
-## 15. Related Topics
+## 16. Related Topics
+
 - Break, Continue, Pass
 - Range Function
 - Iterators and Generators

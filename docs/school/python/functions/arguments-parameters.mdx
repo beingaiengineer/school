@@ -2,9 +2,11 @@
 sidebar_position: 2
 ---
 
+import LearningFlow from '@site/src/components/LearningFlow';
+
 # Arguments & Parameters
 
-# 1. Quick Summary
+## 1. Quick Summary
 
 | Area | Details |
 |---|---|
@@ -16,19 +18,25 @@ sidebar_position: 2
 
 ---
 
-# 2. Real-World Analogy
+## 2. Engineering Story
 
-Think of a function like a custom t-shirt printing machine.
+A generic helper function is useless if it cannot adapt to dynamic contexts. A function hardcoded to fetch user ID 1 is a liability. Production systems require passing dynamic configuration into isolated logic blocks. Whether it's injecting different API endpoint URLs, specifying database connection pools, or passing variable timeout limits, arguments allow our functions to be highly flexible and reusable across entirely different architectural layers.
 
-The **Parameters** are the empty slots on the machine's control panel labeled "Size", "Color", and "Text". It's the blueprint of what the machine expects.
 
-The **Arguments** are the actual values you punch in when you use the machine, like "Large", "Black", and "Hello World".
+## 3. Real-World Analogy
 
-Bro, parameters are the variables listed when you *define* the function. Arguments are the real data you pass in when you *call* the function.
+Think of customizing your morning Chai at the local Tapri, bro.
 
----
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A customer asking for specific ginger and less sugar in their tea at an Indian Chai Tapri. */}
 
-# 3. Concept Explanation
+| Chai Customization | Python Equivalent |
+|---|---|
+| "Bhaiya, ek chai dena" | Default arguments (regular tea) |
+| "Adrak zyada, cheeni kam" | Keyword arguments (specific overrides) |
+| The actual ginger and sugar used | Arguments passed in |
+
+
+## 4. Concept Explanation
 
 Functions wouldn't be very useful if they did exactly the exact same thing every time. Parameters allow functions to accept inputs, making them flexible and dynamic.
 
@@ -43,7 +51,7 @@ Python supports several ways to pass arguments:
 
 ---
 
-# 4. Syntax Table
+## 5. Syntax Table
 
 | Type | Example |
 |---|---|
@@ -55,7 +63,7 @@ Python supports several ways to pass arguments:
 
 ---
 
-# 5. Beginner Example
+## 6. Beginner Example
 
 Let's see positional, keyword, and default arguments in action.
 
@@ -65,22 +73,7 @@ Let's see positional, keyword, and default arguments in action.
 def say_hello(name, greeting="Hello"):
     print(f"{greeting}, {name}!")
 
-# 1. Positional argument (order matters)
-say_hello("Alice")
-# Output: Hello, Alice! (Uses default greeting)
-
-# 2. Positional for both
-say_hello("Bob", "Hi")
-# Output: Hi, Bob!
-
-# 3. Keyword arguments (order doesn't matter)
-say_hello(greeting="Yo", name="Charlie")
-# Output: Yo, Charlie!
-```
-
----
-
-# 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 Imagine you are building a function to connect to a database in a backend system.
 
@@ -99,7 +92,26 @@ Bro, notice how default parameters keep the function call clean for the standard
 
 ---
 
-# 7. Internal Working
+## 8. Internal Working
+
+
+<LearningFlow
+  diagram={{
+    title: 'Execution flow of a function',
+    height: 400,
+    nodes: [
+      {id: 'call', title: 'Function Call', detail: 'Program pauses current state', x: 260, y: 20, kind: 'core'},
+      {id: 'scope', title: 'Local Scope Created', detail: 'Variables are isolated', x: 260, y: 120, kind: 'process'},
+      {id: 'exec', title: 'Execute Logic', detail: 'Runs function body', x: 260, y: 220, kind: 'process'},
+      {id: 'return', title: 'Return Value', detail: 'Sends data back to caller', x: 260, y: 320, kind: 'output'},
+    ],
+    edges: [
+      {source: 'call', target: 'scope', label: 'invoke'},
+      {source: 'scope', target: 'exec', label: 'setup done'},
+      {source: 'exec', target: 'return', label: 'done executing'},
+    ],
+  }}
+/>
 
 When you pass arguments to a Python function, Python handles it via "Pass-by-Object-Reference" (sometimes called pass-by-assignment).
 
@@ -109,7 +121,7 @@ Python doesn't copy the value of the argument. It passes a *reference* to the me
 
 ---
 
-# 8. Performance Table
+## 9. Performance Table
 
 | Action | Complexity | Note |
 |---|---|---|
@@ -119,7 +131,7 @@ Python doesn't copy the value of the argument. It passes a *reference* to the me
 
 ---
 
-# 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
@@ -130,7 +142,7 @@ Python doesn't copy the value of the argument. It passes a *reference* to the me
 
 ---
 
-# 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 Bro, this is the most famous Python interview trick question. **The Mutable Default Argument trap.**
 
@@ -157,7 +169,7 @@ def add_item(item, box=None):
 
 ---
 
-# 11. Real-World Usage
+## 12. Real-World Usage
 
 - **API Requests:** The `requests.get()` library heavily uses keyword arguments for things like `headers`, `timeout`, and `auth` so you only pass what you need.
 - **Data Engineering:** In Pandas, functions like `df.drop(columns=['A'], inplace=True)` use keyword arguments (`inplace=True`) to alter function behavior.
@@ -165,7 +177,7 @@ def add_item(item, box=None):
 
 ---
 
-# 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
@@ -175,14 +187,14 @@ def add_item(item, box=None):
 
 ---
 
-# 13. Production Notes
+## 14. Production Notes
 
 > ⚠ **Production Note:**
 > When designing functions for a large codebase or a library, strongly prefer keyword arguments over long lists of positional arguments. If your function takes 5 positional arguments, a developer calling it *will* mess up the order eventually. You can even force keyword-only arguments in Python by putting an asterisk `*` in the parameter list: `def transfer_funds(amount, *, from_account, to_account):`. This prevents devastating bugs where accounts are swapped!
 
 ---
 
-# 14. Common Mistakes
+## 15. Common Mistakes
 
 - **SyntaxError:** `non-default argument follows default argument`.
   - Bad: `def greet(msg="Hi", name):`
@@ -193,7 +205,7 @@ def add_item(item, box=None):
 
 ---
 
-# 15. Related Topics
+## 16. Related Topics
 
 - Return Values
 - Variable Scope (Local/Global)
