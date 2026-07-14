@@ -17,7 +17,11 @@ import LearningFlow from '@site/src/components/LearningFlow';
 | Common Mistake | Using it without understanding the underlying execution graph |
 | Performance | Scales horizontally if deployed stateless |
 
-## 2. Real-World Analogy
+## 2. Engineering Story
+
+Bro, your team just built an incredibly powerful internal knowledge base for the company, and now the business wants all your internal AI agents to be able to query it. The naive approach is to build a massive custom integration layer into every single agent framework you use (LangChain, CrewAI, AutoGen). But what happens next month when they adopt a new framework? You'd have to write the integration all over again. Instead of hardcoding connections into the clients, the engineering solution is to wrap your knowledge base in an MCP (Model Context Protocol) Server. By developing a standardized MCP server, you write the integration logic exactly once. Any AI agent that speaks MCP can instantly discover your knowledge base's resources, read its tools, and understand its prompt templates without needing any custom client-side code.
+
+## 3. Real-World Analogy
 
 Bro, think of it like this:
 
@@ -29,24 +33,24 @@ Bro, think of it like this:
 
 {/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: An engineer soldering a custom adapter that translates a proprietary connection into a universal standard, representing building an MCP server. */}
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 
 Bro, building an MCP server is how you expose your company's internal data safely to AI. You define resources (like files), prompts (templates), and tools (actions). The server implements the MCP JSON-RPC protocol over standard I/O or SSE. It's crucial to understand when to use this versus standard scripts.
 
-## 4. Syntax Table
+## 5. Syntax Table
 
 | Concept | Syntax | Description |
 |---|---|---|
 | Initialize | `init()` | Bootstraps the setup |
 | Execute | `run()` | Triggers the main loop |
 
-## 5. Beginner Example
+## 6. Beginner Example
 
 ```typescript
 const server = new Server({ name: 'my-server', version: '1.0.0' });
 ```
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 ```typescript
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
@@ -54,7 +58,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 ```
 
-## 7. Internal Working
+## 8. Internal Working
 
 Bro, here is exactly how MCP Server Development orchestrates data internally.
 
@@ -72,51 +76,51 @@ Bro, here is exactly how MCP Server Development orchestrates data internally.
   }}
 />
 
-## 8. Performance Table
+## 9. Performance Table
 
 | Operation | Time Complexity | Space Complexity |
 |---|---|---|
 | Setup | O(1) | O(1) |
 | Invocation | O(N) | O(N) |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
-| What makes MCP Server Development unique? | Its specific approach to state and tooling. |
-| When should I avoid it? | When a simple rule-based script is enough. |
-| How do you handle errors? | Try-catch blocks and explicit retry policies. |
-| Does it support streaming? | Yes, natively via async generators. |
-| How to test it? | Mock the LLM responses. |
+| Q: What are the core components of an MCP Server? | A: An MCP Server typically exposes Resources, Prompts, and Tools that connected clients can consume. |
+| Q: How do you secure an MCP Server? | A: By strictly validating all inputs, authenticating the client connection, and restricting access to underlying data systems. |
+| Q: What is the difference between Resources and Tools in MCP? | A: Resources are static or dynamic data provided to the agent as context, while Tools are executable functions the agent can call. |
+| Q: How do you handle long-running tool executions? | A: The protocol allows for progress notifications and asynchronous execution patterns to keep the client informed. |
+| Q: Why build a custom MCP Server instead of using REST APIs directly? | A: MCP standardizes the discovery and interaction schema, allowing any compatible LLM agent to immediately use the server without custom integration code. |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 Bro, what happens if the LLM hallucinates a tool call? MCP Server Development has specific guardrails, but you must configure them properly or you'll get infinite loops.
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 
 Tech giants are adopting MCP Server Development for their internal developer platforms and automated ops pipelines.
 
-## 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
 | Do set strict timeouts | Don't let agents run forever |
 | Do validate outputs strongly | Don't trust LLM JSON natively |
 
-## 13. Production Notes
+## 14. Production Notes
 
 :::warning
 Bro, in production, always ensure you have LangSmith or similar observability attached. You need to see the traces!
 :::
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 
 | Mistake | Fix |
 |---|---|
 | Missing type schemas | Use Pydantic models for all tool inputs |
 
-## 15. Related Topics
+## 16. Related Topics
 
 - [What Are AI Agents](../intro/what-are-ai-agents.mdx)
 

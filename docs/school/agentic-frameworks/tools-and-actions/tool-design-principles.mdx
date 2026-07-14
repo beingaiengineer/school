@@ -20,7 +20,7 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ## 2. Engineering Story
 
-Bro, you give your agent a tool called `manage_database`. The agent tries to use it and accidentally drops the users table. You get fired. The production problem isn't that the LLM is stupid; it's that your tool design was horrific. You gave it a god-mode tool with vague parameters instead of specific, constrained, safe actions. Designing tools for AI agents is different from writing standard Python functions. You need strict schemas, robust error handling, and extremely clear descriptions so the LLM knows exactly when and how to use it.
+Bro, you just gave your LLM agent access to an API tool that deletes a user account. The tool requires a user ID, but the agent hallucinates a string instead of an integer, and the API crashes. Then, the agent tries again, passing the string 'all', and somehow bypasses a check, deleting multiple records. This is a catastrophic production incident caused by poor tool design. When exposing tools to AI agents, you cannot design them the same way you design APIs for human developers. Agents are unpredictable and prone to hallucinations. You must engineer your tools with strict type validation, comprehensive error messaging that tells the agent how to fix its mistake, and bulletproof guardrails to prevent destructive actions.
 
 ## 3. Real-World Analogy
 

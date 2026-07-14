@@ -20,7 +20,7 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ## 2. Engineering Story
 
-Bro, imagine you're running a high-scale customer support agent. It tries to refund a user via a payment API, but the API times out. Without proper error handling, the agent might either crash, tell the user the refund failed permanently, or worse, try to blindly call it 100 times, burning through your API rate limits. We need a systematic way to handle tool failures.
+Bro, your agent calls a third-party API to fetch stock prices, but the API returns a 503 Service Unavailable error due to rate limiting. Your agent, not knowing what to do, just outputs 'Error 503' to the user and gives up. This is a terrible user experience. In distributed systems, APIs fail all the time. When building agentic tools, you cannot just pass raw HTTP errors back to the LLM. You must engineer robust error handling and retry mechanisms. The tool needs to catch the error, implement exponential backoff, or return a clear, semantic error message to the agent (e.g., 'The API is busy, wait 5 seconds and try again'), enabling the agent to self-correct and complete the task reliably.
 
 ## 3. Real-World Analogy
 
