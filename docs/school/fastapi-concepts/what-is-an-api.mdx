@@ -1,0 +1,248 @@
+---
+sidebar_position: 1
+sidebar_label: "What is an API?"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# What is an API? The Digital Contract
+
+### 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Application Programming Interfaces (APIs) |
+| Difficulty | Beginner |
+| Used For | Allowing different software systems to communicate and share data securely |
+| Common Mistake | Treating APIs as raw database queries rather than designed contracts |
+| Performance | Typically bottlenecked by network latency and payload size |
+
+### 2. Engineering Story
+
+Imagine you've just joined a fast-growing e-commerce startup. The frontend team has built a beautiful React app, and the database team has set up a highly optimized PostgreSQL cluster holding millions of products. But there's a problem: the frontend needs to show products to users, and direct database access from the browser is a massive security risk and architectural nightmare.
+
+You need a middleman. A standardized, secure way for the React app to say, "Give me the top 10 shoes," and for the backend to respond with exactly that data—without the frontend knowing *how* the data was retrieved. This is the core problem APIs solve. They create a deliberate, controlled boundary between systems, turning complex internal logic into simple, predictable requests and responses. If you get this boundary right, your teams can scale independently. If you get it wrong, you create a tangled web of dependencies that brings development to a halt.
+
+### 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A highly organized Swiggy/Zomato delivery kitchen where a waiter (API) takes orders from customers (Frontend) and brings them to the chefs (Backend), ensuring the customers never enter the kitchen. */}
+
+Think of a bustling Swiggy or Zomato partner restaurant.
+
+| Tech Concept | Restaurant Equivalent |
+|---|---|
+| **Client (Frontend)** | The customer reading the menu on the app. |
+| **API (Contract)** | The menu itself, defining exactly what can be ordered and how much it costs. |
+| **Request** | The customer placing an order for "1 Butter Chicken". |
+| **Backend System** | The chaotic, busy kitchen with chefs, stoves, and ingredients. |
+| **Response** | The packaged food delivered to the customer. |
+
+Just as a customer never walks into the kitchen to cook their own food, a client application never accesses the database directly. The API (the menu and the waiter) provides a strict interface: you ask for something on the menu, and the kitchen fulfills it, hiding all the messy details of *how* the butter chicken is actually prepared.
+
+### 4. Concept Explanation
+
+An **Application Programming Interface (API)** is a set of rules, protocols, and tools that allows different software applications to talk to each other. It defines the *contract* between a service provider and a consumer.
+
+When you use an API, you don't need to understand the internal workings of the service you're calling. You only need to know the agreed-upon format for sending requests and what format the response will take.
+
+APIs are everywhere in modern software:
+- **Web APIs (HTTP/REST/GraphQL):** Communication between frontend apps and backend servers, or microservices talking to each other.
+- **Library/SDK APIs:** The functions you call when using a third-party library in your code (e.g., `pandas.read_csv()`).
+- **OS APIs:** How your program asks the operating system to allocate memory or write to a file.
+
+**When to use an API:** Whenever you need to expose functionality or data to another system across a boundary (network, process, or module level) securely and reliably.
+**When NOT to use an API:** When tight coupling is acceptable and performance is so critical that the overhead of serialization/deserialization or network latency is unacceptable (e.g., extremely high-frequency trading loops within the same memory space).
+
+### 5. Syntax Table
+
+Here are common components of a typical HTTP/REST API request:
+
+| Component | Description | Example |
+|---|---|---|
+| **Endpoint (URL)** | The address where the resource lives. | `https://api.example.com/v1/users` |
+| **Method (Verb)** | The action you want to perform. | `GET`, `POST`, `PUT`, `DELETE` |
+| **Headers** | Metadata about the request (auth, format). | `Authorization: Bearer xyz`, `Content-Type: application/json` |
+| **Body (Payload)** | The data sent with the request (usually for POST/PUT). | `\{\"name\": \"Rahul\", \"role\": \"Engineer\"\}` |
+| **Status Code** | The result of the request. | `200 OK`, `404 Not Found`, `500 Server Error` |
+
+### 6. Beginner Example
+
+Let's look at how you might consume a simple API using Python's `requests` library.
+
+```python
+import requests
+
+# 1. Define the API endpoint
+api_url = "https://api.github.com/users/octocat"
+
+# 2. Make a GET request
+response = requests.get(api_url)
+
+# 3. Check if the request was successful
+if response.status_code == 200:
+    # 4. Parse the JSON response
+    data = response.json()
+    print(f"User: {data['name']}")
+    print(f"Bio: {data['bio']}")
+else:
+    print(f"Failed to fetch data: {response.status_code}")
+```
+
+### 7. Real-World Engineering Example
+
+In a production environment, interacting with an API isn't just about making a request; it's about handling timeouts, retries, and rate limits. Here's a robust example of a service fetching user data from an external API.
+
+```python
+import requests
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+class UserService:
+    def __init__(self, base_url: str, api_key: str):
+        self.base_url = base_url
+        self.session = requests.Session()
+        self.session.headers.update({"Authorization": f"Bearer {api_key}"})
+
+        # Configure resilient retry strategy
+        retries = Retry(
+            total=3,
+            backoff_factor=0.5,
+            status_forcelist=[429, 500, 502, 503, 504],
+            allowed_methods=["GET"]
+        )
+        self.session.mount("https://", HTTPAdapter(max_retries=retries))
+
+    def get_user_profile(self, user_id: str) -> dict | None:
+        '''Fetches a user profile with resilience against network hiccups.'''
+        url = f"{self.base_url}/users/{user_id}"
+
+        try:
+            # Set a strict timeout to prevent hanging the system
+            response = self.session.get(url, timeout=5.0)
+
+            # Raise an exception for 4xx or 5xx status codes
+            response.raise_for_status()
+
+            return response.json()
+
+        except requests.exceptions.Timeout:
+            logger.error(f"Timeout while fetching user {user_id}")
+        except requests.exceptions.HTTPError as e:
+            logger.error(f"HTTP error occurred: {e.response.status_code}")
+        except Exception as e:
+            logger.error(f"Unexpected error: {str(e)}")
+
+        return None
+
+# Usage
+# service = UserService("https://api.internal-corp.com/v1", "secret-key")
+# profile = service.get_user_profile("USR-123")
+```
+
+### 8. Internal Working
+
+When a client makes an API request over the internet, several layers of the network stack are involved.
+
+<LearningFlow
+  steps={[
+    { id: 'client', type: 'core', label: 'Client Application\n(React/Mobile)', position: { x: 0, y: 100 } },
+    { id: 'dns', type: 'tool', label: 'DNS Resolution', position: { x: 200, y: 100 } },
+    { id: 'lb', type: 'process', label: 'Load Balancer / API Gateway', position: { x: 400, y: 100 } },
+    { id: 'auth', type: 'process', label: 'Auth Middleware', position: { x: 600, y: 0 } },
+    { id: 'app', type: 'core', label: 'Backend Application\n(FastAPI/Django)', position: { x: 600, y: 100 } },
+    { id: 'db', type: 'data', label: 'Database\n(PostgreSQL)', position: { x: 800, y: 100 } }
+  ]}
+  edges={[
+    { source: 'client', target: 'dns', label: 'Resolve domain' },
+    { source: 'dns', target: 'lb', label: 'HTTP Request', animated: true },
+    { source: 'lb', target: 'auth', label: 'Check token' },
+    { source: 'auth', target: 'app', label: 'Validated' },
+    { source: 'app', target: 'db', label: 'Query data', animated: true },
+    { source: 'db', target: 'app', label: 'Return results' },
+    { source: 'app', target: 'client', label: 'HTTP Response (JSON)', animated: true }
+  ]}
+/>
+
+1. **DNS Resolution**: The URL (e.g., `api.example.com`) is translated into an IP address.
+2. **Connection Establishment**: A TCP connection is opened, followed by a TLS handshake for security (HTTPS).
+3. **Routing & Load Balancing**: The request hits an API Gateway or Load Balancer, which routes it to an available backend server.
+4. **Middleware Processing**: The request passes through authentication, rate limiting, and logging checks.
+5. **Business Logic**: The backend application processes the request, often querying a database.
+6. **Serialization**: Data from the database is serialized into JSON.
+7. **Response**: The JSON payload is sent back through the network to the client.
+
+### 9. Performance Table
+
+| Metric | Typical Latency | Bottleneck Source | Optimization Strategy |
+|---|---|---|---|
+| **DNS Lookup** | 10ms - 50ms | Network, ISP | DNS caching on client |
+| **TLS Handshake** | 50ms - 200ms | CPU, Network distance | Use CDN edge servers, HTTP/3 |
+| **Network Transfer** | Varies widely | Payload size, bandwidth | Compression (Gzip/Brotli), Pagination |
+| **Backend Processing** | 20ms - 500ms+ | DB queries, business logic | Caching (Redis), Query optimization |
+| **JSON Parsing** | 1ms - 10ms | CPU, Payload complexity | Return only needed fields (GraphQL/Sparse fields) |
+
+### 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between an API and a Web Service? | All web services are APIs, but not all APIs are web services. A web service requires a network connection (HTTP), while an API can be local (like an OS or library API). |
+| Why is API versioning important? | It prevents breaking changes for existing clients. When the API contract changes, bumping the version (e.g., `/v1/` to `/v2/`) allows old clients to continue working while new clients use updated features. |
+| What is an API Gateway? | A management tool that sits between a client and a collection of backend services. It acts as a reverse proxy to route requests, and handles cross-cutting concerns like auth, rate limiting, and analytics. |
+| How do you secure a public API? | Using HTTPS (TLS), implementing Authentication (OAuth2, JWT, API Keys), enforcing Rate Limiting, validating inputs to prevent injection, and configuring CORS. |
+| What is a webhook compared to an API? | An API is typically pull-based (client asks server for data). A webhook is push-based (server sends data to a client URL when an event occurs, like a payment succeeding). |
+
+### 11. Tricky Questions & Edge Cases
+
+**Tricky Question: What happens if an API request succeeds on the backend, but the network drops before the response reaches the client?**
+The client receives a timeout error and assumes the request failed. If the request was a `POST` (e.g., "charge credit card"), the client might retry it, resulting in a double charge. This is why API operations that modify state must be designed to be **idempotent** (safe to retry safely without unintended side effects).
+
+### 12. Real-World Usage
+
+Every major tech company relies heavily on APIs:
+- **Stripe:** Their core product *is* an API. They provide a beautiful, developer-friendly REST API for processing payments, complete with versioning and idempotency keys.
+- **Netflix:** Uses a complex microservices architecture where hundreds of internal APIs communicate to render a single user page. They popularized the concept of an API Gateway to handle varying client needs (TV vs. Mobile).
+- **Twilio:** Built a massive business simply by exposing telecom infrastructure (SMS, Voice) as easy-to-use HTTP APIs.
+
+### 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Treat APIs as public contracts. Once published, assume someone is depending on it. | DON'T expose internal database structures directly in API responses. |
+| Use standard HTTP status codes correctly (200 for success, 404 for missing, 500 for server errors). | DON'T return `200 OK` with an error message in the JSON body. |
+| Implement rate limiting from day one to protect your backend infrastructure. | DON'T assume API clients will behave reasonably; they will retry aggressively. |
+| Provide clear, up-to-date documentation (like Swagger/OpenAPI). | DON'T introduce breaking changes without versioning. |
+
+### 14. Production Notes
+
+<Admonition type="warning" title="The N+1 Problem in APIs">
+When designing APIs, beware of "chatty" client behavior. If a client fetches a list of 100 users, and then makes 100 separate API calls to fetch the profile picture for each user, you have an N+1 problem. This will crush your network and database.
+**Solution:** Design your API endpoints to allow fetching related resources in a single call (e.g., `GET /users?include=profile_picture`), or use a technology like GraphQL to let the client specify its data needs upfront.
+</Admonition>
+
+### 15. Common Mistakes
+
+| Mistake | Bad Code (Conceptual) | Good Code (Conceptual) |
+|---|---|---|
+| **Hardcoding API Keys in frontend** | `const API_KEY = "sk_live_12345";`<br/>`fetch("api.example.com", { headers: { Auth: API_KEY } })` | Storing keys on a backend server, and having the frontend call the backend, which securely proxies the request. |
+| **Ignoring Pagination** | `GET /users` returning 10,000 records in one 50MB JSON payload, crashing the client. | `GET /users?page=1&limit=50` returning a manageable chunk with `next_page` cursors. |
+| **Missing Timeouts on Client** | `requests.get("https://slow-api.com")` hanging indefinitely, blocking the main thread. | `requests.get("https://slow-api.com", timeout=3.0)` failing fast and degrading gracefully. |
+
+### 16. Related Topics
+- [REST API Design](./rest-api-design)
+- [FastAPI Fundamentals](./fastapi-fundamentals)
+- [Authentication and JWTs](./authentication-jwt)
+
+### 17. Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [public-apis/public-apis](https://github.com/public-apis/public-apis) | ⭐ 300k+ | A collective list of free APIs for use in software and web development. | Great for beginners to practice consuming APIs. |
+| [OAI/OpenAPI-Specification](https://github.com/OAI/OpenAPI-Specification) | ⭐ 30k+ | The OpenAPI Specification Repository | The industry standard for defining HTTP APIs. |
+| [kong/kong](https://github.com/Kong/kong) | ⭐ 40k+ | Cloud-Native API Gateway. | A leading open-source tool for managing, securing, and routing API traffic. |
+| [postmanlabs/httpbin](https://github.com/postmanlabs/httpbin) | ⭐ 20k+ | HTTP Request & Response Service. | An invaluable tool for testing API clients by echoing back requests. |
+| [tiangolo/fastapi](https://github.com/tiangolo/fastapi) | ⭐ 70k+ | FastAPI framework, high performance, easy to learn, fast to code, ready for production. | The modern framework we will use to build APIs. |

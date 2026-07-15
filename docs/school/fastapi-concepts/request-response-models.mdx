@@ -1,0 +1,251 @@
+---
+sidebar_position: 4
+sidebar_label: "Request & Response Models"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Request & Response Models: Controlling the Boundary
+
+### 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Data Modeling in APIs |
+| Difficulty | Beginner |
+| Used For | Defining exact input expectations and output formatting |
+| Common Mistake | Leaking sensitive data (like passwords) by not using a separate response model |
+| Performance | Fast JSON serialization via Pydantic; filters out excess data before network transmission |
+
+### 2. Engineering Story
+
+Your team just launched a new feature allowing users to update their profile. A frontend engineer builds the form and sends a `PUT` request containing the user's name, bio, and—accidentally—an `is_admin: true` flag that they copied from a testing script.
+
+Because your backend API simply took the entire JSON payload and dumped it straight into the database update query, the user is suddenly granted superuser privileges. Later that day, when another user queries the API to view that profile, the backend reads the database and blindly returns the entire user record as JSON, including the user's hashed password and internal database ID.
+
+You've suffered both a privilege escalation attack and a massive data leak in one day. Why? Because you didn't strictly model your boundaries. You treated the frontend's request as trustworthy and your database's raw output as safe for public consumption. You need strict Request Models to reject unexpected inputs (like `is_admin`) and strict Response Models to filter out sensitive outputs (like passwords).
+
+### 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A high-security corporate building where a receptionist (Request Model) strict checks what visitors bring in, and an exit scanner (Response Model) ensures employees don't accidentally walk out with confidential documents. */}
+
+Think of a highly secure corporate building.
+
+| Tech Concept | Corporate Equivalent |
+|---|---|
+| **Request Payload** | A visitor's briefcase. |
+| **Request Model** | The security guard at the entrance checking the briefcase. If it contains a laptop, it's allowed. If it contains a weapon (unexpected data), they are rejected at the door. |
+| **Database Record** | A confidential filing cabinet inside the building. |
+| **Response Model** | The security scanner at the exit. An employee might hold an entire confidential file, but the scanner ensures only the publicly allowed pages leave the building. |
+
+You never trust what comes in, and you strictly filter what goes out.
+
+### 4. Concept Explanation
+
+In API design, **Request Models** and **Response Models** are strict definitions (usually classes) that dictate exactly what data shapes an endpoint will accept and return.
+
+- **Request Model (Input):** Defines what the client is *allowed* to send. Any extra fields are either ignored or trigger a validation error. Missing required fields trigger an error.
+- **Response Model (Output):** Defines what the client is *allowed* to see. It acts as a filter. Even if you pass a massive database object containing 50 fields to the return statement, the framework will only serialize and transmit the fields defined in the response model.
+
+**When to use them:** Always. Every `POST`, `PUT`, or `PATCH` request should have a defined request model. Every single endpoint should have a defined response model.
+**When NOT to use them:** When building a purely internal proxy that blindly forwards dynamic, unknown JSON payloads to another system (and even then, validation is preferred).
+
+### 5. Syntax Table
+
+Here is how Pydantic models are used in FastAPI.
+
+| Component | Code Example | Description |
+|---|---|---|
+| **Request Model** | `class UserIn(BaseModel): name: str` | Defines expected input payload. |
+| **Response Model** | `class UserOut(BaseModel): name: str` | Defines allowed output payload. |
+| **Type Hinting** | `def create(user: UserIn):` | Enforces the request model. |
+| **Decorator Param** | `@app.post("/", response_model=UserOut)` | Enforces the response filter. |
+| **Field Options** | `email: str = Field(..., max_length=50)` | Adds strict constraints. |
+
+### 6. Beginner Example
+
+A simple implementation separating the incoming data from the outgoing data.
+
+```python
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+# 1. Define what we accept
+class UserCreate(BaseModel):
+    username: str
+    password: str
+    email: str
+
+# 2. Define what we return (Notice: No password!)
+class UserResponse(BaseModel):
+    username: str
+    email: str
+
+# 3. Apply the models
+@app.post("/users/", response_model=UserResponse)
+def create_user(user: UserCreate):
+    # 'user' is guaranteed to have username, password, and email.
+
+    # Fake saving to DB. We have the password here.
+    db_user_dict = {
+        "id": 1,
+        "username": user.username,
+        "password": user.password, # We must save this internally
+        "email": user.email,
+        "is_admin": False
+    }
+
+    # We return the whole dictionary, but FastAPI will
+    # filter it through UserResponse, stripping the password and id.
+    return db_user_dict
+```
+
+### 7. Real-World Engineering Example
+
+In production, you often have a base model, and inherit from it to create distinct Request, Response, and DB models to keep your codebase DRY (Don't Repeat Yourself).
+
+```python
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, EmailStr
+from datetime import datetime
+from typing import Optional
+
+app = FastAPI()
+
+# --- Base Model (Shared Fields) ---
+class UserBase(BaseModel):
+    username: str
+    email: EmailStr
+    full_name: Optional[str] = None
+
+# --- Request Model (Input) ---
+class UserCreate(UserBase):
+    password: str
+
+# --- Database Model (Internal Representation) ---
+class UserInDB(UserBase):
+    id: int
+    hashed_password: str
+    created_at: datetime
+    is_active: bool
+
+# --- Response Model (Output) ---
+class UserResponse(UserBase):
+    id: int
+    created_at: datetime
+    is_active: bool
+    # Inherits username, email, full_name. Password is excluded.
+
+@app.post("/users/", response_model=UserResponse)
+def register_user(user_in: UserCreate):
+    # 1. Hash the password (simulated)
+    fake_hashed_password = user_in.password + "notreallyhashed"
+
+    # 2. Create the DB record representation
+    db_user = UserInDB(
+        id=101,
+        username=user_in.username,
+        email=user_in.email,
+        full_name=user_in.full_name,
+        hashed_password=fake_hashed_password,
+        created_at=datetime.utcnow(),
+        is_active=True
+    )
+
+    # 3. Return the DB object.
+    # FastAPI will look at `response_model=UserResponse` and strip `hashed_password`
+    return db_user
+```
+
+### 8. Internal Working
+
+How FastAPI and Pydantic process the boundary layer.
+
+<LearningFlow
+  steps={[
+    { id: 'client', type: 'core', label: 'Client JSON Payload\n{"pw": "abc", "admin": true}', position: { x: 0, y: 100 } },
+    { id: 'req_model', type: 'process', label: 'Request Model\n(Pydantic UserIn)', position: { x: 250, y: 100 } },
+    { id: 'logic', type: 'process', label: 'Business Logic\n(DB Save)', position: { x: 500, y: 100 } },
+    { id: 'res_model', type: 'process', label: 'Response Model\n(Pydantic UserOut)', position: { x: 750, y: 100 } },
+    { id: 'response', type: 'output', label: 'Safe JSON\n{"user": "abc"}', position: { x: 1000, y: 100 } },
+    { id: 'error', type: 'warning', label: '422 Error\nReject Invalid Data', position: { x: 250, y: 200 } }
+  ]}
+  edges={[
+    { source: 'client', target: 'req_model', label: 'Inbound Request', animated: true },
+    { source: 'req_model', target: 'logic', label: 'Valid Object' },
+    { source: 'req_model', target: 'error', label: 'Invalid Data' },
+    { source: 'logic', target: 'res_model', label: 'Return Raw DB Row' },
+    { source: 'res_model', target: 'response', label: 'Filter & Serialize', animated: true }
+  ]}
+/>
+
+1. **Inbound JSON:** Uvicorn parses the raw bytes into a Python dictionary.
+2. **Input Validation:** Pydantic instantiates the Request Model using the dictionary. It enforces types (e.g., converts strings to ints if needed) and drops extra fields if configured to do so. If required fields are missing, it throws a `ValidationError`.
+3. **Execution:** Your function runs using the safe, validated Pydantic object.
+4. **Output Filtering:** When you `return` data, FastAPI passes it to the `response_model` class. Pydantic creates a new instance of the response model, extracting *only* the declared fields from your raw return data.
+5. **Outbound JSON:** The filtered object is serialized back to JSON and sent to the client.
+
+### 9. Performance Table
+
+| Step | Overhead | Optimization |
+|---|---|---|
+| **JSON Parsing (Inbound)** | Low | Use `orjson` (FastAPI supports this) for faster parsing. |
+| **Pydantic Validation** | Moderate | Pydantic V2 is written in Rust, making validation 5-50x faster than V1. |
+| **Data Filtering (Output)** | Moderate | Defining exact `response_model` saves network bandwidth by dropping huge unneeded fields. |
+
+### 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why not just use one Model for everything? | Because the data you accept (e.g., raw password) is never the exact same data you return (e.g., hashed password, database ID, creation timestamp). Sharing models leads to data leaks. |
+| What happens if a client sends extra fields not defined in the Request Model? | By default, Pydantic ignores them. They are stripped out before your function executes, protecting you from mass-assignment attacks (like injecting `is_admin`). |
+| Can a `response_model` be a List? | Yes. You can declare `@app.get("/", response_model=List[UserOut])` to ensure every item in the returned list is filtered correctly. |
+| What is a Data Leak in this context? | When an API inadvertently exposes sensitive internal data (passwords, internal IPs, API keys) because a raw database object was returned without a Response Model filtering it. |
+
+### 11. Tricky Questions & Edge Cases
+
+**Tricky Question: If you return a Python dictionary that is missing a field required by the `response_model`, what happens?**
+FastAPI will throw a 500 Internal Server Error. The `response_model` is a strict contract. If you promise the client an `email` field in the response model, but your database query fails to retrieve it, FastAPI catches this internal bug and fails safely rather than returning an invalid contract to the client.
+
+### 12. Real-World Usage
+
+- **Fintech APIs (Plaid):** Strictly enforce response models to ensure bank account numbers are never fully transmitted unless explicitly requested and authenticated, returning masked strings (e.g., `****1234`) instead.
+- **Social Media (Instagram/Meta):** When fetching a post, the request model is simple (post ID), but the response model is massive, dictating exactly which nested user data (avatar, username) is safe to expose alongside the post.
+
+### 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Create distinct `UserIn`, `UserOut`, and `UserInDB` models. | DON'T use your SQLAlchemy ORM models directly as response models without strict filtering. |
+| Inherit from a `BaseModel` for shared fields (like email, name) to keep code DRY. | DON'T copy-paste 20 fields across 3 different models. |
+| Use `response_model_exclude_unset=True` if you want to omit fields the user didn't explicitly request. | DON'T leak internal database IDs if the client only needs UUIDs. |
+
+### 14. Production Notes
+
+<Admonition type="info" title="Response Model vs. Return Type Hint">
+In FastAPI, you can use standard Python return type hints `-> UserOut:` instead of `@app.get(response_model=UserOut)`. In modern FastAPI, they do the exact same thing (filtering and documentation), but `response_model` in the decorator allows you to return a database object and have FastAPI convert it, whereas strict static type checkers (like `mypy`) will yell at you if you return a DB object when the hint says `-> UserOut`.
+</Admonition>
+
+### 15. Common Mistakes
+
+| Mistake | Bad Code (Conceptual) | Good Code (Conceptual) |
+|---|---|---|
+| **Missing Response Model** | `@app.get("/users")`<br/>`def get(): return db.query(User)` (Leaks password!) | `@app.get("/users", response_model=List[UserOut])` |
+| **Trusting Client Input** | `db.update(user.id, request.json())` (Mass assignment attack) | `db.update(user.id, validated_pydantic_model.model_dump())` |
+
+### 16. Related Topics
+- [FastAPI Fundamentals](./fastapi-fundamentals)
+- [Pydantic Validation](./pydantic-validation)
+- [CRUD Operations](./crud-operations)
+
+### 17. Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [pydantic/pydantic](https://github.com/pydantic/pydantic) | ⭐ 18k+ | Data validation using Python type hints. | The library that powers all request/response models in FastAPI. |
+| [tiangolo/fastapi](https://github.com/tiangolo/fastapi) | ⭐ 70k+ | FastAPI framework. | The context in which these models are applied. |
+| [zhanymkanov/fastapi-best-practices](https://github.com/zhanymkanov/fastapi-best-practices) | ⭐ 15k+ | FastAPI Best Practices. | Contains excellent sections on how to structure multiple Pydantic models. |
+| [Netflix/dispatch](https://github.com/Netflix/dispatch) | ⭐ 4k+ | Incident management framework by Netflix. | Built on FastAPI, demonstrating complex, nested Pydantic request/response models in production. |

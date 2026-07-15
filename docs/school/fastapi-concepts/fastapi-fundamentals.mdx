@@ -1,0 +1,236 @@
+---
+sidebar_position: 3
+sidebar_label: "FastAPI Fundamentals"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# FastAPI Fundamentals: Speed and Types
+
+### 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | FastAPI Framework |
+| Difficulty | Beginner |
+| Used For | Building high-performance, asynchronous REST APIs in Python |
+| Common Mistake | Mixing synchronous blocking IO code inside `async def` endpoints |
+| Performance | Comparable to NodeJS and Go; easily handles 10k+ concurrent connections when fully async |
+
+### 2. Engineering Story
+
+You are working on a machine learning team. The data scientists have trained a brilliant new fraud-detection model in Python. The backend team, which writes primarily in Go for speed, needs to query this model via an API 5,000 times a second.
+
+You initially wrap the model in Flask. It works, but it's sluggish. To handle the concurrency, you have to spin up a massive cluster of Gunicorn workers, eating up expensive AWS compute. Furthermore, the Go engineers are furious because the Flask API has no strict typing, and they keep getting 500 errors when they send floats instead of integers. Writing the OpenAPI documentation manually takes you three days, and it's out of date the moment you deploy.
+
+You need a framework that is native to Python (to run the ML model), asynchronous (to handle high concurrency without blocking), strictly typed (to validate inbound requests automatically), and self-documenting. You rewrite the service in FastAPI. CPU usage drops by 60%, the data scientists get automatic validation via Pydantic, and the Go engineers get a beautiful, auto-generated Swagger UI.
+
+### 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A hyper-efficient Mumbai Dabbawala sorting system where every lunchbox is strictly checked for correct tags (typing) and sorted asynchronously without anyone waiting in line. */}
+
+Think of FastAPI as the famous Mumbai Dabbawala delivery network, combined with a strict airport security check.
+
+| Tech Concept | Dabbawala Equivalent |
+|---|---|
+| **Python Types / Pydantic** | The strict color-coded tags on each lunchbox. If it's missing, it doesn't enter the system. |
+| **ASGI (Asynchronous)** | A Dabbawala picking up multiple boxes at once, never standing idle waiting for one person to cook. |
+| **Routing** | The local sorting hub that directs the box to the right train based on its tag. |
+| **Auto-Docs (Swagger)** | A constantly updated, public map showing exactly which trains go where and what tags they accept. |
+
+In older frameworks (like WSGI), a worker stands at a door waiting for a specific box to be filled (synchronous blocking). FastAPI uses ASGI, meaning the worker grabs a box, puts it on a train, and immediately turns around to grab the next one while the train is moving.
+
+### 4. Concept Explanation
+
+**FastAPI** is a modern, fast (high-performance) web framework for building APIs with Python 3.8+ based on standard Python type hints.
+
+Key features that define FastAPI:
+1. **Performance:** It runs on Starlette (for the web routing/ASGI part) and Pydantic (for the data validation part), making it one of the fastest Python frameworks available.
+2. **Type Hints:** It leverages Python's native type hinting. You declare a variable is an `int`, and FastAPI handles the validation, serialization, and error generation.
+3. **Asynchronous by Default:** It supports `async` and `await` natively, allowing you to write highly concurrent code.
+4. **Automatic Documentation:** It automatically generates interactive API documentation (Swagger UI and ReDoc) based on your code and type hints.
+
+**When to use FastAPI:** For building microservices, ML model inference APIs, heavily async applications, and any modern REST API where developer speed and robust validation are priorities.
+**When NOT to use FastAPI:** If you are building a massive monolithic application with a heavily server-side rendered frontend (like Jinja templates)—Django is often a better "batteries-included" choice for full-stack monoliths.
+
+### 5. Syntax Table
+
+| Concept | Syntax Example | Description |
+|---|---|---|
+| **App Instance** | `app = FastAPI()` | Creates the main application object. |
+| **Path Operation** | `@app.get("/items/")` | A decorator routing a GET request to a function. |
+| **Path Parameter** | `def read_item(item_id: int):` | Extracts variable from URL path (`/items/123`). |
+| **Query Parameter** | `def read_item(skip: int = 0):` | Extracts variables from URL query (`?skip=10`). |
+| **Async Endpoint** | `async def read_data():` | Defines a non-blocking endpoint. |
+
+### 6. Beginner Example
+
+A minimal FastAPI application showing path parameters, query parameters, and type validation.
+
+```python
+from fastapi import FastAPI
+
+app = FastAPI()
+
+# 1. Basic Route
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to BAE School"}
+
+# 2. Route with Path Parameter and Query Parameter
+# URL: /items/42?q=searchterm
+@app.get("/items/{item_id}")
+def read_item(item_id: int, q: str | None = None):
+    return {"item_id": item_id, "query": q}
+```
+*If you run this and visit `http://localhost:8000/docs`, you will see a fully interactive UI.*
+
+### 7. Real-World Engineering Example
+
+In production, you rarely use the global `app` object for everything. You split your app into routers (blueprints). Here is an example of a modular user router using asynchronous database calls.
+
+```python
+from fastapi import APIRouter, HTTPException, Depends
+from pydantic import BaseModel
+import asyncio
+
+# A router is like a mini-FastAPI instance we can mount to the main app
+router = APIRouter(prefix="/users", tags=["Users"])
+
+# Pydantic model for validation
+class UserCreate(BaseModel):
+    username: str
+    email: str
+
+# Mock async database call
+async def mock_db_save(user: UserCreate):
+    await asyncio.sleep(0.1) # Simulate network IO
+    return {"id": 999, **user.model_dump()}
+
+# Dependency Injection for Database Session
+async def get_db_session():
+    print("Opening DB connection")
+    yield "Fake_DB_Session"
+    print("Closing DB connection")
+
+@router.post("/", status_code=201)
+async def create_user(
+    user: UserCreate,
+    db: str = Depends(get_db_session)
+):
+    '''
+    Create a new user. FastAPI automatically:
+    1. Reads the JSON body
+    2. Validates it against UserCreate
+    3. Injects the DB session
+    '''
+    if "@" not in user.email:
+        # FastAPI converts this to a proper JSON error response
+        raise HTTPException(status_code=400, detail="Invalid email format")
+
+    saved_user = await mock_db_save(user)
+    return saved_user
+
+# To use this in main.py:
+# from fastapi import FastAPI
+# app = FastAPI()
+# app.include_router(router)
+```
+
+### 8. Internal Working
+
+How FastAPI processes a request from the network to the response.
+
+<LearningFlow
+  steps={[
+    { id: 'uvicorn', type: 'tool', label: 'Uvicorn (ASGI Server)', position: { x: 0, y: 100 } },
+    { id: 'starlette', type: 'core', label: 'Starlette (Routing/HTTP)', position: { x: 250, y: 100 } },
+    { id: 'depends', type: 'process', label: 'Dependency Injection', position: { x: 500, y: 0 } },
+    { id: 'pydantic', type: 'tool', label: 'Pydantic (Validation)', position: { x: 500, y: 200 } },
+    { id: 'endpoint', type: 'core', label: 'Your Async Function', position: { x: 750, y: 100 } },
+    { id: 'response', type: 'output', label: 'JSON Response', position: { x: 1000, y: 100 } }
+  ]}
+  edges={[
+    { source: 'uvicorn', target: 'starlette', label: 'Raw HTTP bytes', animated: true },
+    { source: 'starlette', target: 'depends', label: 'Resolve Dependencies' },
+    { source: 'starlette', target: 'pydantic', label: 'Validate Payload' },
+    { source: 'depends', target: 'endpoint', label: 'Inject DB' },
+    { source: 'pydantic', target: 'endpoint', label: 'Pass validated object' },
+    { source: 'endpoint', target: 'response', label: 'Return Dict', animated: true }
+  ]}
+/>
+
+1. **ASGI Server:** A server like Uvicorn receives the HTTP request over the TCP socket and translates it into an ASGI event.
+2. **Routing (Starlette):** Starlette (under the hood) routes the request to the correct FastAPI endpoint.
+3. **Dependency Resolution:** Before running your function, FastAPI executes any functions listed in `Depends()`, passing their results in.
+4. **Validation (Pydantic):** The incoming JSON is parsed and strictly validated against your Pydantic models. If it fails, a 422 Unprocessable Entity error is returned instantly.
+5. **Execution:** Your function runs (asynchronously if defined with `async def`).
+6. **Serialization:** The returned Python dictionary or Pydantic model is converted back to JSON and sent to Uvicorn.
+
+### 9. Performance Table
+
+| Operation Type | FastAPI (`async def`) | FastAPI (`def`) | Reason |
+|---|---|---|---|
+| **Database/Network Calls (I/O)** | Extremely Fast | Slow/Blocking | `async` allows the event loop to switch tasks while waiting for the DB. |
+| **Heavy Math/Image Processing (CPU)** | Blocking/Slow | Blocking/Slow | `async` does not solve CPU bottlenecks. Both will block the event loop. |
+| **Simple Data Retrieval** | Very Fast | Very Fast | Minimal overhead from Pydantic and Starlette routing. |
+
+### 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between WSGI and ASGI? | WSGI (Flask/Django) is synchronous; one request blocks one worker. ASGI (FastAPI) is asynchronous; one worker can handle multiple requests concurrently while waiting for I/O. |
+| Should you use `async def` or `def` in FastAPI? | If your function calls `await` (e.g., async DB driver), use `async def`. If your function does synchronous blocking I/O (e.g., `requests.get` or `time.sleep`), use `def` so FastAPI runs it in a separate threadpool. |
+| How does FastAPI handle data validation? | By heavily integrating with Pydantic. It uses Python type hints to generate schemas and automatically reject invalid payloads with a 422 error. |
+| What is Dependency Injection in FastAPI? | A system where a function (`Depends`) provides resources (like DB sessions or current user context) to the endpoint at runtime, making code modular and testable. |
+| How does FastAPI generate Swagger UI? | It complies with the OpenAPI specification. It reads your Pydantic models and path operations at startup to generate an OpenAPI JSON schema, which Swagger UI renders. |
+
+### 11. Tricky Questions & Edge Cases
+
+**Tricky Question: What happens if you define an endpoint as `async def` but put a `time.sleep(10)` inside it?**
+It will catastrophically block the entire application. The ASGI event loop runs on a single thread. `time.sleep()` is synchronous and halts that thread. No other requests can be processed for 10 seconds. You must use `await asyncio.sleep(10)` in async functions, or define the function as standard `def` so FastAPI runs it in an external threadpool.
+
+### 12. Real-World Usage
+
+- **Uber:** Uses FastAPI heavily for its internal microservices, particularly in machine learning workflows, because of its performance and auto-validation.
+- **Netflix:** Adopted FastAPI for its crisis management orchestration frameworks.
+- **Microsoft:** Uses FastAPI as the core backend framework for several of its AI and Azure machine learning API services.
+
+### 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `APIRouter` to split your app across multiple files (users, items, orders). | DON'T put all 100 endpoints in a single `main.py` file. |
+| Run your app in production using Uvicorn managed by Gunicorn (for process management). | DON'T use `uvicorn --reload` in a production environment. |
+| Use Pydantic models for both incoming requests and outgoing responses (`response_model`). | DON'T return raw, unstructured dictionaries without a defined schema. |
+| Use Dependency Injection (`Depends()`) for database sessions and authentication. | DON'T create global database connection objects inside your route handlers. |
+
+### 14. Production Notes
+
+<Admonition type="caution" title="The Sync in Async Trap">
+The number one mistake in FastAPI production is using synchronous database drivers (like `psycopg2` or standard `SQLAlchemy` without the `asyncio` extension) inside an `async def` route. This silently destroys your concurrency, making FastAPI slower than Flask. If you must use a sync driver, define the route as `def`, not `async def`.
+</Admonition>
+
+### 15. Common Mistakes
+
+| Mistake | Bad Code | Good Code |
+|---|---|---|
+| **Blocking the Event Loop** | `async def read(): requests.get("...")` | `async def read(): await httpx.get("...")` |
+| **Missing Response Models** | `@app.get("/user")`<br/>`def get_u(): return {"pw": "secret"}` | `@app.get("/user", response_model=UserOut)`<br/>(Pydantic filters out the password) |
+| **Global State Mutation** | Modifying a global `dict` across requests without thread/async locks. | Using a proper database or Redis for state. |
+
+### 16. Related Topics
+- [REST API Design](./rest-api-design)
+- [Pydantic Validation](./pydantic-validation)
+- [Background Tasks](./background-tasks)
+
+### 17. Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [tiangolo/fastapi](https://github.com/tiangolo/fastapi) | ⭐ 70k+ | The core FastAPI framework repository. | The source code and documentation hub. |
+| [zhanymkanov/fastapi-best-practices](https://github.com/zhanymkanov/fastapi-best-practices) | ⭐ 15k+ | FastAPI Best Practices and Guide. | Excellent architectural patterns for structuring large FastAPI apps. |
+| [encode/starlette](https://github.com/encode/starlette) | ⭐ 9k+ | The little ASGI framework that shines. | The underlying web toolkit that gives FastAPI its speed. |
+| [pydantic/pydantic](https://github.com/pydantic/pydantic) | ⭐ 18k+ | Data validation using Python type hints. | The core validation engine utilized by FastAPI. |
+| [encode/uvicorn](https://github.com/encode/uvicorn) | ⭐ 7k+ | A lightning-fast ASGI server. | The server used to actually run FastAPI applications. |

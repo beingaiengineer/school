@@ -1,0 +1,262 @@
+---
+sidebar_position: 6
+sidebar_label: "CRUD Operations"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# CRUD Operations: The Bread and Butter of APIs
+
+### 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Create, Read, Update, Delete (CRUD) Operations |
+| Difficulty | Beginner |
+| Used For | Standardizing the basic lifecycle management of resources in an API |
+| Common Mistake | Using `PUT` when you actually meant `PATCH`, leading to data erasure |
+| Performance | Fast for single records; requires pagination for massive `GET` queries to avoid memory spikes |
+
+### 2. Engineering Story
+
+You're a junior engineer assigned to build the backend for an inventory management app. You write endpoints like `/add-item`, `/show-items`, `/change-item-price`, and `/remove-item`. It works on your machine. But a week later, the frontend team files ten Jira tickets. They complain that `/add-item` sometimes updates existing items, `/change-item-price` wiped out the item's description, and `/remove-item` returns a 500 error if the item doesn't exist.
+
+You've reinvented the wheel, and it's a square. You didn't realize that the software industry solved this problem decades ago. By strictly adhering to standard CRUD operations mapped to RESTful HTTP methods (`POST`, `GET`, `PUT/PATCH`, `DELETE`), you get predictable behavior, standard error codes, and a shared vocabulary with every other engineer in the building. You refactor the code to standard CRUD, and the Jira tickets disappear.
+
+### 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A highly organized warehouse where a clerk performs four basic actions on boxes: Creating a new label, Reading a label, Updating a label, and Destroying a box. */}
+
+Think of a massive, highly organized warehouse.
+
+| Tech Concept | Warehouse Equivalent |
+|---|---|
+| **Create (POST)** | A truck arrives with a new unlabelled pallet. The clerk assigns it an ID (Barcode) and stores it. |
+| **Read (GET)** | A manager asks the clerk to locate pallet #123 and read what is inside. |
+| **Update (PUT/PATCH)** | The clerk removes the old label on pallet #123 and attaches a new one with updated inventory counts. |
+| **Delete (DELETE)** | The pallet is empty, so the clerk removes its barcode from the system and destroys the physical pallet. |
+
+No matter how complex a system is—whether it's Facebook, Amazon, or a tiny blog—90% of the actions boil down to these four basic warehouse operations.
+
+### 4. Concept Explanation
+
+**CRUD** stands for **Create, Read, Update, Delete**. It represents the four fundamental operations for managing persistent data in a database. In web development, CRUD is mapped directly to standard HTTP methods.
+
+- **Create:** Adding a new record to the database. Mapped to HTTP `POST`. Returns HTTP `201 Created`.
+- **Read:** Retrieving data without modifying it. Mapped to HTTP `GET`. Returns HTTP `200 OK`.
+- **Update:** Modifying an existing record.
+  - `PUT`: Completely replaces the resource. If fields are missing in the request, they should be set to null.
+  - `PATCH`: Partially updates the resource. Only modifies the fields explicitly provided.
+- **Delete:** Removing a record. Mapped to HTTP `DELETE`. Returns HTTP `204 No Content` (usually).
+
+**When to use CRUD:** For managing standard entities (Users, Products, Orders, Comments).
+**When NOT to use CRUD:** For complex business transactions that affect many resources simultaneously, or actions that don't fit a resource model (like "Calculate Tax" or "Trigger Deployment").
+
+### 5. Syntax Table
+
+Mapping CRUD to FastAPI routing and standard HTTP status codes.
+
+| CRUD Operation | HTTP Method | FastAPI Decorator | Standard Success Code | Standard Error Code |
+|---|---|---|---|---|
+| **Create** | `POST` | `@app.post(..., status_code=201)` | 201 Created | 400 Bad Request, 409 Conflict |
+| **Read** | `GET` | `@app.get(...)` | 200 OK | 404 Not Found |
+| **Update** | `PUT` / `PATCH`| `@app.put(...)` or `.patch(...)` | 200 OK | 404 Not Found, 400 Bad Request |
+| **Delete** | `DELETE` | `@app.delete(..., status_code=204)`| 204 No Content | 404 Not Found |
+
+### 6. Beginner Example
+
+A simple in-memory CRUD API for managing a list of tasks.
+
+```python
+from fastapi import FastAPI, HTTPException, status
+from pydantic import BaseModel
+from typing import List
+
+app = FastAPI()
+
+class Task(BaseModel):
+    id: int
+    title: str
+    is_completed: bool = False
+
+tasks_db = {}
+
+# C: Create
+@app.post("/tasks", status_code=status.HTTP_201_CREATED, response_model=Task)
+def create_task(task: Task):
+    if task.id in tasks_db:
+        raise HTTPException(status_code=409, detail="Task already exists")
+    tasks_db[task.id] = task
+    return task
+
+# R: Read (List)
+@app.get("/tasks", response_model=List[Task])
+def read_all_tasks():
+    return list(tasks_db.values())
+
+# R: Read (Single)
+@app.get("/tasks/{task_id}", response_model=Task)
+def read_task(task_id: int):
+    if task_id not in tasks_db:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return tasks_db[task_id]
+
+# U: Update (PUT - full replace)
+@app.put("/tasks/{task_id}", response_model=Task)
+def update_task(task_id: int, task: Task):
+    if task_id not in tasks_db:
+        raise HTTPException(status_code=404, detail="Task not found")
+    tasks_db[task_id] = task
+    return task
+
+# D: Delete
+@app.delete("/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_task(task_id: int):
+    if task_id not in tasks_db:
+        raise HTTPException(status_code=404, detail="Task not found")
+    del tasks_db[task_id]
+    return None
+```
+
+### 7. Real-World Engineering Example
+
+In production, you don't use dictionaries. You use a database (via an ORM like SQLAlchemy), Dependency Injection for the DB session, and distinct Request/Response models. Here is a production-grade PATCH (partial update) example.
+
+```python
+from fastapi import FastAPI, HTTPException, Depends
+from pydantic import BaseModel
+from typing import Optional
+
+# Mock ORM Model
+class DBUser:
+    def __init__(self, id, name, email):
+        self.id = id
+        self.name = name
+        self.email = email
+
+    def save(self):
+        pass # Save to real DB
+
+# Mock Dependency
+def get_db():
+    return {1: DBUser(1, "Rahul", "rahul@m.com")}
+
+app = FastAPI()
+
+# Note: All fields are Optional because it's a PATCH.
+# We only want to update what the client sends.
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+
+@app.patch("/users/{user_id}")
+def partially_update_user(user_id: int, update_data: UserUpdate, db: dict = Depends(get_db)):
+    # 1. Fetch existing record (Read)
+    db_user = db.get(user_id)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # 2. Extract only the fields the client explicitly provided
+    update_dict = update_data.model_dump(exclude_unset=True)
+
+    # 3. Apply updates
+    for key, value in update_dict.items():
+        setattr(db_user, key, value)
+
+    # 4. Save and return (Update)
+    db_user.save()
+    return {"id": db_user.id, "name": db_user.name, "email": db_user.email}
+```
+
+### 8. Internal Working
+
+How a complete CRUD lifecycle interacts with the database layer.
+
+<LearningFlow
+  steps={[
+    { id: 'client', type: 'core', label: 'Client App', position: { x: 0, y: 150 } },
+    { id: 'post', type: 'process', label: 'POST /users\n(Create)', position: { x: 300, y: 0 } },
+    { id: 'get', type: 'process', label: 'GET /users/1\n(Read)', position: { x: 300, y: 100 } },
+    { id: 'put', type: 'process', label: 'PATCH /users/1\n(Update)', position: { x: 300, y: 200 } },
+    { id: 'del', type: 'process', label: 'DELETE /users/1\n(Delete)', position: { x: 300, y: 300 } },
+    { id: 'db', type: 'data', label: 'Database\n(PostgreSQL)', position: { x: 600, y: 150 } }
+  ]}
+  edges={[
+    { source: 'client', target: 'post', label: '1. Register' },
+    { source: 'post', target: 'db', label: 'INSERT INTO', animated: true },
+    { source: 'client', target: 'get', label: '2. View Profile' },
+    { source: 'get', target: 'db', label: 'SELECT *' },
+    { source: 'client', target: 'put', label: '3. Change Email' },
+    { source: 'put', target: 'db', label: 'UPDATE users', animated: true },
+    { source: 'client', target: 'del', label: '4. Close Account' },
+    { source: 'del', target: 'db', label: 'DELETE FROM' }
+  ]}
+/>
+
+### 9. Performance Table
+
+| Operation | Database Action | Performance Concern | Solution |
+|---|---|---|---|
+| **Create (POST)** | `INSERT` | Slow on heavy indexing | Batch inserts; queue processing for non-critical creates. |
+| **Read (GET list)** | `SELECT` | Massive memory spikes if returning 1M rows | Use strict `LIMIT` and `OFFSET` pagination. |
+| **Update (PATCH)**| `UPDATE` | Locking rows causes bottlenecks | Use optimistic concurrency control (version checks). |
+| **Delete (DELETE)**| `DELETE` | Cascading deletes can lock entire tables | Use "Soft Deletes" (setting `is_deleted=True` instead of dropping). |
+
+### 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between PUT and PATCH? | `PUT` replaces the entire resource. If a client sends a `PUT` with just a name, the email field should theoretically be set to null. `PATCH` is a partial update; it only modifies the fields explicitly provided in the payload. |
+| What does it mean for an API operation to be "Idempotent"? | An operation is idempotent if doing it once has the exact same effect as doing it multiple times. `GET`, `PUT`, and `DELETE` are idempotent. `POST` is NOT idempotent (clicking submit twice creates two orders). |
+| How do you handle pagination in a GET request? | Never return the entire table. Accept `limit` and `offset` (or a cursor) as query parameters, e.g., `/users?limit=10&page=2`. |
+| Why should DELETE return a 204 No Content? | Because once the resource is successfully deleted, there is no resource left to represent in the response body. 204 indicates success with no body. |
+
+### 11. Tricky Questions & Edge Cases
+
+**Tricky Question: If a client sends a `DELETE` request for a resource that has already been deleted, what status code should you return?**
+There are two valid schools of thought:
+1. Return `404 Not Found` because the resource doesn't exist right now.
+2. Return `204 No Content` because `DELETE` is idempotent—the end state the client wants (the resource is gone) is true, so just report success.
+Many major APIs prefer returning `204` to prevent clients from writing unnecessary error-handling code for resources that are already gone.
+
+### 12. Real-World Usage
+
+- **Blogging Platforms (Medium):** The entire core is CRUD. Create a post, read a feed, update a typo, delete the post.
+- **Shopify / E-Commerce:** Managing product catalogs is pure CRUD. Admin panels are essentially massive, beautiful CRUD interfaces over a database.
+- **Internal Microservices:** Often, one microservice exists solely to provide a CRUD interface to a specific database table for other services to consume safely without writing raw SQL.
+
+### 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use `PATCH` with `exclude_unset=True` in Pydantic for partial updates. | DON'T use `POST` for everything just because it's easier. |
+| Validate that the resource belongs to the user before updating or deleting it. | DON'T allow `DELETE /users/1` without verifying the token belongs to User 1 or an Admin. |
+| Implement Soft Deletes for important data (flag as `deleted_at=timestamp`). | DON'T hard delete financial or compliance records. |
+
+### 14. Production Notes
+
+<Admonition type="warning" title="The Over-Fetching GET Trap">
+A common mistake in beginner APIs is writing a `GET /users` endpoint that simply executes `SELECT * FROM users` and returns it. In production, when that table hits 1,000,000 rows, a single API call will attempt to load 1GB of data into Python's memory, serialize it, and send it. It will instantly crash your server (OOM Error). **Always enforce a maximum pagination limit (e.g., max 100 items per request).**
+</Admonition>
+
+### 15. Common Mistakes
+
+| Mistake | Bad Code (Conceptual) | Good Code (Conceptual) |
+|---|---|---|
+| **Success but wrong code** | `POST /items` returning `200 OK` | `POST /items` returning `201 Created` |
+| **Hard Deletes** | `db.execute("DELETE FROM users WHERE id=1")` | `db.execute("UPDATE users SET is_deleted=True WHERE id=1")` |
+| **PUT wiping data** | `user.email = request.email` (Client didn't send email, sets to Null) | Use PATCH, or carefully merge PUT payload with existing DB data. |
+
+### 16. Related Topics
+- [REST API Design](./rest-api-design)
+- [Request & Response Models](./request-response-models)
+- [Pydantic Validation](./pydantic-validation)
+
+### 17. Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [tiangolo/full-stack-fastapi-postgresql](https://github.com/tiangolo/full-stack-fastapi-postgresql) | ⭐ 12k+ | Official FastAPI boilerplate. | Contains production-ready CRUD implementations using SQLAlchemy. |
+| [sqlalchemy/sqlalchemy](https://github.com/sqlalchemy/sqlalchemy) | ⭐ 8k+ | Python SQL Toolkit and ORM. | The standard way to translate Python CRUD logic into database queries. |
+| [encode/databases](https://github.com/encode/databases) | ⭐ 3k+ | Async database support for Python. | Perfect for high-performance async CRUD operations in FastAPI. |

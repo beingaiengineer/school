@@ -86,24 +86,24 @@ No reusable insights recorded yet.
 
 ## Metrics
 
-- Lessons Completed: 0
-- Lessons Remaining: 12
-- Completion %: 0.0%
+- Lessons Completed: 10
+- Lessons Remaining: 2
+- Completion %: 83.3%
 - Open Tasks: 0
 
 ---
 
 ## Backlog
-- [ ] [BAE-FAS-001] | Create `what-is-an-api.mdx`
-- [ ] [BAE-FAS-002] | Create `rest-api-design.mdx`
-- [ ] [BAE-FAS-003] | Create `fastapi-fundamentals.mdx`
-- [ ] [BAE-FAS-004] | Create `request-response-models.mdx`
-- [ ] [BAE-FAS-005] | Create `pydantic-validation.mdx`
-- [ ] [BAE-FAS-006] | Create `crud-operations.mdx`
-- [ ] [BAE-FAS-007] | Create `authentication-jwt.mdx`
-- [ ] [BAE-FAS-008] | Create `middleware-and-cors.mdx`
-- [ ] [BAE-FAS-009] | Create `error-handling-in-apis.mdx`
-- [ ] [BAE-FAS-010] | Create `background-tasks.mdx`
+- [x] [BAE-FAS-001] | Create `what-is-an-api.mdx`
+- [x] [BAE-FAS-002] | Create `rest-api-design.mdx`
+- [x] [BAE-FAS-003] | Create `fastapi-fundamentals.mdx`
+- [x] [BAE-FAS-004] | Create `request-response-models.mdx`
+- [x] [BAE-FAS-005] | Create `pydantic-validation.mdx`
+- [x] [BAE-FAS-006] | Create `crud-operations.mdx`
+- [x] [BAE-FAS-007] | Create `authentication-jwt.mdx`
+- [x] [BAE-FAS-008] | Create `middleware-and-cors.mdx`
+- [x] [BAE-FAS-009] | Create `error-handling-in-apis.mdx`
+- [x] [BAE-FAS-010] | Create `background-tasks.mdx`
 - [ ] [BAE-FAS-011] | Create `websockets.mdx`
 - [ ] [BAE-FAS-012] | Create `rate-limiting.mdx`
 
@@ -113,6 +113,7 @@ No reusable insights recorded yet.
 
 | BAE ID | What's Done (High Level) |
 |---|---|
+| `[BAE-FAS-001] through [BAE-FAS-010]` | Created first 10 API concepts topics. |
 
 ---
 

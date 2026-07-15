@@ -1,0 +1,242 @@
+---
+sidebar_position: 9
+sidebar_label: "Error Handling in APIs"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Error Handling in APIs: Failing Gracefully
+
+### 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Exception Handling and Standardized Error Responses |
+| Difficulty | Intermediate |
+| Used For | Providing clients with actionable error messages without leaking internal system details |
+| Common Mistake | Returning HTTP `200 OK` with `\{\"error\": \"true\"\}` instead of proper HTTP status codes |
+| Performance | Catching specific exceptions via global handlers is faster and cleaner than massive `try/except` blocks everywhere |
+
+### 2. Engineering Story
+
+You are on call for a high-traffic fintech app. At 2:00 AM, the mobile team pages you because the checkout screen is randomly turning completely white. You check the server logs and see thousands of stack traces: a database lookup failed because a user's session expired.
+
+However, instead of the API catching this and telling the mobile app "401 Unauthorized" so it could redirect the user to the login screen, the API threw a raw Python `KeyError`. The server crashed that specific request, returning an HTML webpage containing the full Python traceback and database IP address. The mobile app, expecting JSON, tried to parse the HTML, failed, and white-screened.
+
+You realize that a good API doesn't just return data; it manages expectations when things break. You implement global exception handlers. Now, when a database error occurs, the server catches it, logs the traceback internally for the engineers, and returns a clean, standardized JSON error (`\{\"code\": \"SESSION_EXPIRED\"\}`) with an HTTP 401 status. The mobile app reads it and gracefully routes the user to the login screen.
+
+### 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A receptionist at a high-end Indian hospital. When a doctor is unavailable, instead of screaming medical jargon at the patient, the receptionist calmly provides a standardized, polite explanation and a clear next step (reschedule). */}
+
+Think of an API's error handling like a professional receptionist at a high-end hospital.
+
+| Tech Concept | Hospital Equivalent |
+|---|---|
+| **Raw Exception / Traceback** | The doctor screaming, "The MRI machine's helium compressor blew a gasket!" |
+| **Global Exception Handler** | The receptionist who hears the scream, calms the situation, and translates it for the patient. |
+| **Standardized JSON Error** | The receptionist telling the patient: "I'm sorry, the imaging equipment is currently down. Please reschedule." |
+| **HTTP Status Code** | The severity of the tone (e.g., a calm voice for a minor delay vs. an urgent alarm for an evacuation). |
+
+A good API never lets the raw chaos of the backend (tracebacks, DB errors) reach the client. It intercepts it and translates it into a polite, standardized, and actionable message.
+
+### 4. Concept Explanation
+
+**Error Handling in APIs** is the practice of intercepting exceptions (both expected business rule violations and unexpected crashes) and formatting them into a standard HTTP response.
+
+Key principles:
+1. **Use HTTP Status Codes:** Don't reinvent the wheel. Use 400 for bad client data, 401 for bad auth, 403 for bad permissions, 404 for missing resources, and 500 for server crashes.
+2. **Standardize the Payload:** Every error your API returns should have the exact same JSON structure (e.g., always having `code` and `message` fields). This allows frontend teams to write a single error-handling interceptor.
+3. **Never Leak Internals:** A 500 error should never include a database query or a stack trace in the JSON. It should say "Internal Server Error" and log the trace locally.
+
+**When to use error handling:** Globally, across your entire application.
+**When NOT to use error handling:** You shouldn't use HTTP errors for normal business logic flow (e.g., throwing a 404 just because a search returned 0 results; 0 results is a success (`200 OK`) that just happens to be an empty list).
+
+### 5. Syntax Table
+
+How to handle errors natively in FastAPI.
+
+| Concept | Syntax | Description |
+|---|---|---|
+| **Standard HTTP Error** | `raise HTTPException(status_code=404, detail="Item not found")` | Easiest way to return an error. |
+| **Custom Exception** | `class UserNotFoundError(Exception): pass` | Define business-specific errors. |
+| **Global Handler** | `@app.exception_handler(UserNotFoundError)` | Catch custom errors globally. |
+| **Validation Error** | `@app.exception_handler(RequestValidationError)` | Override default Pydantic errors. |
+
+### 6. Beginner Example
+
+The simplest way to handle errors in FastAPI is using the built-in `HTTPException`.
+
+```python
+from fastapi import FastAPI, HTTPException
+
+app = FastAPI()
+
+fake_db = {"user_1": {"name": "Rahul", "role": "admin"}}
+
+@app.get("/users/{user_id}")
+def get_user(user_id: str):
+    if user_id not in fake_db:
+        # Instead of returning a dictionary with an error,
+        # we raise an HTTPException.
+        # FastAPI catches this and returns a 404 JSON response.
+        raise HTTPException(
+            status_code=404,
+            detail=f"User {user_id} does not exist in our system."
+        )
+    return fake_db[user_id]
+```
+*Response for `/users/user_2`: `{"detail": "User user_2 does not exist in our system."}`*
+
+### 7. Real-World Engineering Example
+
+In production, you don't want to sprinkle `raise HTTPException` everywhere. Your database layer shouldn't know about HTTP status codes. Instead, your core logic throws custom Python exceptions, and your FastAPI app catches them globally at the boundary layer.
+
+```python
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+import logging
+
+# 1. Define custom, HTTP-agnostic business exceptions
+class InsufficientFundsError(Exception):
+    def __init__(self, user_id: int, current_balance: float):
+        self.user_id = user_id
+        self.current_balance = current_balance
+
+class DatabaseTimeoutError(Exception):
+    pass
+
+app = FastAPI()
+logger = logging.getLogger(__name__)
+
+# 2. Register Global Exception Handlers
+@app.exception_handler(InsufficientFundsError)
+async def handle_funds_error(request: Request, exc: InsufficientFundsError):
+    # Map the business exception to an HTTP 400 Bad Request
+    return JSONResponse(
+        status_code=400,
+        content={
+            "error_code": "INSUFFICIENT_FUNDS",
+            "message": f"Transaction failed. Current balance is {exc.current_balance}",
+            "action": "DEPOSIT_REQUIRED"
+        }
+    )
+
+@app.exception_handler(Exception)
+async def handle_generic_crash(request: Request, exc: Exception):
+    # Catch-all for unexpected 500 errors (prevents leaking stack traces)
+    logger.error(f"System crashed on {request.url.path}: {str(exc)}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error_code": "INTERNAL_SERVER_ERROR",
+            "message": "Something went wrong on our end. Engineers have been notified."
+        }
+    )
+
+# 3. Core Business Logic (Knows nothing about HTTP)
+def process_payment(user_id: int, amount: float):
+    # Simulate a business rule failure
+    if amount > 100:
+        raise InsufficientFundsError(user_id=user_id, current_balance=100)
+
+    # Simulate an unexpected crash
+    if amount < 0:
+        raise ValueError("Amount cannot be negative") # Will trigger handle_generic_crash
+
+@app.post("/pay")
+def pay(user_id: int, amount: float):
+    process_payment(user_id, amount)
+    return {"status": "success"}
+```
+
+### 8. Internal Working
+
+How FastAPI routes exceptions to handlers.
+
+<LearningFlow
+  steps={[
+    { id: 'req', type: 'core', label: 'HTTP Request', position: { x: 0, y: 150 } },
+    { id: 'route', type: 'process', label: 'Route Handler\n(Throws Exception)', position: { x: 300, y: 150 } },
+    { id: 'router', type: 'tool', label: 'FastAPI Router\n(Catches Exception)', position: { x: 550, y: 150 } },
+    { id: 'handler_404', type: 'process', label: 'Exception Handler\n(NotFound)', position: { x: 800, y: 50 } },
+    { id: 'handler_500', type: 'warning', label: 'Fallback Handler\n(Exception)', position: { x: 800, y: 250 } },
+    { id: 'res', type: 'output', label: 'JSONResponse', position: { x: 1050, y: 150 } }
+  ]}
+  edges={[
+    { source: 'req', target: 'route', label: 'Inbound' },
+    { source: 'route', target: 'router', label: 'raise Error()', animated: true },
+    { source: 'router', target: 'handler_404', label: 'Matches Type' },
+    { source: 'router', target: 'handler_500', label: 'Unknown Type' },
+    { source: 'handler_404', target: 'res', label: 'Format Error' },
+    { source: 'handler_500', target: 'res', label: 'Format Error' }
+  ]}
+/>
+
+1. **Execution:** The route handler runs and encounters a problem, executing a `raise`.
+2. **Interception:** The exception bubbles up. Before it crashes the Uvicorn server, FastAPI's middleware intercepts it.
+3. **Matching:** FastAPI checks its internal dictionary of registered `@app.exception_handler` functions.
+4. **Formatting:** If a match is found (e.g., `InsufficientFundsError`), it passes the exception to your custom function, which constructs a neat `JSONResponse`.
+5. **Fallback:** If no custom handler matches, it falls back to the default 500 Internal Server Error handler.
+
+### 9. Performance Table
+
+| Strategy | Performance Impact | Code Maintainability |
+|---|---|---|
+| **Global Handlers (`@exception_handler`)** | Very Fast | High (Business logic is decoupled from HTTP concerns) |
+| **Local `try/except` returning JSON** | Very Fast | Poor (Massive code duplication across 50 routes) |
+| **Letting it crash (No handlers)** | Slow (Stack trace generation) | Terrible (Client receives HTML or drops connection) |
+
+### 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why should you use HTTP status codes instead of `{"success": false, "error": "..."}` with a 200 OK? | Using 200 OK for errors breaks the internet. Caching layers (CDNs), API Gateways, and monitoring tools (like Datadog) rely on standard HTTP codes. A 200 OK error will be cached and treated as a success, masking your outages. |
+| What is the difference between a 401 and a 403? | **401 Unauthorized** means "I don't know who you are" (Missing or invalid token). **403 Forbidden** means "I know exactly who you are, but you don't have the admin permissions to do this." |
+| How do you handle Pydantic validation errors globally in FastAPI? | You override the `RequestValidationError` handler. This allows you to reformat Pydantic's default 422 error JSON into whatever standard format your frontend team prefers. |
+| Should you expose database error messages to the client? | Never. It is a massive security risk that exposes your schema to SQL injection reconnaissance. Always map database exceptions to generic HTTP errors. |
+
+### 11. Tricky Questions & Edge Cases
+
+**Tricky Question: If you write a global exception handler for `Exception`, will it catch Pydantic Validation errors?**
+No. FastAPI handles `RequestValidationError` (Pydantic) and `HTTPException` *before* it hits your custom generic `Exception` handler. To change how validation errors look, you must explicitly write a handler for `RequestValidationError`.
+
+### 12. Real-World Usage
+
+- **Stripe API:** Famous for its error handling. Every error returns a standardized object with `type` (e.g., `card_error`), `code` (e.g., `insufficient_funds`), and a human-readable `message`. This allows developers to build robust retry logic.
+- **Twilio API:** Provides a unique `more_info` URL in every error response that links directly to their documentation explaining exactly how to fix the specific error code encountered.
+
+### 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Create a standard `ErrorResponse` Pydantic model so all errors follow the same schema. | DON'T return a string in one error and a JSON object in another. |
+| Provide actionable error codes (e.g., `EMAIL_ALREADY_EXISTS`) rather than just strings. | DON'T rely on the frontend parsing human-readable English strings to dictate UI logic. |
+| Log the full traceback internally using the `logging` module before returning a 500. | DON'T ignore 500 errors. Every 500 should trigger a Slack alert to an engineer. |
+
+### 14. Production Notes
+
+<Admonition type="info" title="Problem Details for HTTP APIs (RFC 7807)">
+If you are designing a brand new API and want to follow the ultimate standard, look up **RFC 7807**. It defines a standard JSON schema for errors, utilizing fields like `type`, `title`, `status`, `detail`, and `instance`. Adopting this prevents endless bikeshedding meetings about what your error JSON should look like.
+</Admonition>
+
+### 15. Common Mistakes
+
+| Mistake | Bad Code (Conceptual) | Good Code (Conceptual) |
+|---|---|---|
+| **Swallowing Errors** | `except Exception: return {"msg": "Failed"}` (Status is 200 OK) | `raise HTTPException(status_code=500)` |
+| **Leaking DB traces** | `except IntegrityError as e: return {"error": str(e)}` | `except IntegrityError: return {"error": "Username taken"}` |
+| **Logic in Routers** | `if not user: raise HTTPException(404)` inside the DB layer. | `if not user: raise UserNotFound()` in DB, caught globally. |
+
+### 16. Related Topics
+- [Middleware & CORS](./middleware-and-cors)
+- [FastAPI Fundamentals](./fastapi-fundamentals)
+- [Pydantic Validation](./pydantic-validation)
+
+### 17. Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [tiangolo/fastapi](https://github.com/tiangolo/fastapi) | ⭐ 70k+ | FastAPI Framework. | The documentation on handling errors is world-class. |
+| [getsentry/sentry-python](https://github.com/getsentry/sentry-python) | ⭐ 2k+ | Sentry SDK for Python. | Sentry integrates with global exception handlers to automatically report 500s. |
