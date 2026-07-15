@@ -86,9 +86,9 @@ No reusable insights recorded yet.
 
 ## Metrics
 
-- Lessons Completed: 10
-- Lessons Remaining: 2
-- Completion %: 83.3%
+- Lessons Completed: 12
+- Lessons Remaining: 0
+- Completion %: 100%
 - Open Tasks: 0
 
 ---
@@ -104,8 +104,8 @@ No reusable insights recorded yet.
 - [x] [BAE-FAS-008] | Create `middleware-and-cors.mdx`
 - [x] [BAE-FAS-009] | Create `error-handling-in-apis.mdx`
 - [x] [BAE-FAS-010] | Create `background-tasks.mdx`
-- [ ] [BAE-FAS-011] | Create `websockets.mdx`
-- [ ] [BAE-FAS-012] | Create `rate-limiting.mdx`
+- [x] [BAE-FAS-011] | Create `websockets.mdx`
+- [x] [BAE-FAS-012] | Create `rate-limiting.mdx`
 
 ---
 
@@ -114,6 +114,7 @@ No reusable insights recorded yet.
 | BAE ID | What's Done (High Level) |
 |---|---|
 | `[BAE-FAS-001] through [BAE-FAS-010]` | Created first 10 API concepts topics. |
+| `[BAE-FAS-011] through [BAE-FAS-012]` | Created websockets and rate-limiting topics. |
 
 ---
 
