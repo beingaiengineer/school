@@ -1,0 +1,223 @@
+---
+sidebar_position: 10
+sidebar_label: "Background Tasks"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Background Tasks: Fire and Forget
+
+### 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Asynchronous Background Execution |
+| Difficulty | Intermediate |
+| Used For | Offloading slow operations (emails, PDF generation) so the API can respond instantly |
+| Common Mistake | Using built-in background tasks for heavy, long-running ML jobs instead of a robust queue like Celery |
+| Performance | Drastically reduces API latency for the client, increasing perceived application speed |
+
+### 2. Engineering Story
+
+You are building a user registration flow. When a user signs up, your code saves them to the database, generates a welcome PDF, makes a network call to SendGrid to email the PDF, and makes another network call to Salesforce to log the new lead.
+
+In testing, it works fine. In production, users click "Sign Up" and stare at a spinning loading wheel for 8 seconds while all these external calls complete. Frustrated, they click "Sign Up" three more times, resulting in duplicate database entries and a crashed server.
+
+The client doesn't need to wait for Salesforce to respond before they are allowed to see the "Welcome to the dashboard" screen. By moving the email and CRM logic into a Background Task, your API can save the user to the database and instantly return a `201 Created` response in 50 milliseconds. The server then quietly finishes the slow email tasks in the background while the user is already interacting with your app.
+
+### 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A busy Indian restaurant where a customer pays the cashier. The cashier hands them a receipt instantly (HTTP Response) and tosses the order ticket to the kitchen (Background Task). The customer walks away happy without waiting for the food to actually be cooked at the counter. */}
+
+Think of Background Tasks like ordering food at a busy fast-food restaurant.
+
+| Tech Concept | Restaurant Equivalent |
+|---|---|
+| **API Request** | You place your order and pay at the cashier. |
+| **Database Write** | The cashier records your payment. |
+| **HTTP Response** | The cashier hands you a receipt and an order number. You step aside immediately. |
+| **Background Task** | The cashier tosses the ticket to the kitchen. The chefs cook the food over the next 10 minutes while you sit down. |
+
+If the system didn't have background tasks, the cashier would have to stand there and wait 10 minutes for the chefs to finish cooking before handing you your receipt. No other customers could be served.
+
+### 4. Concept Explanation
+
+A **Background Task** is a function that is scheduled to run *after* the API has already returned a response to the client.
+
+In modern web architecture, you must return an HTTP response as quickly as possible (ideally under 200ms) to maintain a snappy user experience and prevent network timeouts. Any operation that is slow, prone to network failure, or not strictly necessary to fulfill the immediate client request should be deferred to the background.
+
+**When to use FastAPI Background Tasks:** For lightweight, fast-running operations that are okay to lose if the server crashes (e.g., sending a welcome email, updating a non-critical counter in a DB, logging to an external service).
+**When NOT to use them:** For mission-critical jobs that *must* run (like processing a payment), or heavy jobs taking minutes/hours (like ML video rendering). For those, you must use a dedicated message queue (like Celery, RabbitMQ, or AWS SQS).
+
+### 5. Syntax Table
+
+Using FastAPI's built-in `BackgroundTasks` class.
+
+| Concept | Syntax | Description |
+|---|---|---|
+| **Dependency** | `def create_user(bt: BackgroundTasks):` | Inject the class into your route. |
+| **Add Task** | `bt.add_task(send_email, user.email, msg)`| Queue a function to run. |
+| **Task Function**| `def send_email(email: str, msg: str):` | The actual Python function. |
+| **Return** | `return {"message": "Processing"}` | The route returns immediately. |
+
+### 6. Beginner Example
+
+Sending a mock email in the background.
+
+```python
+from fastapi import FastAPI, BackgroundTasks
+import time
+
+app = FastAPI()
+
+def write_notification(email: str, message: str):
+    '''This function is slow.'''
+    print(f"Starting to send email to {email}")
+    time.sleep(3) # Simulate a slow 3-second network call to SendGrid
+    print(f"Email sent successfully to {email}: {message}")
+
+@app.post("/send-notification/{email}")
+async def send_notification(email: str, background_tasks: BackgroundTasks):
+    # 1. We schedule the slow function to run in the background
+    background_tasks.add_task(write_notification, email, "Welcome to BAE!")
+
+    # 2. We return instantly. The user does not wait 3 seconds.
+    return {"message": "Notification scheduled"}
+```
+
+### 7. Real-World Engineering Example
+
+In production, you often need to perform multiple background operations and update a database based on their success.
+
+```python
+from fastapi import FastAPI, BackgroundTasks, Depends
+import asyncio
+import logging
+
+app = FastAPI()
+logger = logging.getLogger(__name__)
+
+# Mock Database operations
+async def log_activity_to_db(user_id: int, action: str):
+    await asyncio.sleep(0.5)
+    logger.info(f"DB Log: User {user_id} performed {action}")
+
+# External API Call
+async def sync_to_salesforce(user_id: int, email: str):
+    logger.info(f"Starting Salesforce sync for {email}")
+    await asyncio.sleep(2.0) # Slow external API
+    # Imagine this fails sometimes due to network issues
+    logger.info(f"Completed Salesforce sync for {email}")
+
+@app.post("/register")
+async def register_user(
+    email: str,
+    background_tasks: BackgroundTasks
+):
+    # --- SYNCHRONOUS / FAST OPERATIONS ---
+    user_id = 999 # Imagine we saved to DB here
+    logger.info("User saved to database.")
+
+    # --- ASYNCHRONOUS / SLOW OPERATIONS ---
+    # Add multiple tasks. They will run concurrently or sequentially
+    # depending on how Starlette manages the async loop.
+    background_tasks.add_task(log_activity_to_db, user_id, "REGISTRATION")
+    background_tasks.add_task(sync_to_salesforce, user_id, email)
+
+    # Return to client in < 50ms
+    return {
+        "status": "success",
+        "user_id": user_id,
+        "detail": "User created. External sync running in background."
+    }
+```
+
+### 8. Internal Working
+
+How FastAPI and Starlette manage the execution flow.
+
+<LearningFlow
+  steps={[
+    { id: 'client', type: 'core', label: 'Client Request', position: { x: 0, y: 150 } },
+    { id: 'route', type: 'process', label: 'Route Handler\n(FastAPI)', position: { x: 300, y: 150 } },
+    { id: 'queue', type: 'data', label: 'In-Memory Task Queue\n(Starlette)', position: { x: 300, y: 300 } },
+    { id: 'res', type: 'output', label: 'HTTP Response\n(Sent immediately)', position: { x: 600, y: 150 } },
+    { id: 'worker', type: 'process', label: 'Background Execution\n(Event Loop)', position: { x: 600, y: 300 } }
+  ]}
+  edges={[
+    { source: 'client', target: 'route', label: 'POST /' },
+    { source: 'route', target: 'queue', label: 'bt.add_task()' },
+    { source: 'route', target: 'res', label: 'return JSON', animated: true },
+    { source: 'res', target: 'worker', label: 'Connection closed', style: { strokeDasharray: '5, 5' } },
+    { source: 'queue', target: 'worker', label: 'Execute function' }
+  ]}
+/>
+
+1. The route handler receives the request.
+2. You call `background_tasks.add_task()`. Starlette (the framework under FastAPI) adds this function and its arguments to an internal list attached to the current `Response` object.
+3. The route handler completes and returns the response.
+4. FastAPI sends the HTTP response over the network and closes the connection to the client.
+5. Immediately after closing the connection, Starlette iterates over the internal list and executes the queued functions in the same event loop (or threadpool, if they are standard `def` functions).
+
+### 9. Performance Table
+
+| Task Runner | Best For | Persistence (If server crashes) | Setup Complexity |
+|---|---|---|---|
+| **FastAPI BackgroundTasks** | Emails, logging, quick API calls | **Lost.** Tasks disappear from memory. | None (Built-in) |
+| **Celery (with Redis/RabbitMQ)** | Video processing, ML inference, scheduled cron jobs | **Preserved.** Stored in a queue until processed. | High (Requires external servers) |
+| **RQ (Redis Queue)** | Medium-complexity async Python jobs | **Preserved.** | Medium |
+
+### 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What happens to a FastAPI Background Task if the server crashes before it finishes? | It is lost forever. FastAPI background tasks live entirely in RAM. If Uvicorn restarts or crashes, the task evaporates. For mission-critical tasks, you must use a persistent queue like Celery. |
+| Can you use `def` instead of `async def` for a background task? | Yes. If you use a standard `def` (e.g., for a blocking CPU task), FastAPI will automatically run it in an external threadpool so it doesn't block the main async event loop. |
+| How is `BackgroundTasks` different from Python's `asyncio.create_task()`? | `BackgroundTasks` guarantees the HTTP response is fully sent and the connection is closed *before* the task starts. `create_task` starts running immediately and might compete with your route handler for resources before the response is sent. |
+| How do you return the result of a background task to the user? | You can't. The HTTP connection is already closed. You must either update a database flag that the user can poll (e.g., GET `/job-status`), or push a notification to the user via WebSockets when the task completes. |
+
+### 11. Tricky Questions & Edge Cases
+
+**Tricky Question: If you inject a database session via `Depends(get_db)` into your route, and pass that `db` object into a Background Task, what happens?**
+It will crash with a "Session is closed" error. FastAPI cleans up dependencies (like closing the DB connection) immediately after the HTTP response is sent. By the time the background task runs, the connection is gone. You must create a *new* database session *inside* the background task itself.
+
+### 12. Real-World Usage
+
+- **E-Commerce:** Generating invoices. The user sees "Payment Successful" instantly, while the server generates a PDF and emails it in the background.
+- **Analytics:** The client requests a resource. The server returns the resource immediately, and uses a background task to increment the "view count" in the database so the user's read speed isn't delayed by the analytics write speed.
+- **Webhooks:** When an event happens, you return 200 OK to the trigger, and use background tasks to blast HTTP requests to 50 subscribed URLs.
+
+### 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use for non-critical, fast operations that improve UX by reducing latency. | DON'T use for financial transactions where failure must be tracked and retried. |
+| Catch and log exceptions inside your background task function. | DON'T let background tasks fail silently. |
+| Create fresh DB connections inside the task if it needs to hit the database. | DON'T pass scoped dependencies (like an active HTTP request object) into the task. |
+
+### 14. Production Notes
+
+<Admonition type="caution" title="The Memory Leak Trap">
+Do not use FastAPI Background Tasks for infinite loops (e.g., a background worker that polls a database forever). They are designed to be short-lived tasks attached to a specific HTTP request lifecycle. If you need a permanent background worker, run a separate Python script or use Celery.
+</Admonition>
+
+### 15. Common Mistakes
+
+| Mistake | Bad Code (Conceptual) | Good Code (Conceptual) |
+|---|---|---|
+| **Passing closed dependencies** | `def bg(db): db.query(...)`<br/>`@app.post(): bg_tasks.add(bg, db)` | `def bg(): with get_new_db() as db:` |
+| **Using for heavy CPU loads** | `bg_tasks.add(train_ml_model, data)` (Will choke the API server) | Send the task to a Celery worker on a different server. |
+| **Assuming Retries** | Assuming FastAPI will retry if SendGrid returns a 500 error. | Implementing custom `try/except/retry` loops inside the task. |
+
+### 16. Related Topics
+- [FastAPI Fundamentals](./fastapi-fundamentals)
+- WebSockets (External concept for pushing results)
+
+### 17. Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [tiangolo/fastapi](https://github.com/tiangolo/fastapi) | ⭐ 70k+ | FastAPI Framework. | The implementation of BackgroundTasks is built directly into Starlette/FastAPI. |
+| [celery/celery](https://github.com/celery/celery) | ⭐ 25k+ | Distributed Task Queue. | The industry standard for background tasks that are too big or critical for FastAPI to handle in-memory. |
+| [rq/rq](https://github.com/rq/rq) | ⭐ 9k+ | Simple job queues for Python. | A much simpler alternative to Celery if you just need a persistent Redis queue. |
