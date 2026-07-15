@@ -229,7 +229,7 @@ No reusable insights recorded yet.
 
 ---
 
-### Next Task
+### Completed This Cycle
 - [x] [BAE-AF-071] | Create `protocols/a2a-agent-cards.mdx`
 - [x] [BAE-AF-072] | Create `protocols/mcp-vs-a2a-when-to-use.mdx`
 - [x] [BAE-AF-073] | Create `multi-agent-systems/multi-agent-patterns-overview.mdx`
@@ -249,21 +249,16 @@ No reusable insights recorded yet.
 - [x] [BAE-AF-087] | Create `tools-and-actions/api-tools-rest-graphql.mdx`
 - [x] [BAE-AF-088] | Create `tools-and-actions/database-tools.mdx`
 - [x] [BAE-AF-089] | Create `tools-and-actions/code-execution-sandboxes.mdx`
+### Next Task
 ## Backlog
 - [x] [BAE-AF-090] | Create `tools-and-actions/tool-error-handling-and-retries.mdx`
-- [ ] [BAE-AF-101] | Create `interview-prep/agent-coding-rounds.mdx`
-- [ ] [BAE-AF-102] | Create `interview-prep/agent-system-design.mdx`
-- [ ] [BAE-AF-103] | Create `best-practices/framework-selection-guide.mdx`
-- [ ] [BAE-AF-104] | Create `best-practices/agent-design-patterns.mdx`
-- [ ] [BAE-AF-105] | Create `best-practices/agent-testing.mdx`
-- [ ] [BAE-AF-106] | Create `best-practices/agent-anti-patterns.mdx`
-- [ ] [BAE-AF-107] | Create `best-practices/future-of-agents.mdx`
-- [ ] Add diagrams
-- [ ] Improve engineering story
-- [ ] Expand interview questions
-- [ ] Improve SEO
-- [ ] Better analogy
-- [ ] Add benchmarks
+- [x] [BAE-AF-101] | Create `interview-prep/agent-coding-rounds.mdx`
+- [x] [BAE-AF-102] | Create `interview-prep/agent-system-design.mdx`
+- [x] [BAE-AF-103] | Create `best-practices/framework-selection-guide.mdx`
+- [x] [BAE-AF-104] | Create `best-practices/agent-design-patterns.mdx`
+- [x] [BAE-AF-105] | Create `best-practices/agent-testing.mdx`
+- [x] [BAE-AF-106] | Create `best-practices/agent-anti-patterns.mdx`
+- [x] [BAE-AF-107] | Create `best-practices/future-of-agents.mdx`
 
 ---
 
@@ -285,6 +280,7 @@ No reusable insights recorded yet.
 ---
 
 | `[BAE-AF-090]` | Fixed hallucination patterns and expanded missing content across multi-agent systems, protocols, memory, and tools to meet the 150-line and 16-section standard. |
+| `[BAE-AF-101 to BAE-AF-107]` | Created 7 new topics in `interview-prep` and `best-practices` to complete the curriculum plan. |
 
 ## Next Improvements
 

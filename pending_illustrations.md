@@ -240,3 +240,10 @@ When generating images in the interactive session, ensure:
 | BAE-REVIEW-018 | `docs/school/python/functions/arguments-parameters.mdx` | A customer asking for specific ginger and less sugar in their tea at an Indian Chai Tapri. |
 | BAE-REVIEW-019 | `docs/school/python/functions/return-values.mdx` | An Indian Dhobi handing back a stack of neatly ironed clothes to a customer. |
 | BAE-REVIEW-020 | `docs/school/python/functions/lambda-functions.mdx` | A contractor hiring a daily-wage laborer at an Indian Naka for a quick, specific job. |
+| BAE-AF-101 | `docs/school/agentic-frameworks/interview-prep/agent-coding-rounds.mdx` | A highly relatable Indian real-world scenario (like a tea shop or dabbawala system) explaining Agent Coding Rounds. |
+| BAE-AF-102 | `docs/school/agentic-frameworks/interview-prep/agent-system-design.mdx` | A highly relatable Indian real-world scenario (like a tea shop or dabbawala system) explaining Agent System Design. |
+| BAE-AF-103 | `docs/school/agentic-frameworks/best-practices/framework-selection-guide.mdx` | A highly relatable Indian real-world scenario (like a tea shop or dabbawala system) explaining Framework Selection Guide. |
+| BAE-AF-104 | `docs/school/agentic-frameworks/best-practices/agent-design-patterns.mdx` | A highly relatable Indian real-world scenario (like a tea shop or dabbawala system) explaining Agent Design Patterns. |
+| BAE-AF-105 | `docs/school/agentic-frameworks/best-practices/agent-testing.mdx` | A highly relatable Indian real-world scenario (like a tea shop or dabbawala system) explaining Agent Testing. |
+| BAE-AF-106 | `docs/school/agentic-frameworks/best-practices/agent-anti-patterns.mdx` | A highly relatable Indian real-world scenario (like a tea shop or dabbawala system) explaining Agent Anti Patterns. |
+| BAE-AF-107 | `docs/school/agentic-frameworks/best-practices/future-of-agents.mdx` | A highly relatable Indian real-world scenario (like a tea shop or dabbawala system) explaining Future Of Agents. |
