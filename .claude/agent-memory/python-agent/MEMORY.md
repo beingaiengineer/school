@@ -229,24 +229,24 @@ No reusable insights recorded yet.
 
 ## Metrics
 
-- Lessons Completed: 153
-- Lessons Remaining: 133
-- Completion %: 53.5%
+- Lessons Completed: 163
+- Lessons Remaining: 123
+- Completion %: 57.0%
 - Open Tasks: 0
 
 ---
 
 ## Backlog
-- [ ] [BAE-REVIEW-021] | Audit `functions/recursion.mdx`
-- [ ] [BAE-REVIEW-022] | Audit `functions/decorators.mdx`
-- [ ] [BAE-REVIEW-023] | Audit `functions/generators.mdx`
-- [ ] [BAE-REVIEW-024] | Audit `functions/iterators.mdx`
-- [ ] [BAE-REVIEW-025] | Audit `functions/closures.mdx`
-- [ ] [BAE-REVIEW-026] | Audit `collections/lists.mdx`
-- [ ] [BAE-REVIEW-027] | Audit `collections/tuples.mdx`
-- [ ] [BAE-REVIEW-028] | Audit `collections/sets.mdx`
-- [ ] [BAE-REVIEW-029] | Audit `collections/dictionaries.mdx`
-- [ ] [BAE-REVIEW-030] | Audit `collections/list-comprehension.mdx`
+- [x] [BAE-REVIEW-021] | Audit `functions/recursion.mdx`
+- [x] [BAE-REVIEW-022] | Audit `functions/decorators.mdx`
+- [x] [BAE-REVIEW-023] | Audit `functions/generators.mdx`
+- [x] [BAE-REVIEW-024] | Audit `functions/iterators.mdx`
+- [x] [BAE-REVIEW-025] | Audit `functions/closures.mdx`
+- [x] [BAE-REVIEW-026] | Audit `collections/lists.mdx`
+- [x] [BAE-REVIEW-027] | Audit `collections/tuples.mdx`
+- [x] [BAE-REVIEW-028] | Audit `collections/sets.mdx`
+- [x] [BAE-REVIEW-029] | Audit `collections/dictionaries.mdx`
+- [x] [BAE-REVIEW-030] | Audit `collections/list-comprehension.mdx`
 - [ ] [BAE-REVIEW-031] | Audit `collections/dictionary-comprehension.mdx`
 - [ ] [BAE-REVIEW-032] | Audit `collections/collections-module.mdx`
 - [ ] [BAE-REVIEW-033] | Audit `collections/deque.mdx`
@@ -367,6 +367,7 @@ No reusable insights recorded yet.
 
 | BAE ID | What's Done (High Level) |
 |---|---|
+| [BAE-REVIEW-021] through [BAE-REVIEW-030] | Audited 10 functions and collections topics, fixed section numbers, and added GitHub Repositories. |
 | BAE-REVIEW-011 | Rewrote control-flow/if-else.mdx |
 | BAE-REVIEW-012 | Rewrote control-flow/nested-conditions.mdx |
 | BAE-REVIEW-013 | Rewrote control-flow/loops.mdx |
