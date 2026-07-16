@@ -258,16 +258,16 @@ No reusable insights recorded yet.
 - [x] [BAE-REVIEW-039] | Audit `strings/regex.mdx`
 - [x] [BAE-REVIEW-040] | Audit `strings/unicode.mdx`
 - [x] [BAE-REVIEW-041] | Audit `strings/f-strings.mdx`
-- [ ] [BAE-REVIEW-042] | Audit `oops/classes-objects.mdx`
-- [ ] [BAE-REVIEW-043] | Audit `oops/constructors.mdx`
-- [ ] [BAE-REVIEW-044] | Audit `oops/inheritance.mdx`
-- [ ] [BAE-REVIEW-045] | Audit `oops/polymorphism.mdx`
-- [ ] [BAE-REVIEW-046] | Audit `oops/encapsulation.mdx`
-- [ ] [BAE-REVIEW-047] | Audit `oops/abstraction.mdx`
-- [ ] [BAE-REVIEW-048] | Audit `oops/magic-methods.mdx`
-- [ ] [BAE-REVIEW-049] | Audit `oops/dataclasses.mdx`
-- [ ] [BAE-REVIEW-050] | Audit `oops/solid-principles.mdx`
-- [ ] [BAE-REVIEW-051] | Audit `oops/composition-vs-inheritance.mdx`
+- [x] [BAE-REVIEW-042] | Audit `oops/classes-objects.mdx`
+- [x] [BAE-REVIEW-043] | Audit `oops/constructors.mdx`
+- [x] [BAE-REVIEW-044] | Audit `oops/inheritance.mdx`
+- [x] [BAE-REVIEW-045] | Audit `oops/polymorphism.mdx`
+- [x] [BAE-REVIEW-046] | Audit `oops/encapsulation.mdx`
+- [x] [BAE-REVIEW-047] | Audit `oops/abstraction.mdx`
+- [x] [BAE-REVIEW-048] | Audit `oops/magic-methods.mdx`
+- [x] [BAE-REVIEW-049] | Audit `oops/dataclasses.mdx`
+- [x] [BAE-REVIEW-050] | Audit `oops/solid-principles.mdx`
+- [x] [BAE-REVIEW-051] | Audit `oops/composition-vs-inheritance.mdx`
 - [ ] [BAE-REVIEW-052] | Audit `error-handling/exceptions.mdx`
 - [ ] [BAE-REVIEW-053] | Audit `error-handling/custom-exceptions.mdx`
 - [ ] [BAE-REVIEW-054] | Audit `error-handling/logging.mdx`
@@ -367,6 +367,7 @@ No reusable insights recorded yet.
 
 | BAE ID | What's Done (High Level) |
 |---|---|
+| [BAE-REVIEW-042] through [BAE-REVIEW-051] | Audited 10 OOP topics, fixed heading numbering, injected Engineering Story, and added GitHub Repositories. |
 | [BAE-REVIEW-031] through [BAE-REVIEW-041] | Audited 11 collections and strings topics, fixed section numbers, inserted Engineering Story, and added GitHub Repositories. |
 | [BAE-REVIEW-021] through [BAE-REVIEW-030] | Audited 10 functions and collections topics, fixed section numbers, and added GitHub Repositories. |
 | BAE-REVIEW-011 | Rewrote control-flow/if-else.mdx |
