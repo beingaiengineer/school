@@ -229,9 +229,9 @@ No reusable insights recorded yet.
 
 ## Metrics
 
-- Lessons Completed: 163
-- Lessons Remaining: 123
-- Completion %: 57.0%
+- Lessons Completed: 174
+- Lessons Remaining: 112
+- Completion %: 60.8%
 - Open Tasks: 0
 
 ---
@@ -247,17 +247,17 @@ No reusable insights recorded yet.
 - [x] [BAE-REVIEW-028] | Audit `collections/sets.mdx`
 - [x] [BAE-REVIEW-029] | Audit `collections/dictionaries.mdx`
 - [x] [BAE-REVIEW-030] | Audit `collections/list-comprehension.mdx`
-- [ ] [BAE-REVIEW-031] | Audit `collections/dictionary-comprehension.mdx`
-- [ ] [BAE-REVIEW-032] | Audit `collections/collections-module.mdx`
-- [ ] [BAE-REVIEW-033] | Audit `collections/deque.mdx`
-- [ ] [BAE-REVIEW-034] | Audit `collections/counter.mdx`
-- [ ] [BAE-REVIEW-035] | Audit `collections/defaultdict.mdx`
-- [ ] [BAE-REVIEW-036] | Audit `strings/string-basics.mdx`
-- [ ] [BAE-REVIEW-037] | Audit `strings/string-methods.mdx`
-- [ ] [BAE-REVIEW-038] | Audit `strings/string-formatting.mdx`
-- [ ] [BAE-REVIEW-039] | Audit `strings/regex.mdx`
-- [ ] [BAE-REVIEW-040] | Audit `strings/unicode.mdx`
-- [ ] [BAE-REVIEW-041] | Audit `strings/f-strings.mdx`
+- [x] [BAE-REVIEW-031] | Audit `collections/dictionary-comprehension.mdx`
+- [x] [BAE-REVIEW-032] | Audit `collections/collections-module.mdx`
+- [x] [BAE-REVIEW-033] | Audit `collections/deque.mdx`
+- [x] [BAE-REVIEW-034] | Audit `collections/counter.mdx`
+- [x] [BAE-REVIEW-035] | Audit `collections/defaultdict.mdx`
+- [x] [BAE-REVIEW-036] | Audit `strings/string-basics.mdx`
+- [x] [BAE-REVIEW-037] | Audit `strings/string-methods.mdx`
+- [x] [BAE-REVIEW-038] | Audit `strings/string-formatting.mdx`
+- [x] [BAE-REVIEW-039] | Audit `strings/regex.mdx`
+- [x] [BAE-REVIEW-040] | Audit `strings/unicode.mdx`
+- [x] [BAE-REVIEW-041] | Audit `strings/f-strings.mdx`
 - [ ] [BAE-REVIEW-042] | Audit `oops/classes-objects.mdx`
 - [ ] [BAE-REVIEW-043] | Audit `oops/constructors.mdx`
 - [ ] [BAE-REVIEW-044] | Audit `oops/inheritance.mdx`
@@ -367,6 +367,7 @@ No reusable insights recorded yet.
 
 | BAE ID | What's Done (High Level) |
 |---|---|
+| [BAE-REVIEW-031] through [BAE-REVIEW-041] | Audited 11 collections and strings topics, fixed section numbers, inserted Engineering Story, and added GitHub Repositories. |
 | [BAE-REVIEW-021] through [BAE-REVIEW-030] | Audited 10 functions and collections topics, fixed section numbers, and added GitHub Repositories. |
 | BAE-REVIEW-011 | Rewrote control-flow/if-else.mdx |
 | BAE-REVIEW-012 | Rewrote control-flow/nested-conditions.mdx |
