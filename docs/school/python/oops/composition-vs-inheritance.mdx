@@ -16,7 +16,11 @@ import LearningFlow from '@site/src/components/LearningFlow';
 | Common Mistake | Using deep inheritance trees when composition would be cleaner |
 | Performance | Similar, but Composition avoids the overhead of deep Method Resolution Order (MRO) lookups |
 
-## 2. Real-World Analogy
+## 2. Engineering Story
+
+A game engine originally used deep inheritance to model entities (e.g., `FlyingEnemy` inherits from `Enemy` inherits from `Entity`). When designers requested a `FlyingSwimmingEnemy`, the inheritance tree broke down into the diamond problem. By favoring composition, engineers break behaviors into modular components (`WingComponent`, `SwimComponent`) and assemble entities at runtime, providing infinite flexibility without structural lock-in.
+
+## 3. Real-World Analogy
 
 Bro, think about building a robot.
 
@@ -24,7 +28,7 @@ Bro, think about building a robot.
 
 **Composition ("Has-A"):** Instead of creating rigid types of robots, you build a basic `Robot` frame and *attach components* to it. You give it a `Jetpack` object to fly, and `Flippers` to swim. If a robot needs to stop flying, you just remove the `Jetpack` component. It's plug-and-play!
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 
 **Inheritance** establishes an "Is-A" relationship. A `Dog` *is an* `Animal`. It's great for tight hierarchies where behavior is universally shared and extended.
 
@@ -51,14 +55,14 @@ In modern software engineering, the rule of thumb is: **"Favor composition over 
   ]}
 />
 
-## 4. Syntax Table
+## 5. Syntax Table
 
 | Approach | Setup | Implementation |
 |---|---|---|
 | Inheritance | `class Parent:` | `class Child(Parent):` |
 | Composition | `class Engine:` | `class Car:`<br/>&nbsp;&nbsp;&nbsp;&nbsp;`def __init__(self):`<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`self.engine = Engine()` |
 
-## 5. Beginner Example
+## 6. Beginner Example
 
 Let's see the difference in a simple game scenario.
 
@@ -107,7 +111,7 @@ hero.attack() # Output: Casts fireball!
 
 Bro, notice how we changed the hero's attack without creating a whole new class!
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 In web development, we often build services that need to log data and connect to databases.
 
@@ -149,13 +153,13 @@ user_service = UserService(logger=Logger(), db=Database())
 user_service.create_user()
 ```
 
-## 7. Internal Working
+## 8. Internal Working
 
 At the CPython level, inheritance creates a rigid `__mro__` (Method Resolution Order). When a method is called, Python searches up the inheritance tree. Deep trees make this search slightly slower.
 
 Composition simply stores references to other objects inside the instance's `__dict__`. Method calls are direct delegations (e.g., `self.logger.log()`). This avoids complex MRO lookups and prevents the "Diamond Problem" associated with multiple inheritance.
 
-## 8. Performance Table
+## 9. Performance Table
 
 | Aspect | Inheritance | Composition |
 |---|---|---|
@@ -163,7 +167,7 @@ Composition simply stores references to other objects inside the instance's `__d
 | Memory Footprint | Slightly smaller (attributes shared via class dictionary) | Slightly larger (requires holding references to component objects) |
 | Refactoring Speed | Very slow (changing base classes breaks everything) | Very fast (components are decoupled and isolated) |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
@@ -171,7 +175,7 @@ Composition simply stores references to other objects inside the instance's `__d
 | What is the "Gorilla Banana" problem? | "You wanted a banana but what you got was a gorilla holding the banana and the entire jungle." It describes the issue where inheriting a class brings in massive amounts of unnecessary baggage. |
 | Does composition solve multiple inheritance problems? | Yes, by composing a class with multiple smaller components instead of inheriting from multiple base classes, you completely avoid the Diamond Problem and MRO confusion. |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 Bro, what if you need to expose a composed object's methods on the main object?
 
@@ -190,33 +194,41 @@ class Car:
 
 **Trick:** The downside of composition is "delegation boilerplate." If `Engine` has 20 methods, and `Car` needs to expose them all, you have to write 20 wrapper methods. In these rare cases, if `Car` *truly* behaves exactly like an `Engine` plus some extras, inheritance *might* be cleaner, or you can use `__getattr__` to dynamically forward calls (though that gets messy).
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 
 Companies use composition for:
 - **Game Development (Entity Component System):** An `Entity` is just an ID. It is *composed* of a `TransformComponent`, `RenderComponent`, and `PhysicsComponent`.
 - **UI Frameworks (React/Flutter):** Building a complex screen by composing smaller Button, TextField, and Card components together rather than subclassing `Screen`.
 - **Cloud Infrastructure:** A `Server` class composed of `NetworkInterface`, `StorageDrive`, and `ComputeNode` objects.
 
-## 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
 | Favor Composition ("Has-A") as your default architecture choice. | Don't create inheritance trees deeper than 2 or 3 levels. |
 | Use Dependency Injection to pass composed objects into the constructor. | Don't tightly couple components by hardcoding their instantiation inside `__init__`. |
 
-## 13. Production Notes
+## 14. Production Notes
 
 > ⚠ Production Note:
 Deep inheritance hierarchies in production systems (like Django models inheriting from 4 different abstract bases) become maintenance nightmares. When a bug occurs, developers have to jump through 5 different files to figure out where a method is actually defined. Composition keeps code flat, readable, and localized.
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 
 - **Inheriting for Utility:** Inheriting from a `StringFormatter` class just so you can use its `to_camel_case()` method. Instead, you should just import `StringFormatter` or compose it.
 - **The "BaseBaseManager" Anti-pattern:** Creating classes like `BaseController` -> `AuthenticatedController` -> `AdminController`. Use middleware (composition) to handle authentication instead!
 
-## 15. Related Topics
+## 16. Related Topics
 
 - Classes & Objects
 - Inheritance
 - SOLID Principles
 - Design Patterns (Strategy Pattern, Decorator Pattern)
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [pygame/pygame](https://github.com/pygame/pygame) | ⭐ 6k+ | Python game development library | Modern Pygame architectures often favor ECS (Entity Component System) using composition. |
+| [pytorch/pytorch](https://github.com/pytorch/pytorch) | ⭐ 75k+ | Tensors and Dynamic neural networks in Python | Uses `nn.Module` heavily which relies on composition to build complex neural networks. |
+| [Textualize/rich](https://github.com/Textualize/rich) | ⭐ 45k+ | Rich text and beautiful formatting in the terminal | Composes terminal outputs using mixable Renderable components. |

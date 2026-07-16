@@ -6,7 +6,7 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 # Constructors (`__init__`)
 
-# 1. Quick Summary
+## 1. Quick Summary
 
 | Area | Details |
 |---|---|
@@ -18,7 +18,11 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ---
 
-# 2. Real-World Analogy
+## 2. Engineering Story
+
+When an e-commerce platform initializes a new checkout session, it must instantly secure a database connection, lock inventory items, and attach a unique session ID. Doing this manually after creating the object is a recipe for disaster—a forgotten method call means corrupted state. Constructors solve this by ensuring an object is fully formed, valid, and ready to use the exact millisecond it is instantiated.
+
+## 3. Real-World Analogy
 
 Think of a **Constructor** like the factory setup process for a brand new smartphone.
 
@@ -28,7 +32,7 @@ In Python, the `__init__` method is that factory setup script. The moment you sa
 
 ---
 
-# 3. Concept Explanation
+## 4. Concept Explanation
 
 In Python, the constructor method is always named `__init__` (short for initialize). It is a "magic method" (indicated by the double underscores, or "dunder").
 
@@ -36,7 +40,7 @@ It is called automatically when you create a new instance of a class. Its primar
 
 ---
 
-# 4. Syntax Table
+## 5. Syntax Table
 
 | Concept | Code | Note |
 |---|---|---|
@@ -47,7 +51,7 @@ It is called automatically when you create a new instance of a class. Its primar
 
 ---
 
-# 5. Beginner Example
+## 6. Beginner Example
 
 Let's look at how we pass arguments directly into the constructor.
 
@@ -90,7 +94,7 @@ print(phone1.battery_level) # 100
 
 ---
 
-# 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 In backend development, constructors are heavily used to establish connections or load configurations when a service starts up.
 
@@ -117,7 +121,7 @@ Bro, this is a very common pattern: use the constructor to grab the API keys or 
 
 ---
 
-# 7. Internal Working
+## 8. Internal Working
 
 Technically, `__init__` is NOT the method that actually creates the object in memory.
 
@@ -127,7 +131,7 @@ The true creator is another magic method called `__new__`. When you type `obj = 
 
 ---
 
-# 8. Performance Table
+## 9. Performance Table
 
 | Operation | Complexity | Note |
 |---|---|---|
@@ -136,7 +140,7 @@ The true creator is another magic method called `__new__`. When you type `obj = 
 
 ---
 
-# 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
@@ -146,7 +150,7 @@ The true creator is another magic method called `__new__`. When you type `obj = 
 
 ---
 
-# 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 Wait, what if you forget the `__init__` method entirely? Does the code crash?
 
@@ -163,7 +167,7 @@ Bro, Python provides a default, invisible constructor for every class under the 
 
 ---
 
-# 11. Real-World Usage
+## 12. Real-World Usage
 
 - **Configuration Injection:** Passing environment variables, API keys, or logger objects into a class via the constructor so the class can use them later.
 - **Dependency Injection:** In complex systems, passing a database object into the constructor of a User Service object.
@@ -171,7 +175,7 @@ Bro, Python provides a default, invisible constructor for every class under the 
 
 ---
 
-# 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
@@ -181,14 +185,14 @@ Bro, Python provides a default, invisible constructor for every class under the 
 
 ---
 
-# 13. Production Notes
+## 14. Production Notes
 
 > ⚠ Production Note:
 Avoid putting blocking I/O (like making an HTTP request or heavy DB query) directly inside `__init__` if possible. If the network is down, simply *creating* the object will crash the app or freeze the thread. It is often better to have a lightweight constructor, and a separate explicit `.connect()` or `.load()` method that the user calls when they are ready to handle the I/O.
 
 ---
 
-# 14. Common Mistakes
+## 15. Common Mistakes
 
 - **Returning a value:**
   ```python
@@ -204,8 +208,16 @@ Avoid putting blocking I/O (like making an HTTP request or heavy DB query) direc
 
 ---
 
-# 15. Related Topics
+## 16. Related Topics
 
 - Classes & Objects
 - Magic Methods (`__str__`, `__repr__`)
 - Inheritance (using `super().__init__()`)
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [sqlalchemy/sqlalchemy](https://github.com/sqlalchemy/sqlalchemy) | ⭐ 22k+ | Python SQL Toolkit and ORM | Relies on complex `__init__` setups for database session management. |
+| [boto/boto3](https://github.com/boto/boto3) | ⭐ 8k+ | AWS SDK for Python | Uses constructors extensively to initialize client connections to AWS. |
+| [urllib3/urllib3](https://github.com/urllib3/urllib3) | ⭐ 3k+ | HTTP library with thread-safe connection pooling | Connection pools are set up heavily in constructors. |
