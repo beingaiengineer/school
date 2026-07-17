@@ -268,3 +268,14 @@ When generating images in the interactive session, ensure:
 | BAE-OOP-007 | `docs/school/oop-patterns/service-layer-pattern.mdx` | `service-layer-pattern.png` | A bustling restaurant kitchen organizing orders via service layers |
 | BAE-OOP-008 | `docs/school/oop-patterns/dependency-injection.mdx` | `dependency-injection.png` | An Indian multi-plug adapter representing injected dependencies |
 | BAE-OOP-009 | `docs/school/oop-patterns/clean-architecture.mdx` | `clean-architecture.png` | A beautifully structured onion diagram mapping to clean architecture |
+| BAE-REVIEW-052 | `docs/school/python/error-handling/exceptions.mdx` | `exceptions.png` | A highly relatable Indian real-world scenario explaining Exceptions. |
+| BAE-REVIEW-053 | `docs/school/python/error-handling/custom-exceptions.mdx` | `custom-exceptions.png` | A highly relatable Indian real-world scenario explaining Custom Exceptions. |
+| BAE-REVIEW-054 | `docs/school/python/error-handling/logging.mdx` | `logging.png` | A highly relatable Indian real-world scenario explaining Logging. |
+| BAE-REVIEW-055 | `docs/school/python/error-handling/debugging.mdx` | `debugging.png` | A highly relatable Indian real-world scenario explaining Debugging. |
+| BAE-REVIEW-056 | `docs/school/python/error-handling/production-debugging.mdx` | `production-debugging.png` | A highly relatable Indian real-world scenario explaining Production Debugging. |
+| BAE-REVIEW-057 | `docs/school/python/file-handling/reading-files.mdx` | `reading-files.png` | A highly relatable Indian real-world scenario explaining Reading Files. |
+| BAE-REVIEW-058 | `docs/school/python/file-handling/writing-files.mdx` | `writing-files.png` | A highly relatable Indian real-world scenario explaining Writing Files. |
+| BAE-REVIEW-059 | `docs/school/python/file-handling/csv-files.mdx` | `csv-files.png` | A highly relatable Indian real-world scenario explaining CSV Files. |
+| BAE-REVIEW-060 | `docs/school/python/file-handling/json-files.mdx` | `json-files.png` | A highly relatable Indian real-world scenario explaining JSON Files. |
+| BAE-REVIEW-061 | `docs/school/python/file-handling/pathlib.mdx` | `pathlib.png` | A highly relatable Indian real-world scenario explaining Pathlib. |
+| BAE-REVIEW-062 | `docs/school/python/file-handling/file-best-practices.mdx` | `file-best-practices.png` | A highly relatable Indian real-world scenario explaining File Best Practices. |

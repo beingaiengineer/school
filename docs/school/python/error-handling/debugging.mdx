@@ -16,7 +16,13 @@ import LearningFlow from '@site/src/components/LearningFlow';
 | Common Mistake | Relying solely on `print()` instead of using a proper debugger |
 | Performance | Not applicable to runtime; strictly a development process |
 
-## 2. Real-World Analogy
+## 2. Engineering Story
+
+I once spent an entire night staring at a massive chunk of data processing code, trying to figure out why the output was totally wrong. I kept adding print statements everywhere until the screen was just a mess of text. Then a senior engineer sat next to me, attached a debugger, paused the execution, and found the bug in two minutes.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: An Indian software engineer sitting in a messy startup office looking at code related to Debugging. */}
 
 Bro, imagine you are a mechanic trying to figure out why a car won't start.
 - **`print()` debugging:** You turn the key, listen for a click, and guess the starter is broken.
@@ -24,7 +30,7 @@ Bro, imagine you are a mechanic trying to figure out why a car won't start.
 
 Debugging tools let you pause your code and inspect the engine while it's running.
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 
 Debugging is the process of identifying and removing errors from computer hardware or software.
 
@@ -46,7 +52,7 @@ In Python, while `print()` statements are common for quick checks, true debuggin
   ]}
 />
 
-## 4. Syntax Table
+## 5. Syntax Table
 
 | Tool / Action | Syntax / Command |
 |---|---|
@@ -58,7 +64,7 @@ In Python, while `print()` statements are common for quick checks, true debuggin
 | `pdb`: Print variable | `p variable_name` |
 | `pdb`: Quit debugger | `q` (quit) |
 
-## 5. Beginner Example
+## 6. Beginner Example
 
 Let's look at a buggy function using `print()` vs `breakpoint()`.
 
@@ -86,7 +92,7 @@ print(calculate_average_debugged([10, 20, 30]))
 
 When you run this, the terminal will drop into an interactive `(Pdb)` prompt. You can type `p total` to see `60`, and `p len(numbers)` to see `3`. You immediately realize the `- 1` is causing the wrong math!
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 In backend development, bugs often happen inside complex data transformations.
 
@@ -119,13 +125,13 @@ process_user_payload(bad_payload)
 ```
 Bro, by putting `breakpoint()` in the `except` block, you can instantly inspect `payload` and `roles` without having to rerun the script 10 times adding `print()` statements.
 
-## 7. Internal Working
+## 8. Internal Working
 
 When you call `breakpoint()` (or `pdb.set_trace()`), Python uses the `sys.settrace()` function under the hood. This attaches a trace function to the Python interpreter. The interpreter calls this trace function before executing *every single line* of code.
 
 When the debugger is active, it halts the execution loop and hands control over to an interactive console (reading from `stdin`), allowing you to evaluate expressions within the current frame's local and global scope namespaces.
 
-## 8. Performance Table
+## 9. Performance Table
 
 | Scenario | Performance Impact |
 |---|---|
@@ -133,7 +139,7 @@ When the debugger is active, it halts the execution loop and hands control over 
 | Running with debugger attached (IDE) | Noticeably Slower (Trace hooks fire on every line) |
 | Paused at breakpoint | Execution is completely halted |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
@@ -141,7 +147,7 @@ When the debugger is active, it halts the execution loop and hands control over 
 | What does `breakpoint()` do? | Introduced in Python 3.7, it's a built-in function that drops you into the `pdb` debugger. It's cleaner than `import pdb; pdb.set_trace()`. |
 | Why is `print()` debugging considered bad practice for complex bugs? | It requires modifying the code, rerunning the entire application, and often clutters the output. It can't inspect state dynamically or step backwards/forwards easily. |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 Bro, what happens if you put a `breakpoint()` inside a loop that runs 10,000 times?
 
@@ -161,31 +167,31 @@ for i in range(10000):
 ```
 (Most IDEs also let you right-click the red breakpoint dot and type a condition like `i == 500`).
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 
 Companies debug code using:
 - **VS Code / PyCharm Debuggers:** Visually stepping through code, inspecting local variables, and evaluating expressions on the fly.
 - **`pdb` in Docker/SSH:** When debugging a script running on a remote Linux server where you don't have a visual IDE, `pdb` is the only way.
 - **Logging (Production):** You cannot use `breakpoint()` in production! Real-world debugging in production relies entirely on reading comprehensive logs.
 
-## 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
 | Use an IDE visual debugger (VS Code/PyCharm) for everyday development. | Don't commit `breakpoint()` or `pdb.set_trace()` to version control! |
 | Use conditional breakpoints for bugs inside large loops. | Don't rely solely on `print("got here 1")`, `print("got here 2")`. |
 
-## 13. Production Notes
+## 14. Production Notes
 
 > ⚠ Production Note:
 Never, ever leave a `breakpoint()` call in code deployed to a server. If the server hits that line, the application will completely freeze, waiting for terminal input that will never come. The request will hang, and eventually, your server will crash or run out of worker threads. Always set up a pre-commit hook to block commits containing `breakpoint()`.
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 
 - **Committing Debug Code:** Leaving `print()` or `breakpoint()` in the code pushed to GitHub.
 - **Debugging Symptoms, Not Causes:** Fixing a `TypeError` by slapping a `str()` around a variable, instead of debugging *why* the variable was an integer in the first place.
 
-## 15. Related Topics
+## 16. Related Topics
 
 - Exceptions
 - Logging

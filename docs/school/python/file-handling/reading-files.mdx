@@ -19,13 +19,19 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 Bro, reading files is one of the most common things you'll do in Python. You're just taking data sitting on your hard drive and pulling it into your program's memory.
 
-## 2. Real-World Analogy
+## 2. Engineering Story
+
+We once had a batch script that read a massive 10GB access log file to count unique visitors. A junior dev wrote it using `file.read()`, which tried to load the entire 10GB file into RAM at once. The server immediately crashed due to an Out-Of-Memory error. That's when we learned why streaming files line-by-line is absolutely crucial.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: An Indian software engineer sitting in a messy startup office looking at code related to Reading Files. */}
 
 Think of reading a file like reading a book from a library.
 
 You find the book on the shelf (file path), you open the book (using `open()`), you read the pages (using `read()` or `readlines()`), and then you have to put the book back on the shelf (using `close()`). If you don't return the book, no one else can read it!
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 
 To read a file in Python, you use the built-in `open()` function. This function returns a file object, which gives you methods to read the contents.
 
@@ -33,7 +39,7 @@ You need to specify the file mode. For reading, you use `'r'` (which stands for 
 
 When you're done, you *must* close the file. The best way to handle this is using a `with` statement (a context manager), which automatically closes the file for you, even if an error happens.
 
-## 4. Syntax Table
+## 5. Syntax Table
 
 | Operation | Example |
 |---|---|
@@ -43,7 +49,7 @@ When you're done, you *must* close the file. The best way to handle this is usin
 | Read all lines into a list | `lines = f.readlines()` |
 | Context Manager (Best Practice) | `with open("data.txt", "r") as f:` |
 
-## 5. Beginner Example
+## 6. Beginner Example
 
 Here's how you read a simple text file line by line using the `with` statement:
 
@@ -64,7 +70,7 @@ Hello, bro!
 Welcome to Python.
 ```
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 In the real world, you might process a large log file. You don't want to load a 5GB log file into memory all at once. Instead, you iterate over the file object directly, processing it line by line.
 
@@ -84,7 +90,7 @@ def process_access_logs(log_file_path):
 # print(f"Found {total_errors} server errors.")
 ```
 
-## 7. Internal Working
+## 8. Internal Working
 
 When you call `open()`, Python asks the Operating System (OS) for a file handle (a reference to the file). The OS checks permissions and locks the file if necessary.
 
@@ -131,7 +137,7 @@ When you use the `with` block, Python calls the file object's `__enter__()` meth
   ]}
 />
 
-## 8. Performance Table
+## 9. Performance Table
 
 | Operation | Memory Impact | CPU Impact |
 |---|---|---|
@@ -139,7 +145,7 @@ When you use the `with` block, Python calls the file object's `__enter__()` meth
 | `file.readlines()` | High (Creates a list of strings) | Low |
 | `for line in file:` | Low (Streams one line at a time) | Low |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
@@ -149,7 +155,7 @@ When you use the `with` block, Python calls the file object's `__enter__()` meth
 | What does the `with` statement do? | It's a context manager that ensures the file is properly closed when the block exits, even if an exception occurs. |
 | How do you read a file in chunks? | Use `file.read(chunk_size)` inside a `while` loop until it returns an empty string. |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 What happens if you try to read a file that doesn't exist?
 
@@ -175,7 +181,7 @@ with open("data.txt", "r") as f:
 
 **Why?** Because the file cursor moves to the end after the first read. You have to use `f.seek(0)` to rewind it to the beginning.
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 
 Bro, reading files is literally everywhere:
 - **Web Servers:** Reading configuration files (like `.env` or `.yaml`).
@@ -183,7 +189,7 @@ Bro, reading files is literally everywhere:
 - **DevOps:** Parsing log files to detect crashes.
 - **Backend APIs:** Reading template files to send HTML emails.
 
-## 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
@@ -191,17 +197,17 @@ Bro, reading files is literally everywhere:
 | Use `for line in file:` for reading large text files. | Use `file.read()` or `file.readlines()` for files over a few MBs. |
 | Specify the encoding explicitly: `open("data.txt", "r", encoding="utf-8")`. | Assume the system default encoding will work everywhere. |
 
-## 13. Production Notes
+## 14. Production Notes
 
 > ⚠ Production Note:
 If you are running Python on different operating systems (like Windows locally, but Linux in production), always specify `encoding="utf-8"`. Windows might default to `cp1252`, causing nasty `UnicodeDecodeError` crashes in production when reading special characters.
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 
 - **Not checking if the file exists:** Always wrap file opening in a `try/except FileNotFoundError` block if you aren't 100% sure the file is there.
 - **Forgetting newline characters:** `readline()` and `readlines()` keep the trailing `\n` characters. You often need to use `.strip()` to clean them up: `line.strip()`.
 
-## 15. Related Topics
+## 16. Related Topics
 
 - Writing Files
 - Context Managers
