@@ -1,0 +1,213 @@
+---
+sidebar_position: 4
+sidebar_label: "SOLID Principles"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# SOLID Principles in Production
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | SOLID Principles |
+| Difficulty | Intermediate |
+| Used For | Writing software architecture that is easy to scale, test, and maintain over years. |
+| Common Mistake | Violating the Open-Closed principle by constantly modifying existing `if-else` chains. |
+| Performance | No runtime performance cost; purely a structural architectural standard. |
+
+## 2. Engineering Story
+
+Your team built an e-commerce checkout service. Initially, the `CheckoutService` class verified the cart, processed the credit card, sent a confirmation email, and updated the inventory. It was 3,000 lines long.
+
+Six months later, marketing wants to add PayPal support and SMS notifications. To add PayPal, you have to modify the core `CheckoutService`. In doing so, someone accidentally breaks the inventory update logic, causing the company to sell products they don't have.
+
+By applying SOLID principles—specifically the Single Responsibility Principle (SRP) and Open-Closed Principle (OCP)—the team refactors the code. They split it into `PaymentProcessor`, `NotificationService`, and `InventoryManager`. When Apple Pay is requested next month, they just add a new `ApplePayProcessor` class without touching the core checkout logic at all. Zero regressions.
+
+## 3. Real-World Analogy
+
+Think of a traditional Indian street food stall that scales up into a massive restaurant.
+
+Initially, one person (the God Class) takes the order, chops the veggies, cooks the dosa, handles the cash, and cleans the plates. If they get sick, the whole stall shuts down.
+
+To scale, you apply SOLID:
+1. **S**: One person cooks, one person takes cash. (Single Responsibility)
+2. **O**: If you add a new menu item, you hire a new chef for it, rather than retraining the existing chef to do both. (Open-Closed)
+3. **L**: Any chef you hire must be able to stand at the stove and cook; you don't hire a driver to cook. (Liskov Substitution)
+4. **I**: You don't force the cashier to know how to turn on the gas stove. (Interface Segregation)
+5. **D**: The owner (high-level) relies on the *role* of a Chef (interface), not a specific person named Ramesh (implementation). If Ramesh quits, any other Chef can step in. (Dependency Inversion)
+
+{/* TODO: [BAE-ILLUSTRATION] Shows a clean workspace following SOLID design rules */}
+
+## 4. Concept Explanation
+
+SOLID is an acronym for five design principles intended to make software designs more understandable, flexible, and maintainable.
+
+1. **S - Single Responsibility Principle (SRP)**: A class should have one, and only one, reason to change.
+2. **O - Open/Closed Principle (OCP)**: Software entities should be open for extension, but closed for modification.
+3. **L - Liskov Substitution Principle (LSP)**: Objects of a superclass shall be replaceable with objects of its subclasses without breaking the application.
+4. **I - Interface Segregation Principle (ISP)**: No client should be forced to depend on methods it does not use.
+5. **D - Dependency Inversion Principle (DIP)**: High-level modules should not depend on low-level modules. Both should depend on abstractions.
+
+## 5. Syntax Table
+
+| Principle | Core Idea | How to Spot a Violation |
+|---|---|---|
+| SRP | Do one thing. | The class name has "And" in it, or it imports 50 different libraries. |
+| OCP | Extend, don't modify. | You have a massive `switch` statement checking types. |
+| LSP | Subclasses must behave. | You have `if (obj instanceof SubClass)` in your code. |
+| ISP | Keep interfaces small. | You have to implement a method with `throw new NotImplementedError()`. |
+| DIP | Depend on interfaces. | You use `new MySQLDatabase()` inside your core business logic. |
+
+## 6. Beginner Example
+
+Let's look at a violation of the Single Responsibility Principle (SRP) and how to fix it.
+
+**Bad (Violates SRP):**
+```python
+class User:
+    def __init__(self, name):
+        self.name = name
+
+    def save_to_database(self):
+        # Database logic mixed with Domain logic
+        print(f"Saving {self.name} to DB")
+```
+
+**Good (Follows SRP):**
+```python
+class User:
+    def __init__(self, name):
+        self.name = name
+
+class UserRepository:
+    def save(self, user: User):
+        print(f"Saving {user.name} to DB")
+```
+
+## 7. Real-World Engineering Example
+
+Let's look at the Open-Closed Principle (OCP) in a production Payment system.
+
+**Bad (Violates OCP):** Every time we add a payment method, we modify this class.
+```typescript
+class PaymentProcessor {
+    process(type: string, amount: number) {
+        if (type === "CREDIT") {
+            // process credit card
+        } else if (type === "PAYPAL") {
+            // process paypal
+        }
+        // Adding Crypto requires modifying this file!
+    }
+}
+```
+
+**Good (Follows OCP):** We can add Crypto just by creating a new class. We never touch existing code.
+```typescript
+interface PaymentStrategy {
+    process(amount: number): void;
+}
+
+class CreditCardStrategy implements PaymentStrategy {
+    process(amount: number): void { /* ... */ }
+}
+
+class PayPalStrategy implements PaymentStrategy {
+    process(amount: number): void { /* ... */ }
+}
+
+class PaymentProcessor {
+    process(strategy: PaymentStrategy, amount: number) {
+        // Closed for modification, open for extension!
+        strategy.process(amount);
+    }
+}
+```
+
+## 8. Internal Working
+
+SOLID principles do not change how the runtime or compiler works; they dictate how dependencies are wired together in memory. Following DIP, for example, means injecting references at runtime rather than hardcoding them at compile time.
+
+<LearningFlow
+  diagram={{
+    nodes: [
+      { id: '1', kind: 'core', title: 'High-Level Logic (OrderManager)', detail: '', x: 0, y: 40 },
+      { id: '2', kind: 'process', title: 'Depends on Abstraction (IPayment)', detail: '', x: 250, y: 40 },
+      { id: '3', kind: 'data', title: 'Low-Level Logic (StripeAPI)', detail: '', x: 500, y: 40 },
+      { id: '4', kind: 'data', title: 'Low-Level Logic (PayPalAPI)', detail: '', x: 750, y: 40 }
+    ],
+    edges: [
+
+      { source: '1', target: '2', label: 'calls' },
+      { source: '3', target: '2', label: 'implements', animated: true },
+      { source: '4', target: '2', label: 'implements', animated: true }
+
+    ]
+  }}
+/>
+
+## 9. Performance Table
+
+| Aspect | Impact |
+|---|---|
+| Virtual Method Dispatch (OCP/DIP) | Negligible overhead (nanoseconds) for dynamic dispatch. |
+| Memory Usage | Slightly more memory due to more small classes being instantiated instead of one massive class. |
+| Compilation Time | Vastly improved. Changing one small class doesn't require recompiling the massive God class. |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the Liskov Substitution Principle? | A derived class must be substitutable for its base class. If a function takes a `Bird`, you should be able to pass a `Duck` without the program crashing. |
+| How do you know if you are violating ISP? | If a class implements an interface but leaves some of the methods empty or throws "Not Implemented" errors, the interface is too fat. |
+| What is Dependency Inversion? | High-level modules should not depend on low-level modules; they should depend on abstractions (interfaces). |
+| How does OCP relate to the Strategy Pattern? | The Strategy Pattern is the most common way to achieve OCP, allowing behavior to be swapped out by passing different strategy implementations. |
+| Is it possible to over-engineer with SOLID? | Yes. Applying full SOLID to a 50-line throwaway script is overkill. Use it when maintaining long-term, scalable codebases. |
+
+## 11. Tricky Questions & Edge Cases
+
+**Question:** If I have a `Rectangle` class with `set_width()` and `set_height()`, and a `Square` class that inherits from `Rectangle`, is this a good design?
+**Answer:** No. This is the classic violation of the **Liskov Substitution Principle (LSP)**. A square must have equal width and height. If a function expects a `Rectangle` and calls `set_width(5)` and `set_height(10)`, the `Square` object will either behave incorrectly (becoming a rectangle) or throw an error, breaking the program. In code, a Square IS NOT a Rectangle.
+
+## 12. Real-World Usage
+
+- **Spring Boot (Java) / NestJS (Node):** These frameworks are built entirely around the Dependency Inversion Principle using IoC (Inversion of Control) containers.
+- **Microservices:** Microservices communicate via strict API contracts (Interfaces), which is an architectural application of ISP and DIP.
+
+## 13. Best Practices
+
+| Do | Don't |
+|---|---|
+| **DO** refactor towards SOLID when you notice code is hard to test or requires changing multiple files for one feature. | **DON'T** start day one by creating 50 interfaces for a simple MVP feature. YAGNI (You Aren't Gonna Need It). |
+| **DO** write unit tests. SOLID code is naturally highly testable via mocks. | **DON'T** confuse SRP with "a class should only have one method." It means one *responsibility* or domain concept. |
+
+## 14. Production Notes
+
+<Admonition type="info" title="The True Cost of SOLID">
+SOLID creates more files. A 1000-line monolithic file might turn into ten 100-line files. Junior engineers sometimes complain it's harder to trace the execution path. However, in production, reading 100 lines of highly focused, bug-free code is infinitely better than deciphering a 1000-line spaghetti monster.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Bad Code | Good Code |
+|---|---|---|
+| Fat Interfaces (ISP Violation) | `interface Worker { work(); eat(); }` (Robots can't eat!) | `interface Worker { work(); } \n interface Eater { eat(); }` |
+| Hardcoded Dependencies (DIP Violation) | `class App { db = new MySQL(); }` | `class App { constructor(db: Database) { this.db = db; } }` |
+
+## 16. Related Topics
+
+- Inheritance vs Composition
+- Dependency Injection
+- Design Patterns (Strategy Pattern)
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [cleancoder/CleanCode](https://github.com/cleancoder/CleanCode) | ⭐ 15k+ | Concepts from Uncle Bob's Clean Code | The origin of modern interpretations of SOLID. |
+| [nestjs/nest](https://github.com/nestjs/nest) | ⭐ 65k+ | A progressive Node.js framework | A perfect, modern example of heavily enforced SOLID architecture. |
+| [angular/angular](https://github.com/angular/angular) | ⭐ 95k+ | Web framework | Enforces Dependency Inversion directly in the frontend. |
+| [dotnet/aspnetcore](https://github.com/dotnet/aspnetcore) | ⭐ 35k+ | ASP.NET Core framework | Shows how Microsoft implements SOLID in their massive web framework. |

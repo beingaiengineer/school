@@ -259,3 +259,12 @@ When generating images in the interactive session, ensure:
 | BAE-FAS-010 | `docs/school/fastapi-concepts/background-tasks.mdx` | A busy Indian restaurant where a customer pays the cashier. The cashier hands them a receipt instantly (HTTP Response) and tosses the order ticket to the kitchen (Background Task). The customer walks away happy without waiting for the food to actually be cooked at the counter. |
 | BAE-FAS-011 | `docs/school/fastapi-concepts/websockets.mdx` | `docs/school/fastapi-concepts/assets/websockets.png` | A highly relatable Indian real-world scenario explaining WebSockets. |
 | BAE-FAS-012 | `docs/school/fastapi-concepts/rate-limiting.mdx` | `docs/school/fastapi-concepts/assets/rate-limiting.png` | A highly relatable Indian real-world scenario explaining Rate Limiting. |
+| BAE-OOP-001 | `docs/school/oop-patterns/oop-in-production.mdx` | `oop-in-production.png` | Shows OOP scaling in a massive e-commerce environment |
+| BAE-OOP-002 | `docs/school/oop-patterns/classes-and-objects-real-world.mdx` | `classes-and-objects-real-world.png` | Depicts an Indian car manufacturing chassis as a base class |
+| BAE-OOP-003 | `docs/school/oop-patterns/inheritance-vs-composition.mdx` | `inheritance-vs-composition.png` | Mixing various masalas to compose a dish versus rigid inheritance |
+| BAE-OOP-004 | `docs/school/oop-patterns/solid-principles.mdx` | `solid-principles.png` | Shows a clean workspace following SOLID design rules |
+| BAE-OOP-005 | `docs/school/oop-patterns/design-patterns-strategy.mdx` | `design-patterns-strategy.png` | A chess board demonstrating strategic pattern choices |
+| BAE-OOP-006 | `docs/school/oop-patterns/repository-pattern.mdx` | `repository-pattern.png` | A librarian managing massive data stores |
+| BAE-OOP-007 | `docs/school/oop-patterns/service-layer-pattern.mdx` | `service-layer-pattern.png` | A bustling restaurant kitchen organizing orders via service layers |
+| BAE-OOP-008 | `docs/school/oop-patterns/dependency-injection.mdx` | `dependency-injection.png` | An Indian multi-plug adapter representing injected dependencies |
+| BAE-OOP-009 | `docs/school/oop-patterns/clean-architecture.mdx` | `clean-architecture.png` | A beautifully structured onion diagram mapping to clean architecture |

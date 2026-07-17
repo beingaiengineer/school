@@ -1,0 +1,229 @@
+---
+sidebar_position: 6
+sidebar_label: "Repository Pattern"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# The Repository Pattern
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Repository Pattern |
+| Difficulty | Intermediate |
+| Used For | Abstracting away data access logic (SQL, APIs, NoSQL) from core business logic. |
+| Common Mistake | Leaking database-specific queries (like raw SQL or ORM objects) into the business logic. |
+| Performance | Adds a tiny layer of abstraction overhead, but enables massive architectural scalability and testability. |
+
+## 2. Engineering Story
+
+You are maintaining an inventory system. The business logic is riddled with `db.execute('SELECT * FROM products WHERE id = ?')`. One day, the CTO mandates a migration from MySQL to MongoDB for scalability.
+
+Because SQL is hardcoded into 200 different files, the migration takes 6 months of painful find-and-replace, and hundreds of bugs are introduced because developers missed some queries.
+
+If the team had used the Repository Pattern, the business logic would just say `productRepository.findById(id)`. The migration would have taken one week: you just write a new `MongoProductRepository` that implements the same interface and inject it. The business logic remains untouched.
+
+## 3. Real-World Analogy
+
+Think of a massive corporate library.
+
+As a researcher (Business Logic), you don't walk into the basement, navigate the Dewey Decimal system, operate the mechanical shelves, and blow the dust off a specific SQL book. You don't know *how* the books are stored.
+
+Instead, you walk up to the Librarian (The Repository). You ask, "Give me all books on Physics published after 2020." The Librarian goes to the basement, navigates the complex storage system (Database), retrieves the physical books, and hands them to you as standard reading materials (Domain Objects). If the library upgrades to a digital storage system tomorrow, your interaction with the Librarian doesn't change.
+
+| OOP Concept | Library Analogy |
+|---|---|
+| Business Logic | The Researcher |
+| Repository Interface | The concept of a Librarian |
+| Concrete Repository | The actual Librarian who knows the basement layout |
+| Database | The physical basement shelves |
+| Domain Object | The readable book handed back to you |
+
+{/* TODO: [BAE-ILLUSTRATION] A librarian managing massive data stores */}
+
+## 4. Concept Explanation
+
+The **Repository Pattern** acts as a mediator between the domain/business logic and data mapping layers using a collection-like interface for accessing domain objects.
+
+It encapsulates the logic required to access data sources (databases, external APIs, caches). The rest of the application interacts with the Repository, remaining completely ignorant of *where* or *how* the data is stored.
+
+## 5. Syntax Table
+
+| Layer | Responsibility | Example Method |
+|---|---|---|
+| Domain Object | Holds pure data | `User { id, name }` |
+| Interface | Defines the contract | `interface IUserRepository { find(id): User }` |
+| Implementation | Executes DB logic | `class SQLUserRepository implements IUserRepository` |
+
+## 6. Beginner Example
+
+A simple Python example abstracting a dictionary as a database.
+
+```python
+from typing import List, Optional
+
+# Domain Object
+class User:
+    def __init__(self, uid: int, name: str):
+        self.uid = uid
+        self.name = name
+
+# The Repository Interface (Conceptually)
+class UserRepository:
+    def get_by_id(self, uid: int) -> Optional[User]:
+        pass
+    def save(self, user: User):
+        pass
+
+# The Concrete Implementation
+class InMemoryUserRepository(UserRepository):
+    def __init__(self):
+        self._db = {} # Simulating a database
+
+    def get_by_id(self, uid: int) -> Optional[User]:
+        data = self._db.get(uid)
+        if data:
+            return User(uid=data['id'], name=data['name'])
+        return None
+
+    def save(self, user: User):
+        self._db[user.uid] = {"id": user.uid, "name": user.name}
+
+# Business Logic
+repo = InMemoryUserRepository()
+repo.save(User(1, "Rahul"))
+print(repo.get_by_id(1).name)
+```
+
+## 7. Real-World Engineering Example
+
+In production, Repositories handle complex database ORM interactions. Here is a TypeScript example using an interface.
+
+```typescript
+// 1. Define the contract
+interface OrderRepository {
+    findActiveOrdersByUserId(userId: string): Promise<Order[]>;
+    save(order: Order): Promise<void>;
+}
+
+// 2. Implement with PostgreSQL
+class PostgresOrderRepository implements OrderRepository {
+    private pool: pg.Pool;
+
+    constructor(pool: pg.Pool) { this.pool = pool; }
+
+    async findActiveOrdersByUserId(userId: string): Promise<Order[]> {
+        // DB specific logic is hidden here
+        const res = await this.pool.query(
+            "SELECT * FROM orders WHERE user_id = $1 AND status = 'ACTIVE'",
+            [userId]
+        );
+        // Map database row to pure Domain Object
+        return res.rows.map(row => new Order(row.id, row.amount));
+    }
+
+    async save(order: Order): Promise<void> {
+        await this.pool.query("INSERT INTO orders...");
+    }
+}
+
+// 3. Business Logic uses it without knowing it's Postgres
+class OrderService {
+    constructor(private repo: OrderRepository) {}
+
+    async processUserOrders(userId: string) {
+        const orders = await this.repo.findActiveOrdersByUserId(userId);
+        // Do business logic...
+    }
+}
+```
+
+## 8. Internal Working
+
+The Repository Pattern sits as a boundary layer. When a Service calls `repo.find()`, the runtime crosses the boundary into the Repository implementation, which executes network/I-O bound calls to a database, maps the raw byte response into an ORM entity, converts it into a pure Domain Object, and returns it across the boundary.
+
+<LearningFlow
+  diagram={{
+    nodes: [
+      { id: '1', kind: 'core', title: 'Business Logic (Service)', detail: '', x: 0, y: 40 },
+      { id: '2', kind: 'process', title: 'Repository Interface', detail: '', x: 250, y: 40 },
+      { id: '3', kind: 'process', title: 'Concrete Repository', detail: '', x: 500, y: 40 },
+      { id: '4', kind: 'data', title: 'Database (SQL/NoSQL)', detail: '', x: 750, y: 40 }
+    ],
+    edges: [
+
+      { source: '1', target: '2', label: 'calls find()' },
+      { source: '2', target: '3', label: 'resolves to' },
+      { source: '3', target: '4', label: 'executes raw query', animated: true },
+      { source: '4', target: '3', label: 'returns raw data' },
+      { source: '3', target: '1', label: 'returns Domain Object' }
+
+    ]
+  }}
+/>
+
+## 9. Performance Table
+
+| Aspect | Impact |
+|---|---|
+| Execution Speed | Tiny microsecond overhead for the method call. Highly acceptable. |
+| Memory | Requires allocating Domain Objects mapped from raw DB rows. |
+| Testability | Massive speedup. You can inject `InMemoryRepository` for tests, avoiding slow DB calls. |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why use a Repository if I already use an ORM? | An ORM (like Prisma or Hibernate) is an implementation detail. The Repository hides the ORM from your business logic so you can swap ORMs or add caching layers without breaking your app. |
+| What is the difference between DAO and Repository? | A DAO (Data Access Object) maps exactly to a database table. A Repository maps to a Domain Aggregate (a logical business entity, which might span multiple tables). |
+| Should a Repository contain business logic? | No. A repository should only contain data retrieval and persistence logic. |
+| How does the Repository pattern help with testing? | It allows you to easily mock or fake the database by passing a mock object that implements the Repository interface, ensuring unit tests run in milliseconds. |
+| Can a Repository talk to an external API instead of a DB? | Yes! To the business logic, it doesn't matter if `UserRepository.findById()` queries Postgres or makes a REST call to a microservice. |
+
+## 11. Tricky Questions & Edge Cases
+
+**Question:** Should my repository return database rows or ORM objects to the service layer?
+**Answer:** In strict Clean Architecture, it should return pure Domain Objects (plain classes with no database annotations). However, in many pragmatic codebases, returning the ORM object is accepted to save mapping boilerplate, *provided* the service layer does not try to call database-specific methods (like `.save()`) on that ORM object directly.
+
+## 12. Real-World Usage
+
+- **Spring Data JPA:** In the Java ecosystem, you define a `UserRepository extends JpaRepository`, and Spring automatically generates the implementation at runtime.
+- **Microservices:** A `UserRepository` in Service A might actually be implemented by making HTTP calls to Service B, completely hiding the network boundary from Service A's business logic.
+
+## 13. Best Practices
+
+| Do | Don't |
+|---|---|
+| **DO** return null or specific Domain Exceptions when data is not found. | **DON'T** return database-specific exceptions (like `PgError`) to the service layer. |
+| **DO** use Repositories to encapsulate complex, optimized queries. | **DON'T** create generic `BaseRepository<T>` that exposes `.executeRawQuery()` to the service. |
+
+## 14. Production Notes
+
+<Admonition type="info" title="The Caching Decorator">
+The Repository pattern is perfect for adding caching. You can create a `CachedUserRepository` that implements `UserRepository`. Inside, it first checks Redis. If the data isn't there, it calls the `SqlUserRepository`, caches the result, and returns it. Your business logic remains totally unaware that Redis even exists.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Bad Code | Good Code |
+|---|---|---|
+| Leaking DB logic | `repo.getUsers("WHERE age > 18")` | `repo.getAdultUsers()` |
+| Saving inside the service | `user.name = 'x'; db.execute('UPDATE...', user)` | `user.name = 'x'; repo.save(user)` |
+
+## 16. Related Topics
+
+- Service Layer Pattern
+- Clean Architecture
+- Dependency Injection
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [spring-projects/spring-data-jpa](https://github.com/spring-projects/spring-data-jpa) | ⭐ 8k+ | Spring Data JPA | The industry standard implementation of the Repository pattern in Java. |
+| [typeorm/typeorm](https://github.com/typeorm/typeorm) | ⭐ 33k+ | ORM for TypeScript | Natively supports and encourages the Repository pattern via `connection.getRepository()`. |
+| [dotnet/eShop](https://github.com/dotnet/eShop) | ⭐ 24k+ | .NET Microservices Architecture | A Microsoft reference app heavily utilizing strict Repositories. |
+| [mikro-orm/mikro-orm](https://github.com/mikro-orm/mikro-orm) | ⭐ 7k+ | Node.js ORM | A modern ORM built strictly around the Data Mapper and Repository patterns. |
