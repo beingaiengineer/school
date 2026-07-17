@@ -1,0 +1,235 @@
+---
+sidebar_position: 5
+sidebar_label: "Strategy Pattern"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Design Patterns: The Strategy Pattern
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Strategy Design Pattern |
+| Difficulty | Intermediate |
+| Used For | Swapping out algorithms or behaviors at runtime without altering the objects that use them. |
+| Common Mistake | Using it for trivial `if-else` blocks where a simple configuration object would suffice. |
+| Performance | Minimal interface dispatch overhead; saves massive performance drops caused by bloated `switch` statements. |
+
+## 2. Engineering Story
+
+You are building a logistics platform for an e-commerce giant. Initially, there is only one shipping calculation: Standard Shipping. The code works fine. Then, they add Express Shipping. You add an `if-else`. Then they add Same-Day Delivery, Drone Delivery, and International Freight. Your `calculate_shipping_cost()` function is now a 500-line monstrosity of nested conditionals.
+
+Every time a new logistics partner is onboarded, someone has to touch this massive function, inevitably breaking another shipping method.
+
+By implementing the Strategy Pattern, you extract each shipping algorithm into its own isolated class (`ExpressShippingStrategy`, `DroneShippingStrategy`). The main order context just holds a reference to a `ShippingStrategy` interface and says `strategy.calculate()`. The 500-line function disappears, replaced by elegant, decoupled objects.
+
+## 3. Real-World Analogy
+
+Imagine a game of cricket. A bowler has a goal: get the batsman out. But the *strategy* they use changes based on the situation.
+- Pitch is green? Strategy = Swing Bowling.
+- Pitch is dry? Strategy = Spin Bowling.
+- Batsman is aggressive? Strategy = Yorker.
+
+The Bowler (Context) doesn't change their entire identity. They just swap out the Ball Delivery Strategy at runtime. They hold the ball, decide on a strategy, and execute it.
+
+| OOP Concept | Cricket Analogy |
+|---|---|
+| Context | The Bowler |
+| Strategy Interface | `IDeliveryStrategy` (must have a `bowl()` method) |
+| Concrete Strategy A | `SpinDelivery` |
+| Concrete Strategy B | `YorkerDelivery` |
+| Client | The Captain telling the bowler which strategy to use |
+
+{/* TODO: [BAE-ILLUSTRATION] A chess board demonstrating strategic pattern choices */}
+
+## 4. Concept Explanation
+
+The **Strategy Pattern** is a behavioral design pattern that lets you define a family of algorithms, put each of them into a separate class, and make their objects interchangeable.
+
+It allows the algorithm to vary independently from the clients that use it. It is the practical embodiment of the Open-Closed Principle (OCP) and Favor Composition over Inheritance.
+
+## 5. Syntax Table
+
+| Component | Description |
+|---|---|
+| `Context` | The class that requires the behavior (e.g., `Order`). It holds a reference to the Interface. |
+| `IStrategy` | The interface defining the method signature (e.g., `calculate()`). |
+| `ConcreteStrategy` | The actual implementation (e.g., `ExpressStrategy`). |
+| `setStrategy()` | A method on the Context to swap the strategy at runtime. |
+
+## 6. Beginner Example
+
+A simple Python example showing how to swap text formatting strategies.
+
+```python
+from abc import ABC, abstractmethod
+
+# 1. Strategy Interface
+class TextFormatter(ABC):
+    @abstractmethod
+    def format(self, text: str) -> str:
+        pass
+
+# 2. Concrete Strategies
+class UpperCaseFormatter(TextFormatter):
+    def format(self, text: str) -> str:
+        return text.upper()
+
+class LowerCaseFormatter(TextFormatter):
+    def format(self, text: str) -> str:
+        return text.lower()
+
+# 3. Context
+class TextEditor:
+    def __init__(self, formatter: TextFormatter):
+        self.formatter = formatter
+
+    def set_formatter(self, formatter: TextFormatter):
+        self.formatter = formatter
+
+    def publish(self, text: str):
+        print(self.formatter.format(text))
+
+# Usage
+editor = TextEditor(UpperCaseFormatter())
+editor.publish("Hello World") # HELLO WORLD
+
+editor.set_formatter(LowerCaseFormatter())
+editor.publish("Hello World") # hello world
+```
+
+## 7. Real-World Engineering Example
+
+In production, Strategy is heavily used for Auth and Payment processing. Here is a TypeScript example for Payment Processing.
+
+```typescript
+interface PaymentStrategy {
+    pay(amount: number): Promise<boolean>;
+}
+
+class StripeStrategy implements PaymentStrategy {
+    async pay(amount: number) {
+        console.log(`Processing $${amount} via Stripe API...`);
+        return true;
+    }
+}
+
+class RazorpayStrategy implements PaymentStrategy {
+    async pay(amount: number) {
+        console.log(`Processing ₹${amount * 80} via Razorpay API...`);
+        return true;
+    }
+}
+
+class ShoppingCart {
+    private paymentStrategy: PaymentStrategy;
+
+    // Inject the strategy
+    constructor(strategy: PaymentStrategy) {
+        this.paymentStrategy = strategy;
+    }
+
+    async checkout(amount: number) {
+        // The cart doesn't care HOW the payment happens
+        const success = await this.paymentStrategy.pay(amount);
+        if (success) console.log("Checkout complete!");
+    }
+}
+
+// Client code dynamically picks the strategy based on region
+const strategy = userRegion === 'INDIA' ? new RazorpayStrategy() : new StripeStrategy();
+const cart = new ShoppingCart(strategy);
+cart.checkout(100);
+```
+
+## 8. Internal Working
+
+Under the hood, the Context object stores a pointer to an object on the heap that implements the Strategy interface. When the Context calls `strategy.execute()`, the runtime uses dynamic dispatch (v-table lookup) to find the correct method on the specific concrete strategy object currently being pointed to.
+
+<LearningFlow
+  diagram={{
+    nodes: [
+      { id: '1', kind: 'core', title: 'Context (ShoppingCart)', detail: '', x: 0, y: 40 },
+      { id: '2', kind: 'process', title: 'Holds Reference to Interface', detail: '', x: 250, y: 40 },
+      { id: '3', kind: 'data', title: 'Stripe Implementation', detail: '', x: 500, y: 40 },
+      { id: '4', kind: 'data', title: 'Razorpay Implementation', detail: '', x: 750, y: 40 },
+      { id: '5', kind: 'output', title: 'Dynamic Execution', detail: '', x: 1000, y: 40 }
+    ],
+    edges: [
+
+      { source: '1', target: '2', label: 'delegates to' },
+      { source: '3', target: '2', label: 'satisfies', animated: true },
+      { source: '4', target: '2', label: 'satisfies' },
+      { source: '2', target: '5', label: 'executes' }
+
+    ]
+  }}
+/>
+
+## 9. Performance Table
+
+| Operation | Cost | Description |
+|---|---|---|
+| Instantiating Strategy | $O(1)$ | Creating the specific strategy object. |
+| Memory Overhead | Very Low | One extra object pointer in the Context. |
+| Execution Dispatch | $O(1)$ | Interface method resolution is highly optimized in modern runtimes. |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| How does the Strategy pattern differ from a simple `switch` statement? | A `switch` statement hardcodes all logic in one place, violating OCP. Strategy delegates logic to separate classes, allowing new logic to be added without touching existing code. |
+| How does Strategy differ from the State pattern? | Strategy is about swapping algorithms (usually decided by the client). State is about an object changing its behavior based on internal state transitions. |
+| Does the Strategy pattern violate SRP? | No, it enforces SRP! It moves the algorithm out of the Context class, so the Context only focuses on its primary job, and the Strategy focuses only on the algorithm. |
+| Should strategies hold state? | Generally, no. Strategies should ideally be stateless, pure algorithms. The Context should pass any required state into the strategy method. |
+| In functional languages, how is Strategy implemented? | By passing higher-order functions as arguments. You don't need a whole class structure in pure functional programming. |
+
+## 11. Tricky Questions & Edge Cases
+
+**Question:** What if the concrete strategy needs data from the Context to do its job?
+**Answer:** You have two options.
+1. Pass the specific data as arguments: `strategy.execute(data1, data2)`. (Preferred, keeps them decoupled).
+2. Pass the whole Context object: `strategy.execute(this)`. (Can create tight coupling, as the strategy now depends on the Context's exact shape).
+
+## 12. Real-World Usage
+
+- **Passport.js (Node Auth Library):** Uses "Strategies" explicitly (e.g., `LocalStrategy`, `GoogleStrategy`, `FacebookStrategy`). You configure Passport with the strategy you want.
+- **Sorting Algorithms:** `collections.sort(list, new Comparator())` in Java is a classic Strategy pattern. The `Comparator` is the strategy.
+
+## 13. Best Practices
+
+| Do | Don't |
+|---|---|
+| **DO** use Strategy when you have a lot of similar classes that only differ in the way they execute some behavior. | **DON'T** use Strategy if you only have a couple of algorithms and they rarely change. An `if-else` is fine for simple scripts. |
+| **DO** make strategies stateless if possible so they can be reused across multiple contexts (Flyweight pattern). | **DON'T** let the Context class know about the concrete implementations. |
+
+## 14. Production Notes
+
+<Admonition type="caution" title="Over-Engineering">
+Do not prematurely optimize with the Strategy pattern. If you have an `if(user.isPremium)` block, just write the `if` statement. Only refactor into the Strategy pattern when that `if` statement starts growing into `else if (isGuest) ... else if (isAdmin) ... else if (isSuperAdmin)` and causes merge conflicts.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Bad Code | Good Code |
+|---|---|---|
+| Context instantiating the strategy directly | `class App { constructor() { this.strat = new Stripe(); } }` | `class App { constructor(strat) { this.strat = strat; } }` |
+| Stateful strategies causing bugs | `class TaxStrat { total = 0; calc(x) { this.total+=x; } }` | `class TaxStrat { calc(x, currentTotal) { return currentTotal+x; } }` |
+
+## 16. Related Topics
+
+- SOLID Principles (OCP)
+- Dependency Injection
+- Service Layer Pattern
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [jaredhanson/passport](https://github.com/jaredhanson/passport) | ⭐ 22k+ | Simple, unobtrusive authentication for Node.js | The definitive real-world example of the Strategy pattern. |
+| [iluwatar/java-design-patterns](https://github.com/iluwatar/java-design-patterns) | ⭐ 85k+ | Java Design Patterns | Contains a pristine implementation of Strategy. |
+| [spring-projects/spring-security](https://github.com/spring-projects/spring-security) | ⭐ 10k+ | Spring Security | Heavily uses strategies for authentication mechanisms. |
+| [RefactoringGuru/design-patterns-cpp](https://github.com/RefactoringGuru/design-patterns-cpp) | ⭐ 5k+ | Patterns in C++ | Excellent reference for how to implement Strategy safely in memory-managed languages. |

@@ -1,0 +1,214 @@
+---
+sidebar_position: 3
+sidebar_label: "Inheritance vs Composition"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Inheritance vs Composition
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Inheritance vs Composition |
+| Difficulty | Intermediate |
+| Used For | Designing relationships between objects to reuse code effectively. |
+| Common Mistake | Using deep inheritance hierarchies (the "Gorilla Banana" problem). |
+| Performance | Both have negligible runtime overhead, but Composition is vastly superior for maintainability and compilation speed. |
+
+## 2. Engineering Story
+
+You are building a game engine. You start with a base `GameObject`. Then you need a character, so you create `Player` which inherits from `GameObject`. Then you need enemies, so you create `Enemy` (inherits `GameObject`). Now you need a boss enemy that can cast spells, so you make `MagicEnemy`. But wait, you also want a `MagicPlayer`. Do you create a `MagicEntity` base class? What if you want an enemy that can fly but not cast spells, and a player that can cast spells but not fly?
+
+Your inheritance tree becomes a massive, tangled nightmare. Every time you change the base `GameObject`, you break 50 subclasses.
+
+A senior engineer steps in and refactors the code using Composition. Instead of saying "A MagicPlayer *is a* GameObject", they say "A Player *has a* MagicComponent and a FlyingComponent." Suddenly, adding a new enemy type is as easy as snapping together Lego blocks.
+
+## 3. Real-World Analogy
+
+Inheritance is like biological genetics. If you inherit from your parents, you get their traits, and you can't easily swap them out at runtime. If your parent class has a flaw, you have that flaw. This is an "IS-A" relationship (A Car IS-A Vehicle).
+
+Composition is like cooking an Indian curry. You don't create a `SpicyTomatoCurry` by inheriting from a `BaseTomatoCurry` class. Instead, you start with a base gravy (the object) and you *compose* it by adding independent components: a pinch of Garam Masala, some Paneer, and a dash of cream. This is a "HAS-A" relationship (The Curry HAS-A Masala Component). If you want to make it vegan, you just swap out the cream component.
+
+| Paradigm | Relationship | Example | Flexibility |
+|---|---|---|---|
+| Inheritance | IS-A | `ElectricCar` extends `Car` | Rigid. Hard to change at runtime. |
+| Composition | HAS-A | `Car` has an `ElectricEngine` | Highly flexible. Swap engines anytime. |
+
+{/* TODO: [BAE-ILLUSTRATION] Mixing various masalas to compose a dish versus rigid inheritance */}
+
+## 4. Concept Explanation
+
+**Inheritance** defines a rigid relationship where a child class derives all properties and methods of a parent class. It tightly couples the child to the parent.
+**Composition** defines a relationship where complex objects are built by combining simpler, independent objects. It keeps classes loosely coupled.
+
+In modern software engineering, the golden rule is **"Favor Composition over Inheritance."** Deep inheritance trees lead to the Fragile Base Class problem, where a small change at the top breaks everything below it.
+
+## 5. Syntax Table
+
+| Paradigm | Python Example | Concept |
+|---|---|---|
+| Inheritance | `class Dog(Animal):` | `Dog` IS-A `Animal` |
+| Composition | `class Dog: def __init__(self): self.sound = BarkComponent()` | `Dog` HAS-A `BarkComponent` |
+
+## 6. Beginner Example
+
+Let's look at the classic inheritance trap and how composition fixes it.
+
+**The Inheritance Trap (Bad):**
+```python
+class Bird:
+    def fly(self):
+        print("Flying!")
+
+class Penguin(Bird):
+    # Penguins can't fly, but they inherited the fly method!
+    # Now we have to override it with an error.
+    def fly(self):
+        raise Exception("Penguins cannot fly!")
+```
+
+**The Composition Solution (Good):**
+```python
+class FlyingBehavior:
+    def execute(self):
+        print("Flying!")
+
+class SwimmingBehavior:
+    def execute(self):
+        print("Swimming!")
+
+class Penguin:
+    def __init__(self):
+        # We compose the Penguin with only the behaviors it actually needs.
+        self.move_behavior = SwimmingBehavior()
+
+    def move(self):
+        self.move_behavior.execute()
+
+p = Penguin()
+p.move() # "Swimming!"
+```
+
+## 7. Real-World Engineering Example
+
+In enterprise applications, composition is often achieved via Dependency Injection (which we will cover in depth later). Here is a TypeScript example of building an API Controller using Composition.
+
+```typescript
+// Components
+class Logger {
+    log(msg: string) { console.log(`[LOG]: ${msg}`); }
+}
+
+class UserRepository {
+    save(user: any) { /* db logic */ }
+}
+
+// The Controller is COMPOSED of a Logger and a Repository
+class UserController {
+    private logger: Logger;
+    private repo: UserRepository;
+
+    constructor(logger: Logger, repo: UserRepository) {
+        this.logger = logger;
+        this.repo = repo;
+    }
+
+    createUser(data: any) {
+        this.logger.log("Creating new user");
+        this.repo.save(data);
+    }
+}
+
+// If we used inheritance here (e.g., UserController extends BaseDbLoggerController),
+// we would be stuck with whatever database and logger the base class forced upon us.
+```
+
+## 8. Internal Working
+
+When using Inheritance, the compiler builds a single, large memory layout for the child object that physically includes all the parent's state fields.
+When using Composition, the main object's memory simply holds *pointers* (references) to the component objects, which live elsewhere on the heap.
+
+<LearningFlow
+  diagram={{
+    nodes: [
+      { id: '1', kind: 'core', title: 'Main Object (e.g. Car)', detail: '', x: 0, y: 40 },
+      { id: '2', kind: 'data', title: 'Engine Component', detail: '', x: 250, y: 40 },
+      { id: '3', kind: 'data', title: 'Wheels Component', detail: '', x: 500, y: 40 },
+      { id: '4', kind: 'process', title: 'Delegation Execution', detail: '', x: 750, y: 40 }
+    ],
+    edges: [
+
+      { source: '1', target: '2', label: 'HAS-A reference' },
+      { source: '1', target: '3', label: 'HAS-A reference' },
+      { source: '1', target: '4', label: 'calls engine.start()', animated: true }
+
+    ]
+  }}
+/>
+
+## 9. Performance Table
+
+| Strategy | Memory Overhead | Lookup Speed |
+|---|---|---|
+| Inheritance | Lower (all fields in one contiguous block) | Marginally faster direct access |
+| Composition | Slightly higher (pointers to other objects) | Marginally slower due to pointer dereferencing |
+
+*Note: In modern languages, this performance difference is microscopic and should NEVER be the reason you choose inheritance over composition.*
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What does "Favor Composition over Inheritance" mean? | It means you should prefer building complex classes by combining simpler component objects (HAS-A) rather than inheriting from base classes (IS-A) to avoid tight coupling. |
+| What is the "Gorilla Banana" problem? | "You wanted a banana but what you got was a gorilla holding the banana and the entire jungle." A quote by Joe Armstrong describing the problem with inheritance pulling in unnecessary parent state. |
+| When is Inheritance actually good? | When the relationship is a strict, undeniable IS-A relationship, the hierarchy is shallow (1-2 levels max), and subclasses genuinely share exactly the same behavior. |
+| Can you achieve polymorphism with Composition? | Yes, by composing your class with objects that implement a common interface (Strategy Pattern). |
+| What is the Fragile Base Class problem? | When a change in a base class inadvertently breaks the behavior of derived child classes because they are tightly coupled. |
+
+## 11. Tricky Questions & Edge Cases
+
+**Question:** In Python, can a class inherit from multiple parents?
+**Answer:** Yes, Python supports Multiple Inheritance. However, it can lead to the "Diamond Problem" (ambiguity when two parent classes have methods with the same name). Python resolves this using Method Resolution Order (MRO), but it is heavily discouraged in modern production systems. Use composition instead.
+
+## 12. Real-World Usage
+
+- **ReactJS:** React moved away from Class components and Inheritance (`class MyComponent extends React.Component`) entirely, adopting Hooks (Functions and Composition) to share stateful logic.
+- **Game Engines (Unity/Godot):** They use the Entity-Component-System (ECS) pattern. An Entity is just an ID, and it is *composed* of various Components (Transform, Renderer, Collider).
+
+## 13. Best Practices
+
+| Do | Don't |
+|---|---|
+| **DO** use Composition when you need to mix and match behaviors dynamically at runtime. | **DON'T** create inheritance trees deeper than 2 or 3 levels. It becomes unmaintainable. |
+| **DO** use Interfaces (or Abstract Base Classes) to define contracts for your components. | **DON'T** use inheritance just to reuse a utility function from another class. |
+
+## 14. Production Notes
+
+<Admonition type="info" title="Testing with Composition">
+Code written with Composition is exponentially easier to unit test. If a `UserController` inherits from `BaseDatabaseController`, you have to spin up a whole database just to test the user logic. If it is composed with a `DatabaseRepository` interface, you can just pass in a mock fake repository and test it instantly.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Bad Code | Good Code |
+|---|---|---|
+| Reusing code via inheritance | `class Stack(List):` (Now a Stack has methods like `.insert_at(index)`, which breaks the definition of a Stack!) | `class Stack: self.data = List()` (Hide the list and only expose `.push()` and `.pop()`) |
+| The God Base Class | `class BaseEntity:` with 50 methods for rendering, networking, and saving. | Separate components: `NetworkSync`, `Renderer`, `Serializer`. |
+
+## 16. Related Topics
+
+- Classes and Objects
+- SOLID Principles
+- Design Patterns (Strategy Pattern)
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [facebook/react](https://github.com/facebook/react) | ⭐ 210k+ | The React UI library | A massive production example of migrating from inheritance to composition (Hooks). |
+| [bevyengine/bevy](https://github.com/bevyengine/bevy) | ⭐ 30k+ | ECS game engine in Rust | Pure composition-based architecture (Entity-Component-System). |
+| [go-gitea/gitea](https://github.com/go-gitea/gitea) | ⭐ 40k+ | Git with a cup of tea | Written in Go, a language that intentionally omitted classical inheritance to force composition. |
+| [google/guice](https://github.com/google/guice) | ⭐ 11k+ | Lightweight dependency injection | Facilitates composing Java objects together efficiently. |

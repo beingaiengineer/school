@@ -1,0 +1,220 @@
+---
+sidebar_position: 8
+sidebar_label: "Dependency Injection"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Dependency Injection in Production
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Dependency Injection (DI) |
+| Difficulty | Advanced |
+| Used For | Decoupling classes from their dependencies by passing them in from the outside, rather than creating them internally. |
+| Common Mistake | Using DI to inject massive god-objects instead of small, focused interfaces. |
+| Performance | Slight startup overhead for IoC containers to map dependencies, but zero runtime cost thereafter. |
+
+## 2. Engineering Story
+
+You are writing unit tests for your new `PaymentService`. Inside the `PaymentService` constructor, you wrote `this.db = new MySQLDatabase()`. When you run your test suite, it tries to connect to the production database and fails because the CI server doesn't have the database credentials.
+
+To fix this, you have to spin up a Docker database just to run a simple 2-millisecond unit test. The test suite now takes 15 minutes to run. Developers stop running tests. Bugs slip into production.
+
+A principal engineer steps in and applies Dependency Injection. Instead of the `PaymentService` creating the database, it *asks* for the database in its constructor: `constructor(db: Database)`. Now, the production code passes in the MySQL database, but the test suite passes in a tiny, fake `InMemoryDatabase`. The test suite drops from 15 minutes to 2 seconds. The team rejoices.
+
+## 3. Real-World Analogy
+
+Imagine you buy an electronic device, like a TV.
+
+If a TV was built **without** Dependency Injection, it would come with a built-in power plant inside the chassis. If the power plant breaks, or if you move to a country with a different voltage, you have to throw away the whole TV.
+
+Because TVs are built **with** Dependency Injection, they just have a standard power plug (an Interface). The TV says, "I don't care *how* you generate electricity (coal, solar, nuclear), just plug it into my port and give me 240V." You inject the dependency (electricity) from the outside via the wall socket.
+
+| OOP Concept | TV Analogy |
+|---|---|
+| Dependent Class | The TV |
+| Interface (Contract) | The shape of the power plug |
+| Concrete Dependency | The local power grid (e.g., Solar Power) |
+| Injection (Constructor) | Plugging the TV into the wall |
+| IoC Container | The house's electrical wiring distributing power everywhere |
+
+{/* TODO: [BAE-ILLUSTRATION] An Indian multi-plug adapter representing injected dependencies */}
+
+## 4. Concept Explanation
+
+**Dependency Injection (DI)** is a technique where an object receives other objects that it depends on, rather than creating them itself.
+
+It is the practical implementation of the **Dependency Inversion Principle (DIP)** from SOLID. By injecting dependencies, classes become loosely coupled, highly testable, and easily configurable. In large applications, DI is usually managed by an **Inversion of Control (IoC) Container** (like Spring or NestJS), which automatically figures out what dependencies a class needs and hands them to it.
+
+## 5. Syntax Table
+
+| Method | Example | Use Case |
+|---|---|---|
+| Constructor Injection | `constructor(private repo: Repo)` | **Best Practice**. Fails fast if dependency is missing. |
+| Setter Injection | `setRepo(repo: Repo)` | Optional dependencies. Rarely used today. |
+| Field Injection | `@Inject() repo: Repo` | Easy to write, but makes testing harder. |
+
+## 6. Beginner Example
+
+Let's look at the difference between tight coupling and DI.
+
+**Bad (Tight Coupling):**
+```python
+class EmailService:
+    def send(self, msg):
+        print(f"Sending email: {msg}")
+
+class NotificationManager:
+    def __init__(self):
+        # BAD: Creating the dependency internally
+        self.email = EmailService()
+
+    def notify(self, msg):
+        self.email.send(msg)
+```
+
+**Good (Dependency Injection):**
+```python
+class NotificationManager:
+    # GOOD: Asking for the dependency via constructor
+    def __init__(self, sender):
+        self.sender = sender
+
+    def notify(self, msg):
+        self.sender.send(msg)
+
+# The client decides what to inject!
+email_svc = EmailService()
+manager = NotificationManager(email_svc)
+```
+
+## 7. Real-World Engineering Example
+
+In TypeScript/Node (using a framework like NestJS or tsyringe), DI is handled via decorators and metadata reflection. You define the classes, and the framework wires them together.
+
+```typescript
+import { injectable, inject } from "tsyringe";
+
+// 1. Define the Interface
+interface Logger {
+    log(message: string): void;
+}
+
+// 2. Concrete Implementation
+@injectable()
+class CloudWatchLogger implements Logger {
+    log(msg: string) { console.log(`[AWS] ${msg}`); }
+}
+
+// 3. The Service that needs the Logger
+@injectable()
+class OrderService {
+    // The framework will look at the type and automatically inject the Logger
+    constructor(@inject("Logger") private logger: Logger) {}
+
+    createOrder() {
+        this.logger.log("Order created successfully.");
+    }
+}
+
+// 4. App Startup (IoC Container Setup)
+import { container } from "tsyringe";
+// We tell the container: "Whenever someone asks for 'Logger', give them CloudWatchLogger"
+container.register("Logger", { useClass: CloudWatchLogger });
+
+// The container automatically instantiates OrderService AND its dependencies
+const service = container.resolve(OrderService);
+service.createOrder();
+```
+
+## 8. Internal Working
+
+An IoC Container (like Spring or tsyringe) builds a dependency graph on startup. It uses Reflection to inspect the constructors of all registered classes. It finds the classes with no dependencies, instantiates them first (storing them in a map), then moves up the graph, passing those instances into the constructors of higher-level classes until the entire application is wired together in the heap.
+
+<LearningFlow
+  diagram={{
+    nodes: [
+      { id: '1', kind: 'tool', title: 'IoC Container (Startup)', detail: '', x: 0, y: 40 },
+      { id: '2', kind: 'process', title: 'Inspects Constructors via Reflection', detail: '', x: 250, y: 40 },
+      { id: '3', kind: 'data', title: 'Instantiates DatabaseConnection', detail: '', x: 500, y: 40 },
+      { id: '4', kind: 'data', title: 'Instantiates UserRepository (injects DB)', detail: '', x: 750, y: 40 },
+      { id: '5', kind: 'core', title: 'Instantiates UserService (injects Repo)', detail: '', x: 1000, y: 40 }
+    ],
+    edges: [
+
+      { source: '1', target: '2', label: 'builds graph' },
+      { source: '2', target: '3', label: 'no deps, create first' },
+      { source: '3', target: '4', label: 'passes reference', animated: true },
+      { source: '4', target: '5', label: 'passes reference', animated: true }
+
+    ]
+  }}
+/>
+
+## 9. Performance Table
+
+| Aspect | Overhead | Note |
+|---|---|---|
+| Startup Time | Slows down application boot by milliseconds/seconds. | Container must scan and reflect on hundreds of classes. |
+| Runtime Memory | Negligible | References are standard heap pointers. |
+| Runtime Speed | Zero overhead | Direct method calls once instantiated. |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between DI and IoC? | Inversion of Control (IoC) is the broad principle that the flow of the program is controlled by a framework, not your custom code. Dependency Injection (DI) is a specific design pattern used to implement IoC. |
+| Why is Constructor Injection preferred over Field Injection? | Constructor Injection makes dependencies explicit, guarantees the object is fully initialized upon creation, and allows the object to be easily tested without a DI framework. |
+| What is a DI Container? | A framework module that automatically manages the creation, wiring, and lifecycle of objects in your application. |
+| How does DI affect Unit Testing? | It makes unit testing trivial. You can pass mock objects (e.g., `new MockRepo()`) directly into the constructor during the test setup. |
+| What is a Singleton vs Transient in a DI container? | A Singleton means the container creates one instance and shares it everywhere. Transient means the container creates a brand new instance every time it is requested. |
+
+## 11. Tricky Questions & Edge Cases
+
+**Question:** What happens if Service A needs Service B, and Service B needs Service A?
+**Answer:** This is a **Circular Dependency**. Most DI containers will throw a fatal error on startup because they cannot resolve the chicken-and-egg problem. You fix it by redesigning the architecture to extract the shared logic into a new Service C, which both A and B can depend on.
+
+## 12. Real-World Usage
+
+- **Java (Spring Framework):** The `@Autowired` annotation and ApplicationContext are the gold standard of DI.
+- **Angular (Frontend):** Angular has a powerful built-in DI system. When a component asks for `constructor(private http: HttpClient)`, Angular provides it.
+- **Go / Rust:** Modern systems programming languages often skip magical IoC containers and do "Manual DI" in the `main.go` file, explicitly wiring objects together for maximum type safety and compile-time speed.
+
+## 13. Best Practices
+
+| Do | Don't |
+|---|---|
+| **DO** rely on abstractions/interfaces rather than concrete classes when injecting. | **DON'T** use the Service Locator anti-pattern (where a class asks the container for a dependency mid-execution). |
+| **DO** configure your DI container at the very edge of your application (the `main` file). | **DON'T** inject the DI container itself into your business logic. |
+
+## 14. Production Notes
+
+<Admonition type="caution" title="Framework Lock-in">
+If you heavily use Field Injection (`@Inject`) directly inside your domain models, your core business logic becomes tightly coupled to the DI framework (like Spring or NestJS). Prefer pure constructor injection so your classes remain plain old objects that can be moved to any framework.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Bad Code | Good Code |
+|---|---|---|
+| The `new` keyword in logic | `class App { init() { db = new DB(); } }` | `class App { init(db) { this.db = db; } }` |
+| Over-injecting (God Class) | `constructor(a, b, c, d, e, f, g, h)` | If a class needs 8 dependencies, it violates SRP. Split the class up. |
+
+## 16. Related Topics
+
+- SOLID Principles (DIP)
+- Clean Architecture
+- Service Layer Pattern
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [google/guice](https://github.com/google/guice) | ⭐ 11k+ | Lightweight dependency injection for Java | A masterclass in how DI containers are built under the hood. |
+| [microsoft/tsyringe](https://github.com/microsoft/tsyringe) | ⭐ 4k+ | Lightweight DI container for TypeScript | Shows how DI works in modern JavaScript ecosystems via decorators. |
+| [inversify/InversifyJS](https://github.com/inversify/InversifyJS) | ⭐ 10k+ | IoC container for TS/JS | A robust, highly configurable DI container for Node. |
+| [google/wire](https://github.com/google/wire) | ⭐ 12k+ | Compile-time DI for Go | Demonstrates how to achieve DI without reflection overhead by generating code at compile time. |
