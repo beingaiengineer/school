@@ -279,3 +279,13 @@ When generating images in the interactive session, ensure:
 | BAE-REVIEW-060 | `docs/school/python/file-handling/json-files.mdx` | `json-files.png` | A highly relatable Indian real-world scenario explaining JSON Files. |
 | BAE-REVIEW-061 | `docs/school/python/file-handling/pathlib.mdx` | `pathlib.png` | A highly relatable Indian real-world scenario explaining Pathlib. |
 | BAE-REVIEW-062 | `docs/school/python/file-handling/file-best-practices.mdx` | `file-best-practices.png` | A highly relatable Indian real-world scenario explaining File Best Practices. |
+| BAE-REVIEW-063 | `docs/school/python/modules-packages/modules.mdx` | `modules.png` | An Indian street vendor sorting items neatly in separate containers, representing modular organization. |
+| BAE-REVIEW-064 | `docs/school/python/modules-packages/packages.mdx` | `packages.png` | An Indian street vendor sorting items neatly in separate containers, representing directory structures. |
+| BAE-REVIEW-065 | `docs/school/python/modules-packages/virtual-environments.mdx` | `virtual-environments.png` | An Indian street vendor sorting items neatly in separate containers, representing isolated environments. |
+| BAE-REVIEW-066 | `docs/school/python/modules-packages/pip.mdx` | `pip.png` | An Indian street vendor sorting items neatly in separate containers, representing package managers. |
+| BAE-REVIEW-067 | `docs/school/python/modules-packages/pyproject-toml.mdx` | `pyproject-toml.png` | An Indian street vendor sorting items neatly in separate containers, representing configuration files. |
+| BAE-REVIEW-068 | `docs/school/python/modules-packages/dependency-management.mdx` | `dependency-management.png` | An Indian street vendor sorting items neatly in separate containers, representing dependency resolution. |
+| BAE-REVIEW-069 | `docs/school/python/advanced-python/memory-management.mdx` | `memory-management.png` | An Indian street vendor sorting items neatly in separate containers, representing memory allocation. |
+| BAE-REVIEW-070 | `docs/school/python/advanced-python/garbage-collection.mdx` | `garbage-collection.png` | An Indian street vendor sorting items neatly in separate containers, representing waste cleanup. |
+| BAE-REVIEW-071 | `docs/school/python/advanced-python/shallow-vs-deep-copy.mdx` | `shallow-vs-deep-copy.png` | An Indian street vendor sorting items neatly in separate containers, representing copying mechanisms. |
+| BAE-REVIEW-072 | `docs/school/python/advanced-python/mutability.mdx` | `mutability.png` | An Indian street vendor sorting items neatly in separate containers, representing changing states. |
