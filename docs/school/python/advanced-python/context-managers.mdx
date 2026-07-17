@@ -9,14 +9,19 @@ import LearningFlow from '@site/src/components/LearningFlow';
 ## 1. Quick Summary
 Bro, Context Managers are the clean, professional way to handle resources in Python. Whenever you need to "setup" something, do some work, and guarantee it gets "torn down" (even if an error happens), you use a Context Manager. The most common way you see this is the `with` statement.
 
-## 2. Real-World Analogy
+## 2. Engineering Story
+Bro, imagine a production service that writes logs to a file 5,000 times a second. One day, the service crashes under load because it hit the 'Too many open files' OS limit. Why? A junior engineer forgot to call `.close()` after an exception was thrown. To fix this, you need a bulletproof mechanism that guarantees resources are released exactly when you're done with them, no matter if the code succeeds or blows up. That's why context managers exist.
+
+## 3. Real-World Analogy
 Think of a Context Manager like renting a car.
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: An Indian tea shop owner securely locking his shop shutter at the end of the day despite bad weather, representing guaranteed resource cleanup. */}
 1. **Enter:** You sign the papers and get the keys.
 2. **Body:** You drive the car around (do your work).
 3. **Exit:** You return the car to the lot.
 Even if you crash the car (throw an Exception), the rental company *guarantees* they are taking the car back and closing the contract. You never have to remember to "close" the rental yourself.
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 Without context managers, you have to use messy `try...finally` blocks to ensure things like files or database connections are closed. If you forget the `finally` block, a crash leaves the file locked or the database connection dangling forever.
 
 A Context Manager wraps that logic up. It relies on two magic methods:
@@ -41,7 +46,7 @@ A Context Manager wraps that logic up. It relies on two magic methods:
   }}
 />
 
-## 4. Syntax Table
+## 5. Syntax Table
 
 | Approach | Syntax | Best For |
 |---|---|---|
@@ -49,7 +54,7 @@ A Context Manager wraps that logic up. It relies on two magic methods:
 | **Class-based** | `class MyManager: def __enter__... def __exit__...` | Complex state management where you need full OOP control. |
 | **Generator (`@contextmanager`)** | `@contextmanager def my_manager(): yield` | Quick, simple context managers without writing a whole class. |
 
-## 5. Beginner Example
+## 6. Beginner Example
 Here is the old, messy way vs the clean `with` statement way.
 
 ```python
@@ -67,7 +72,7 @@ with open("data.txt", "w") as file:
     # file is automatically closed the moment we unindent!
 ```
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 Bro, in backend engineering, you write custom context managers all the time for Database Transactions. You want to commit if successful, but rollback if there's an error.
 
 Here is how you build one using the `contextlib` decorator (the cleanest way).
@@ -113,7 +118,7 @@ except ValueError:
     pass
 ```
 
-## 7. Internal Working
+## 8. Internal Working
 When Python sees `with X() as y:`, here is the exact execution flow:
 1. It evaluates `X()`.
 2. It calls `X().__enter__()`.
@@ -123,7 +128,7 @@ When Python sees `with X() as y:`, here is the exact execution flow:
    - If there was no error, the `exc` arguments are `None`.
    - If there was an error, the `exc` arguments contain the crash info. If `__exit__` returns `True`, it swallows the error. If it returns `False` (or None), the error crashes the program as normal.
 
-## 8. Performance Table
+## 9. Performance Table
 
 | Method | Speed / Overhead | Readability | Use Case |
 |---|---|---|---|
@@ -131,7 +136,7 @@ When Python sees `with X() as y:`, here is the exact execution flow:
 | **`@contextmanager` decorator** | Fast | Excellent | Wrapping simple setup/teardown logic cleanly. |
 | **Naked `try/finally`** | Fastest (No function calls) | Terrible | Low-level C-like optimizations (rarely needed). |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer | Explanation |
 |---|---|---|
@@ -139,32 +144,39 @@ When Python sees `with X() as y:`, here is the exact execution flow:
 | What are the required magic methods for a context manager? | `__enter__` and `__exit__`. | `__enter__` sets up the resource. `__exit__` tears it down and handles potential exceptions. |
 | Can a context manager suppress an exception? | Yes. | If the `__exit__` method explicitly returns `True`, Python will ignore the exception that occurred inside the `with` block and continue execution. |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 **Q: I used `@contextmanager`, but my cleanup code didn't run when an error happened!**
 Bro, if you use `@contextmanager`, everything *after* the `yield` statement is basically your `__exit__`. BUT, if an exception happens in the `with` block, that exception is thrown *at the `yield` line*. If you don't put a `try...finally` around the `yield`, your generator crashes and the cleanup code never runs!
 
 **Q: Do I always need `as variable`?**
 No. `with lock:` is perfectly valid if you don't need to interact with the object returned by `__enter__`.
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 - **Threading:** `with lock:` to acquire a mutex lock and guarantee it gets released so you don't deadlock your server.
 - **Testing:** `with pytest.raises(ValueError):` to temporarily tell the test runner that we *expect* a crash to happen right now.
 - **Timing:** Creating a `with Timer() as t:` to measure how many milliseconds a specific block of code takes to execute.
 
-## 12. Best Practices
+## 13. Best Practices
 - **Use `@contextmanager` over Classes:** 90% of the time, the generator decorator is shorter, cleaner, and easier to read than writing a full class with `__enter__` and `__exit__`.
 - **Keep blocks short:** Only put the code that *needs* the resource inside the `with` block. Don't do heavy CPU math inside a `with db_connection:` block, holding the database hostage.
 - **Always yield:** If you use the decorator, do not forget the `yield` statement, or Python will yell at you.
 
-## 13. Production Notes
+## 14. Production Notes
 In Async Python (FastAPI/Asyncio), you must use **Async Context Managers**. They use the `async with` syntax, and the magic methods become `__aenter__` and `__aexit__`. This is mandatory for things like async database connections (`asyncpg`) or async HTTP clients (`aiohttp`).
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 - **Forgetting the `()`:** Doing `with threading.Lock:` instead of `with threading.Lock():`. You must instantiate the object!
 - **Returning the wrong thing:** Having `__enter__` return `None` when the user expects to use `as f`.
 - **Swallowing errors accidentally:** Writing an `__exit__` method that accidentally returns `True` (or a truthy value), which silently hides all crashes in your application.
 
-## 15. Related Topics
+## 16. Related Topics
 - **File Handling:** The most common place beginners use `with`.
 - **Exceptions:** The exact mechanisms that `__exit__` is designed to handle.
 - **Decorators:** How `@contextmanager` modifies a simple generator.
+
+
+### Top GitHub Repositories
+
+| Repository | Description | Link |
+|---|---|---|
+| Python Contextlib Examples | Real-world usage of Python's contextlib. | [Explore](https://github.com/dabeaz/concurrency) |

@@ -289,16 +289,16 @@ No reusable insights recorded yet.
 - [x] [BAE-REVIEW-070] | Audit `advanced-python/garbage-collection.mdx`
 - [x] [BAE-REVIEW-071] | Audit `advanced-python/shallow-vs-deep-copy.mdx`
 - [x] [BAE-REVIEW-072] | Audit `advanced-python/mutability.mdx`
-- [ ] [BAE-REVIEW-073] | Audit `advanced-python/context-managers.mdx`
-- [ ] [BAE-REVIEW-074] | Audit `advanced-python/descriptors.mdx`
-- [ ] [BAE-REVIEW-075] | Audit `advanced-python/metaclasses.mdx`
-- [ ] [BAE-REVIEW-076] | Audit `advanced-python/monkey-patching.mdx`
-- [ ] [BAE-REVIEW-077] | Audit `advanced-python/dynamic-typing.mdx`
-- [ ] [BAE-REVIEW-078] | Audit `advanced-python/python-internals.mdx`
-- [ ] [BAE-REVIEW-079] | Audit `concurrency/threading.mdx`
-- [ ] [BAE-REVIEW-080] | Audit `concurrency/multiprocessing.mdx`
-- [ ] [BAE-REVIEW-081] | Audit `concurrency/asyncio.mdx`
-- [ ] [BAE-REVIEW-082] | Audit `concurrency/async-await.mdx`
+- [x] [BAE-REVIEW-073] | Audit `advanced-python/context-managers.mdx`
+- [x] [BAE-REVIEW-074] | Audit `advanced-python/descriptors.mdx`
+- [x] [BAE-REVIEW-075] | Audit `advanced-python/metaclasses.mdx`
+- [x] [BAE-REVIEW-076] | Audit `advanced-python/monkey-patching.mdx`
+- [x] [BAE-REVIEW-077] | Audit `advanced-python/dynamic-typing.mdx`
+- [x] [BAE-REVIEW-078] | Audit `advanced-python/python-internals.mdx`
+- [x] [BAE-REVIEW-079] | Audit `concurrency/threading.mdx`
+- [x] [BAE-REVIEW-080] | Audit `concurrency/multiprocessing.mdx`
+- [x] [BAE-REVIEW-081] | Audit `concurrency/asyncio.mdx`
+- [x] [BAE-REVIEW-082] | Audit `concurrency/async-await.mdx`
 - [ ] [BAE-REVIEW-083] | Audit `concurrency/race-conditions.mdx`
 - [ ] [BAE-REVIEW-084] | Audit `concurrency/queues.mdx`
 - [ ] [BAE-REVIEW-085] | Audit `concurrency/locks-semaphores.mdx`
@@ -367,6 +367,7 @@ No reusable insights recorded yet.
 
 | BAE ID | What's Done (High Level) |
 |---|---|
+| [BAE-REVIEW-073] through [BAE-REVIEW-082] | Audited 10 Python topics (Advanced & Concurrency), added unique Engineering Stories, added distinct Illustration placeholders, and added unique GitHub Repositories. |
 | [BAE-REVIEW-063] through [BAE-REVIEW-072] | Audited 10 Python modules and advanced topics, fixed heading numbering, injected Engineering Story, added Illustration placeholder, and added GitHub Repositories. |
 | [BAE-REVIEW-042] through [BAE-REVIEW-051] | Audited 10 OOP topics, fixed heading numbering, injected Engineering Story, and added GitHub Repositories. |
 | [BAE-REVIEW-031] through [BAE-REVIEW-041] | Audited 11 collections and strings topics, fixed section numbers, inserted Engineering Story, and added GitHub Repositories. |
