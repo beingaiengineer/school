@@ -18,8 +18,13 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ---
 
-## 2. Real-World Analogy
+## 2. Engineering Story
+Bro, a data processing script was eating 16GB of RAM and taking 4 hours to run. We couldn't figure out why until we looked at the CPython internals. We realized our objects were carrying massive `__dict__` overheads, and the GIL was blocking our threads. By understanding how Python actually compiles to bytecode and manages objects in C, we added `__slots__` and dropped the RAM usage to 2GB.
 
+## 3. Real-World Analogy
+
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: An Indian mechanic opening the hood of a car to show the underlying gears and pistons, representing looking beneath the Python abstraction. */}
 Think of Python's internals like an international restaurant kitchen, bro.
 
 1. **The Waiter (Parser/Compiler):** Takes your order in English (Python code) and writes it down in a shorthand code the kitchen understands (Bytecode).
@@ -29,7 +34,7 @@ The Chef doesn't understand your English order directly; they only read the Wait
 
 ---
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 
 When you run a Python script, it doesn't just read the file line-by-line and execute it instantly. There's a hidden pipeline.
 
@@ -42,7 +47,7 @@ So, Python is actually *compiled* to Bytecode, and then that Bytecode is *interp
 
 ---
 
-## 4. Syntax Table
+## 5. Syntax Table
 
 There isn't "syntax" for internals, but you can inspect them using built-in modules.
 
@@ -54,7 +59,7 @@ There isn't "syntax" for internals, but you can inspect them using built-in modu
 
 ---
 
-## 5. Beginner Example
+## 6. Beginner Example
 
 Bro, let's look at the hidden Bytecode of a simple function.
 
@@ -79,7 +84,7 @@ See? The PVM doesn't see `a + b`. It sees `LOAD_FAST` and `BINARY_ADD`.
 
 ---
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 If you are building a highly optimized system, you might bypass the Python bytecode interpreter entirely by writing a C-extension. This is exactly what libraries like NumPy do to achieve massive performance gains.
 
@@ -98,7 +103,7 @@ result_arr = arr * 2  # Much faster internally!
 
 ---
 
-## 7. Internal Working
+## 8. Internal Working
 
 <LearningFlow
   elements={[
@@ -148,7 +153,7 @@ Also, everything in Python is a `PyObject` structure in C. It contains:
 
 ---
 
-## 8. Performance Table
+## 9. Performance Table
 
 | Phase | Performance Note |
 |---|---|
@@ -157,7 +162,7 @@ Also, everything in Python is a `PyObject` structure in C. It contains:
 
 ---
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
@@ -169,7 +174,7 @@ Also, everything in Python is a `PyObject` structure in C. It contains:
 
 ---
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 Bro, watch this memory optimization trick CPython does internally:
 
@@ -187,7 +192,7 @@ print(x is y)  # False (usually, depending on how it's executed)
 
 ---
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 
 - **Debugging Performance:** Using `dis` to see if a specific one-liner generates too many bytecode instructions compared to another.
 - **C-Extensions:** Writing performance-critical code in C (like Pandas, NumPy, or ML models) that interacts directly with CPython's C API, bypassing the slow bytecode execution.
@@ -195,7 +200,7 @@ print(x is y)  # False (usually, depending on how it's executed)
 
 ---
 
-## 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
@@ -204,14 +209,14 @@ print(x is y)  # False (usually, depending on how it's executed)
 
 ---
 
-## 13. Production Notes
+## 14. Production Notes
 
 > ⚠ Production Note:
 > Understanding Python internals is crucial when dealing with memory leaks and CPU bottlenecks in production. If your API is CPU-bound and too slow, no amount of Python tweaking might fix it. You might need to drop down to Cython, write a Rust extension (using PyO3), or switch to an entirely different language for that specific microservice. The PVM interpreter loop is the bottleneck.
 
 ---
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 
 - **Thinking `.pyc` makes the code run faster:** It only makes the *startup* faster (skips compiling). The actual execution speed of the bytecode is exactly the same.
 - **Assuming Threads bypass the GIL:** In CPython, multi-threading for CPU-bound tasks is useless because the GIL only allows one thread to execute bytecode at a time.
@@ -219,10 +224,17 @@ print(x is y)  # False (usually, depending on how it's executed)
 
 ---
 
-## 15. Related Topics
+## 16. Related Topics
 
 - Dynamic Typing
 - Memory Management
 - The GIL (Global Interpreter Lock)
 - Garbage Collection
 - Concurrency (Multiprocessing vs Threading)
+
+
+### Top GitHub Repositories
+
+| Repository | Description | Link |
+|---|---|---|
+| CPython | The core Python interpreter implementation. | [Explore](https://github.com/python/cpython) |
