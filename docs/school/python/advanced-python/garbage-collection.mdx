@@ -9,10 +9,22 @@ import LearningFlow from '@site/src/components/LearningFlow';
 ## 1. Quick Summary
 Bro, Garbage Collection (GC) is Python's background cleanup crew. While Reference Counting handles 99% of memory cleanup instantly, the Garbage Collector exists specifically to catch and destroy "circular references"—situations where objects point to each other, preventing their reference counts from ever reaching zero.
 
-## 2. Real-World Analogy
+## 2. Engineering Story
+
+Bro, imagine you're deploying a large-scale system at a tech giant like Zomato. You have complex logic for handling high concurrency and massive data flows. Without understanding garbage collection, you might end up with severe performance bottlenecks or unmaintainable code that breaks under pressure. Mastering this concept is crucial for building robust, production-ready systems that can handle real-world scale smoothly.
+
+## 3. Real-World Analogy
 Imagine two friends holding each other's hands and refusing to let go. The normal hotel staff (Reference Counting) can't kick them out because they claim they are still "with someone." The Garbage Collector is the specialized security team that periodically sweeps the hotel, identifies these stubborn, isolated groups holding hands in an empty hallway, and throws them out together to free up space.
 
-## 3. Concept Explanation
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: An Indian street vendor sorting items neatly in separate containers, representing waste cleanup. */}
+
+| Real-World Scenario | Python Equivalent |
+|---|---|
+| General untracked mess | Unoptimized or disorganized code |
+| Neatly sorted and isolated items | Proper use of Garbage Collection |
+
+## 4. Concept Explanation
 As we learned in Memory Management, when a variable's reference count drops to `0`, Python deletes it from memory immediately.
 But what if Object A points to Object B, and Object B points back to Object A? Even if you delete both variables from your code, their internal reference counts remain at `1` because they are keeping *each other* alive. This is a **circular reference**, and it causes a memory leak.
 
@@ -38,7 +50,7 @@ Python's `gc` module runs a cyclic garbage collector periodically to find these 
   }}
 />
 
-## 4. Syntax Table
+## 5. Syntax Table
 
 | Function | Purpose |
 |---|---|
@@ -48,7 +60,7 @@ Python's `gc` module runs a cyclic garbage collector periodically to find these 
 | `gc.get_objects()` | Returns a list of all objects currently tracked by the GC. |
 | `gc.get_threshold()` | Shows the thresholds for the 3 GC generations. |
 
-## 5. Beginner Example
+## 6. Beginner Example
 Let's create a circular reference and watch the Garbage Collector clean it up.
 
 ```python
@@ -81,7 +93,7 @@ print("Forcing GC run...")
 gc.collect()  # Now you will see the "Destroyed" prints!
 ```
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 Bro, in high-performance web frameworks like Instagram's Django servers, the automatic GC sweeping actually causes CPU spikes (GC Pauses) that slow down web requests. Engineers sometimes disable the GC during requests and only run it manually between requests.
 
 ```python
@@ -104,7 +116,7 @@ def handle_web_request():
 print(handle_web_request())
 ```
 
-## 7. Internal Working
+## 8. Internal Working
 Python's GC uses a **Generational** approach to be efficient. It divides objects into 3 generations (Generation 0, 1, and 2).
 1. **Gen 0:** New objects. The GC sweeps here most frequently.
 2. **Gen 1:** Objects that survived a Gen 0 sweep move here. Swept less frequently.
@@ -112,7 +124,7 @@ Python's GC uses a **Generational** approach to be efficient. It divides objects
 
 *Why?* Because statistics show that most objects die young (like variables inside a function). If an object has survived multiple sweeps, it's probably going to stick around, so Python stops wasting CPU time checking it constantly.
 
-## 8. Performance Table
+## 9. Performance Table
 
 | Mechanism | CPU Impact | Memory Efficiency | Note |
 |---|---|---|---|
@@ -120,7 +132,7 @@ Python's GC uses a **Generational** approach to be efficient. It divides objects
 | **Generational GC** | Noticeable (Spikes) | High | Sweeps only when thresholds are reached. |
 | **Disabled GC** | None | Risk of OOM | Used by expert teams who manage circular loops manually. |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer | Explanation |
 |---|---|---|
@@ -128,32 +140,39 @@ Python's GC uses a **Generational** approach to be efficient. It divides objects
 | What is a circular reference? | Two or more objects referencing each other, keeping their ref-counts > 0. | Example: A doubly linked list node, or a parent holding a child object that holds a `parent` attribute. |
 | How does Python optimize GC? | Using Generational Garbage Collection. | It assumes young objects die fast and old objects live long, prioritizing sweeps on new objects to save CPU time. |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 **Q: I have a circular reference, but `gc.collect()` isn't cleaning it up! Why?**
 Bro, if you are using an older Python version (pre-3.4) and your objects have custom `__del__` methods, the GC refuses to delete them! It doesn't know which `__del__` to call first. In Python 3.4+, PEP 442 fixed this, but it's still a classic trap in legacy codebases.
 
 **Q: Can I just disable the GC completely?**
 Yes (`gc.disable()`). Some gaming companies and massive tech platforms do this to prevent frame drops or request latency. BUT, if you do this, you must write perfectly clean code with absolutely zero circular references, or your RAM will fill up and crash the server.
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 - **Doubly Linked Lists / Trees:** Data structures that naturally point back to their parents.
 - **ORM Models:** Database objects where a `User` points to `Posts`, and `Posts` have an `author` pointing back to the `User`.
 - **Game Dev:** Managing memory sweeps manually during loading screens instead of during active gameplay to avoid stuttering.
 
-## 12. Best Practices
+## 13. Best Practices
 - **Use `weakref`:** If you *must* have an object point back to its parent (like a tree node), use Python's `weakref` module. A weak reference does not increase the reference count!
 - **Don't over-optimize:** Unless you are handling tens of thousands of requests per second, leave the GC alone. Python's defaults are highly tuned.
 - **Break loops manually:** If you know you have a circular loop, explicitly set the references to `None` when you are done with them.
 
-## 13. Production Notes
+## 14. Production Notes
 If you are debugging a memory leak in a production server, the first thing to check is if `gc.garbage` is populated. The `objgraph` library is heavily used by production engineers to visualize object graphs and visually locate exactly which objects are looping and refusing to die.
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 - **Calling `gc.collect()` everywhere:** This will tank your application's CPU performance. Let Python handle it.
 - **Assuming GC handles everything immediately:** GC only runs when certain allocation thresholds are hit. Your memory might look "high" for a while until the sweep triggers.
 - **Accidental global loops:** Storing objects in a global dictionary for caching, and those objects accidentally reference the dictionary itself.
 
-## 15. Related Topics
+## 16. Related Topics
 - **Memory Management:** The foundational concept of how Python requests RAM.
 - **Weakref Module:** The professional way to build parent-child references without triggering GC issues.
 - **Classes and Objects:** Where `__del__` magic methods are defined.
+
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [python/cpython](https://github.com/python/cpython) | ⭐ 60k+ | The official Python implementation | It shows how Garbage Collection is implemented under the hood in C. |
