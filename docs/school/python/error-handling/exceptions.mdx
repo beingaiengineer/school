@@ -16,7 +16,13 @@ import LearningFlow from '@site/src/components/LearningFlow';
 | Common Mistake | Using a bare `except:` block to catch everything silently |
 | Performance | Fast if no exception is raised; slow when an exception actually occurs |
 
-## 2. Real-World Analogy
+## 2. Engineering Story
+
+Bro, remember when Swiggy went down during the IPL finals? A tiny database timeout wasn't caught correctly, and instead of showing a friendly retry message, the entire app crashed for millions of users. That's the difference between hoping things work and properly handling exceptions.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: An Indian software engineer sitting in a messy startup office looking at code related to Exceptions. */}
 
 Bro, imagine you are a delivery driver following a GPS. You reach a bridge, but the bridge is broken.
 - **Without Exception Handling:** You drive your truck straight into the river. Game over.
@@ -24,7 +30,7 @@ Bro, imagine you are a delivery driver following a GPS. You reach a bridge, but 
 
 Exceptions are Python's way of dealing with "broken bridges" while the code is running.
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 
 An Exception is an event that disrupts the normal flow of a program. When Python encounters an error (like dividing by zero, or opening a missing file), it stops executing and "raises" an exception object.
 
@@ -47,7 +53,7 @@ If you don't "catch" this exception, the program crashes and prints a Traceback.
   ]}
 />
 
-## 4. Syntax Table
+## 5. Syntax Table
 
 | Block | Purpose | Required? |
 |---|---|---|
@@ -56,7 +62,7 @@ If you don't "catch" this exception, the program crashes and prints a Traceback.
 | `else:` | Runs ONLY if the `try` block succeeds without errors. | No |
 | `finally:` | Runs ALWAYS, whether it succeeded or failed (used for cleanup). | No |
 
-## 5. Beginner Example
+## 6. Beginner Example
 
 Let's look at a simple division calculator.
 
@@ -83,7 +89,7 @@ print("---")
 print(safe_divide(10, "apple"))
 ```
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 In backend APIs, we often fetch data from a database. If the database connection drops, we don't want to crash the whole server; we want to return a 500 error to the user and log the issue.
 
@@ -115,13 +121,13 @@ def get_user_profile(user_id):
 print(get_user_profile(99))
 ```
 
-## 7. Internal Working
+## 8. Internal Working
 
 In CPython, exceptions are implemented using a linked list of try blocks managed by the thread state. When `raise` is executed, Python unwinds the call stack frame by frame, looking for an `except` block that matches the exception class (or a base class of it).
 
 This stack-unwinding process is computationally expensive. This is why you should use exceptions for *exceptional* circumstances, not for normal control flow loops.
 
-## 8. Performance Table
+## 9. Performance Table
 
 | Scenario | Performance Impact | Note |
 |---|---|---|
@@ -129,7 +135,7 @@ This stack-unwinding process is computationally expensive. This is why you shoul
 | Error raised and caught | Very Slow | Stack unwinding, object creation, and traceback generation are expensive |
 | `if` condition vs `try...except` | `if` is faster if failure is frequent | "Look before you leap" (LBYL) is better if failure happens >10% of the time |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
@@ -138,7 +144,7 @@ This stack-unwinding process is computationally expensive. This is why you shoul
 | Will `finally` execute if there is a `return` in the `try` block? | Yes! `finally` ALWAYS executes before the function actually returns to the caller. |
 | How do you re-raise an exception? | Just use the `raise` keyword by itself inside the `except` block. |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 Bro, look at this code. What does it return?
 
@@ -154,14 +160,14 @@ print(tricky_func())
 
 **Trick:** It returns `"Finally return"`! If both `try` and `finally` contain `return` statements, the `finally` block's return value overwrites the `try` block's return value. This is a massive trap in production code. Never put a `return` in a `finally` block!
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 
 Companies use exceptions for:
 - **API Wrappers:** Catching `requests.exceptions.Timeout` and triggering an automatic retry logic.
 - **File Processing:** Catching `FileNotFoundError` when a cron job tries to read a file before another system has finished writing it.
 - **Graceful Shutdowns:** Catching `KeyboardInterrupt` to close database connections safely before a Docker container exits.
 
-## 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
@@ -169,17 +175,17 @@ Companies use exceptions for:
 | Use `finally` to close files or connections. | Don't put `return` or `break` statements inside `finally` blocks. |
 | Use the `else` block to keep the `try` block as small as possible. | Don't put hundreds of lines of code inside a single `try` block. |
 
-## 13. Production Notes
+## 14. Production Notes
 
 > ⚠ Production Note:
 Silent failures are a nightmare to debug in production. If you catch an exception, you MUST do something with it (log it, retry, or alert). Doing `except Exception: pass` means an error is happening, but you have blinded yourself to it. The system will fail downstream, and you will have zero logs to tell you why.
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 
 - **Swallowing Exceptions:** Catching an error and printing it instead of logging it properly, causing monitoring systems to miss the error.
 - **EAFP vs LBYL:** In Python, "Easier to Ask Forgiveness than Permission" (`try...except`) is generally preferred over "Look Before You Leap" (checking `if key in dict` before accessing). But if the key is missing 50% of the time, the `if` check is much better for performance.
 
-## 15. Related Topics
+## 16. Related Topics
 
 - Custom Exceptions
 - Logging

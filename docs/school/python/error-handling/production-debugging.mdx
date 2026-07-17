@@ -16,13 +16,19 @@ import LearningFlow from '@site/src/components/LearningFlow';
 | Common Mistake | Using `breakpoint()` or changing code directly on the production server |
 | Performance | Critical to minimize impact; diagnostic tools shouldn't slow down the live app |
 
-## 2. Real-World Analogy
+## 2. Engineering Story
+
+Local debugging is easy, bro. You just pause the code. But what happens when the bug only happens in a production Docker container with 10,000 concurrent users? You can't just stop the server to step through code. Production debugging is an entirely different beast involving APM tools, log aggregation, and remote tracing.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: An Indian software engineer sitting in a messy startup office looking at code related to Production Debugging. */}
 
 Bro, debugging locally is like fixing your car in your garage. You can turn off the engine, take out the spark plugs, and take your time.
 
 Production debugging is like fixing a commercial airplane *while it is flying at 30,000 feet*. You cannot turn off the engines. You cannot use a regular wrench (a `breakpoint()`). You have to rely on instrument panels (logs), black box recorders (metrics/traces), and very careful remote diagnostics to figure out why the left wing is rattling without crashing the plane.
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 
 When code runs on a developer's laptop, you have full control. In production, code runs on isolated servers, in Docker containers, or serverless functions.
 
@@ -48,7 +54,7 @@ You cannot attach a standard IDE debugger to a production system because pausing
   ]}
 />
 
-## 4. Syntax Table
+## 5. Syntax Table
 
 Production debugging doesn't have "syntax." It relies on tools and patterns.
 
@@ -59,7 +65,7 @@ Production debugging doesn't have "syntax." It relies on tools and patterns.
 | Correlation IDs | Generating a UUID per request and passing it everywhere |
 | Profiling | `import cProfile; cProfile.run(...)` |
 
-## 5. Beginner Example
+## 6. Beginner Example
 
 Let's look at how adding a Correlation ID saves you in production.
 
@@ -97,7 +103,7 @@ process_request({"id": 99, "amount": -10})
 ```
 Now you can search your log aggregator (like Datadog) for `a1b2c3d4` and see the exact flow of that one specific request among thousands.
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 In modern systems, engineers use **Sentry** to catch unhandled exceptions automatically.
 
@@ -126,11 +132,11 @@ def divide_funds(total, users):
 divide_funds(1000, 0)
 ```
 
-## 7. Internal Working
+## 8. Internal Working
 
 When tools like Sentry or Datadog APM hook into a Python application, they often monkey-patch standard libraries or use WSGI/ASGI middleware to intercept requests. When an exception bubbles up unhandled, they capture the `sys.exc_info()`, serialize the local variables in the stack frame, and send an async HTTP request to their servers before the process dies.
 
-## 8. Performance Table
+## 9. Performance Table
 
 | Tool | Performance Impact | Note |
 |---|---|---|
@@ -139,7 +145,7 @@ When tools like Sentry or Datadog APM hook into a Python application, they often
 | APM (Distributed Tracing) | Medium | Adds slight latency to requests to inject/extract trace headers |
 | Live Debuggers (e.g., PySnooper) | Very High | NEVER use in production; strictly for local/staging |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
@@ -147,20 +153,20 @@ When tools like Sentry or Datadog APM hook into a Python application, they often
 | What is structured logging? | Emitting logs as JSON objects rather than plain text strings. This allows log aggregators to parse, index, and query log data easily (e.g., `SELECT * FROM logs WHERE user_id = 5`). |
 | Why is `print()` useless in a Dockerized production app? | `print()` writes to standard output, which is often lost or unsearchable when containers restart or scale across multiple servers, unless specifically captured by the container runtime. |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 Bro, a user reports a bug, but there are absolutely zero errors in the logs. What happened?
 
 **Trick:** This is a "Silent Failure." It usually happens when a developer uses a bare `except Exception: pass` block, effectively swallowing the error and blinding the team. Alternatively, the application might have run out of memory (OOMKilled by the OS), which crashes the process *before* Python can write a log. You must check system-level metrics (RAM/CPU usage) in this case!
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 
 Companies handle production debugging using the "Observability Triad":
 1. **Metrics (Grafana/Prometheus):** "Are we CPU bound? Is the API taking longer than 200ms?"
 2. **Logs (ELK/Splunk):** "What exactly did the application say when the error happened?"
 3. **Traces (Jaeger/Datadog):** "Which microservice in the chain of 5 services actually caused the failure?"
 
-## 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
@@ -168,17 +174,17 @@ Companies handle production debugging using the "Observability Triad":
 | Use exception tracking software (Sentry, Rollbar) to group errors automatically. | Don't SSH into a production server and modify Python files using `nano` or `vim`. |
 | Write logs that provide context (state of variables), not just "Something failed." | Don't leave `DEBUG` level logging on in production; it will flood your disk. |
 
-## 13. Production Notes
+## 14. Production Notes
 
 > ⚠ Production Note:
 If you *must* run ad-hoc scripts to fix corrupted data in production, never run them directly against the live master database first. Write a dry-run script, test it on a sanitized staging database, and get another engineer to review the code. "Fixing" things quickly in production is the #1 way to cause a catastrophic outage.
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 
 - **Log Spamming:** Logging a warning inside a `for` loop that runs 10,000 times a second. It will cost the company thousands of dollars in Datadog ingestion fees.
 - **Missing Context:** Logging `Error: user not found`. *Which user? What endpoint? What time?* A log without context is almost useless.
 
-## 15. Related Topics
+## 16. Related Topics
 
 - Logging
 - Exceptions

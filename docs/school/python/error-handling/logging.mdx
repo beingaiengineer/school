@@ -16,14 +16,20 @@ import LearningFlow from '@site/src/components/LearningFlow';
 | Common Mistake | Using `print()` instead of the `logging` module in production |
 | Performance | Fast, especially when writing to files asynchronously, but excessive logging slows I/O |
 
-## 2. Real-World Analogy
+## 2. Engineering Story
+
+Bro, debugging in production without logs is like driving a car at night with no headlights. One time our server was randomly rebooting every 4 hours, and because we just used `print()` statements that disappeared into the void instead of proper persistent logging, it took us three days to find out it was an out-of-memory error.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: An Indian software engineer sitting in a messy startup office looking at code related to Logging. */}
 
 Bro, imagine running a massive shipping warehouse.
 If a worker drops a box, they could just yell "I dropped a box!" (like using `print()`). But the manager in the office won't hear them.
 
 Instead, the warehouse has a system: workers write down what happened, the severity (minor dent vs destroyed TV), the time, and the aisle number in a central logbook (like the `logging` module). If something goes wrong next week, the manager can read the logbook to figure out exactly what happened and when.
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 
 The built-in `logging` module in Python is used to track events that happen when some software runs.
 
@@ -45,7 +51,7 @@ Unlike `print()`, which just dumps text to the console, logging allows you to ca
   ]}
 />
 
-## 4. Syntax Table
+## 5. Syntax Table
 
 | Level | Method | Purpose | Numeric Value |
 |---|---|---|---|
@@ -55,7 +61,7 @@ Unlike `print()`, which just dumps text to the console, logging allows you to ca
 | Error | `logging.error("msg")` | A serious problem, software couldn't perform a function | 40 |
 | Critical | `logging.critical("msg")` | A severe error, the program itself may crash | 50 |
 
-## 5. Beginner Example
+## 6. Beginner Example
 
 Let's set up a basic logger.
 
@@ -88,7 +94,7 @@ process_payment(-10)
 # 2023-10-25 10:00:00,126 - ERROR - Payment failed: Negative amount
 ```
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 In production, you never use the root logger directly via `logging.info()`. You create a specific logger for your module and route logs to both a file and the console.
 
@@ -121,7 +127,7 @@ logger.warning("Stripe API latency is high!")     # Goes to file AND console
 logger.error("Payment dropped due to timeout.")   # Goes to file AND console
 ```
 
-## 7. Internal Working
+## 8. Internal Working
 
 The `logging` module is thread-safe and heavily object-oriented.
 - **Loggers** expose the interface that application code uses directly.
@@ -131,7 +137,7 @@ The `logging` module is thread-safe and heavily object-oriented.
 
 When you call `logger.info("msg")`, Python creates a `LogRecord` object and passes it to all attached handlers, checking the severity level at each step to see if it should be discarded or written.
 
-## 8. Performance Table
+## 9. Performance Table
 
 | Logging Setup | Performance Impact | Note |
 |---|---|---|
@@ -139,7 +145,7 @@ When you call `logger.info("msg")`, Python creates a `LogRecord` object and pass
 | Console logging (StreamHandler) | Moderate | Writing to `sys.stdout` blocks the thread momentarily |
 | File logging (FileHandler) | Slower | Disk I/O is slow. Use `RotatingFileHandler` to manage file sizes |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
@@ -148,7 +154,7 @@ When you call `logger.info("msg")`, Python creates a `LogRecord` object and pass
 | How do you log an exception with its traceback? | Use `logging.exception("Something broke!")` inside an `except` block. It automatically logs at the ERROR level and appends the full stack trace. |
 | What does `logging.getLogger(__name__)` do? | It creates a logger named after the current module. This is best practice as it makes it easy to trace which file generated the log. |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 Bro, look at this code. Why is the dictionary `user_data` being processed even when the log level is INFO?
 
@@ -169,14 +175,14 @@ logging.debug(f"User Data: {heavy_computation(user_data)}")
 **Trick:** Even though the logging level is `INFO` (meaning `DEBUG` logs are ignored), the f-string `f"User Data: {heavy_computation(user_data)}"` is evaluated *before* it is passed to `logging.debug()`. So the heavy computation runs anyway!
 **Fix:** Pass arguments lazily: `logging.debug("User Data: %s", heavy_computation)` (though for complex functions, you might need to check `if logger.isEnabledFor(logging.DEBUG):` first).
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 
 Companies use logging heavily for Observability:
 - **ELK Stack (Elasticsearch, Logstash, Kibana):** Writing JSON logs to a file, which Logstash reads and indexes into Elasticsearch for visualizing in Kibana.
 - **Datadog / New Relic:** Forwarding application logs to external SaaS platforms to trigger alerts if ERROR rates spike.
 - **Audit Trails:** Logging critical security events (like a user changing their password) to a highly secure, append-only file.
 
-## 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
@@ -184,17 +190,17 @@ Companies use logging heavily for Observability:
 | Use `logging.exception()` inside `except` blocks to capture stack traces. | Don't leave `print()` statements in your code before committing. |
 | Log in JSON format for production systems (using libraries like `pythonjsonlogger`). | Don't log sensitive data (PII, passwords, API keys, credit card numbers). |
 
-## 13. Production Notes
+## 14. Production Notes
 
 > ⚠ Production Note:
 If your app runs 24/7, a standard `FileHandler` will eventually fill up your entire hard drive and crash the server. Always use `logging.handlers.RotatingFileHandler` or `TimedRotatingFileHandler`. These automatically create a new log file (e.g., `app.log.1`, `app.log.2`) when the file reaches a certain size or time, and delete the oldest ones.
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 
 - **Calling `basicConfig` Multiple Times:** `logging.basicConfig()` only works the *first* time it is called. Subsequent calls do nothing. If an imported library calls it before you do, your logging configuration will be ignored.
 - **Logging Everything at INFO:** Flooding the INFO level with debug data makes logs unreadable. Reserve INFO for major lifecycle events (e.g., "Server started", "Job finished").
 
-## 15. Related Topics
+## 16. Related Topics
 
 - Exceptions
 - Debugging

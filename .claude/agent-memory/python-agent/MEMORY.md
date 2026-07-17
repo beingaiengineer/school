@@ -268,17 +268,17 @@ No reusable insights recorded yet.
 - [x] [BAE-REVIEW-049] | Audit `oops/dataclasses.mdx`
 - [x] [BAE-REVIEW-050] | Audit `oops/solid-principles.mdx`
 - [x] [BAE-REVIEW-051] | Audit `oops/composition-vs-inheritance.mdx`
-- [ ] [BAE-REVIEW-052] | Audit `error-handling/exceptions.mdx`
-- [ ] [BAE-REVIEW-053] | Audit `error-handling/custom-exceptions.mdx`
-- [ ] [BAE-REVIEW-054] | Audit `error-handling/logging.mdx`
-- [ ] [BAE-REVIEW-055] | Audit `error-handling/debugging.mdx`
-- [ ] [BAE-REVIEW-056] | Audit `error-handling/production-debugging.mdx`
-- [ ] [BAE-REVIEW-057] | Audit `file-handling/reading-files.mdx`
-- [ ] [BAE-REVIEW-058] | Audit `file-handling/writing-files.mdx`
-- [ ] [BAE-REVIEW-059] | Audit `file-handling/csv-files.mdx`
-- [ ] [BAE-REVIEW-060] | Audit `file-handling/json-files.mdx`
-- [ ] [BAE-REVIEW-061] | Audit `file-handling/pathlib.mdx`
-- [ ] [BAE-REVIEW-062] | Audit `file-handling/file-best-practices.mdx`
+- [x] [BAE-REVIEW-052] | Audit `error-handling/exceptions.mdx`
+- [x] [BAE-REVIEW-053] | Audit `error-handling/custom-exceptions.mdx`
+- [x] [BAE-REVIEW-054] | Audit `error-handling/logging.mdx`
+- [x] [BAE-REVIEW-055] | Audit `error-handling/debugging.mdx`
+- [x] [BAE-REVIEW-056] | Audit `error-handling/production-debugging.mdx`
+- [x] [BAE-REVIEW-057] | Audit `file-handling/reading-files.mdx`
+- [x] [BAE-REVIEW-058] | Audit `file-handling/writing-files.mdx`
+- [x] [BAE-REVIEW-059] | Audit `file-handling/csv-files.mdx`
+- [x] [BAE-REVIEW-060] | Audit `file-handling/json-files.mdx`
+- [x] [BAE-REVIEW-061] | Audit `file-handling/pathlib.mdx`
+- [x] [BAE-REVIEW-062] | Audit `file-handling/file-best-practices.mdx`
 - [ ] [BAE-REVIEW-063] | Audit `modules-packages/modules.mdx`
 - [ ] [BAE-REVIEW-064] | Audit `modules-packages/packages.mdx`
 - [ ] [BAE-REVIEW-065] | Audit `modules-packages/virtual-environments.mdx`
