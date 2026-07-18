@@ -19,7 +19,13 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 Bro, FastAPI is the modern rockstar of Python web frameworks. It took the best parts of Flask (simplicity), combined it with Pydantic (data validation), and built it on top of Starlette (async speed).
 
-## 2. Real-World Analogy
+## 2. Engineering Story
+
+Migrating a slow, synchronous API to FastAPI unlocked high-performance async capabilities and gave us automatic swagger docs.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-REVIEW-089] Generate and embed illustration here. Prompt: An illustration of a highly efficient, automated conveyor belt system in a factory, representing FastAPI's speed and type validation. */}
 
 Think of FastAPI as a highly efficient airport security checkpoint.
 
@@ -27,7 +33,7 @@ In an old airport (older frameworks), security guards have to manually check eve
 
 In the FastAPI airport, you scan a barcode (Pydantic validation). If your ticket is fake, the gates instantly reject you without a human ever looking at it (automatic 422 Validation Error). If you pass, the system automatically routes you async so you don't block the line behind you. It even automatically prints a map of the airport for you (auto-generated Swagger docs).
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 
 FastAPI is designed to build APIs quickly with fewer bugs.
 
@@ -38,7 +44,7 @@ It heavily relies on Python type hints. By simply declaring the types of your va
 
 It also natively supports async/await, allowing it to handle thousands of concurrent requests if they involve waiting for I/O (like a database or external API).
 
-## 4. Syntax Table
+## 5. Syntax Table
 
 | Concept | Code Example |
 |---|---|
@@ -49,7 +55,7 @@ It also natively supports async/await, allowing it to handle thousands of concur
 | JSON Body (Pydantic) | `def create_user(user: UserSchema):` |
 | Async Endpoint | `async def read_data():` |
 
-## 5. Beginner Example
+## 6. Beginner Example
 
 ```python
 from fastapi import FastAPI
@@ -75,7 +81,7 @@ def create_item(item: Item):
 
 Bro, try sending a POST request to `/items/` with `{"name": "Laptop", "price": "expensive"}`. FastAPI will automatically return a `422 Unprocessable Entity` because "expensive" is a string, not a float!
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 In production, you usually use asynchronous endpoints connected to an async database driver.
 
@@ -107,7 +113,7 @@ async def register_user(user: UserCreate):
         raise HTTPException(status_code=400, detail=str(e))
 ```
 
-## 7. Internal Working
+## 8. Internal Working
 
 FastAPI does not handle the raw HTTP sockets itself. It runs on an ASGI server (like Uvicorn).
 
@@ -138,7 +144,7 @@ FastAPI does not handle the raw HTTP sockets itself. It runs on an ASGI server (
 3. Pydantic validates it based on your type hints.
 4. Your function runs.
 
-## 8. Performance Table
+## 9. Performance Table
 
 | Area | Performance | Why |
 |---|---|---|
@@ -146,7 +152,7 @@ FastAPI does not handle the raw HTTP sockets itself. It runs on an ASGI server (
 | CPU Bound Tasks (Math, Image) | Poor (if async) | Event loop blocks; use `Depends` or background tasks to push to a thread pool. |
 | Validation Speed | Very High | Pydantic V2 is written in Rust, making it incredibly fast. |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
@@ -156,7 +162,7 @@ FastAPI does not handle the raw HTTP sockets itself. It runs on an ASGI server (
 | What is Uvicorn? | It is an ASGI web server implementation used to run FastAPI applications. |
 | How do you handle Dependency Injection? | Using the `Depends()` function in endpoint parameters (great for DB sessions or Auth). |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 ### Blocking the Event Loop
 
@@ -186,7 +192,7 @@ def get_user(user_id):
 
 FastAPI will treat `user_id` as a string, and it won't be documented properly. Always use `user_id: int`.
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 
 | Domain | Real-World Usage |
 |---|---|
@@ -194,7 +200,7 @@ FastAPI will treat `user_id` as a string, and it won't be documented properly. A
 | Microservices | Building high-throughput backend services that talk to multiple databases. |
 | Data Engineering | Receiving webhooks and pushing them onto a Kafka queue. |
 
-## 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
@@ -203,12 +209,12 @@ FastAPI will treat `user_id` as a string, and it won't be documented properly. A
 | Use ASGI servers like Uvicorn or Daphne | Try to run FastAPI on Waitress or pure Gunicorn (WSGI) |
 | Return `HTTPException` for errors | Return `{ "error": "msg" }` with a 200 OK status |
 
-## 13. Production Notes
+## 14. Production Notes
 
 > ⚠ Production Note:
 > Never run just `uvicorn main:app` in production. You should use a process manager to run multiple workers to utilize all CPU cores. E.g.: `fastapi run` or `uvicorn main:app --workers 4`.
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 
 | Mistake | Why It Hurts |
 |---|---|
@@ -216,10 +222,17 @@ FastAPI will treat `user_id` as a string, and it won't be documented properly. A
 | Putting business logic in the router | Makes testing hard. Separate your routes from your core logic/services. |
 | Returning DB models directly | Can accidentally expose hashed passwords or internal IDs. Always use response models (`response_model=UserPublic`). |
 
-## 15. Related Topics
+## 16. Related Topics
 
 - REST API Basics
 - Asyncio
 - Async/Await
 - Authentication
 - Middleware
+
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [tiangolo/fastapi](https://github.com/tiangolo/fastapi) | ⭐ 10k+ | FastAPI framework | Relevant to this topic |

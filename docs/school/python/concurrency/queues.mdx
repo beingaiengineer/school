@@ -18,7 +18,13 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ---
 
-## 2. Real-World Analogy
+## 2. Engineering Story
+
+To prevent data loss during high traffic, we implemented a thread-safe task queue to buffer incoming requests before processing.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-REVIEW-084] Generate and embed illustration here. Prompt: An illustration of an amusement park ride line, showing a thread-safe queue where people wait their turn to board the ride in an orderly manner. */}
 
 Think of a Queue like the order ticket rail at an Indian diner, bro.
 
@@ -29,7 +35,7 @@ They don't shout at each other (shared variables). They don't fight over the sam
 
 ---
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 
 When you have multiple threads or processes running, they often need to send data to each other.
 If you try to use a standard Python list to pass data between threads, you risk Race Conditions unless you manually write complex Lock logic.
@@ -40,7 +46,7 @@ This implements the famous **Producer-Consumer** pattern.
 
 ---
 
-## 4. Syntax Table
+## 5. Syntax Table
 
 | Operation | Example |
 |---|---|
@@ -52,7 +58,7 @@ This implements the famous **Producer-Consumer** pattern.
 
 ---
 
-## 5. Beginner Example
+## 6. Beginner Example
 
 Bro, watch a Producer thread hand off work to a Consumer thread safely.
 
@@ -91,7 +97,7 @@ t2.join()
 
 ---
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 In web scraping, we often have one thread gathering URLs (Producer), while 10 worker threads download the HTML simultaneously (Consumers).
 
@@ -144,7 +150,7 @@ print("All scraping finished!")
 
 ---
 
-## 7. Internal Working
+## 8. Internal Working
 
 <LearningFlow
   elements={[
@@ -163,7 +169,7 @@ When `Consumer 1` calls `.get()`, the Queue acquires a lock, pulls the item, and
 
 ---
 
-## 8. Performance Table
+## 9. Performance Table
 
 | Queue Type | Best Use Case | Performance Note |
 |---|---|---|
@@ -173,7 +179,7 @@ When `Consumer 1` calls `.get()`, the Queue acquires a lock, pulls the item, and
 
 ---
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
@@ -184,7 +190,7 @@ When `Consumer 1` calls `.get()`, the Queue acquires a lock, pulls the item, and
 
 ---
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 Bro, why does this script hang forever?
 
@@ -212,7 +218,7 @@ q.join()
 
 ---
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 
 - **Log Processing Pipeline:** Web requests write logs to a Queue quickly so the user doesn't wait. A background thread reads the Queue and writes to the DB slowly.
 - **Task Distribution:** A master node puts video encoding tasks into a Queue, and 10 worker nodes pull tasks off to render them.
@@ -220,7 +226,7 @@ q.join()
 
 ---
 
-## 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
@@ -229,14 +235,14 @@ q.join()
 
 ---
 
-## 13. Production Notes
+## 14. Production Notes
 
 > ⚠ Production Note:
 > Python's built-in Queues only exist in the RAM of the single server running the script. If the server crashes, all pending jobs in the queue are lost permanently! In real distributed production systems, we replace Python's internal queues with robust message brokers like **RabbitMQ**, **Redis (Celery)**, or **AWS SQS**, which persist the queue to disk and allow multiple different servers to act as consumers.
 
 ---
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 
 - **Polling instead of blocking:** Doing `while not q.empty():` and `time.sleep()`. This is bad. Just use `item = q.get()`, it handles the waiting efficiently at the OS level.
 - **Using `q.get(block=False)` without try-except:** It will instantly throw a `queue.Empty` exception if the queue happens to be empty at that exact millisecond.
@@ -244,10 +250,17 @@ q.join()
 
 ---
 
-## 15. Related Topics
+## 16. Related Topics
 
 - Threading
 - Multiprocessing
 - Locks & Semaphores
 - Race Conditions
 - Celery / RabbitMQ
+
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [celery/celery](https://github.com/celery/celery) | ⭐ 10k+ | Distributed Task Queue | Relevant to this topic |
