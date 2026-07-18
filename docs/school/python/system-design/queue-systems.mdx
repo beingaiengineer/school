@@ -6,7 +6,7 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 # Queue Systems
 
-# 1. Quick Summary
+## 1. Quick Summary
 
 | Area | Details |
 |---|---|
@@ -18,7 +18,13 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ---
 
-# 2. Real-World Analogy
+## 2. Engineering Story
+
+Bro, our video processing app used to crash completely if more than 5 users uploaded a video at the exact same time. The server would run out of memory trying to convert all of them simultaneously. We introduced a task queue. Now, when a video is uploaded, the web server just drops a message in the queue. A fleet of worker servers pull from the queue one by one at their own pace. No more crashes, just a predictable pipeline.
+
+---
+
+## 3. Real-World Analogy
 
 Think of a bank, bro.
 
@@ -28,7 +34,11 @@ Instead, banks use a ticketing machine (the Queue). You take a ticket and sit do
 
 ---
 
-# 3. Concept Explanation
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: Bae organizing a chaotic ticket counter into an orderly queue with multiple fast-track lanes. */}
+
+---
+
+## 4. Concept Explanation
 
 A Queue System (or Message Queue) is an asynchronous service-to-service communication mechanism. A producer puts a task in the queue, and a background worker pulls it out to process it.
 
@@ -38,7 +48,7 @@ Why use it?
 
 ---
 
-# 4. Syntax Table (Concepts)
+## 5. Syntax Table (Concepts)
 
 | Concept | Description | Typical Python Tool |
 |---|---|---|
@@ -49,7 +59,7 @@ Why use it?
 
 ---
 
-# 5. Beginner Example
+## 6. Beginner Example
 
 A simple simulation of a queue using Python's built-in `queue.Queue`.
 
@@ -87,7 +97,7 @@ t.join()
 
 ---
 
-# 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 In the real world, you use a library like Celery with Redis as the broker.
 
@@ -121,7 +131,7 @@ def upload_video_endpoint():
 
 ---
 
-# 7. Internal Working
+## 8. Internal Working
 
 Bro, what happens when `.delay()` is called?
 
@@ -147,7 +157,7 @@ Bro, what happens when `.delay()` is called?
 
 ---
 
-# 8. Performance Table
+## 9. Performance Table
 
 | Operation | Scale Factor | Impact |
 |---|---|---|
@@ -157,7 +167,7 @@ Bro, what happens when `.delay()` is called?
 
 ---
 
-# 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
@@ -168,7 +178,7 @@ Bro, what happens when `.delay()` is called?
 
 ---
 
-# 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 Bro, what if a worker crashes right in the middle of processing a payment?
 
@@ -179,7 +189,7 @@ The worker pulls the task, but the broker keeps it hidden. Only when the worker 
 
 ---
 
-# 11. Real-World Usage
+## 12. Real-World Usage
 
 - **Video Processing:** YouTube encoding videos after upload.
 - **Email/SMS Campaigns:** Sending 100,000 promotional emails without crashing the marketing dashboard.
@@ -188,7 +198,7 @@ The worker pulls the task, but the broker keeps it hidden. Only when the worker 
 
 ---
 
-# 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
@@ -198,7 +208,7 @@ The worker pulls the task, but the broker keeps it hidden. Only when the worker 
 
 ---
 
-# 13. Production Notes
+## 14. Production Notes
 
 > ⚠ Production Note:
 Never pass large objects (like a 10MB image or complex nested dictionary) as arguments to a background task. The payload must be serialized, pushed over the network to Redis, and deserialized. This kills performance.
@@ -206,16 +216,21 @@ Instead, save the image to S3, save the record to the DB, and just pass the `ima
 
 ---
 
-# 14. Common Mistakes
+## 15. Common Mistakes
 
 - **Starting Celery as root:** A massive security risk. Always run workers as an unprivileged user.
 - **Forgetting to monitor the broker:** If Redis runs out of memory because workers are dead and the queue is growing, your whole API might go down trying to connect to it.
 
 ---
 
-# 15. Related Topics
+## 16. Related Topics
 
 - Event-Driven Systems
 - Concurrency
 - Multiprocessing
 - Redis
+
+### Top GitHub Repositories
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [rabbitmq/rabbitmq-server](https://github.com/rabbitmq/rabbitmq-server) | ⭐ 12k+ | Message broker | Industry standard queue |

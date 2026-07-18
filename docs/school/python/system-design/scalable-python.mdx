@@ -6,7 +6,7 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 # Scalable Python
 
-# 1. Quick Summary
+## 1. Quick Summary
 
 | Area | Details |
 |---|---|
@@ -18,7 +18,13 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ---
 
-# 2. Real-World Analogy
+## 2. Engineering Story
+
+Bro, we launched an app that went viral on a Friday night. We thought our single huge server could handle it, but it just completely crashed under the load. We were frantically trying to restart it while thousands of users saw error pages. We realized you can't just buy a bigger server. We had to rethink our entire approach to make the application stateless so we could spin up fifty smaller servers behind a load balancer. It was the night I learned the true meaning of horizontal scaling.
+
+---
+
+## 3. Real-World Analogy
 
 Bro, imagine you own a single food truck. You have one cook (the Python process).
 
@@ -29,7 +35,11 @@ Scaling horizontally (Horizontal Scaling) is cloning your food truck 100 times a
 
 ---
 
-# 3. Concept Explanation
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: Bae managing a bustling Indian street food stall by hiring more chefs to handle the growing crowd. */}
+
+---
+
+## 4. Concept Explanation
 
 Because of the Global Interpreter Lock (GIL), a single Python process is generally bad at utilizing multiple CPU cores for CPU-bound tasks.
 
@@ -37,7 +47,7 @@ To make Python scale to massive traffic, we don't try to make a single Python sc
 
 ---
 
-# 4. Syntax Table
+## 5. Syntax Table
 
 | Concept | The Unscalable Way | The Scalable Way |
 |---|---|---|
@@ -48,7 +58,7 @@ To make Python scale to massive traffic, we don't try to make a single Python sc
 
 ---
 
-# 5. Beginner Example
+## 6. Beginner Example
 
 Let's look at the difference between stateful (bad for scaling) and stateless (good for scaling) code.
 
@@ -90,7 +100,7 @@ Bro, the golden rule of horizontal scaling is: **Any server can die at any time,
 
 ---
 
-# 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 When a user registers on your site, you might need to:
 1. Save them to the DB (Fast)
@@ -122,7 +132,7 @@ Now, your web server is immediately free to handle the next user. The heavy lift
 
 ---
 
-# 7. Internal Working
+## 8. Internal Working
 
 <LearningFlow
   elements={[
@@ -168,7 +178,7 @@ In a scalable architecture, the Load Balancer sits at the front. It receives 10,
 
 ---
 
-# 8. Performance Table
+## 9. Performance Table
 
 | Architecture | Setup Complexity | Max Concurrent Users | Single Point of Failure? |
 |---|---|---|---|
@@ -179,7 +189,7 @@ In a scalable architecture, the Load Balancer sits at the front. It receives 10,
 
 ---
 
-# 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer | Explanation & Tricks |
 |---|---|---|
@@ -189,7 +199,7 @@ In a scalable architecture, the Load Balancer sits at the front. It receives 10,
 
 ---
 
-# 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 **Tricky Scenario:** Database bottlenecks.
 You scaled horizontally to 100 Python servers. Now your Postgres database is crying because 100 servers are hammering it with queries at the same time.
@@ -200,14 +210,14 @@ Sometimes, legacy apps aren't stateless, and they require the Load Balancer to a
 
 ---
 
-# 11. Real-World Usage
+## 12. Real-World Usage
 
 - **Instagram (Early days):** They ran Django. To scale, they simply ran thousands of Django instances behind load balancers and heavily sharded their Postgres databases.
 - **Microservices:** Breaking a giant monolithic Python app into 5 smaller Python apps (Auth API, Billing API, Notification API) so you can scale the heavily-used parts independently.
 
 ---
 
-# 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
@@ -217,23 +227,27 @@ Sometimes, legacy apps aren't stateless, and they require the Load Balancer to a
 
 ---
 
-# 13. Production Notes
+## 14. Production Notes
 
 > ⚠ Production Note:
 Bro, if you write files to the local disk (like saving a user's avatar to `./static/images`), it works fine on your laptop. But in production, if User A uploads to Server 1, and User B requests that image from Server 2, they will get a 404 Error. In scalable systems, **never trust the local disk.** Always upload assets to cloud storage like AWS S3.
 
 ---
 
-# 14. Common Mistakes
+## 15. Common Mistakes
 
 - **Cron Jobs on multiple servers:** If you have a script that runs every night at midnight to bill users, and you scale to 5 servers, all 5 servers will run the script and bill the users 5 times. You must decouple scheduled tasks from the web servers.
 - **Ignoring Connection Pooling:** If 50 Python web workers all open separate database connections on every single HTTP request, you will exhaust the database connection limit instantly. Use connection pooling (like PgBouncer or SQLAlchemy's built-in pool).
 
 ---
 
-# 15. Related Topics
+## 16. Related Topics
 
 - Queue Systems (Celery)
 - Distributed Systems
 - Python Architecture
 - Event-Driven Systems
+### Top GitHub Repositories
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [celery/celery](https://github.com/celery/celery) | ⭐ 25k+ | Distributed task queue | Standard for scaling tasks |
