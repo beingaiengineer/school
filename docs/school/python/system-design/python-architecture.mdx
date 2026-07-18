@@ -6,7 +6,7 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 # Python Architecture
 
-# 1. Quick Summary
+## 1. Quick Summary
 
 | Area | Details |
 |---|---|
@@ -18,7 +18,13 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ---
 
-# 2. Real-World Analogy
+## 2. Engineering Story
+
+Bro, I once worked on a massive monolithic Django app that had zero architectural boundaries. Everything was shoved into `views.py`. When we had to swap our payment provider from Stripe to PayPal, it took six months of rewriting because payment logic was deeply coupled with HTML rendering and database models. After that nightmare, we adopted a strict layered architecture. The next time we needed to change a core service, it took two days.
+
+---
+
+## 3. Real-World Analogy
 
 Bro, imagine building a house.
 
@@ -28,7 +34,11 @@ In Python, a script is a shed. You can put all your code in one file. But a prod
 
 ---
 
-# 3. Concept Explanation
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: Bae designing the blueprint of a majestic palace with separate rooms for different functions. */}
+
+---
+
+## 4. Concept Explanation
 
 Python architecture refers to how you organize your modules, classes, and responsibilities in a large project.
 
@@ -38,7 +48,7 @@ Bro, when you decouple your code this way, you can swap out Postgres for MongoDB
 
 ---
 
-# 4. Syntax Table
+## 5. Syntax Table
 
 | Layer | Responsibility | What goes here |
 |---|---|---|
@@ -49,7 +59,7 @@ Bro, when you decouple your code this way, you can swap out Postgres for MongoDB
 
 ---
 
-# 5. Beginner Example
+## 6. Beginner Example
 
 Let's look at the classic mistake of mixing architecture layers, and how to fix it.
 
@@ -71,7 +81,7 @@ def checkout(request: Request, db: Session):
 
 
 # GOOD: Layered Architecture
-# 1. Presentation Layer (Only handles HTTP)
+### Presentation Layer
 @app.post("/checkout")
 def checkout_route(payload: CheckoutPayload, db: Session):
     try:
@@ -81,7 +91,7 @@ def checkout_route(payload: CheckoutPayload, db: Session):
     except InsufficientFundsError:
         return {"error": "Insufficient funds"}
 
-# 3. Service Layer (Only handles Business Logic)
+### Service Layer
 def process_checkout(user_id: int, amount: float, db: Session):
     user = get_user_from_db(user_id, db) # 4. Data Layer call
     if user.balance < amount:
@@ -94,7 +104,7 @@ Bro, the good way means I can test `process_checkout` without needing to fake an
 
 ---
 
-# 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 In enterprise Python projects, you'll often see a strict folder structure enforcing this architecture.
 
@@ -118,7 +128,7 @@ If the product manager says "We are switching our payment provider from Stripe t
 
 ---
 
-# 7. Internal Working
+## 8. Internal Working
 
 <LearningFlow
   elements={[
@@ -163,7 +173,7 @@ Data flows downwards. The Presentation layer depends on the Service layer. The S
 
 ---
 
-# 8. Performance Table
+## 9. Performance Table
 
 | Architecture Choice | Code Maintainability | Setup Time | Execution Overhead |
 |---|---|---|---|
@@ -174,7 +184,7 @@ Data flows downwards. The Presentation layer depends on the Service layer. The S
 
 ---
 
-# 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer | Explanation & Tricks |
 |---|---|---|
@@ -184,7 +194,7 @@ Data flows downwards. The Presentation layer depends on the Service layer. The S
 
 ---
 
-# 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 **Tricky Scenario:** Circular Imports.
 If your `services.py` imports from `models.py`, and `models.py` imports a helper from `services.py`, Python will crash with an `ImportError`.
@@ -195,14 +205,14 @@ If your classes are just data (no methods) and your Service layer is 5,000 lines
 
 ---
 
-# 11. Real-World Usage
+## 12. Real-World Usage
 
 - **Fintech APIs:** Banks require strict separation of concerns. The code that calculates interest rates (Core) must be completely isolated from the code that generates the HTTP JSON response (Presentation) to pass security audits.
 - **Testing:** Companies with Layered Architecture have test suites that run in seconds, because they can unit test the Service Layer in pure Python without spinning up a Docker database.
 
 ---
 
-# 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
@@ -212,23 +222,27 @@ If your classes are just data (no methods) and your Service layer is 5,000 lines
 
 ---
 
-# 13. Production Notes
+## 14. Production Notes
 
 > ⚠ Production Note:
 Bro, don't over-engineer on Day 1. If you are building a simple CRUD app that just reads a database and returns JSON, forcing a strict 5-layer Clean Architecture with Repository Patterns and Interfaces will just slow you down. Start with a simple Layered approach (Routes -> Services -> DB), and only add complexity when the codebase actually hurts to maintain.
 
 ---
 
-# 14. Common Mistakes
+## 15. Common Mistakes
 
 - **Fat Controllers:** Writing 200 lines of logic inside a Flask `@app.route` or Django View. It makes the code impossible to reuse if you want to run that same logic via a background Celery task.
 - **Leaking Secrets:** Returning an entire Database Object to the frontend without a DTO, accidentally exposing `hashed_password` to the internet.
 
 ---
 
-# 15. Related Topics
+## 16. Related Topics
 
 - Scalable Python
 - Microservices
 - Clean Code
 - Project Structure
+### Top GitHub Repositories
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [tiangolo/fastapi](https://github.com/tiangolo/fastapi) | ⭐ 70k+ | High-performance API framework | Exemplary architectural patterns |

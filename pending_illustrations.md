@@ -309,3 +309,13 @@ When generating images in the interactive session, ensure:
 | BAE-REVIEW-100 | `docs/school/python/databases/indexing.mdx` | `BAE-REVIEW-100.png` | An Indian librarian finding a specific book instantly using a catalog card rather than walking every aisle. |
 | BAE-REVIEW-101 | `docs/school/python/databases/connection-pooling.mdx` | `BAE-REVIEW-101.png` | An Indian call center having a pool of 50 ready operators taking incoming calls dynamically. |
 | BAE-REVIEW-102 | `docs/school/python/testing/pytest.mdx` | `BAE-REVIEW-102.png` | An Indian teacher with a red pen checking an exam paper step by step and highlighting errors. |
+| BAE-REVIEW-113 | `docs/school/python/performance/numpy-performance.mdx` | `numpy-performance.png` | Bae packing items perfectly tight into a single massive shipping container to avoid multiple trips. |
+| BAE-REVIEW-114 | `docs/school/python/performance/performance-best-practices.mdx` | `performance-best-practices.png` | Bae optimizing a kitchen to make cooking faster by bringing ingredients closer and throwing away useless tools. |
+| BAE-REVIEW-115 | `docs/school/python/system-design/python-architecture.mdx` | `python-architecture.png` | Bae designing the blueprint of a majestic palace with separate rooms for different functions. |
+| BAE-REVIEW-116 | `docs/school/python/system-design/scalable-python.mdx` | `scalable-python.png` | Bae managing a bustling Indian street food stall by hiring more chefs to handle the growing crowd. |
+| BAE-REVIEW-117 | `docs/school/python/system-design/event-driven-systems.mdx` | `event-driven-systems.png` | Bae throwing a party where servers only bring food when a guest claps their hands. |
+| BAE-REVIEW-118 | `docs/school/python/system-design/queue-systems.mdx` | `queue-systems.png` | Bae organizing a chaotic ticket counter into an orderly queue with multiple fast-track lanes. |
+| BAE-REVIEW-119 | `docs/school/python/system-design/distributed-systems.mdx` | `distributed-systems.png` | Bae orchestrating a synchronized dance routine with multiple dancers spread across different cities. |
+| BAE-REVIEW-120 | `docs/school/python/system-design/microservices.mdx` | `microservices.png` | Bae running a company where each department has its own building and completely manages its own work. |
+| BAE-REVIEW-121 | `docs/school/python/system-design/production-patterns.mdx` | `production-patterns.png` | Bae placing guardrails and safety nets around a high-wire circus act to prevent disasters. |
+| BAE-REVIEW-122 | `docs/school/python/ai-engineering/python-for-ai.mdx` | `python-for-ai.png` | Bae teaching a robot how to read books and make intelligent decisions. |
