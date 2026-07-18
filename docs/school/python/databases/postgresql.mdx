@@ -19,7 +19,14 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 Bro, PostgreSQL (often just called Postgres) is the gold standard for relational databases. If you are building a real-world web application, microservice, or AI backend, this is usually the default choice.
 
-## 2. Real-World Analogy
+
+## 2. Engineering Story
+
+Bro, imagine it is Big Billion Day. You deployed a basic database to handle your e-commerce traffic. Suddenly, traffic spikes 100x. Your database locks up because too many people are trying to buy the same phone simultaneously. You frantically check the logs and realize the system was perfectly designed for 10 users, but fails miserably at handling complex concurrent transactions. You are losing money every second. This is exactly why we need to properly architect with PostgreSQL. Without it, a successful sale turns into a massive outage.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A massive Indian wholesale market with strict rules and huge capacity for complex trades. */}
 
 Think of Postgres like a massive, high-security corporate warehouse.
 
@@ -27,7 +34,7 @@ SQLite is a filing cabinet in your office (fast, but only you can use it). Postg
 
 Because it's a massive warehouse, you have to establish a connection (drive there) before you can use it, which has overhead.
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 
 PostgreSQL is a client-server database. Your Python application (the client) connects over a network (TCP/IP) to the Postgres Server.
 
@@ -38,7 +45,7 @@ You use Postgres when:
 - You need strict data integrity and ACID transactions.
 - You need advanced features like JSON fields, geospatial data (PostGIS), or full-text search.
 
-## 4. Syntax Table
+## 5. Syntax Table
 
 | Operation | Code (using `psycopg`) | Description |
 |---|---|---|
@@ -49,7 +56,7 @@ You use Postgres when:
 | Fetch | `cursor.fetchall()` | Retrieve rows |
 | JSONB Query | `SELECT data->'name' FROM users;` | Query inside a JSON column natively |
 
-## 5. Beginner Example
+## 6. Beginner Example
 
 Make sure you `pip install psycopg` first.
 
@@ -93,7 +100,7 @@ Output:
 
 Bro, notice that `psycopg` uses `%s` for parameters, not `?` like SQLite does.
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 In production, connection drops happen. Databases restart. You must handle exceptions and always rollback on failure.
 
@@ -130,7 +137,7 @@ def register_user(email: str, password_hash: str):
         conn.close()
 ```
 
-## 7. Internal Working
+## 8. Internal Working
 
 How does Postgres handle multiple Python apps talking to it?
 
@@ -161,7 +168,7 @@ How does Postgres handle multiple Python apps talking to it?
 When Python connects to Postgres, the main Postgres server (`postmaster`) spawns a dedicated worker process just for that connection.
 Because Postgres uses **MVCC (Multi-Version Concurrency Control)**, App 2 can safely read the database while App 1 is writing to it. App 2 just sees the "old" version of the data until App 1 commits. No "Database is locked" errors here, bro!
 
-## 8. Performance Table
+## 9. Performance Table
 
 | Feature | Postgres Capability |
 |---|---|
@@ -170,7 +177,7 @@ Because Postgres uses **MVCC (Multi-Version Concurrency Control)**, App 2 can sa
 | Complex Queries | Excellent. Highly optimized query planner for JOINs. |
 | Storage Types | Native JSONB support makes it almost act like MongoDB when needed. |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
@@ -179,7 +186,7 @@ Because Postgres uses **MVCC (Multi-Version Concurrency Control)**, App 2 can sa
 | What is JSONB? | A binary JSON data type in Postgres. It allows you to store JSON documents and index/query them incredibly fast. |
 | Why shouldn't you open a new connection for every request? | Opening a Postgres connection takes time (~20-50ms) and RAM. You should use a **Connection Pool**. |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 ### The "Idle in Transaction" Killer
 
@@ -199,7 +206,7 @@ In `psycopg2`, the placeholder is `%s`.
 
 Bro, even if the value is an integer, you STILL use `%s`. Do not use `%d`. `psycopg2` handles the type conversion.
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 
 | Domain | Real-World Usage |
 |---|---|
@@ -207,7 +214,7 @@ Bro, even if the value is an integer, you STILL use `%s`. Do not use `%d`. `psyc
 | Geospatial Apps | Using the `PostGIS` extension to calculate distances between coordinates directly in SQL (Uber, Swiggy use this logic). |
 | AI / RAG Pipelines | Using `pgvector` extension to store LLM embeddings and perform similarity searches. |
 
-## 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
@@ -215,22 +222,31 @@ Bro, even if the value is an integer, you STILL use `%s`. Do not use `%d`. `psyc
 | Put `RETURNING id` at the end of an INSERT query | Run a second `SELECT` query just to get the ID you just created |
 | Catch DB exceptions and explicitly `conn.rollback()` | Let exceptions happen and leave broken transactions hanging |
 
-## 13. Production Notes
+## 14. Production Notes
 
 > ⚠ Production Note:
 > Never expose your Postgres port (5432) to the public internet. It should sit in a private subnet, and only your Python backend/API servers should be allowed to talk to it.
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 
 | Mistake | Why It Hurts |
 |---|---|
 | Fetching 1,000,000 rows at once | `cursor.fetchall()` loads all rows into Python's RAM. Your server will crash with an Out of Memory error. Use `fetchmany()` or server-side cursors for huge queries. |
 | SQL Injection via string formatting | Using `f"SELECT * FROM users WHERE name = '{user}'"` instead of parameterized `%s`. |
 
-## 15. Related Topics
+## 16. Related Topics
 
 - SQLite
 - Connection Pooling
 - ORM vs Raw SQL
 - SQLAlchemy
 - AI Engineering (Vector Databases with pgvector)
+
+
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [postgres/postgres](https://github.com/postgres/postgres) | ⭐ 12k+ | PostgreSQL Official Repo | The C source code of the database |
+| [MagicStack/asyncpg](https://github.com/MagicStack/asyncpg) | ⭐ 6k+ | Fast PostgreSQL client | The fastest async driver for Postgres in Python |

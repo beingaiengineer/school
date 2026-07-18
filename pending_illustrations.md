@@ -299,3 +299,13 @@ When generating images in the interactive session, ensure:
 | BAE-REVIEW-080 | `docs/school/python/concurrency/multiprocessing.mdx` | `multiprocessing.png` | Multiple independent Indian street food stalls cooking dosas in parallel on their own stoves, representing CPU-bound multiprocessing. |
 | BAE-REVIEW-081 | `docs/school/python/concurrency/asyncio.mdx` | `asyncio.png` | A skilled Indian juggler keeping 100 balls in the air using just two hands by switching rapidly, representing the single-threaded event loop. |
 | BAE-REVIEW-082 | `docs/school/python/concurrency/async-await.mdx` | `async-await.png` | An Indian train station master giving clear, modern digital signals to trains instead of using old flag systems, representing clean asynchronous syntax. |
+| BAE-REVIEW-093 | `docs/school/python/api-development/api-versioning.mdx` | `BAE-REVIEW-093.png` | An Indian car showroom selling both old and new model cars simultaneously to different customers. |
+| BAE-REVIEW-094 | `docs/school/python/api-development/rate-limiting.mdx` | `BAE-REVIEW-094.png` | An Indian temple queue manager allowing exactly 10 people per minute to enter the shrine. |
+| BAE-REVIEW-095 | `docs/school/python/databases/sqlite.mdx` | `BAE-REVIEW-095.png` | A small Indian street vendor carrying all his shop inventory in one portable box. |
+| BAE-REVIEW-096 | `docs/school/python/databases/postgresql.mdx` | `BAE-REVIEW-096.png` | A massive Indian wholesale market with strict rules and huge capacity for complex trades. |
+| BAE-REVIEW-097 | `docs/school/python/databases/sqlalchemy.mdx` | `BAE-REVIEW-097.png` | An Indian translator who speaks both the local dialect (Python) and the official government language (SQL). |
+| BAE-REVIEW-098 | `docs/school/python/databases/orm-vs-raw-sql.mdx` | `BAE-REVIEW-098.png` | A traditional Indian scribe writing explicit documents vs a modern PA handling translations automatically. |
+| BAE-REVIEW-099 | `docs/school/python/databases/transactions.mdx` | `BAE-REVIEW-099.png` | An Indian bank teller putting cash in an envelope, sealing it, and handing it over only when the receipt is signed. |
+| BAE-REVIEW-100 | `docs/school/python/databases/indexing.mdx` | `BAE-REVIEW-100.png` | An Indian librarian finding a specific book instantly using a catalog card rather than walking every aisle. |
+| BAE-REVIEW-101 | `docs/school/python/databases/connection-pooling.mdx` | `BAE-REVIEW-101.png` | An Indian call center having a pool of 50 ready operators taking incoming calls dynamically. |
+| BAE-REVIEW-102 | `docs/school/python/testing/pytest.mdx` | `BAE-REVIEW-102.png` | An Indian teacher with a red pen checking an exam paper step by step and highlighting errors. |

@@ -21,14 +21,21 @@ Bro, once an API is in production and other teams (or companies) rely on it, you
 
 API Versioning solves this by creating parallel realities of your API.
 
-## 2. Real-World Analogy
+
+## 2. Engineering Story
+
+Bro, imagine you have a successful mobile app with 1M users. You decide to completely redesign the database and the JSON response format for a new feature. You deploy the backend, and instantly your support inbox catches fire. The old mobile apps, which users haven't updated yet, are expecting the old data format and are crashing entirely. This is why we need to properly architect API Versioning. Without it, a successful backend update turns into a massive outage for legacy clients.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: An Indian car showroom selling both old and new model cars simultaneously to different customers. */}
 
 Think of API Versioning like car models.
 
 Honda sells the 2020 Civic (v1) and the 2024 Civic (v2).
 If Honda invents a new engine design for 2024, they don't recall every 2020 Civic and force them to upgrade their engines (that would break the old cars). They just keep selling parts for the 2020 Civic, while all new buyers get the 2024 Civic. Eventually, they announce they will no longer support the 2020 model (Deprecation), forcing people to eventually buy the new one.
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 
 API Versioning is the practice of managing changes to your API endpoints.
 
@@ -42,7 +49,7 @@ You do NOT need to version for **Non-Breaking Changes**:
 - Adding new endpoints.
 - Adding new optional fields to a response.
 
-## 4. Syntax Table
+## 5. Syntax Table
 
 There are three common ways to version an API:
 
@@ -54,7 +61,7 @@ There are three common ways to version an API:
 
 Bro, in 90% of cases, just use URI Routing (`/v1/`). It's the industry standard (used by Stripe, Twitter, GitHub).
 
-## 5. Beginner Example
+## 6. Beginner Example
 
 Here is how you handle URI versioning using FastAPI routers.
 
@@ -86,7 +93,7 @@ app.include_router(v2_router)
 
 Now, old mobile apps calling `/v1/users` keep working perfectly, while the new web app calls `/v2/users`.
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 If you have a large app, you don't want to copy-paste your database queries for every version. You map the core data differently in the view layer.
 
@@ -111,7 +118,7 @@ def user_v2():
     return {"first_name": first, "last_name": last}
 ```
 
-## 7. Internal Working
+## 8. Internal Working
 
 How does traffic reach the correct logic?
 
@@ -138,7 +145,7 @@ How does traffic reach the correct logic?
 
 At the framework level, the router looks at the URL path (`/v1` or `/v2`). It treats them as two completely separate endpoints that happen to be running in the same application.
 
-## 8. Performance Table
+## 9. Performance Table
 
 | Strategy | Dev Overhead | Runtime Overhead |
 |---|---|---|
@@ -146,7 +153,7 @@ At the framework level, the router looks at the URL path (`/v1` or `/v2`). It tr
 | Adapters / Mappers | Low | Minimal CPU (Dict translation) |
 | API Gateway routing | Medium | Network hop (if routing to a different microservice) |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
@@ -155,7 +162,7 @@ At the framework level, the router looks at the URL path (`/v1` or `/v2`). It tr
 | What are the 3 ways to version an API? | URL prefix (`/v1`), Query parameter (`?v=1`), Custom Headers (`Accept: v=1`). |
 | How do you handle API deprecation? | Communicate the sunset date, monitor usage, add sunset HTTP headers, and eventually return 410 Gone. |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 ### The "Forever V1" Problem
 
@@ -169,7 +176,7 @@ If you want to turn off V1, you can't just delete it.
 3. Start returning `Sunset` and `Deprecation` HTTP headers on V1 endpoints.
 4. On the deadline date, shut it down.
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 
 | Domain | Real-World Usage |
 |---|---|
@@ -177,7 +184,7 @@ If you want to turn off V1, you can't just delete it.
 | GitHub | Moved from REST (v3) to GraphQL (v4), showing versions can represent entirely different paradigms. |
 | Mobile Backends | Since you can't force a user to update their phone app, mobile APIs often support V1, V2, and V3 simultaneously for years. |
 
-## 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
@@ -185,21 +192,30 @@ If you want to turn off V1, you can't just delete it.
 | Map old endpoints to new underlying logic to avoid code duplication | Copy-paste the entire database layer for every version |
 | Document which version is current and which is deprecated | Break changes silently |
 
-## 13. Production Notes
+## 14. Production Notes
 
 > ⚠ Production Note:
 > Supporting multiple versions increases your maintenance burden. If you have a bug in the DB query, you have to make sure the fix doesn't accidentally break the V1 adapter. Always write integration tests for *every active version* of your API.
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 
 | Mistake | Why It Hurts |
 |---|---|
 | Using `?v=1` instead of `/v1/` | Many caching proxies (like Varnish or Cloudfront) struggle to cache query parameters effectively compared to hard URL paths. |
 | Changing validation on V1 | If V1 allowed nulls, and you update the DB to `NOT NULL`, V1 will suddenly start crashing for old clients. Breaking changes include DB restrictions! |
 
-## 15. Related Topics
+## 16. Related Topics
 
 - REST API Basics
 - FastAPI Routers
 - Flask Blueprints
 - Middleware
+
+
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [stripe/stripe-python](https://github.com/stripe/stripe-python) | ⭐ 3k+ | Stripe API client | Shows how world-class versioning is handled in SDKs |
+| [fastapi/fastapi](https://github.com/fastapi/fastapi) | ⭐ 65k+ | FastAPI Framework | Modern framework for building versioned APIs |

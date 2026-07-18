@@ -6,7 +6,7 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 # Indexing
 
-# 1. Quick Summary
+## 1. Quick Summary
 
 | Area | Details |
 |---|---|
@@ -18,7 +18,14 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 ---
 
-# 2. Real-World Analogy
+
+## 2. Engineering Story
+
+Bro, imagine your app is growing. Users start complaining that the search page takes 10 seconds to load. You look at the database and realize you have 10 million rows, and the database is scanning every single one of them for every search query. Your CPU is at 100%. You frantically try to add more servers, but realize the system fails miserably because the queries are just too slow. This is exactly why we need to properly architect Database Indexing. Without it, a successful app grinds to an absolute halt.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: An Indian librarian finding a specific book instantly using a catalog card rather than walking every aisle. */}
 
 Think of a massive 10,000-page textbook. Bro, if I ask you to find the chapter on "Machine Learning", are you going to flip through all 10,000 pages one by one? No. That takes forever.
 
@@ -26,7 +33,7 @@ You go to the **Index** at the back of the book, look up "M", find "Machine Lear
 
 ---
 
-# 3. Concept Explanation
+## 4. Concept Explanation
 
 An index is a separate data structure (usually a B-Tree) created by the database to quickly locate data without scanning the entire table.
 
@@ -36,7 +43,7 @@ Bro, use indexes on columns you frequently use in `WHERE`, `JOIN`, or `ORDER BY`
 
 ---
 
-# 4. Syntax Table
+## 5. Syntax Table
 
 | Operation | Example (SQLAlchemy) | Example (Raw Postgres) |
 |---|---|---|
@@ -46,7 +53,7 @@ Bro, use indexes on columns you frequently use in `WHERE`, `JOIN`, or `ORDER BY`
 
 ---
 
-# 5. Beginner Example
+## 6. Beginner Example
 
 Let's see how you define an index in SQLAlchemy.
 
@@ -75,7 +82,7 @@ Bro, notice we didn't index `bio`. Indexing a massive text field is a waste of m
 
 ---
 
-# 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 Imagine a social media feed. You need to fetch all posts by a specific user, ordered by creation date, extremely fast.
 
@@ -97,7 +104,7 @@ Without this compound index, the database would find the user's posts quickly, b
 
 ---
 
-# 7. Internal Working
+## 8. Internal Working
 
 <LearningFlow
   title="B-Tree Index Lookup vs Table Scan"
@@ -122,7 +129,7 @@ However, every time you `INSERT`, `UPDATE`, or `DELETE` a row, the database must
 
 ---
 
-# 8. Performance Table
+## 9. Performance Table
 
 | Operation | Without Index | With Index | Impact of Index |
 |---|---|---|---|
@@ -132,7 +139,7 @@ However, every time you `INSERT`, `UPDATE`, or `DELETE` a row, the database must
 
 ---
 
-# 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
@@ -144,7 +151,7 @@ However, every time you `INSERT`, `UPDATE`, or `DELETE` a row, the database must
 
 ---
 
-# 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 Bro, look at this compound index:
 
@@ -162,7 +169,7 @@ Why? Because compound indexes work left-to-right. Think of a phone book sorted b
 
 ---
 
-# 11. Real-World Usage
+## 12. Real-World Usage
 
 - **E-commerce:** Heavily index `product_id` and `category_id` because users constantly search and filter by them.
 - **Log Data:** Do NOT index heavily. Log tables are written to constantly and rarely read. High write speed is more important than read speed.
@@ -170,7 +177,7 @@ Why? Because compound indexes work left-to-right. Think of a phone book sorted b
 
 ---
 
-# 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
@@ -180,14 +187,14 @@ Why? Because compound indexes work left-to-right. Think of a phone book sorted b
 
 ---
 
-# 13. Production Notes
+## 14. Production Notes
 
 > ⚠ Production Note:
 Bro, creating an index on a massive table in production locks the table by default. If you run `CREATE INDEX` on a 50GB table, your app will go offline for 20 minutes because no one can write to it. Always use `CREATE INDEX CONCURRENTLY` in Postgres to build the index in the background without locking writes.
 
 ---
 
-# 14. Common Mistakes
+## 15. Common Mistakes
 
 - **Index on booleans:** Indexing an `is_deleted` column. If 90% of rows are False, the database will ignore the index anyway because scanning the table is just as fast.
 - **Function wrapping:** `WHERE LOWER(email) = 'test@test.com'`. Wrapping an indexed column in a function prevents the database from using the standard index. You need a "Function-Based Index" for this.
@@ -195,9 +202,18 @@ Bro, creating an index on a massive table in production locks the table by defau
 
 ---
 
-# 15. Related Topics
+## 16. Related Topics
 
 - Transactions
 - ORM vs Raw SQL
 - Connection Pooling
 - Performance Tuning
+
+
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [elastic/elasticsearch](https://github.com/elastic/elasticsearch) | ⭐ 64k+ | Elasticsearch | Shows how inverted indexes work at scale |
+| [postgres/postgres](https://github.com/postgres/postgres) | ⭐ 12k+ | PostgreSQL | B-Tree index implementation in C |
