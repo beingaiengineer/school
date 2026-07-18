@@ -236,6 +236,18 @@ No reusable insights recorded yet.
 
 ---
 
+### Next Task
+- [ ] [BAE-REVIEW-103] | Audit `testing/unit-testing.mdx`
+- [ ] [BAE-REVIEW-104] | Audit `testing/mocking.mdx`
+- [ ] [BAE-REVIEW-105] | Audit `testing/integration-testing.mdx`
+- [ ] [BAE-REVIEW-106] | Audit `testing/load-testing.mdx`
+- [ ] [BAE-REVIEW-107] | Audit `testing/test-best-practices.mdx`
+- [ ] [BAE-REVIEW-108] | Audit `performance/profiling.mdx`
+- [ ] [BAE-REVIEW-109] | Audit `performance/memory-optimization.mdx`
+- [ ] [BAE-REVIEW-110] | Audit `performance/caching.mdx`
+- [ ] [BAE-REVIEW-111] | Audit `performance/lazy-loading.mdx`
+- [ ] [BAE-REVIEW-112] | Audit `performance/vectorization.mdx`
+
 ## Backlog
 - [x] [BAE-REVIEW-021] | Audit `functions/recursion.mdx`
 - [x] [BAE-REVIEW-022] | Audit `functions/decorators.mdx`
@@ -309,16 +321,16 @@ No reusable insights recorded yet.
 - [x] [BAE-REVIEW-090] | Audit `api-development/flask.mdx`
 - [x] [BAE-REVIEW-091] | Audit `api-development/authentication.mdx`
 - [x] [BAE-REVIEW-092] | Audit `api-development/middleware.mdx`
-- [ ] [BAE-REVIEW-093] | Audit `api-development/api-versioning.mdx`
-- [ ] [BAE-REVIEW-094] | Audit `api-development/rate-limiting.mdx`
-- [ ] [BAE-REVIEW-095] | Audit `databases/sqlite.mdx`
-- [ ] [BAE-REVIEW-096] | Audit `databases/postgresql.mdx`
-- [ ] [BAE-REVIEW-097] | Audit `databases/sqlalchemy.mdx`
-- [ ] [BAE-REVIEW-098] | Audit `databases/orm-vs-raw-sql.mdx`
-- [ ] [BAE-REVIEW-099] | Audit `databases/transactions.mdx`
-- [ ] [BAE-REVIEW-100] | Audit `databases/indexing.mdx`
-- [ ] [BAE-REVIEW-101] | Audit `databases/connection-pooling.mdx`
-- [ ] [BAE-REVIEW-102] | Audit `testing/pytest.mdx`
+- [x] [BAE-REVIEW-093] | Audit `api-development/api-versioning.mdx`
+- [x] [BAE-REVIEW-094] | Audit `api-development/rate-limiting.mdx`
+- [x] [BAE-REVIEW-095] | Audit `databases/sqlite.mdx`
+- [x] [BAE-REVIEW-096] | Audit `databases/postgresql.mdx`
+- [x] [BAE-REVIEW-097] | Audit `databases/sqlalchemy.mdx`
+- [x] [BAE-REVIEW-098] | Audit `databases/orm-vs-raw-sql.mdx`
+- [x] [BAE-REVIEW-099] | Audit `databases/transactions.mdx`
+- [x] [BAE-REVIEW-100] | Audit `databases/indexing.mdx`
+- [x] [BAE-REVIEW-101] | Audit `databases/connection-pooling.mdx`
+- [x] [BAE-REVIEW-102] | Audit `testing/pytest.mdx`
 - [ ] [BAE-REVIEW-103] | Audit `testing/unit-testing.mdx`
 - [ ] [BAE-REVIEW-104] | Audit `testing/mocking.mdx`
 - [ ] [BAE-REVIEW-105] | Audit `testing/integration-testing.mdx`
@@ -367,6 +379,7 @@ No reusable insights recorded yet.
 
 | BAE ID | What's Done (High Level) |
 |---|---|
+| [BAE-REVIEW-093] through [BAE-REVIEW-102] | Audited 10 Python topics (API & Databases), added unique Engineering Stories, added distinct Illustration placeholders, and added unique GitHub Repositories. |
 | [BAE-REVIEW-083] through [BAE-REVIEW-092] | Audited 10 Python topics (Concurrency & API), added Engineering Stories, Illustration placeholders, and GitHub Repositories. |
 | [BAE-REVIEW-073] through [BAE-REVIEW-082] | Audited 10 Python topics (Advanced & Concurrency), added unique Engineering Stories, added distinct Illustration placeholders, and added unique GitHub Repositories. |
 | [BAE-REVIEW-063] through [BAE-REVIEW-072] | Audited 10 Python modules and advanced topics, fixed heading numbering, injected Engineering Story, added Illustration placeholder, and added GitHub Repositories. |
