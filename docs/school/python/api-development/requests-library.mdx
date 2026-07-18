@@ -19,7 +19,13 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 Bro, the `requests` library is the standard way to talk to other servers in Python. It's not built-in, but it's universally used because it makes HTTP simple.
 
-## 2. Real-World Analogy
+## 2. Engineering Story
+
+We replaced verbose `urllib` code with the clean `requests` library to reliably consume an external weather API without boilerplate.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-REVIEW-087] Generate and embed illustration here. Prompt: An illustration of a smooth, modern drive-thru ordering system representing the Requests library, contrasting with a complex, manual kitchen order form. */}
 
 Think of the `requests` library like a delivery boy.
 
@@ -27,7 +33,7 @@ If you want food from a restaurant, you don't go there yourself. You give the de
 
 If the restaurant is closed (404), he comes back and tells you. If the restaurant is taking too long (timeout), he gives up and comes back.
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 
 The `requests` library abstracts the complexities of making HTTP requests behind a beautiful, simple API.
 
@@ -42,7 +48,7 @@ You use it when your Python script needs to fetch data from an API, scrape a web
 
 Bro, you should NOT use it if you need high-concurrency async operations (use `aiohttp` or `httpx` instead).
 
-## 4. Syntax Table
+## 5. Syntax Table
 
 | Operation | Code Example |
 |---|---|
@@ -53,7 +59,7 @@ Bro, you should NOT use it if you need high-concurrency async operations (use `a
 | Parse JSON | `response.json()` |
 | Raise Error on Bad Status | `response.raise_for_status()` |
 
-## 5. Beginner Example
+## 6. Beginner Example
 
 ```python
 import requests
@@ -77,7 +83,7 @@ Name: The Octocat
 
 Bro, it's that easy. Just call `.get()` and then `.json()` to get your data as a Python dictionary.
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 In production, you never just `.get()` without error handling and timeouts. Here is a real-world retry loop using standard libraries.
 
@@ -107,7 +113,7 @@ def fetch_user_data(user_id, retries=3):
 data = fetch_user_data(101)
 ```
 
-## 7. Internal Working
+## 8. Internal Working
 
 When you call `requests.get()`, it doesn't just do raw socket programming.
 
@@ -134,7 +140,7 @@ When you call `requests.get()`, it doesn't just do raw socket programming.
 
 `requests` relies on `urllib3` under the hood. When you make a request, `urllib3` checks if there's an existing TCP connection in its connection pool. If yes, it reuses it (saving SSL handshake time). If no, it opens a new socket.
 
-## 8. Performance Table
+## 9. Performance Table
 
 | Operation | Performance Impact | Recommendation |
 |---|---|---|
@@ -142,7 +148,7 @@ When you call `requests.get()`, it doesn't just do raw socket programming.
 | Reusing Connections | Saves ~50-100ms per request (no SSL handshake) | Use `requests.Session()` for multiple calls |
 | Streaming Large Files | High memory if loaded at once | Use `stream=True` and read in chunks |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
@@ -152,7 +158,7 @@ When you call `requests.get()`, it doesn't just do raw socket programming.
 | Why use `requests.Session()`? | It persists cookies, headers, and reuses underlying TCP connections (connection pooling) across multiple requests. |
 | What does `raise_for_status()` do? | It raises an `HTTPError` if the response status code is 4xx or 5xx. |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 ### The Infinite Hang
 
@@ -184,7 +190,7 @@ with open("huge.zip", "wb") as f:
         f.write(chunk)
 ```
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 
 | Domain | Real-World Usage |
 |---|---|
@@ -193,7 +199,7 @@ with open("huge.zip", "wb") as f:
 | Microservices | Sync communication between internal backend services |
 | Testing | Writing end-to-end API tests to verify endpoints |
 
-## 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
@@ -202,12 +208,12 @@ with open("huge.zip", "wb") as f:
 | Use `.raise_for_status()` to catch errors | Ignore 500 status codes and try to parse JSON |
 | Set a standard `User-Agent` header | Use the default python-requests user agent |
 
-## 13. Production Notes
+## 14. Production Notes
 
 > ⚠ Production Note:
 > The `requests` library is fully synchronous. If you are building a FastAPI or Asyncio app and you use `requests.get()`, you will block the entire event loop, destroying your app's performance. In async environments, use `httpx` or `aiohttp` instead.
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 
 | Mistake | Why It Hurts |
 |---|---|
@@ -215,10 +221,17 @@ with open("huge.zip", "wb") as f:
 | Not using Sessions | You waste time doing SSL handshakes over and over for the same host. |
 | Hardcoding URLs | Makes changing environments (dev vs prod) painful. |
 
-## 15. Related Topics
+## 16. Related Topics
 
 - REST API Basics
 - FastAPI
 - Requests vs HTTPX
 - Asyncio (why requests blocks it)
 - Python Error Handling
+
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [psf/requests](https://github.com/psf/requests) | ⭐ 10k+ | A simple, yet elegant, HTTP library. | Relevant to this topic |

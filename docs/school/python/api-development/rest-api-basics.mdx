@@ -19,7 +19,13 @@ import LearningFlow from '@site/src/components/LearningFlow';
 
 Bro, REST (Representational State Transfer) is not a strict protocol; it's an architectural style for building APIs. If your API is RESTful, it means it follows standard rules that make it predictable and easy to use.
 
-## 2. Real-World Analogy
+## 2. Engineering Story
+
+We designed a standard RESTful interface for a chaotic set of internal microservices, enabling teams to communicate consistently.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-REVIEW-088] Generate and embed illustration here. Prompt: An illustration of a restaurant menu with standard verbs (GET menu, POST order) representing REST API principles. */}
 
 Think of a REST API like ordering at a fast-food restaurant.
 
@@ -27,7 +33,7 @@ You (the client) look at the menu (API documentation) to see what you can order.
 
 The cashier doesn't remember who you are or what you ordered yesterday. Every time you walk up, you have to give them all the information they need right then (statelessness). They take your request, go to the kitchen (database/backend), and hand you your food wrapped in a standard paper bag (JSON response).
 
-## 3. Concept Explanation
+## 4. Concept Explanation
 
 A REST API allows systems to exchange data securely and predictably. It uses standard HTTP methods (verbs) to perform operations on resources (nouns).
 
@@ -39,7 +45,7 @@ Key REST principles:
 
 Bro, treating things as "Resources" is the secret to REST. You don't have endpoints like `/createUser` or `/deleteUser`. You just have `/users` and you use different HTTP methods on it.
 
-## 4. Syntax Table
+## 5. Syntax Table
 
 | HTTP Method | Action (CRUD) | Example Endpoint | Meaning |
 |---|---|---|---|
@@ -50,7 +56,7 @@ Bro, treating things as "Resources" is the secret to REST. You don't have endpoi
 | PATCH | Update | `/users/123` | Partially update user 123 |
 | DELETE | Delete | `/users/123` | Delete user 123 |
 
-## 5. Beginner Example
+## 6. Beginner Example
 
 Let's look at how you might define a simple REST API in your mind before coding it.
 
@@ -66,7 +72,7 @@ DELETE /books/42   -> Removes book 42 from the library
 
 Bro, notice how the noun (`/books`) stays the same, but the verb (`GET`, `POST`, etc.) changes the action.
 
-## 6. Real-World Engineering Example
+## 7. Real-World Engineering Example
 
 When hitting a real REST API (like GitHub's API) using Python, it looks like this:
 
@@ -92,7 +98,7 @@ if response.status_code == 201:
     print("Repository created successfully!")
 ```
 
-## 7. Internal Working
+## 8. Internal Working
 
 How does a REST API process a request?
 
@@ -120,7 +126,7 @@ How does a REST API process a request?
 
 When a request arrives, the web framework (like FastAPI or Flask) looks at the verb (`GET`) and the path (`/users/123`), routes it to the correct Python function, fetches data from the database, converts that data to JSON, and sends it back with an HTTP status code.
 
-## 8. Performance Table
+## 9. Performance Table
 
 | REST Characteristic | Performance Impact | Recommendation |
 |---|---|---|
@@ -128,7 +134,7 @@ When a request arrives, the web framework (like FastAPI or Flask) looks at the v
 | JSON Serialization | Moderate CPU cost | Use fast parsers like `orjson` if dealing with massive payloads. |
 | Over-fetching | Wastes bandwidth | If an endpoint returns 100 fields but the client needs 2, REST wastes data (unlike GraphQL). |
 
-## 9. Top Interview Questions
+## 10. Top Interview Questions
 
 | Question | Answer |
 |---|---|
@@ -138,7 +144,7 @@ When a request arrives, the web framework (like FastAPI or Flask) looks at the v
 | What HTTP status code is used for successful creation? | 201 Created. |
 | Why use plural nouns for endpoints? | It represents a collection of resources (e.g., `/users` instead of `/user`). |
 
-## 10. Tricky Questions & Edge Cases
+## 11. Tricky Questions & Edge Cases
 
 ### The "Everything is a POST" Anti-Pattern
 
@@ -163,7 +169,7 @@ An operation is **idempotent** if doing it once has the same effect as doing it 
 - `GET`, `PUT`, `DELETE` are idempotent. If you delete user 123 ten times, user 123 is still gone.
 - `POST` is NOT idempotent. If you `POST /users` ten times, you might create 10 different users.
 
-## 11. Real-World Usage
+## 12. Real-World Usage
 
 | Domain | Real-World Usage |
 |---|---|
@@ -172,7 +178,7 @@ An operation is **idempotent** if doing it once has the same effect as doing it 
 | SaaS Platforms | Stripe, Twilio, and GitHub exposing APIs for developers. |
 | Single Page Apps | React or Vue frontends loading data asynchronously. |
 
-## 12. Best Practices
+## 13. Best Practices
 
 | DO | DON'T |
 |---|---|
@@ -181,12 +187,12 @@ An operation is **idempotent** if doing it once has the same effect as doing it 
 | Version your API (`/v1/users`) | Change the response structure of an active API without warning |
 | Use pagination for lists (`/users?limit=50&offset=100`) | Return 10,000 records in a single GET request |
 
-## 13. Production Notes
+## 14. Production Notes
 
 > ⚠ Production Note:
 > Never trust the client, bro. Always validate payloads (using tools like Pydantic) before processing them. Also, a real production REST API must have rate limiting and authentication to prevent abuse.
 
-## 14. Common Mistakes
+## 15. Common Mistakes
 
 | Mistake | Why It Hurts |
 |---|---|
@@ -194,7 +200,7 @@ An operation is **idempotent** if doing it once has the same effect as doing it 
 | Sending sensitive data in the URL | Query params (`GET /users?password=123`) are saved in server logs. Always use POST with a JSON body for sensitive data. |
 | Forgetting pagination | Your API works fine in dev with 10 rows, but crashes production when the table has 1 million rows. |
 
-## 15. Related Topics
+## 16. Related Topics
 
 - Requests Library
 - FastAPI
@@ -202,3 +208,10 @@ An operation is **idempotent** if doing it once has the same effect as doing it 
 - API Versioning
 - Authentication
 - Rate Limiting
+
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [tiangolo/fastapi](https://github.com/tiangolo/fastapi) | ⭐ 10k+ | FastAPI framework | Relevant to this topic |

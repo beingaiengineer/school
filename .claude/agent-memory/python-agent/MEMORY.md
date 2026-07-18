@@ -299,16 +299,16 @@ No reusable insights recorded yet.
 - [x] [BAE-REVIEW-080] | Audit `concurrency/multiprocessing.mdx`
 - [x] [BAE-REVIEW-081] | Audit `concurrency/asyncio.mdx`
 - [x] [BAE-REVIEW-082] | Audit `concurrency/async-await.mdx`
-- [ ] [BAE-REVIEW-083] | Audit `concurrency/race-conditions.mdx`
-- [ ] [BAE-REVIEW-084] | Audit `concurrency/queues.mdx`
-- [ ] [BAE-REVIEW-085] | Audit `concurrency/locks-semaphores.mdx`
-- [ ] [BAE-REVIEW-086] | Audit `concurrency/gil.mdx`
-- [ ] [BAE-REVIEW-087] | Audit `api-development/requests-library.mdx`
-- [ ] [BAE-REVIEW-088] | Audit `api-development/rest-api-basics.mdx`
-- [ ] [BAE-REVIEW-089] | Audit `api-development/fastapi.mdx`
-- [ ] [BAE-REVIEW-090] | Audit `api-development/flask.mdx`
-- [ ] [BAE-REVIEW-091] | Audit `api-development/authentication.mdx`
-- [ ] [BAE-REVIEW-092] | Audit `api-development/middleware.mdx`
+- [x] [BAE-REVIEW-083] | Audit `concurrency/race-conditions.mdx`
+- [x] [BAE-REVIEW-084] | Audit `concurrency/queues.mdx`
+- [x] [BAE-REVIEW-085] | Audit `concurrency/locks-semaphores.mdx`
+- [x] [BAE-REVIEW-086] | Audit `concurrency/gil.mdx`
+- [x] [BAE-REVIEW-087] | Audit `api-development/requests-library.mdx`
+- [x] [BAE-REVIEW-088] | Audit `api-development/rest-api-basics.mdx`
+- [x] [BAE-REVIEW-089] | Audit `api-development/fastapi.mdx`
+- [x] [BAE-REVIEW-090] | Audit `api-development/flask.mdx`
+- [x] [BAE-REVIEW-091] | Audit `api-development/authentication.mdx`
+- [x] [BAE-REVIEW-092] | Audit `api-development/middleware.mdx`
 - [ ] [BAE-REVIEW-093] | Audit `api-development/api-versioning.mdx`
 - [ ] [BAE-REVIEW-094] | Audit `api-development/rate-limiting.mdx`
 - [ ] [BAE-REVIEW-095] | Audit `databases/sqlite.mdx`
@@ -367,6 +367,7 @@ No reusable insights recorded yet.
 
 | BAE ID | What's Done (High Level) |
 |---|---|
+| [BAE-REVIEW-083] through [BAE-REVIEW-092] | Audited 10 Python topics (Concurrency & API), added Engineering Stories, Illustration placeholders, and GitHub Repositories. |
 | [BAE-REVIEW-073] through [BAE-REVIEW-082] | Audited 10 Python topics (Advanced & Concurrency), added unique Engineering Stories, added distinct Illustration placeholders, and added unique GitHub Repositories. |
 | [BAE-REVIEW-063] through [BAE-REVIEW-072] | Audited 10 Python modules and advanced topics, fixed heading numbering, injected Engineering Story, added Illustration placeholder, and added GitHub Repositories. |
 | [BAE-REVIEW-042] through [BAE-REVIEW-051] | Audited 10 OOP topics, fixed heading numbering, injected Engineering Story, and added GitHub Repositories. |
