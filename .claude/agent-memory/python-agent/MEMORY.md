@@ -237,16 +237,16 @@ No reusable insights recorded yet.
 ---
 
 ### Next Task
-- [ ] [BAE-REVIEW-103] | Audit `testing/unit-testing.mdx`
-- [ ] [BAE-REVIEW-104] | Audit `testing/mocking.mdx`
-- [ ] [BAE-REVIEW-105] | Audit `testing/integration-testing.mdx`
-- [ ] [BAE-REVIEW-106] | Audit `testing/load-testing.mdx`
-- [ ] [BAE-REVIEW-107] | Audit `testing/test-best-practices.mdx`
-- [ ] [BAE-REVIEW-108] | Audit `performance/profiling.mdx`
-- [ ] [BAE-REVIEW-109] | Audit `performance/memory-optimization.mdx`
-- [ ] [BAE-REVIEW-110] | Audit `performance/caching.mdx`
-- [ ] [BAE-REVIEW-111] | Audit `performance/lazy-loading.mdx`
-- [ ] [BAE-REVIEW-112] | Audit `performance/vectorization.mdx`
+- [ ] [BAE-REVIEW-113] | Audit `performance/numpy-performance.mdx`
+- [ ] [BAE-REVIEW-114] | Audit `performance/performance-best-practices.mdx`
+- [ ] [BAE-REVIEW-115] | Audit `system-design/python-architecture.mdx`
+- [ ] [BAE-REVIEW-116] | Audit `system-design/scalable-python.mdx`
+- [ ] [BAE-REVIEW-117] | Audit `system-design/event-driven-systems.mdx`
+- [ ] [BAE-REVIEW-118] | Audit `system-design/queue-systems.mdx`
+- [ ] [BAE-REVIEW-119] | Audit `system-design/distributed-systems.mdx`
+- [ ] [BAE-REVIEW-120] | Audit `system-design/microservices.mdx`
+- [ ] [BAE-REVIEW-121] | Audit `system-design/production-patterns.mdx`
+- [ ] [BAE-REVIEW-122] | Audit `ai-engineering/python-for-ai.mdx`
 
 ## Backlog
 - [x] [BAE-REVIEW-021] | Audit `functions/recursion.mdx`
@@ -331,16 +331,16 @@ No reusable insights recorded yet.
 - [x] [BAE-REVIEW-100] | Audit `databases/indexing.mdx`
 - [x] [BAE-REVIEW-101] | Audit `databases/connection-pooling.mdx`
 - [x] [BAE-REVIEW-102] | Audit `testing/pytest.mdx`
-- [ ] [BAE-REVIEW-103] | Audit `testing/unit-testing.mdx`
-- [ ] [BAE-REVIEW-104] | Audit `testing/mocking.mdx`
-- [ ] [BAE-REVIEW-105] | Audit `testing/integration-testing.mdx`
-- [ ] [BAE-REVIEW-106] | Audit `testing/load-testing.mdx`
-- [ ] [BAE-REVIEW-107] | Audit `testing/test-best-practices.mdx`
-- [ ] [BAE-REVIEW-108] | Audit `performance/profiling.mdx`
-- [ ] [BAE-REVIEW-109] | Audit `performance/memory-optimization.mdx`
-- [ ] [BAE-REVIEW-110] | Audit `performance/caching.mdx`
-- [ ] [BAE-REVIEW-111] | Audit `performance/lazy-loading.mdx`
-- [ ] [BAE-REVIEW-112] | Audit `performance/vectorization.mdx`
+- [x] [BAE-REVIEW-103] | Audit `testing/unit-testing.mdx`
+- [x] [BAE-REVIEW-104] | Audit `testing/mocking.mdx`
+- [x] [BAE-REVIEW-105] | Audit `testing/integration-testing.mdx`
+- [x] [BAE-REVIEW-106] | Audit `testing/load-testing.mdx`
+- [x] [BAE-REVIEW-107] | Audit `testing/test-best-practices.mdx`
+- [x] [BAE-REVIEW-108] | Audit `performance/profiling.mdx`
+- [x] [BAE-REVIEW-109] | Audit `performance/memory-optimization.mdx`
+- [x] [BAE-REVIEW-110] | Audit `performance/caching.mdx`
+- [x] [BAE-REVIEW-111] | Audit `performance/lazy-loading.mdx`
+- [x] [BAE-REVIEW-112] | Audit `performance/vectorization.mdx`
 - [ ] [BAE-REVIEW-113] | Audit `performance/numpy-performance.mdx`
 - [ ] [BAE-REVIEW-114] | Audit `performance/performance-best-practices.mdx`
 - [ ] [BAE-REVIEW-115] | Audit `system-design/python-architecture.mdx`
