@@ -1,0 +1,198 @@
+---
+sidebar_position: 5
+sidebar_label: "Canary Deployment"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Canary Deployment
+
+### 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Canary Deployment |
+| Difficulty | Advanced |
+| Used For | Testing new code on a small subset of real users before a full rollout |
+| Common Mistake | Rolling out to 1% of users but not actually monitoring the error metrics |
+| Performance | Requires advanced load balancing and metric analysis tools |
+
+### 2. Engineering Story
+
+Bro, the team just spent six months rewriting the entire recommendation engine. In Staging, it passed every test. But Staging only simulates 100 users. Production has 5 million. You cannot use a Blue-Green deployment here, because flipping 5 million users to a completely unproven, massive rewrite is a recipe for a catastrophic database meltdown.
+
+Instead, you deploy the new engine and configure the load balancer to send exactly 1% of live user traffic to it. The other 99% stay on the old engine. You sit back and watch the dashboards. The 1% acts as your early warning system. If the new engine starts throwing 500 errors or latency spikes to 10 seconds, you immediately route that 1% back to safety. If it looks healthy after an hour, you increase it to 5%, then 25%, and finally 100%. You just deployed a massive risk with zero widespread impact.
+
+### 3. Real-World Analogy
+
+Think of Canary deployment like launching a new Jio plan, bro.
+
+| Telecom Strategy | Software Equivalent |
+|---|---|
+| Releasing the new plan only in one small city (e.g., Pune) | Routing 1% of traffic to the new V2 code |
+| Monitoring if Pune users experience network drops | Analyzing metrics (latency, error rates) |
+| Expanding the plan to Maharashtra | Scaling up to 25% traffic |
+| Releasing it nationwide | Full 100% rollout |
+
+The name comes from coal miners carrying a canary into a mine. If the canary died, it meant toxic gas was present, and the miners evacuated.
+
+### 4. Concept Explanation
+
+Canary Deployment is a technique to reduce the risk of introducing a new software version in production by slowly rolling out the change to a small subset of users before making it available to everybody.
+
+We care about this because synthetic tests in Staging never perfectly replicate the chaos of real user data. Canary allows you to test in production safely. If the new version is buggy (the "canary dies"), only a tiny fraction of users are affected, and rollback is instantaneous.
+
+### 5. Syntax Table
+
+| Concept | Description |
+|---|---|
+| Baseline | The current stable version (V1) |
+| Canary | The new version being tested (V2) |
+| Traffic Split | The percentage of requests routed to the Canary |
+| Automated Analysis | Tools evaluating if the Canary is healthy compared to the Baseline |
+
+### 6. Beginner Example
+
+Using a modern API Gateway or Service Mesh like Istio, you define a VirtualService to handle the traffic split.
+
+```yaml
+# Istio VirtualService configuration
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: recommendation-service
+spec:
+  hosts:
+  - recommendations.mycorp.com
+  http:
+  - route:
+    # 90% of traffic goes to V1
+    - destination:
+        host: recommendation-service
+        subset: v1
+      weight: 90
+    # 10% of traffic goes to the Canary V2
+    - destination:
+        host: recommendation-service
+        subset: v2
+      weight: 10
+```
+
+### 7. Real-World Engineering Example
+
+In advanced setups, a Progressive Delivery controller (like Flagger) automates the entire process based on Prometheus metrics.
+
+```yaml
+# Flagger Canary Resource
+apiVersion: flagger.app/v1beta1
+kind: Canary
+metadata:
+  name: payment-api
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: payment-api
+  service:
+    port: 8080
+  analysis:
+    interval: 1m
+    threshold: 5       # Max number of failed metric checks before rollback
+    maxWeight: 50      # Max traffic % before full promotion
+    stepWeight: 5      # Increase traffic by 5% every interval
+    metrics:
+    - name: request-success-rate
+      thresholdRange:
+        min: 99        # Roll back if success rate drops below 99%
+    - name: request-duration
+      thresholdRange:
+        max: 500       # Roll back if latency exceeds 500ms
+```
+
+### 8. Internal Working
+
+This diagram visualizes a Canary release in progress.
+
+<LearningFlow
+  steps={[
+    { id: '1', kind: 'data', label: '100% User Traffic', position: { x: 200, y: 0 } },
+    { id: '2', kind: 'core', label: 'Smart Proxy (Istio/Envoy)', position: { x: 200, y: 100 } },
+    { id: '3', kind: 'process', label: 'Baseline V1 (95%)', position: { x: 0, y: 250 } },
+    { id: '4', kind: 'warning', label: 'Canary V2 (5%)', position: { x: 400, y: 250 } },
+    { id: '5', kind: 'tool', label: 'Metrics Server (Prometheus)', position: { x: 400, y: 350 } },
+    { id: '6', kind: 'output', label: 'Automated Rollback Trigger', position: { x: 200, y: 350 } }
+  ]}
+  edges={[
+    { source: '1', target: '2', animated: true, label: 'requests' },
+    { source: '2', target: '3', animated: true, label: '95%' },
+    { source: '2', target: '4', animated: true, label: '5%' },
+    { source: '4', target: '5', animated: true, label: 'sends telemetry' },
+    { source: '5', target: '6', animated: true, label: 'evaluates' },
+    { source: '6', target: '2', animated: true, label: 'updates weights' }
+  ]}
+/>
+
+### 9. Performance Table
+
+| Phase | Metric Priority | Action on Failure |
+|---|---|---|
+| 1% Traffic | Error 500s | Instant Rollback |
+| 10% Traffic | Latency (P99) | Pause rollout, alert engineer |
+| 50% Traffic | Database Load | Slow down rollout speed |
+
+### 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between Canary and Blue-Green? | Blue-Green flips 100% of traffic instantly. Canary shifts traffic incrementally (1%, 10%, 50%). |
+| How do you route specific users to the Canary instead of random percentages? | By using HTTP header inspection in the load balancer (e.g., routing users with `@mycorp.com` emails to the Canary first). |
+| What happens to database schema changes during a Canary? | It is identical to Rolling/Blue-Green. The schema must support both V1 and V2 simultaneously using the Expand/Contract pattern. |
+| Can you do a Canary deployment without a Service Mesh? | Yes, you can manually adjust Replica counts in Kubernetes (e.g., 9 V1 pods, 1 V2 pod), but it's less precise than traffic shifting via a gateway. |
+| What metrics should you monitor during a Canary? | The "Four Golden Signals": Latency, Traffic, Errors, and Saturation. |
+
+### 11. Tricky Questions & Edge Cases
+
+**Bro, your Canary (V2) is getting 1% traffic and looks totally healthy. You promote it to 100%, and the database immediately crashes. Why did the Canary lie?**
+The Canary didn't lie; it lacked context. A single Canary server might comfortably handle 1% of traffic using unoptimized database queries. But when you hit 100%, those unoptimized queries cause a massive database lock. Canary testing verifies code correctness, but it does NOT always verify scale.
+
+### 12. Real-World Usage
+
+Facebook (Meta) uses a highly advanced form of Canary deployment. They roll out code first to internal employee accounts, then to 1% of a specific region, then 10%, expanding globally over several days.
+
+### 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Automate the Canary analysis. If error rates spike, the system should roll back without human intervention. | Manually stare at Datadog dashboards for 3 hours trying to decide if the Canary is healthy. |
+| Use sticky sessions if your app requires a user to stay on the same version during their workflow. | Randomly bounce a user between V1 and V2 on every click. |
+
+### 14. Production Notes
+
+<Admonition type="caution" title="Statistical Significance">
+If your application only gets 10 requests per minute, a 1% Canary gets 0.1 requests per minute. You cannot make statistical decisions on that volume. Canary deployments require reasonably high traffic volume to generate useful metric data quickly.
+</Admonition>
+
+### 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Comparing Canary (V2) against a stale Production (V1) | V1 has been running for weeks and might have memory leaks. Always spin up a fresh "Baseline V1" alongside the "Canary V2" to ensure a fair metric comparison. |
+| Ignoring frontend assets | If V2 HTML expects a new V2 JavaScript file, but the CDN cached the V1 file, the Canary will break. Version your static assets. |
+
+### 16. Related Topics
+- Deployment Strategies
+- Feature Flags
+- Blue-Green Deployment
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [weaveworks/flagger](https://github.com/weaveworks/flagger) | ⭐ 4k+ | Progressive Delivery Operator | Automates the math and routing for Canary deployments in K8s |
+| [envoyproxy/envoy](https://github.com/envoyproxy/envoy) | ⭐ 24k+ | Cloud-native high-performance edge/middle proxy | The underlying technology that makes precise traffic splitting possible |
+| [linkerd/linkerd2](https://github.com/linkerd/linkerd2) | ⭐ 10k+ | Ultralight service mesh | Provides the telemetry required to evaluate a Canary |
+| [keptn/keptn](https://github.com/keptn/keptn) | ⭐ 2k+ | Cloud-native application life-cycle orchestration | Specializes in automated quality gates for deployments |
+| [Netflix/kayenta](https://github.com/spinnaker/kayenta) | ⭐ 1k+ | Automated Canary Analysis (ACA) | The brain behind Netflix's Canary evaluation system |
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: An engineer nervously watching a small, high-tech robotic yellow bird (canary) flying into a massive, dark server room, while holding a remote control ready to hit the "Recall" button. */}

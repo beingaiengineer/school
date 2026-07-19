@@ -84,24 +84,24 @@ No reusable insights recorded yet.
 
 ## Metrics
 
-- Lessons Completed: 0
-- Lessons Remaining: 10
-- Completion %: 0.0%
+- Lessons Completed: 10
+- Lessons Remaining: 0
+- Completion %: 100.0%
 - Open Tasks: 0
 
 ---
 
 ## Backlog
-- [ ] [BAE-REL-001] | Create `deployment-fundamentals.mdx`
-- [ ] [BAE-REL-002] | Create `environments-dev-staging-prod.mdx`
-- [ ] [BAE-REL-003] | Create `deployment-strategies.mdx`
-- [ ] [BAE-REL-004] | Create `blue-green-deployment.mdx`
-- [ ] [BAE-REL-005] | Create `canary-deployment.mdx`
-- [ ] [BAE-REL-006] | Create `feature-flags.mdx`
-- [ ] [BAE-REL-007] | Create `release-management.mdx`
-- [ ] [BAE-REL-008] | Create `rollback-strategies.mdx`
-- [ ] [BAE-REL-009] | Create `infrastructure-as-code.mdx`
-- [ ] [BAE-REL-010] | Create `terraform-basics.mdx`
+- [x] [BAE-REL-001] | Create `deployment-fundamentals.mdx`
+- [x] [BAE-REL-002] | Create `environments-dev-staging-prod.mdx`
+- [x] [BAE-REL-003] | Create `deployment-strategies.mdx`
+- [x] [BAE-REL-004] | Create `blue-green-deployment.mdx`
+- [x] [BAE-REL-005] | Create `canary-deployment.mdx`
+- [x] [BAE-REL-006] | Create `feature-flags.mdx`
+- [x] [BAE-REL-007] | Create `release-management.mdx`
+- [x] [BAE-REL-008] | Create `rollback-strategies.mdx`
+- [x] [BAE-REL-009] | Create `infrastructure-as-code.mdx`
+- [x] [BAE-REL-010] | Create `terraform-basics.mdx`
 
 ---
 

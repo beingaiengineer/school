@@ -1,0 +1,184 @@
+---
+sidebar_position: 6
+sidebar_label: "Feature Flags"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Feature Flags
+
+### 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Feature Flags (Toggles) |
+| Difficulty | Intermediate |
+| Used For | Decoupling deployment from release |
+| Common Mistake | Leaving dead flags in the codebase forever |
+| Performance | Adds minor latency per request if evaluated over the network |
+
+### 2. Engineering Story
+
+Bro, you've been working on a massive redesign of the user dashboard for two months. Marketing wants to launch it exactly on Monday at 9:00 AM with a massive press release. If you wait until 8:55 AM on Monday to deploy the code, you are risking the entire launch on a deployment succeeding flawlessly under pressure. If it fails, the press release goes out to a broken site.
+
+Instead, you deploy the code on Thursday. But no users see it. The code is wrapped in an `if` statement controlled by a database switch. The code is safely resting in production, dormant. On Monday at 8:59 AM, you log into an admin panel and flip the switch from `false` to `true`. Instantly, the new dashboard is live for everyone. If it crashes at 9:01 AM, you flip it back to `false` and fix it in peace. That is the power of Feature Flags.
+
+### 3. Real-World Analogy
+
+Think of feature flags like Diwali lights on a house, bro.
+
+| Electrical Setup | Software Equivalent |
+|---|---|
+| Stringing up the wires and bulbs all afternoon | Deploying the code to production |
+| Keeping the main switch OFF | The feature flag is `false` (hidden) |
+| Waiting until exactly 7:00 PM when guests arrive | Waiting for Marketing's launch date |
+| Flipping the switch to turn all lights ON | Toggling the feature flag to `true` |
+| Turning it off instantly if a bulb sparks | Instant rollback via the flag |
+
+### 4. Concept Explanation
+
+A Feature Flag (or Toggle) is a software engineering technique that allows you to turn features of your application on or off safely, without deploying new code.
+
+We care about this because it fundamentally separates **Deployment** (putting code on a server) from **Release** (exposing that code to users). It allows teams to merge incomplete features into the main branch safely, test in production with internal users, and perform targeted rollouts (e.g., "turn this on only for premium users in Canada").
+
+### 5. Syntax Table
+
+| Flag Type | Lifetime | Purpose |
+|---|---|---|
+| Release Flag | Short | Safely rolling out a new feature, then deleting the flag. |
+| Experiment Flag | Medium | A/B testing two different designs to see which converts better. |
+| Ops Flag | Long | A kill switch to disable a heavy feature if the database is struggling. |
+| Permission Flag | Long | Premium features only available to paying enterprise customers. |
+
+### 6. Beginner Example
+
+The absolute simplest feature flag is just a boolean in a configuration file or database.
+
+```javascript
+// A rudimentary feature flag implementation
+function renderDashboard(user) {
+    // Check if the flag is enabled in our config/database
+    const isNewDashboardEnabled = getFeatureFlag('new_dashboard_v2');
+
+    if (isNewDashboardEnabled) {
+        return renderV2Dashboard(user); // The new code
+    } else {
+        return renderV1Dashboard(user); // The old, safe code
+    }
+}
+```
+
+### 7. Real-World Engineering Example
+
+In production, you use dedicated SaaS platforms (like LaunchDarkly or Unleash) to evaluate flags dynamically based on the user's context, without hardcoding logic.
+
+```javascript
+import { initialize } from 'launchdarkly-node-server-sdk';
+
+const ldClient = initialize('YOUR_SDK_KEY');
+
+async function processPayment(user, cart) {
+    // We pass the specific user context to the flag provider
+    const userContext = {
+        key: user.id,
+        country: user.country,
+        isBetaTester: user.roles.includes('beta')
+    };
+
+    // The SaaS platform evaluates the rules and returns true/false
+    const useStripeV2 = await ldClient.variation('use-stripe-v2-api', userContext, false);
+
+    if (useStripeV2) {
+        return stripeV2.charge(cart);
+    } else {
+        return legacyPayment.charge(cart);
+    }
+}
+```
+
+### 8. Internal Working
+
+This diagram shows how a request is evaluated against a feature flag management system.
+
+<LearningFlow
+  steps={[
+    { id: '1', kind: 'data', label: 'User Request', position: { x: 0, y: 150 } },
+    { id: '2', kind: 'process', label: 'Application Code', position: { x: 250, y: 150 } },
+    { id: '3', kind: 'tool', label: 'Flag Evaluator (SDK)', position: { x: 500, y: 150 } },
+    { id: '4', kind: 'data', label: 'Flag Rules Cache', position: { x: 500, y: 50 } },
+    { id: '5', kind: 'output', label: 'Feature A (ON)', position: { x: 750, y: 100 } },
+    { id: '6', kind: 'output', label: 'Legacy Code (OFF)', position: { x: 750, y: 200 } }
+  ]}
+  edges={[
+    { source: '1', target: '2', animated: true, label: 'GET /dashboard' },
+    { source: '2', target: '3', animated: true, label: 'check flag' },
+    { source: '3', target: '4', animated: false, label: 'reads rules' },
+    { source: '3', target: '5', animated: true, label: 'if true' },
+    { source: '3', target: '6', animated: true, label: 'if false' }
+  ]}
+/>
+
+### 9. Performance Table
+
+| Evaluation Method | Latency Impact | Reliability |
+|---|---|---|
+| Local SDK Cache | < 1ms | High (survives network drops) |
+| API Call per Request | 50ms - 200ms | Low (Flag server goes down, app breaks) |
+| Database Lookup | 5ms - 20ms | Medium (Adds DB load) |
+
+### 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| How do Feature Flags differ from Canary Deployments? | Canary routes traffic at the infrastructure level (load balancer). Feature flags route execution paths inside the application code. |
+| What is "Technical Debt" in the context of feature flags? | Dead flags. Once a feature is 100% rolled out, the `if/else` flag logic remains in the code, causing clutter. It must be actively deleted. |
+| How do you test an application with many feature flags? | It's difficult due to combinatorial explosion. Focus tests on the "current production state" and the "intended next state," not every possible combination. |
+| What happens if the Feature Flag SaaS provider goes down? | Your application SDK must have a local cache of the last known rules, and a hardcoded fallback value (e.g., `false`) so the app doesn't crash. |
+| Can you use feature flags for database migrations? | No. Feature flags control code execution. Database schemas are global state and cannot be easily toggled on and off per user request. |
+
+### 11. Tricky Questions & Edge Cases
+
+**Bro, a user loads the homepage and the flag says `false`. They click a link to a sub-page, and suddenly the flag evaluates to `true`, changing the UI entirely. Why?**
+This is called "Flag Flapping." If your flag rule is "Enable for 50% of traffic," but it evaluates randomly on every single page load, the user will see a flickering experience. Flags must be evaluated using a sticky hash (like hashing the User ID) so a specific user always gets the same result.
+
+### 12. Real-World Usage
+
+Netflix uses Operational Flags extensively. If their recommendation engine starts buckling under heavy load, an automated system flips an Ops Flag. The UI instantly stops requesting complex AI recommendations and falls back to a static list of "Trending Now" movies, saving the database from crashing.
+
+### 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Create Jira tickets to remove Release Flags the moment you create them. | Leave 500 dormant flags in your codebase, confusing new engineers. |
+| Use strongly typed SDKs so flag names are autocompleted and typos are caught at compile time. | Hardcode flag string names randomly throughout the application. |
+
+### 14. Production Notes
+
+<Admonition type="caution" title="Evaluation Latency">
+Never make a synchronous HTTP call to a flag management API in the middle of a hot code path. Always use an SDK that maintains a local, asynchronously updated cache of the rules.
+</Admonition>
+
+### 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Reusing an old flag name | If you used `new-checkout` in 2021, and reuse it in 2023, old cached rules might activate your new code prematurely. Use unique namespaces like `2023-q4-checkout-revamp`. |
+| Flagging too granularly | Don't put a flag on every single button color change. Flag at the component or feature level. |
+
+### 16. Related Topics
+- Canary Deployment
+- Release Management
+- Rollback Strategies
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [Unleash/unleash](https://github.com/Unleash/unleash) | ⭐ 10k+ | Open-source feature flag & toggle system | The best self-hosted alternative to LaunchDarkly |
+| [open-feature/spec](https://github.com/open-feature/spec) | ⭐ 1k+ | Standardizing Feature Flagging | A vendor-neutral standard for evaluating flags |
+| [Flagsmith/flagsmith](https://github.com/Flagsmith/flagsmith) | ⭐ 4k+ | Open Source Feature Flagging | A modern, fully featured flagging engine |
+| [markphelps/flipt](https://github.com/markphelps/flipt) | ⭐ 3k+ | An open source, self-contained feature flag solution | Fast, lightweight, written in Go |
+| [Growthbook/growthbook](https://github.com/growthbook/growthbook) | ⭐ 6k+ | Open Source Feature Flagging and A/B Testing | Focuses heavily on the analytics side of feature flags |
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: An engineer standing confidently in front of a giant switchboard labeled 'Production', flipping a single switch to instantly illuminate a massive, complicated neon sign. */}
