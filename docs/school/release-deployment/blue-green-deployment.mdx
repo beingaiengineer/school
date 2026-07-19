@@ -1,0 +1,201 @@
+---
+sidebar_position: 4
+sidebar_label: "Blue-Green Deployment"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Blue-Green Deployment
+
+### 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Blue-Green Deployment |
+| Difficulty | Intermediate |
+| Used For | Zero-downtime deployments with instant rollback capability |
+| Common Mistake | Assuming database migrations will just magically work |
+| Performance | Requires 2x the infrastructure during the deployment window |
+
+### 2. Engineering Story
+
+Bro, imagine you are managing a massive e-commerce site. It's the week before Diwali, traffic is peaking, and product just demanded a critical UI update to the checkout flow. You can't use a Rolling Update because having half your users see the old checkout and half see the new checkout might cause cart corruption. You need the switch to be instantaneous.
+
+So, you build an exact replica of your entire production system right next to it. You deploy the new code there. You run all your tests privately. Everything looks flawless. Then, you tell the main router: "Stop sending people to the old system. Send everyone to the new one." In a fraction of a second, the entire user base is on the new code. If it crashes, you just flip the router back. That is the magic, and the cost, of Blue-Green deployment.
+
+### 3. Real-World Analogy
+
+Think of Blue-Green deployment like moving to a new apartment, bro.
+
+| Life Event | Blue-Green Equivalent |
+|---|---|
+| Living in your current messy apartment | The Blue Environment (V1, Active) |
+| Renting a new apartment and setting up furniture | The Green Environment (V2, Idle) |
+| Changing your mailing address at the post office | Flipping the Load Balancer |
+| Keeping the old apartment keys for a week just in case | Instant Rollback Capability |
+
+### 4. Concept Explanation
+
+Blue-Green is a deployment strategy where you maintain two identical production environments. Only one is active at a time (let's say Blue). When a new release is ready, you deploy it to the idle environment (Green). You test Green thoroughly. Once verified, you switch the router/load balancer to point all traffic to Green. Blue now becomes idle.
+
+We care about this because it eliminates the "transition window" problem of rolling updates where two different versions of code run simultaneously. It also provides the absolute fastest rollback mechanism in engineering: if Green fails, just point the router back to Blue.
+
+### 5. Syntax Table
+
+| Component | Role in Blue-Green |
+|---|---|
+| Active Environment | Currently serving 100% of live user traffic. |
+| Idle Environment | Currently receiving 0% of user traffic, used for staging the new release. |
+| Router / Proxy | The mechanism (DNS, Load Balancer, Ingress) used to flip traffic. |
+| Cutover | The exact moment traffic is switched from Active to Idle. |
+
+### 6. Beginner Example
+
+At its most basic, Blue-Green can be executed using Nginx to just point to a different port.
+
+```nginx
+# nginx.conf
+upstream backend {
+    # Currently pointing to Blue (V1)
+    server 127.0.0.1:8080;
+
+    # When ready for Green (V2), comment Blue and uncomment Green:
+    # server 127.0.0.1:8081;
+}
+
+server {
+    listen 80;
+    location / {
+        proxy_pass http://backend;
+    }
+}
+# After editing, run: nginx -s reload
+```
+
+### 7. Real-World Engineering Example
+
+In Kubernetes, we use Services to flip traffic between two different Deployments using labels.
+
+```yaml
+# 1. The Blue Deployment (V1)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-blue
+spec:
+  template:
+    metadata:
+      labels:
+        app: api
+        color: blue
+
+---
+# 2. The Green Deployment (V2)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-green
+spec:
+  template:
+    metadata:
+      labels:
+        app: api
+        color: green
+
+---
+# 3. The Service (The Router)
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-service
+spec:
+  selector:
+    app: api
+    color: green # CHANGE THIS FROM 'blue' TO 'green' TO CUTOVER
+```
+
+### 8. Internal Working
+
+This diagram visualizes the cutover moment.
+
+<LearningFlow
+  steps={[
+    { id: '1', kind: 'data', label: 'User Traffic', position: { x: 200, y: 0 } },
+    { id: '2', kind: 'core', label: 'Load Balancer / Ingress', position: { x: 200, y: 100 } },
+    { id: '3', kind: 'warning', label: 'Blue Env (V1) - IDLE', position: { x: 50, y: 250 } },
+    { id: '4', kind: 'output', label: 'Green Env (V2) - ACTIVE', position: { x: 350, y: 250 } },
+    { id: '5', kind: 'data', label: 'Shared Database', position: { x: 200, y: 400 } }
+  ]}
+  edges={[
+    { source: '1', target: '2', animated: true, label: 'requests' },
+    { source: '2', target: '3', animated: false, label: 'previously routed' },
+    { source: '2', target: '4', animated: true, label: 'NEW ROUTE' },
+    { source: '3', target: '5', animated: false },
+    { source: '4', target: '5', animated: true }
+  ]}
+/>
+
+### 9. Performance Table
+
+| Aspect | Impact |
+|---|---|
+| Infrastructure Cost | High (Requires 2x compute resources during deployment) |
+| Deployment Speed | Fast (Instant DNS/Load Balancer update) |
+| Rollback Speed | Instant (Change DNS/Load Balancer back) |
+
+### 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the biggest challenge with Blue-Green deployments? | Database migrations. Since both Blue and Green must connect to the same live database, any schema changes must be backward compatible with the older version. |
+| Why not just use Rolling Updates? | Rolling updates result in users experiencing different versions of the app simultaneously. Blue-Green ensures a clean, instant cutover for all users. |
+| Do you keep the Idle environment running forever? | No. Once the active environment is stable (usually after a few hours or a day), the idle environment is scaled down to save money. |
+| How do you handle long-running user sessions during cutover? | Connection draining. The load balancer stops sending *new* requests to Blue, but allows existing active connections on Blue to finish before shutting it down. |
+| Is Blue-Green suitable for stateful apps? | It is very difficult for stateful apps where data is stored on the local disk. It is best for stateless microservices. |
+
+### 11. Tricky Questions & Edge Cases
+
+**Bro, you flipped to Green, and everything works. But 5 minutes later, users complain they were logged out. What happened?**
+Session state mismatch. If your user session tokens (like JWTs) rely on a secret key stored in memory, and Green generated a different key than Blue, all existing tokens instantly become invalid upon cutover. Always use a centralized cache (like Redis) for sessions.
+
+### 12. Real-World Usage
+
+AWS heavily promotes Blue-Green deployments for their managed database services (like RDS). When you upgrade a major PostgreSQL version, AWS creates a Green replica, syncs the data, upgrades the Green instance, and then flips the DNS endpoint, minimizing database downtime to mere seconds.
+
+### 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Run automated integration tests against the Idle environment before flipping traffic. | Flip traffic blindly and hope users don't find bugs. |
+| Ensure database migrations are executed using the Expand-and-Contract pattern. | Drop database columns that the old (Blue) environment is still trying to read. |
+
+### 14. Production Notes
+
+<Admonition type="caution" title="The Database Bottleneck">
+The fatal flaw of Blue-Green is the database. You have two versions of code, but only ONE database. If Green corrupts the database, flipping back to Blue will not save you, because Blue will now crash trying to read corrupted data.
+</Admonition>
+
+### 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Forgetting to scale down the idle environment | Automate a cleanup script to destroy the idle environment after 24 hours to prevent massive cloud bills. |
+| Using DNS for cutover without considering TTL | DNS propagation takes time. Use a Load Balancer or API Gateway flip instead of DNS for truly instant cutovers. |
+
+### 16. Related Topics
+- Deployment Strategies
+- Canary Deployment
+- Rollback Strategies
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [aws/aws-code-deploy-agent](https://github.com/aws/aws-codedeploy-agent) | ⭐ 1k+ | AWS CodeDeploy | Native AWS support for Blue-Green on EC2 |
+| [cloudfoundry/cli](https://github.com/cloudfoundry/cli) | ⭐ 2k+ | CF Command Line | Historically famous for making Blue-Green easy (`cf map-route`) |
+| [containous/traefik](https://github.com/traefik/traefik) | ⭐ 45k+ | Modern HTTP reverse proxy | Excellent for dynamic traffic routing required in Blue-Green |
+| [hashicorp/consul](https://github.com/hashicorp/consul) | ⭐ 28k+ | Service Networking | Used to update service discovery instantly during cutover |
+| [istio/istio](https://github.com/istio/istio) | ⭐ 33k+ | Service Mesh | The enterprise standard for advanced traffic management in K8s |
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: An engineer standing between two identical servers, one painted blue and one painted green, holding a massive railroad track lever to switch the train tracks from one server to the other. */}

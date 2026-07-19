@@ -1,0 +1,190 @@
+---
+sidebar_position: 1
+sidebar_label: "Deployment Fundamentals"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Deployment Fundamentals
+
+### 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Deployment Fundamentals |
+| Difficulty | Beginner |
+| Used For | Getting software from your laptop to users |
+| Common Mistake | Assuming "it works on my machine" means it works in production |
+| Performance | Varies wildly based on automation level |
+
+### 2. Engineering Story
+
+Bro, imagine spending three weeks building the most beautifully architected checkout service. The code is clean, the tests are green, and you're feeling like a 10x engineer. You ping your lead: "Checkout is done, ready for users." They look at you and say, "Cool, how do we deploy it?"
+
+Suddenly, you realize your masterpiece only exists on your local MacBook. Production is a cluster of Linux servers running somewhere in AWS, behind firewalls, load balancers, and a database you don't have direct access to. How does your code safely cross that gap without breaking the entire e-commerce site during peak traffic? That entire process—packaging, moving, configuring, and starting your code on real servers—is deployment. It's the bridge between theoretical code and actual business value.
+
+### 3. Real-World Analogy
+
+Think of deployment like a Swiggy or Zomato delivery, bro.
+
+| Kitchen Instruction | Deployment Equivalent |
+|---|---|
+| Cooking the food | Writing the code locally |
+| Packing in spill-proof containers | Containerizing the app (Docker) |
+| Handing to the delivery driver | Pushing to an artifact registry |
+| The route to the customer's house | The CI/CD pipeline |
+| Unpacking and serving on the dining table | Starting the app on production servers |
+
+### 4. Concept Explanation
+
+Deployment is the systematic process of moving software from a development environment into a production environment where real users can interact with it. It's not just "copying files." It involves configuration management, database migrations, restarting services, and ensuring zero downtime.
+
+We care about this because manual deployments are slow, error-prone, and terrifying. When things go wrong in deployment, the site goes down. Therefore, modern engineering teams invest heavily in making deployments boring, automated, and repeatable. We never want to rely on a single engineer knowing the "magic commands" to get code live.
+
+### 5. Syntax Table
+
+| Concept | Description | Typical Tools |
+|---|---|---|
+| Artifact | The packaged, deployable version of your code | Docker Image, JAR file, Tarball |
+| Registry | The storage system for artifacts | Docker Hub, AWS ECR, Artifactory |
+| Target Environment | The servers where code will run | AWS EC2, Kubernetes Clusters, Vercel |
+| Pipeline | The automated steps to move code | GitHub Actions, Jenkins, GitLab CI |
+
+### 6. Beginner Example
+
+The absolute simplest (and dangerous) form of deployment: SSH and Git pull.
+
+```bash
+# Connect to the production server
+ssh ubuntu@production-server-ip
+
+# Navigate to the app folder
+cd /var/www/my-app
+
+# Pull latest changes (Warning: don't do this in real life)
+git pull origin main
+
+# Restart the app
+npm run restart
+```
+
+### 7. Real-World Engineering Example
+
+In the real world, we use containers and orchestrators to pull artifacts securely without raw SSH access.
+
+```yaml
+# A simplified Kubernetes deployment manifest
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: checkout-service
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: checkout
+  template:
+    metadata:
+      labels:
+        app: checkout
+    spec:
+      containers:
+      - name: checkout-app
+        # We deploy a specific built artifact, NEVER 'latest'
+        image: myregistry.com/checkout:v1.2.4
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: prod-db-secrets
+              key: host
+```
+
+### 8. Internal Working
+
+When a deployment is triggered, a complex series of handoffs occurs between systems.
+
+<LearningFlow
+  steps={[
+    { id: '1', kind: 'data', label: 'Git Push (v1.2)', position: { x: 0, y: 0 } },
+    { id: '2', kind: 'process', label: 'CI Pipeline Builds Artifact', position: { x: 250, y: 0 } },
+    { id: '3', kind: 'data', label: 'Artifact Registry (Docker Image)', position: { x: 500, y: 0 } },
+    { id: '4', kind: 'process', label: 'CD Pipeline Triggers Update', position: { x: 500, y: 150 } },
+    { id: '5', kind: 'core', label: 'Prod Servers Pull New Image', position: { x: 250, y: 150 } },
+    { id: '6', kind: 'output', label: 'Traffic Routes to New Version', position: { x: 0, y: 150 } }
+  ]}
+  edges={[
+    { source: '1', target: '2', animated: true, label: 'triggers' },
+    { source: '2', target: '3', animated: true, label: 'pushes to' },
+    { source: '3', target: '4', animated: true, label: 'webhook' },
+    { source: '4', target: '5', animated: true, label: 'commands' },
+    { source: '5', target: '6', animated: true, label: 'ready' }
+  ]}
+/>
+
+### 9. Performance Table
+
+| Deployment Metric | Ideal Target | Reality |
+|---|---|---|
+| Deployment Frequency | Multiple times a day | Weekly/Monthly (in legacy corps) |
+| Lead Time for Changes | Under 1 hour | Days to Weeks |
+| Time to Restore Service | Under 15 minutes | Hours |
+
+### 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between deployment and release? | Deployment is pushing code to servers. Release is turning that feature on for users (often handled separately via feature flags). |
+| Why is deploying via `git pull` on the server bad? | It requires development tools on prod servers, lacks version control for dependencies, causes downtime during the pull/build, and fails unpredictably. |
+| What is an artifact? | A compiled, immutable package of your code and its dependencies, ready to be run anywhere. |
+| Why do we use staging environments? | To verify the artifact runs correctly against production-like databases and configurations before actual users see it. |
+| What is zero-downtime deployment? | A deployment technique where new versions of the app are started alongside old ones, and traffic is smoothly routed over without dropping requests. |
+
+### 11. Tricky Questions & Edge Cases
+
+**What happens if your database migration takes 10 minutes, but your code deployment takes 1 minute?**
+Bro, this is a classic outage. If your new code goes live in 1 minute and expects the new database columns, but the migration is still running for another 9 minutes, all queries will fail. Always write backward-compatible database migrations.
+
+### 12. Real-World Usage
+
+Companies like Netflix and Amazon deploy thousands of times a day. They achieve this by strictly separating code deployments from feature releases, using immutable artifacts, and heavily automating their testing and rollout pipelines so no human is required to "click deploy."
+
+### 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Build an artifact ONCE, then promote that same exact artifact through dev, staging, and prod. | Rebuild the code from source in every environment. |
+| Automate the entire process so a single button click or git merge deploys the code. | Rely on a 20-page Word document of manual deployment steps. |
+
+### 14. Production Notes
+
+<Admonition type="caution" title="Immutable Deployments">
+Bro, never SSH into a production server to tweak a config file or fix a bug directly. This creates "configuration drift." If that server crashes, your manual fix is lost forever, and the next automated deployment will overwrite it anyway. Fix it in Git, and deploy it through the pipeline.
+</Admonition>
+
+### 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Deploying late on a Friday | Only deploy when the team is awake and available to fix issues (Mon-Thu mornings). |
+| Hardcoding environment variables | Inject configurations at runtime using secrets managers or `.env` files, keeping artifacts generic. |
+
+### 16. Related Topics
+- Environments (Dev/Staging/Prod)
+- Deployment Strategies
+- CI/CD Pipelines
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [kubernetes/kubernetes](https://github.com/kubernetes/kubernetes) | ⭐ 104k+ | Production-grade container orchestration | The gold standard for modern deployment targets |
+| [argoproj/argo-cd](https://github.com/argoproj/argo-cd) | ⭐ 15k+ | Declarative continuous deployment for K8s | Shows how modern deployments are automated |
+| [hashicorp/terraform](https://github.com/hashicorp/terraform) | ⭐ 40k+ | Infrastructure as Code | Essential for defining where you deploy |
+| [ansible/ansible](https://github.com/ansible/ansible) | ⭐ 60k+ | IT automation | Classic tool for configuration management |
+| [drone/drone](https://github.com/drone/drone) | ⭐ 27k+ | Container-Native CI/CD | Shows how pipelines are constructed |
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A frustrated junior engineer standing next to a pristine dining table (local environment), staring across a massive canyon at a chaotic restaurant kitchen (production environment), holding a single plate of code, wondering how to get it across safely. */}

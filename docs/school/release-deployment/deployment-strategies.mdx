@@ -1,0 +1,174 @@
+---
+sidebar_position: 3
+sidebar_label: "Deployment Strategies"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Deployment Strategies
+
+### 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Deployment Strategies Overview |
+| Difficulty | Intermediate |
+| Used For | Upgrading software without dropping user requests |
+| Common Mistake | Using Big Bang deployment for critical systems |
+| Performance | Varies by strategy (Rolling takes time, Blue-Green takes double infrastructure) |
+
+### 2. Engineering Story
+
+Bro, it's 2 AM on a Sunday. The operations team is executing a "Big Bang" deployment. They have shut down all the main application servers, putting up a "We are undergoing maintenance" page. For the next three hours, engineers frantically copy new files over, run massive database scripts, and pray that the servers turn back on. At 5 AM, they flip the switch, and... the login button is broken. Panic sets in. Rolling back means another 3 hours of downtime.
+
+This archaic approach is how companies used to update software. In modern distributed systems, taking the site down for maintenance is unacceptable. We need ways to upgrade the engine of a plane while it is still flying, without the passengers noticing a thing. This is why we have deployment strategies.
+
+### 3. Real-World Analogy
+
+Think of deployment strategies like replacing the wheels on a moving train, bro.
+
+| Train Scenario | Deployment Equivalent |
+|---|---|
+| Stopping the train completely to change wheels | Big Bang / Recreate Deployment |
+| Changing one wheel at a time while moving slowly | Rolling Deployment |
+| Building a parallel track, moving passengers over | Blue-Green Deployment |
+| Testing the new track with just one car of people | Canary Deployment |
+
+### 4. Concept Explanation
+
+A deployment strategy is the algorithmic approach to replacing an old version of an application (V1) with a new version (V2). The goal is to minimize downtime, reduce risk, and allow for fast rollbacks if something goes wrong.
+
+We care about this because downtime costs money and ruins reputation. If you just kill all V1 servers and start V2 servers simultaneously (Recreate), users experience an outage. Instead, modern strategies use load balancers to intelligently route traffic between old and new instances until the new version is proven stable.
+
+### 5. Syntax Table
+
+| Strategy | Description | Downtime | Rollback Speed |
+|---|---|---|---|
+| Recreate / Big Bang | Kill V1 completely, then start V2 | High | Slow |
+| Rolling Update | Replace instances one by one (or in small batches) | Zero | Moderate |
+| Blue-Green | Spin up full V2 environment alongside V1, flip traffic | Zero | Instant |
+| Canary | Route 1% of traffic to V2, verify, then scale up | Zero | Instant |
+
+### 6. Beginner Example
+
+A rolling update is the default behavior in Kubernetes. Here is a conceptual example of what the load balancer is doing over time.
+
+```text
+Time 0: [V1, V1, V1] (100% traffic to V1)
+Time 1: [V2, V1, V1] (One V1 killed, one V2 started)
+Time 2: [V2, V2, V1] (Continuing the roll)
+Time 3: [V2, V2, V2] (100% traffic to V2, deployment complete)
+```
+
+### 7. Real-World Engineering Example
+
+Here is how you define a Rolling Update strategy in a Kubernetes Deployment manifest, ensuring you never drop below 75% capacity during the upgrade.
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+spec:
+  replicas: 4
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25% # Never drop below 3 running pods
+      maxSurge: 25%       # Can temporarily have 5 running pods
+  template:
+    metadata:
+      labels:
+        app: payment
+    spec:
+      containers:
+      - name: app
+        image: myregistry/payment:v2
+```
+
+### 8. Internal Working
+
+This diagram visualizes a Rolling Deployment mid-flight.
+
+<LearningFlow
+  steps={[
+    { id: '1', kind: 'data', label: 'User Traffic', position: { x: 200, y: 0 } },
+    { id: '2', kind: 'core', label: 'Load Balancer', position: { x: 200, y: 100 } },
+    { id: '3', kind: 'process', label: 'Server 1 (V2)', position: { x: 0, y: 250 } },
+    { id: '4', kind: 'process', label: 'Server 2 (V2)', position: { x: 150, y: 250 } },
+    { id: '5', kind: 'warning', label: 'Server 3 (V1)', position: { x: 300, y: 250 } },
+    { id: '6', kind: 'warning', label: 'Server 4 (V1)', position: { x: 450, y: 250 } }
+  ]}
+  edges={[
+    { source: '1', target: '2', animated: true, label: 'requests' },
+    { source: '2', target: '3', animated: true, label: 'routes' },
+    { source: '2', target: '4', animated: true, label: 'routes' },
+    { source: '2', target: '5', animated: true, label: 'routes' },
+    { source: '2', target: '6', animated: true, label: 'routes' }
+  ]}
+/>
+
+### 9. Performance Table
+
+| Strategy | Resource Cost | Deployment Duration |
+|---|---|---|
+| Recreate | Low (same servers) | Fast |
+| Rolling | Low (same servers) | Slow (waits for health checks) |
+| Blue-Green | Double (requires 2x servers) | Fast (instant flip) |
+
+### 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| When would you use a Recreate strategy? | Only in non-production environments or for legacy systems where V1 and V2 cannot share the same database schema simultaneously. |
+| What is a potential issue with Rolling Deployments? | During the rollout, both V1 and V2 are serving traffic simultaneously. Your database schema and API contracts must be compatible with both versions. |
+| Why are health checks critical for deployment strategies? | The orchestrator uses health checks to determine if a new V2 instance is actually ready to receive traffic before killing an old V1 instance. |
+| How does Blue-Green handle rollbacks? | Instantaneously. If V2 (Green) fails, you just tell the load balancer to route traffic back to V1 (Blue), which is still running. |
+| What is shadow deployment? | Routing real production traffic to a new version, but ignoring its responses, just to test if the new version can handle the load. |
+
+### 11. Tricky Questions & Edge Cases
+
+**Bro, you are doing a Rolling Update. V1 requires `first_name`, but V2 changed the database to require `full_name`. What happens?**
+Total chaos, bro. When V2 starts, it tries to read `full_name`. V1 is still writing `first_name`. Both versions are throwing errors. This is the hardest part of zero-downtime deployments: you must use the "Expand and Contract" database migration pattern to ensure backward compatibility during the transition window.
+
+### 12. Real-World Usage
+
+Shopify handles massive Black Friday traffic spikes. They cannot afford a single second of downtime. They heavily utilize Canary deployments, rolling out complex new checkout logic to a tiny subset of users first, monitoring error rates, and automatically rolling back if the system detects an anomaly.
+
+### 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Implement strict readiness and liveness probes in your application. | Assume the app is ready just because the process started. |
+| Monitor error rates and latency during the rollout. | Deploy and walk away for a coffee break. |
+
+### 14. Production Notes
+
+<Admonition type="caution" title="Stateful Applications">
+Deployment strategies are easy for stateless web servers, but extremely difficult for stateful applications like Databases or Caches. You cannot simply "Rolling Update" a master database without complex replication and failover planning.
+</Admonition>
+
+### 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Breaking API contracts during a Rolling Update | Always add new fields first (non-breaking), deploy, then deprecate old fields later in a separate deployment. |
+| Draining connections too fast | Allow old instances a "grace period" to finish processing active HTTP requests before killing them. |
+
+### 16. Related Topics
+- Blue-Green Deployment
+- Canary Deployment
+- Rollback Strategies
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [spinnaker/spinnaker](https://github.com/spinnaker/spinnaker) | ⭐ 8k+ | Multi-cloud continuous delivery platform | Built by Netflix specifically for advanced deployment strategies |
+| [argoproj/argo-rollouts](https://github.com/argoproj/argo-rollouts) | ⭐ 3k+ | Advanced deployment capabilities for K8s | Adds Canary and Blue-Green to native Kubernetes |
+| [weaveworks/flagger](https://github.com/weaveworks/flagger) | ⭐ 4k+ | Progressive delivery tool | Automates the promotion of Canary deployments based on metrics |
+| [crossplane/crossplane](https://github.com/crossplane/crossplane) | ⭐ 8k+ | Cloud native control plane | Manages infrastructure for complex deployments |
+| [kelseyhightower/nocode](https://github.com/kelseyhightower/nocode) | ⭐ 50k+ | No code is the best way to write secure software | A joke repo, but reminds us that the best deployment is no deployment |
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: An engineer frantically trying to change the tires on a moving formula one race car (representing rolling deployment), while the pit crew watches nervously holding laptops. */}
