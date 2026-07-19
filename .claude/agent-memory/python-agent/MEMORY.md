@@ -351,16 +351,16 @@ No reusable insights recorded yet.
 - [x] [BAE-REVIEW-120] | Audit `system-design/microservices.mdx`
 - [x] [BAE-REVIEW-121] | Audit `system-design/production-patterns.mdx`
 - [x] [BAE-REVIEW-122] | Audit `ai-engineering/python-for-ai.mdx`
-- [ ] [BAE-REVIEW-123] | Audit `ai-engineering/numpy.mdx`
-- [ ] [BAE-REVIEW-124] | Audit `ai-engineering/pandas.mdx`
-- [ ] [BAE-REVIEW-125] | Audit `ai-engineering/llm-basics.mdx`
-- [ ] [BAE-REVIEW-126] | Audit `ai-engineering/rag-pipelines.mdx`
-- [ ] [BAE-REVIEW-127] | Audit `ai-engineering/vector-databases.mdx`
-- [ ] [BAE-REVIEW-128] | Audit `ai-engineering/ai-agents.mdx`
-- [ ] [BAE-REVIEW-129] | Audit `ai-engineering/async-ai-workflows.mdx`
-- [ ] [BAE-REVIEW-130] | Audit `ai-engineering/ai-observability.mdx`
-- [ ] [BAE-REVIEW-131] | Audit `interview-prep/top-python-interview-questions.mdx`
-- [ ] [BAE-REVIEW-132] | Audit `interview-prep/tricky-python-questions.mdx`
+- [x] [BAE-REVIEW-123] | Audit `ai-engineering/numpy.mdx`
+- [x] [BAE-REVIEW-124] | Audit `ai-engineering/pandas.mdx`
+- [x] [BAE-REVIEW-125] | Audit `ai-engineering/llm-basics.mdx`
+- [x] [BAE-REVIEW-126] | Audit `ai-engineering/rag-pipelines.mdx`
+- [x] [BAE-REVIEW-127] | Audit `ai-engineering/vector-databases.mdx`
+- [x] [BAE-REVIEW-128] | Audit `ai-engineering/ai-agents.mdx`
+- [x] [BAE-REVIEW-129] | Audit `ai-engineering/async-ai-workflows.mdx`
+- [x] [BAE-REVIEW-130] | Audit `ai-engineering/ai-observability.mdx`
+- [x] [BAE-REVIEW-131] | Audit `interview-prep/top-python-interview-questions.mdx`
+- [x] [BAE-REVIEW-132] | Audit `interview-prep/tricky-python-questions.mdx`
 - [ ] [BAE-REVIEW-133] | Audit `interview-prep/debugging-rounds.mdx`
 - [ ] [BAE-REVIEW-134] | Audit `interview-prep/coding-round-patterns.mdx`
 - [ ] [BAE-REVIEW-135] | Audit `interview-prep/system-design-rounds.mdx`
@@ -379,6 +379,7 @@ No reusable insights recorded yet.
 
 | BAE ID | What's Done (High Level) |
 |---|---|
+| [BAE-REVIEW-123] through [BAE-REVIEW-132] | Audited 10 AI Engineering and Interview Prep topics, fixed heading numbering, injected Engineering Story, added distinct Illustration placeholders, and added unique GitHub Repositories. |
 | [BAE-REVIEW-113] through [BAE-REVIEW-122] | Audited 10 advanced Python topics, fixed heading numbering, injected Engineering Story, added distinct Illustration placeholders, and added unique GitHub Repositories. |
 | [BAE-REVIEW-093] through [BAE-REVIEW-102] | Audited 10 Python topics (API & Databases), added unique Engineering Stories, added distinct Illustration placeholders, and added unique GitHub Repositories. |
 | [BAE-REVIEW-083] through [BAE-REVIEW-092] | Audited 10 Python topics (Concurrency & API), added Engineering Stories, Illustration placeholders, and GitHub Repositories. |
