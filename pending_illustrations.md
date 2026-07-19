@@ -319,3 +319,13 @@ When generating images in the interactive session, ensure:
 | BAE-REVIEW-120 | `docs/school/python/system-design/microservices.mdx` | `microservices.png` | Bae running a company where each department has its own building and completely manages its own work. |
 | BAE-REVIEW-121 | `docs/school/python/system-design/production-patterns.mdx` | `production-patterns.png` | Bae placing guardrails and safety nets around a high-wire circus act to prevent disasters. |
 | BAE-REVIEW-122 | `docs/school/python/ai-engineering/python-for-ai.mdx` | `python-for-ai.png` | Bae teaching a robot how to read books and make intelligent decisions. |
+| BAE-REVIEW-123 | `docs/school/python/ai-engineering/numpy.mdx` | `numpy.png` | Bae organizing thousands of tiny water cups into one massive, highly efficient industrial water tank. |
+| BAE-REVIEW-124 | `docs/school/python/ai-engineering/pandas.mdx` | `pandas.png` | Bae effortlessly shuffling and merging massive stacks of messy spreadsheets into one perfectly organized ledger. |
+| BAE-REVIEW-125 | `docs/school/python/ai-engineering/llm-basics.mdx` | `llm-basics.png` | Bae teaching a massive library of books to speak intelligently through a glowing neural network. |
+| BAE-REVIEW-126 | `docs/school/python/ai-engineering/rag-pipelines.mdx` | `rag-pipelines.png` | Bae operating a giant claw machine that pulls a specific book from an archive and hands it to a thinking robot. |
+| BAE-REVIEW-127 | `docs/school/python/ai-engineering/vector-databases.mdx` | `vector-databases.png` | Bae floating in a 3D grid, shooting lasers to connect similar glowing data points across space. |
+| BAE-REVIEW-128 | `docs/school/python/ai-engineering/ai-agents.mdx` | `ai-agents.png` | Bae wearing a general's hat, dispatching multiple tiny robots to fetch tools and complete tasks autonomously. |
+| BAE-REVIEW-129 | `docs/school/python/ai-engineering/async-ai-workflows.mdx` | `async-ai-workflows.png` | Bae juggling dozens of digital requests effortlessly, never pausing while waiting for the slow mailman to return. |
+| BAE-REVIEW-130 | `docs/school/python/ai-engineering/ai-observability.mdx` | `ai-observability.png` | Bae wearing a detective's hat, looking through a high-tech magnifying glass at a glowing stream of AI thoughts and logs. |
+| BAE-REVIEW-131 | `docs/school/python/interview-prep/top-python-interview-questions.mdx` | `top-python-interview-questions.png` | Bae confidently sitting in an interview chair, x-ray vision revealing the internal engine of a Python snake. |
+| BAE-REVIEW-132 | `docs/school/python/interview-prep/tricky-python-questions.mdx` | `tricky-python-questions.png` | Bae carefully navigating a digital minefield, defusing hidden traps buried beneath innocent-looking code blocks. |
