@@ -1,0 +1,161 @@
+---
+sidebar_position: 9
+sidebar_label: "Writing RFCs"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Writing RFCs
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Writing RFCs (Request for Comments) |
+| Difficulty | Advanced |
+| Used For | Proposing major technical architectures and gathering feedback before coding. |
+| Common Mistake | Treating an RFC as a final decision instead of a discussion document. |
+| Performance | Prevents building the wrong architecture by surfacing flaws early. |
+
+## 2. Engineering Story
+
+Bro, a team at my company decided to migrate our entire logging system from ELK to Datadog. The lead engineer just started writing the terraform scripts. Three weeks in, the DevOps team noticed and stopped the deployment. They pointed out that our compliance requirements strictly forbade sending certain PII data to third-party SaaS vendors. The entire three weeks of work had to be scrapped. If the lead had written an RFC (Request for Comments) first, the Security and DevOps teams would have read the proposal on day one, flagged the compliance issue in the comments, and saved thousands of dollars in wasted engineering time. RFCs are cheap; rewriting architecture is expensive.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A vibrant, chaotic Indian scenario illustrating Writing RFCs. For instance, a classic Indian kitchen spice box (Masala Dabba) organization. */}
+
+Think of an RFC like presenting a business plan to your extended Indian family before starting a shop.
+
+| Family Meeting | RFC Equivalent |
+|---|---|
+| "I want to open a Chai shop in Dadar" | The Proposal / Objective |
+| Uncle asks, "What about the monsoon?" | Identifying Edge Cases / Risks |
+| Cousin says, "I can supply the milk cheaper" | Gathering better technical alternatives |
+
+You don't just sign the shop lease in secret. You put the idea out there to get battered by questions so the final plan is bulletproof.
+
+## 4. Concept Explanation
+
+An RFC (Request for Comments) is a formal document written by an engineer to propose a significant technical change, architecture, or standard. Bro, the key word is *Request*. It is an invitation for the rest of the engineering organization to poke holes in your idea.
+
+You write an RFC when you are changing databases, introducing a new language to the stack, or redesigning a core microservice. You do NOT write an RFC for a small bug fix.
+
+A good RFC includes the context, the proposed solution, the drawbacks, and—most importantly—the *Alternatives Considered*. If you haven't considered alternatives, you haven't done your research. You circulate the RFC, people leave comments, you debate, and finally, it is either approved or rejected.
+
+## 5. Syntax Table
+
+| RFC Section | Purpose |
+|---|---|
+| Context / Background | Why are we doing this? What is the current pain point? |
+| Proposed Solution | The technical design (diagrams, API schemas, data models). |
+| Drawbacks / Risks | What could go wrong? What does this make harder? |
+| Alternatives Considered | What else did you try, and why did you reject it? |
+
+## 6. Beginner Example
+
+```text
+// A Bad RFC (Dictatorship style)
+Title: Moving to MongoDB
+Content: We are migrating from Postgres to Mongo next week because it's web scale and faster.
+Let me know if you have questions.
+```
+
+## 7. Real-World Engineering Example
+
+```text
+// A Proper RFC snippet
+Title: RFC-24: Migrating User Sessions to Redis
+Background: Our Postgres DB is hitting 90% CPU during peak hours. Session lookups account for 40% of queries.
+Proposed Solution: Implement a Redis caching layer for all session validations.
+Drawbacks:
+- Introduces a new infrastructure dependency.
+- Cache invalidation complexity.
+Alternatives Considered:
+- Scaling Postgres vertically (Rejected: Too expensive, temporary fix).
+- Using Memcached (Rejected: We need Redis data structures for future rate limiting).
+```
+
+## 8. Internal Working
+
+This diagram shows the lifecycle of an RFC.
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Identify Architectural Problem' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'data', data: { label: 'Draft RFC Document' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'process', data: { label: 'Peer Review & Commenting' }, position: { x: 250, y: 200 } },
+    { id: '4', type: 'output', data: { label: 'Approved (Begin Coding)' }, position: { x: 100, y: 300 } },
+    { id: '5', type: 'warning', data: { label: 'Rejected (Back to drawing board)' }, position: { x: 400, y: 300 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true },
+    { id: 'e2-3', source: '2', target: '3' },
+    { id: 'e3-4', source: '3', target: '4' },
+    { id: 'e3-5', source: '3', target: '5' }
+  ]}
+/>
+
+## 9. Performance Table
+
+| Strategy | Upfront Time | Long-term Impact |
+|---|---|---|
+| Cowboy Coding (No RFC) | Zero | High risk of massive rework |
+| Writing RFC | 1-3 Days | High alignment, low architectural risk |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why is the "Alternatives Considered" section the most important part of an RFC? | Because it proves to the reviewers that you didn't just pick the first technology you read about on Hacker News. It shows you evaluated trade-offs. |
+| When is an RFC NOT necessary? | For standard feature development, bug fixes, or minor refactors that don't change the overall system architecture or data flow. |
+| How do you handle toxic comments or bikeshedding on an RFC? | I take the conversation offline. If two senior devs are arguing in a Google Doc over naming conventions, I schedule a 15-minute zoom call to force a resolution. |
+| What is the difference between a PRD and an RFC? | A PRD is written by Product to define *what* we are building for the user. An RFC is written by Engineering to define *how* we are going to build it technically. |
+| Have you ever had an RFC rejected? | Yes, I proposed a complex message queue, and a senior engineer pointed out that a simple database polling job would suffice for our scale. It bruised my ego but saved the company time. |
+
+## 11. Tricky Questions & Edge Cases
+
+Bro, a major gotcha with RFCs is "Analysis Paralysis." If you leave an RFC open for comments forever, nothing gets built. The senior move is to put a strict timebox on it. Put at the top of the document: "Comments close on Friday at 5 PM. A decision will be made on Monday." You must force the organization to commit.
+
+## 12. Real-World Usage
+
+Uber's engineering team is famous for their RFC culture. Before any team can deploy a new microservice, they must submit an RFC detailing exactly how it handles network partitions, tracing, and data ownership. This rigorous written culture is how they maintain thousands of microservices without the system collapsing into chaos.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use clear architecture diagrams (e.g., Mermaid.js) | Make it a wall of text |
+| Define what is out of scope for the proposal | Get defensive when people find flaws in your idea |
+| Timebox the review period | Wait for 100% consensus (you rarely get it) |
+
+## 14. Production Notes
+
+<Admonition type="warning" title="Watch Out in Prod!">
+An approved RFC is a blueprint, but reality often differs. If you discover a major flaw while implementing the RFC, don't blindly follow the document into a production outage. Pause, update the RFC, and inform the stakeholders.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Writing it after the code is written | The RFC comes *before* the code. |
+| Hiding the drawbacks | Be brutally honest about the negatives of your proposal. |
+| Ignoring operational costs | Always include how the new system will be monitored and deployed. |
+
+## 16. Related Topics
+
+- Architecture Decision Records
+- Product Requirement Documents (PRD)
+- Systems Design Basics
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [joelparkerhenderson/architecture-decision-record](https://github.com/joelparkerhenderson/architecture-decision-record) | ⭐ 8k+ | Architecture decision record (ADR) examples | Good contrast between product docs and tech docs. |
+| [kamranahmedse/developer-roadmap](https://github.com/kamranahmedse/developer-roadmap) | ⭐ 250k+ | Roadmaps to becoming a developer | Context for agile workflows. |
+| [thoughtworks/build-your-own-radar](https://github.com/thoughtworks/build-your-own-radar) | ⭐ 1k+ | Tech radar builder | Helps teams assess technologies. |
+| [donnemartin/system-design-primer](https://github.com/donnemartin/system-design-primer) | ⭐ 220k+ | Learn how to design large-scale systems | High-level requirements. |
+| [microsoft/api-guidelines](https://github.com/microsoft/api-guidelines) | ⭐ 20k+ | Microsoft REST API Guidelines | Excellent example of strict guidelines. |

@@ -1,0 +1,166 @@
+---
+sidebar_position: 8
+sidebar_label: "Technical Debt"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Technical Debt
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Technical Debt |
+| Difficulty | Advanced |
+| Used For | Managing the trade-off between speed of delivery and code quality. |
+| Common Mistake | Assuming all technical debt is bad and must be fixed immediately. |
+| Performance | Too much debt paralyzes a team; zero debt means you shipped too slowly. |
+
+## 2. Engineering Story
+
+Bro, we had a startup client who needed a checkout system built in two weeks for Black Friday. Doing it the "right" way with microservices and proper queues would take two months. So, we hardcoded the tax rates, skipped the caching layer, and jammed it all into one monolithic function. We launched. It held up. They made a million dollars. That was intentional technical debt. However, six months later, the company expanded to Europe. The hardcoded taxes broke everything. Every new feature took weeks because the code was a fragile mess. We had taken out a loan to survive Black Friday, but the interest payments were now bankrupting our engineering velocity.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A vibrant, chaotic Indian scenario illustrating Technical Debt. For instance, cricket captain MS Dhoni setting the field for a specific batsman. */}
+
+Think of Technical Debt exactly like taking a financial loan from a bank.
+
+| Financial Loan | Technical Debt Equivalent |
+|---|---|
+| Borrowing money to buy a house today | Writing messy code to hit a deadline today |
+| Paying monthly interest | Slower development speed on future tasks |
+| Paying off the principal | Refactoring the messy code |
+
+If you take a loan to build a business, it's smart. If you take a loan to buy a TV, it's dumb. Similarly, taking tech debt to hit a critical market window is smart. Taking tech debt because you are too lazy to write a test is dumb.
+
+## 4. Concept Explanation
+
+Technical Debt is the implied cost of additional rework caused by choosing an easy (limited) solution now instead of using a better approach that would take longer. Bro, it was coined by Ward Cunningham, one of the authors of the Agile Manifesto.
+
+Not all debt is bad. There is *Deliberate Debt* (we know this is a hack, but we need to ship today) and *Inadvertent Debt* (we wrote bad code because we didn't understand the architecture).
+
+The problem is the "interest". When you have high tech debt, adding a simple button might take 3 days because the developer has to navigate through spaghetti code, fix side effects, and manually test everything because there are no automated tests. If you don't pay down the principal (refactor), the interest will eventually consume 100% of your engineering capacity.
+
+## 5. Syntax Table
+
+| Type of Debt | Cause | How to Handle |
+|---|---|---|
+| Deliberate / Prudent | Strategic choice to hit a deadline. | Document it (ADR/RFC), schedule refactor soon. |
+| Deliberate / Reckless | "We don't have time for tests." | Stop. This is toxic culture. |
+| Inadvertent / Prudent | "Now that we scaled, we see our design was wrong." | Natural evolution. Refactor as you go. |
+
+## 6. Beginner Example
+
+```python
+# Deliberate Technical Debt (Hardcoding for speed)
+def calculate_tax(amount):
+    # TODO: TECH DEBT - We need to integrate a real tax API.
+    # Hardcoding 18% for India to hit the Friday launch deadline.
+    return amount * 0.18
+```
+
+## 7. Real-World Engineering Example
+
+```python
+# Paying off technical debt (Refactoring)
+class TaxCalculator:
+    def __init__(self, tax_api_client):
+        # We injected a real API client to replace the hardcoded mess
+        self.api = tax_api_client
+
+    def calculate_tax(self, user_location, amount):
+        try:
+            # Look up dynamic rates based on region
+            rate = self.api.get_rate(user_location)
+            return amount * rate
+        except APIError:
+            # Proper fallback mechanism instead of crashing
+            return calculate_fallback_tax(amount)
+```
+
+## 8. Internal Working
+
+This diagram shows the cycle of taking and paying technical debt.
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Business Deadline' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'warning', data: { label: 'Take Tech Debt (Hack it)' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'output', data: { label: 'Feature Ships Fast!' }, position: { x: 250, y: 200 } },
+    { id: '4', type: 'process', data: { label: 'Velocity Drops (Interest)' }, position: { x: 100, y: 300 } },
+    { id: '5', type: 'process', data: { label: 'Refactor (Pay Principal)' }, position: { x: 400, y: 300 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true },
+    { id: 'e2-3', source: '2', target: '3' },
+    { id: 'e3-4', source: '3', target: '4', label: 'If ignored' },
+    { id: 'e3-5', source: '3', target: '5', label: 'Best Practice' }
+  ]}
+/>
+
+## 9. Performance Table
+
+| Strategy | Short-term Speed | Long-term Speed |
+|---|---|---|
+| Zero Debt (Perfectionism) | Very Slow | High |
+| High Debt (Cowboy Coding) | Very Fast | Zero (Gridlock) |
+| Managed Debt (20% refactor rule) | Medium | Consistently High |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Is technical debt always a bad thing? | No. It is a strategic tool. If a startup runs out of money before shipping the perfect code, the company dies. Shipping a slightly messy MVP to get funding is good tech debt. |
+| How do you convince PMs to prioritize technical debt? | I don't use technical terms. I use business terms. "If we don't fix this database issue, page loads will take 5 seconds, and we will lose 20% of checkout conversions." |
+| How do you manage tech debt on a daily basis? | The Boy Scout Rule: Leave the code a little better than you found it. Refactor small things as you touch them during normal feature work. |
+| What is "interest" in technical debt? | It is the extra time it takes to build a *new* feature because the *old* code is hard to read, tightly coupled, or lacks tests. |
+| When should you completely rewrite a system instead of refactoring? | Almost never. Rewrites ("The Big Bang") usually fail. Strangler Fig pattern (incremental replacement) is much safer. |
+
+## 11. Tricky Questions & Edge Cases
+
+Bro, a massive edge case is when PMs promise to give you a "refactoring sprint" later. It is a trap. That sprint will never happen. The business will always have a new priority. The senior move is to bake the refactoring into your feature estimates. If a ticket takes 2 days to hack, and 4 days to do right, you estimate it at 4 days. You don't ask for permission to write good code.
+
+## 12. Real-World Usage
+
+Twitter's original architecture was built on Ruby on Rails (the famous "Fail Whale" era). It was massive technical debt to get to market fast. It worked. Once they had the market share and the capital, they spent years systematically replacing the Ruby backend with high-performance Scala/JVM services. They took the loan, won the market, and paid it back.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Track major debt in Jira as technical tickets | Hide debt in your head |
+| Allocate 15-20% of every sprint to tech debt | Wait for a mythical "refactor sprint" |
+| Use TODO comments with specific Jira ticket links | Write generic `// TODO: fix this` |
+
+## 14. Production Notes
+
+<Admonition type="warning" title="Watch Out in Prod!">
+Unmanaged technical debt eventually manifests as a production outage. When spaghetti code gets too complex, an engineer will inevitably make a change that brings down the system because they couldn't foresee the side effects.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Perfectionism | Understand that shipping value is more important than perfect code. |
+| Never paying it back | If you never refactor, the project will eventually stall completely. |
+| Blaming past developers | They likely made the best choice with the time and context they had. |
+
+## 16. Related Topics
+
+- Agile Methodologies
+- Software Testing Pyramid
+- Architecture Decision Records
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [kamranahmedse/developer-roadmap](https://github.com/kamranahmedse/developer-roadmap) | ⭐ 250k+ | Roadmaps to becoming a developer | Context for agile workflows. |
+| [joelparkerhenderson/architecture-decision-record](https://github.com/joelparkerhenderson/architecture-decision-record) | ⭐ 8k+ | Architecture decision record (ADR) examples | Good contrast between product docs and tech docs. |
+| [thoughtworks/build-your-own-radar](https://github.com/thoughtworks/build-your-own-radar) | ⭐ 1k+ | Tech radar builder | Helps teams assess technologies. |
+| [donnemartin/system-design-primer](https://github.com/donnemartin/system-design-primer) | ⭐ 220k+ | Learn how to design large-scale systems | High-level requirements. |
+| [microsoft/api-guidelines](https://github.com/microsoft/api-guidelines) | ⭐ 20k+ | Microsoft REST API Guidelines | Excellent example of strict guidelines. |

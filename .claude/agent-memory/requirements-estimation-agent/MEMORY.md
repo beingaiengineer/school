@@ -28,23 +28,23 @@ Below are the topics that make up this course. This list serves as the structura
 
 ## Course Status
 
-- **Status**: Not Started
-- **Progress**: 0 / 10
-- **Next Milestone**: Complete initial planning
+- **Status**: In Progress
+- **Progress**: 10 / 10
+- **Next Milestone**: Complete first batch of requirements topics
 
 ---
 
 ## Health
 
 🟢 Healthy
-- 0% complete
-- Ready for kick-off
+- 100% complete
+- Completed initial topics
 
 ---
 
 ## Current Focus
 
-Ready for next planning phase.
+Completed the 10 requirements and estimation topics.
 
 ---
 
@@ -84,24 +84,24 @@ No reusable insights recorded yet.
 
 ## Metrics
 
-- Lessons Completed: 0
-- Lessons Remaining: 10
-- Completion %: 0.0%
+- Lessons Completed: 10
+- Lessons Remaining: 0
+- Completion %: 100.0%
 - Open Tasks: 0
 
 ---
 
 ## Backlog
-- [ ] [BAE-REQ-001] | Create `requirement-gathering.mdx`
-- [ ] [BAE-REQ-002] | Create `product-requirement-documents.mdx`
-- [ ] [BAE-REQ-003] | Create `writing-user-stories.mdx`
-- [ ] [BAE-REQ-004] | Create `acceptance-criteria.mdx`
-- [ ] [BAE-REQ-005] | Create `estimation-techniques.mdx`
-- [ ] [BAE-REQ-006] | Create `planning-poker.mdx`
-- [ ] [BAE-REQ-007] | Create `velocity-and-burndown.mdx`
-- [ ] [BAE-REQ-008] | Create `technical-debt.mdx`
-- [ ] [BAE-REQ-009] | Create `writing-rfcs.mdx`
-- [ ] [BAE-REQ-010] | Create `architecture-decision-records.mdx`
+- [x] [BAE-REQ-001] | Create `requirement-gathering.mdx`
+- [x] [BAE-REQ-002] | Create `product-requirement-documents.mdx`
+- [x] [BAE-REQ-003] | Create `writing-user-stories.mdx`
+- [x] [BAE-REQ-004] | Create `acceptance-criteria.mdx`
+- [x] [BAE-REQ-005] | Create `estimation-techniques.mdx`
+- [x] [BAE-REQ-006] | Create `planning-poker.mdx`
+- [x] [BAE-REQ-007] | Create `velocity-and-burndown.mdx`
+- [x] [BAE-REQ-008] | Create `technical-debt.mdx`
+- [x] [BAE-REQ-009] | Create `writing-rfcs.mdx`
+- [x] [BAE-REQ-010] | Create `architecture-decision-records.mdx`
 
 ---
 
@@ -109,6 +109,7 @@ No reusable insights recorded yet.
 
 | BAE ID | What's Done (High Level) |
 |---|---|
+| `[BAE-REQ-001] through [BAE-REQ-010]` | Created all 10 initial requirements and estimation topics with 16-section structure. |
 
 ---
 

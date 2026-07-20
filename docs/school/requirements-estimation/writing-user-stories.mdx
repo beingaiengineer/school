@@ -1,0 +1,163 @@
+---
+sidebar_position: 3
+sidebar_label: "Writing User Stories"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Writing User Stories
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Writing User Stories |
+| Difficulty | Beginner |
+| Used For | Breaking down large PRDs into actionable, user-focused chunks of work. |
+| Common Mistake | Writing stories that describe technical tasks instead of user value. |
+| Performance | Improves sprint velocity by keeping tickets small and focused. |
+
+## 2. Engineering Story
+
+Bro, I used to hate JIRA. Every ticket was just a technical command: "Add database index on user_id" or "Create a REST endpoint for carts". One day, the PM asked, "Why did you build the cart endpoint to return all historical items?" I replied, "Because the ticket didn't say otherwise." The team switched to User Stories. The next ticket read: "As a returning customer, I want to see my current active cart items, so I can complete my checkout quickly." Suddenly, I understood the *context*. I didn't return historical items because the user wanted a quick checkout. User stories force engineers to build features for humans, not for machines.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A vibrant, chaotic Indian scenario illustrating Writing User Stories. For instance, a Mumbai Dabbawala organizing thousands of lunchboxes accurately. */}
+
+Think of User Stories like the precise routing codes used by Mumbai Dabbawalas.
+
+| Dabbawala Code | User Story Equivalent |
+|---|---|
+| "From Andheri (The Source)" | "As a [User Persona]" |
+| "Deliver Lunch (The Action)" | "I want to [Action]" |
+| "So husband can eat warm food (The Goal)" | "So that [Benefit]" |
+
+Without the full context, the Dabbawala just has a box of food. With the context, he knows exactly who needs it and why it matters.
+
+## 4. Concept Explanation
+
+A User Story is the smallest unit of work in an Agile framework. It is an informal, general explanation of a software feature written from the perspective of the end user. The standard format is: **As a [persona], I want to [action], so that [benefit].**
+
+Bro, this format is magic. By stating the *benefit*, the engineer has the freedom to choose the best technical implementation. If the story says "As an admin, I want to see system health so I can prevent downtime", you might build a dashboard, or you might just send an automated email. The story focuses on the *value*, not the implementation.
+
+User stories are often gathered together into "Epics" (large bodies of work). They must be independent, negotiable, valuable, estimable, small, and testable (INVEST principle).
+
+## 5. Syntax Table
+
+| Component | Example | Purpose |
+|---|---|---|
+| Persona | "As a frequent shopper..." | Defines who we are building this for. |
+| Action | "...I want to filter by price..." | Defines the specific interaction. |
+| Benefit | "...so I can stay within budget." | Defines the value, providing context for edge cases. |
+
+## 6. Beginner Example
+
+```text
+// A BAD User Story (Too Technical)
+"Add a Redis cache to the pricing service."
+
+// A GOOD User Story (User Focused)
+"As a mobile app user, I want product prices to load instantly, so I don't abandon my cart."
+```
+
+## 7. Real-World Engineering Example
+
+```python
+# How an engineer translates a user story into code logic
+# Story: "As a free-tier user, I want to see upgrade prompts when I hit my limit, so I know how to get more access."
+
+def process_api_request(user, request):
+    if user.tier == "free" and user.api_calls_today > 1000:
+        # Instead of just throwing a generic 500 error,
+        # we fulfill the story's benefit by providing clear upgrade paths
+        return {
+            "status": 429,
+            "message": "Limit reached. Upgrade for unlimited access.",
+            "upgrade_url": "https://billing.internal/upgrade"
+        }
+
+    return execute_request(request)
+```
+
+## 8. Internal Working
+
+This diagram shows how a PRD is broken down into User Stories.
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'PRD / Epic' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Breakdown Session' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'data', data: { label: 'User Story 1' }, position: { x: 100, y: 200 } },
+    { id: '4', type: 'data', data: { label: 'User Story 2' }, position: { x: 400, y: 200 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true },
+    { id: 'e2-3', source: '2', target: '3' },
+    { id: 'e2-4', source: '2', target: '4' }
+  ]}
+/>
+
+## 9. Performance Table
+
+| Action | Impact on Team Velocity | Impact on Code Quality |
+|---|---|---|
+| Writing pure technical tasks | Low (bottlenecks common) | Low (missed edge cases) |
+| Writing proper user stories | High (clear ownership) | High (focus on user value) |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the INVEST principle? | Independent, Negotiable, Valuable, Estimable, Small, Testable. It's the checklist for a good user story. |
+| Why not just write technical tasks? | Technical tasks assume the implementation is perfect. User stories explain *why*, allowing engineers to find better technical solutions. |
+| How detailed should a user story be? | Small enough to fit in a single sprint, but detailed enough to have clear Acceptance Criteria. |
+| Can technical debt be a user story? | Yes, you can frame it as: "As a developer, I want to refactor the payment module so that future changes take half the time." |
+| Who writes user stories? | Usually the Product Manager, but engineers should actively refine and break them down during backlog grooming. |
+
+## 11. Tricky Questions & Edge Cases
+
+Bro, what if the feature has no UI? How do you write a user story for a database migration? You use developer personas! "As a backend engineer, I want the users table indexed on email, so that login queries execute in &lt;10ms." The end-user is the engineer. Never write a ticket that just says "Run migration." Always attach the *why*.
+
+## 12. Real-World Usage
+
+In Agile companies like Spotify, squads operate autonomously based on User Stories. The PM doesn't tell the squad *how* to build the playlist feature; they write a story: "As a runner, I want a playlist that matches my running pace." The engineering team then figures out the technical implementation (accelerometer data, BPM matching, etc.). The story dictates the value, not the tech.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use the "As a... I want to... So that..." format | Write stories that span multiple sprints |
+| Include clear Acceptance Criteria | Dictate technical architecture in the story |
+| Discuss stories with the team before sprinting | Treat JIRA as a one-way command system |
+
+## 14. Production Notes
+
+<Admonition type="warning" title="Watch Out in Prod!">
+A user story is not done until it delivers value to the user in production. Merging code to the `develop` branch doesn't complete the story. Deployment and user validation complete the story.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Forgetting the "So that" clause | Always include the benefit. It provides context. |
+| Writing massive stories (Epics disguised as stories) | Break them down until they take 1-3 days to complete. |
+| Skipping Acceptance Criteria | A story is useless if you don't know how to test it. |
+
+## 16. Related Topics
+
+- Acceptance Criteria
+- Estimation Techniques
+- Planning Poker
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [joelparkerhenderson/architecture-decision-record](https://github.com/joelparkerhenderson/architecture-decision-record) | ⭐ 8k+ | Architecture decision record (ADR) examples | Good contrast between product docs and tech docs. |
+| [kamranahmedse/developer-roadmap](https://github.com/kamranahmedse/developer-roadmap) | ⭐ 250k+ | Roadmaps to becoming a developer | Context for agile workflows. |
+| [thoughtworks/build-your-own-radar](https://github.com/thoughtworks/build-your-own-radar) | ⭐ 1k+ | Tech radar builder | Helps teams assess technologies. |
+| [donnemartin/system-design-primer](https://github.com/donnemartin/system-design-primer) | ⭐ 220k+ | Learn how to design large-scale systems | High-level requirements. |
+| [microsoft/api-guidelines](https://github.com/microsoft/api-guidelines) | ⭐ 20k+ | Microsoft REST API Guidelines | Excellent example of strict guidelines. |

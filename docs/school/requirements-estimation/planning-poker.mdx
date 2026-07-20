@@ -1,0 +1,171 @@
+---
+sidebar_position: 6
+sidebar_label: "Planning Poker"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Planning Poker
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Planning Poker |
+| Difficulty | Beginner |
+| Used For | Achieving consensus on estimations as a team without bias. |
+| Common Mistake | Anchoring (being influenced by the senior engineer's guess). |
+| Performance | Rapidly surfaces hidden complexities in tickets. |
+
+## 2. Engineering Story
+
+Bro, I remember my first sprint planning session. The PM read a ticket about upgrading a database version. The Tech Lead immediately said, "Oh, that's easy, maybe a 2." The rest of us juniors just nodded in agreement. Why argue with the lead, right? Well, two days later, we realized the new DB version broke our ORM. It took two weeks to fix. The Tech Lead didn't know because he hadn't touched the ORM code in a year, but the juniors were too scared to speak up. That's why Planning Poker exists. It forces everyone to estimate in secret, preventing the loudest or most senior voice from biasing the entire team.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A vibrant, chaotic Indian scenario illustrating Planning Poker. For instance, the IRCTC train ticket reservation queue opening at exactly 10 AM. */}
+
+Think of Planning Poker like blind bidding for an IPL cricket player.
+
+| Auction Action | Poker Equivalent |
+|---|---|
+| Player stats are read out | PM reads the User Story |
+| Teams write their bid in secret | Devs select their Story Point card |
+| All bids are revealed at once | Cards are flipped simultaneously |
+
+If Chennai Super Kings yells out "50 Lakhs!" before the bidding starts, smaller teams might get intimidated and drop out. Secret bidding forces independent thought.
+
+## 4. Concept Explanation
+
+Planning Poker is a consensus-based, gamified technique for estimating software tasks. Bro, the goal is not to be 100% accurate; the goal is to trigger a conversation when there is a massive disagreement.
+
+Here is how it works: The PM reads a User Story. Every engineer privately selects a card with a Fibonacci number (1, 2, 3, 5, 8, 13) representing the complexity. Then, everyone reveals their cards at the exact same time.
+
+If everyone shows a 3, great, move on. But if the Junior shows an 8 and the Senior shows a 2, you stop and talk. The Junior might say, "I gave it an 8 because I know that old API is undocumented and brittle." The Senior realizes they missed that detail. The magic of Planning Poker is in the conversation, not the numbers.
+
+## 5. Syntax Table
+
+| Card Value | Meaning (Relative) | Action |
+|---|---|---|
+| 1 or 2 | Trivial, straightforward | Just do it. |
+| 5 or 8 | Complex, requires testing | Standard sprint work. |
+| 13 or 21+ | Too large, high risk | Break the story down immediately. |
+
+## 6. Beginner Example
+
+```text
+// How a bad planning session goes:
+Lead: "This is a 2, right guys?"
+Team: "Uh, sure." (Anchoring bias occurs)
+
+// How Planning Poker goes:
+PM: "Read ticket."
+*Secret selection*
+*Reveal: Lead shows 2, Junior shows 8.*
+Lead: "Why an 8?"
+Junior: "Because it touches the billing system."
+Lead: "Oh right. Let's make it an 8."
+```
+
+## 7. Real-World Engineering Example
+
+```python
+# A programmatic simulation of Planning Poker consensus
+def run_planning_poker(dev_estimates):
+    # dev_estimates is a list of integers, e.g., [2, 3, 3, 8]
+    lowest = min(dev_estimates)
+    highest = max(dev_estimates)
+
+    if highest - lowest > 3: # Massive disagreement
+        return "Trigger Discussion between lowest and highest estimators"
+
+    if len(set(dev_estimates)) == 1:
+        return f"Consensus achieved: {dev_estimates[0]} points"
+
+    return f"Rough consensus, team agrees on: {max(set(dev_estimates), key=dev_estimates.count)}"
+```
+
+## 8. Internal Working
+
+This diagram shows the flow of a Planning Poker round.
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'PM Presents Story' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Private Estimation' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'data', data: { label: 'Reveal Cards' }, position: { x: 250, y: 200 } },
+    { id: '4', type: 'output', data: { label: 'Discuss Outliers' }, position: { x: 100, y: 300 } },
+    { id: '5', type: 'output', data: { label: 'Consensus Reached' }, position: { x: 400, y: 300 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true },
+    { id: 'e2-3', source: '2', target: '3' },
+    { id: 'e3-4', source: '3', target: '4', label: 'If variance is high' },
+    { id: 'e3-5', source: '3', target: '5', label: 'If variance is low' }
+  ]}
+/>
+
+## 9. Performance Table
+
+| Metric | With Planning Poker | Without (Open Discussion) |
+|---|---|---|
+| Junior Dev Participation | High | Low (Intimidated) |
+| Uncovering Hidden Risks | Very High | Low |
+| Time spent in planning | Medium | Fast (but inaccurate) |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the main benefit of Planning Poker? | It prevents 'Anchoring Bias' where the first person to speak influences everyone else's estimates. |
+| What happens if a team cannot reach consensus? | After a timeboxed discussion, if agreement isn't reached, it usually means the requirements are too vague. Send it back to the PM. |
+| Why use Fibonacci numbers? | It forces teams to make distinct choices. Distinguishing between 20 and 21 hours is impossible, but distinguishing between a 13 and a 21 is a clear conversation about massive complexity. |
+| Can the PM vote in Planning Poker? | No. Only the engineers and QA who will actually do the work are allowed to estimate it. |
+| Do you estimate bugs in Planning Poker? | Usually, no. Bugs are considered unplanned work. You size them relatively if needed, but point values are best for delivering new value. |
+
+## 11. Tricky Questions & Edge Cases
+
+Bro, what do you do if you just joined the team and have no idea how their point system maps to reality? You look at historical tickets. Ask the team, "What did a 3 look like last sprint?" You use that as your baseline. Never just guess blindly. Another edge case is the "perpetual argument" where two devs fight over a 3 vs a 5. The senior move is to just take the higher number (the 5) and move on to save time.
+
+## 12. Real-World Usage
+
+Remote teams rely heavily on digital Planning Poker tools (like pointingpoker.com or Jira plugins). During a Zoom call, nobody can read body language well, making it even easier for introverted engineers to get talked over. The digital secret vote ensures every single engineer has an equal voice in system architecture and complexity.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Ask the highest and lowest estimators to explain their logic | Average the scores (e.g., a 3 and a 5 does not equal a 4) |
+| Timebox the discussion to 2-3 minutes per ticket | Spend 20 minutes arguing over 1 point difference |
+| Use historical tickets as a baseline for comparison | Let the PM bully the team into lower estimates |
+
+## 14. Production Notes
+
+<Admonition type="warning" title="Watch Out in Prod!">
+Planning poker is useless if the Acceptance Criteria is missing. If nobody knows what "done" looks like, everyone is estimating a different feature. Read the AC before voting.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Giving in to pressure | Stick to your estimate if you genuinely see a risk others don't. |
+| Revealing early | Do not say "I think it's a..." before cards are flipped. Keep quiet. |
+| Pointing without QA | QA must vote. Testing complexity is often higher than coding complexity. |
+
+## 16. Related Topics
+
+- Estimation Techniques
+- Velocity and Burndown
+- Sprint Planning
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [kamranahmedse/developer-roadmap](https://github.com/kamranahmedse/developer-roadmap) | ⭐ 250k+ | Roadmaps to becoming a developer | Context for agile workflows. |
+| [joelparkerhenderson/architecture-decision-record](https://github.com/joelparkerhenderson/architecture-decision-record) | ⭐ 8k+ | Architecture decision record (ADR) examples | Good contrast between product docs and tech docs. |
+| [thoughtworks/build-your-own-radar](https://github.com/thoughtworks/build-your-own-radar) | ⭐ 1k+ | Tech radar builder | Helps teams assess technologies. |
+| [donnemartin/system-design-primer](https://github.com/donnemartin/system-design-primer) | ⭐ 220k+ | Learn how to design large-scale systems | High-level requirements. |
+| [microsoft/api-guidelines](https://github.com/microsoft/api-guidelines) | ⭐ 20k+ | Microsoft REST API Guidelines | Excellent example of strict guidelines. |

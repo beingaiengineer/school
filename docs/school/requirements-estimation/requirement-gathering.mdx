@@ -1,0 +1,173 @@
+---
+sidebar_position: 1
+sidebar_label: "Requirement Gathering"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Requirement Gathering
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Requirement Gathering |
+| Difficulty | Beginner |
+| Used For | Discovering exactly what needs to be built before writing any code. |
+| Common Mistake | Accepting vague requests without digging for edge cases. |
+| Performance | Massive time saved during the development phase. |
+
+## 2. Engineering Story
+
+Bro, my first month as an engineer I was assigned a ticket that just said, "Export report to CSV". I thought it was a 2-hour task. I pulled the database records, formatted them, and added an export button. When I showed it to the PM, he said, "Wait, where is the date range filter? And what about the admin view? Also, this needs to handle 5 million rows." I spent the next 3 weeks rewriting it. The problem wasn't my code, bro; the problem was I started coding without knowing what the actual requirement was. Requirement Gathering is the art of extracting the real, hidden truth from business users before a single line of code is written. It prevents you from building the wrong thing efficiently.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A vibrant, chaotic Indian scenario illustrating Requirement Gathering. For instance, a strict Udupi restaurant waiter meticulously noting down 15 customized dosa orders while ignoring confusing customers. */}
+
+Think of Requirement Gathering like a waiter at a busy Udupi restaurant.
+
+| Restaurant Action | Software Equivalent |
+|---|---|
+| Customer says "I want a dosa" | Vague feature request |
+| Waiter asks "Rava? Masala? Paper?" | Clarifying questions (The 5 Whys) |
+| Waiter writes exactly "1x Rava Masala, No Chutney" | Formalized spec |
+
+If the waiter just yells "dosa" to the kitchen, you get chaos. You need exactly what the customer meant, not just what they said.
+
+## 4. Concept Explanation
+
+Requirement Gathering is the fundamental process of discovering, analyzing, and defining the needs of a system. Bro, business stakeholders speak in outcomes ("We need more engagement"), while engineers speak in implementations ("Add a Redis cache layer"). Requirement gathering bridges this gap.
+
+It involves interviewing stakeholders, understanding the current system pain points, and translating those into actionable engineering tasks. This isn't just about functional requirements (what the system does), but also non-functional requirements (how well it does it, like latency, scale, and security).
+
+If you skip this, you end up with massive scope creep. You build a feature, they ask for a change, you bolt it on. Eventually, your system architecture looks like a bowl of tangled noodles because you kept retrofitting missed requirements.
+
+## 5. Syntax Table
+
+| Technique | Purpose / Usage |
+|---|---|
+| The 5 Whys | Drill down to root causes of a request by asking "Why?" repeatedly. |
+| MoSCoW Method | Categorize features: Must have, Should have, Could have, Won't have. |
+| Use Case Diagrams | Visualizing actors and their interactions with the system. |
+
+## 6. Beginner Example
+
+```python
+# A naive approach to writing code without gathering requirements
+def process_payment(amount):
+    # Just charging the card without considering edge cases
+    # like currency, tax, or failed transactions.
+    payment_gateway.charge(amount)
+    return "Success"
+```
+
+## 7. Real-World Engineering Example
+
+```python
+# A production-ready approach after proper requirement gathering
+def process_payment_robust(user_id, amount, currency="INR"):
+    # Requirement 1: Validate input and currency
+    if amount <= 0:
+        raise ValueError("Invalid amount")
+
+    # Requirement 2: Check for fraud before charging
+    if risk_engine.is_high_risk(user_id):
+        raise FraudException("Transaction flagged")
+
+    # Requirement 3: Handle retries and idempotency
+    payment_record = db.create_idempotent_record(user_id, amount, currency)
+
+    try:
+        payment_gateway.charge(amount, currency)
+        # Requirement 4: Emit event for downstream invoicing
+        event_bus.publish("payment.success", payment_record.id)
+    except GatewayTimeout:
+        # Requirement 5: Fallback behavior for timeouts
+        queue_for_retry(payment_record.id)
+
+    return payment_record
+```
+
+## 8. Internal Working
+
+This diagram shows the workflow of Requirement Gathering.
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Vague Request' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Stakeholder Interviews' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'process', data: { label: 'Clarification (MoSCoW / 5 Whys)' }, position: { x: 250, y: 200 } },
+    { id: '4', type: 'output', data: { label: 'Formal Requirements' }, position: { x: 250, y: 300 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true },
+    { id: 'e2-3', source: '2', target: '3' },
+    { id: 'e3-4', source: '3', target: '4', animated: true }
+  ]}
+/>
+
+## 9. Performance Table
+
+| Phase | Time Investment | Business Impact |
+|---|---|---|
+| Discovery & Interviews | High | Extremely High |
+| Documenting Specs | Medium | High |
+| Fixing missed requirements later | Massive | Catastrophic (Technical Debt) |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| How do you handle vague requirements from a PM? | I schedule a sync to ask clarifying questions using the "5 Whys" and draft a rough proposal to force concrete decisions. |
+| What is the difference between functional and non-functional requirements? | Functional is what the system does (login). Non-functional is how well it does it (login in &lt;200ms, 99.9% uptime). |
+| How do you prioritize conflicting requirements? | I use the MoSCoW method and align them with the immediate quarterly business goals. I also provide data on engineering costs. |
+| What happens if you skip requirement gathering? | You build the wrong thing, incur massive technical debt, and waste expensive engineering cycles. |
+| Give an example of a non-functional requirement you missed early in your career. | I missed asking about the expected scale, so I built an in-memory cache that crashed when traffic spiked 10x. |
+
+## 11. Tricky Questions & Edge Cases
+
+Bro, a classic tricky situation is when the stakeholder says, "it just needs to work exactly like the old legacy system." Never accept that. The legacy system has undocumented bugs that users rely on as features. Always ask, "What exact inputs and outputs are you expecting for this specific edge case?" Another gotcha is "scale to infinity." There is no infinity. Ask for hard numbers: requests per second, data storage growth per year.
+
+## 12. Real-World Usage
+
+Top tier companies like Amazon and Netflix rely heavily on rigorous Requirement Gathering. Before a team writes code for a new feature, they write a 6-page narrative document (at Amazon) detailing the customer experience, edge cases, and scale requirements. They don't just "start coding." They spend weeks on this because a mistake at their scale costs millions of dollars.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Get sign-off from all stakeholders | Assume "everyone knows what I mean" |
+| Include non-functional requirements (latency, scale) | Ignore security and compliance requirements |
+| Timebox discovery to avoid analysis paralysis | Accept "just make it work" |
+
+## 14. Production Notes
+
+<Admonition type="warning" title="Watch Out in Prod!">
+Always consider failure modes during Requirement Gathering. If you require a 3rd party API, what happens if they are down? Your requirements must dictate the fallback behavior (e.g., return cached data or show an error), otherwise the system will crash in production when the API timeouts.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Only talking to the PM, not end-users | Shadowing actual users to see how they use the system |
+| Estimating before understanding | Doing a short timeboxed technical spike to understand complexity before giving estimates |
+| Not involving QA early | Defining acceptance criteria before coding starts |
+
+## 16. Related Topics
+
+- Product Requirement Documents (PRD)
+- Writing User Stories
+- Acceptance Criteria
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [joelparkerhenderson/architecture-decision-record](https://github.com/joelparkerhenderson/architecture-decision-record) | ⭐ 8k+ | Architecture decision record (ADR) examples | Best resource for seeing how real teams document technical choices. |
+| [kamranahmedse/developer-roadmap](https://github.com/kamranahmedse/developer-roadmap) | ⭐ 250k+ | Roadmaps to becoming a developer | Good context on where Requirement Gathering fits into a career. |
+| [thoughtworks/build-your-own-radar](https://github.com/thoughtworks/build-your-own-radar) | ⭐ 1k+ | Tech radar builder | Helps teams assess which technologies to use for new requirements. |
+| [donnemartin/system-design-primer](https://github.com/donnemartin/system-design-primer) | ⭐ 220k+ | Learn how to design large-scale systems | High-level requirements gathering for massive scale apps. |
+| [microsoft/api-guidelines](https://github.com/microsoft/api-guidelines) | ⭐ 20k+ | Microsoft REST API Guidelines | Excellent example of strict non-functional requirements. |

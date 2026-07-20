@@ -1,0 +1,166 @@
+---
+sidebar_position: 7
+sidebar_label: "Velocity and Burndown"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Velocity and Burndown
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Velocity and Burndown |
+| Difficulty | Intermediate |
+| Used For | Tracking team progress and predicting delivery dates. |
+| Common Mistake | Using velocity to compare different teams. |
+| Performance | Provides a mathematical reality check against PM optimism. |
+
+## 2. Engineering Story
+
+Bro, I was once on a team that promised to deliver 80 points of work in a sprint because the CEO was angry. We worked weekends, drank unhealthy amounts of Red Bull, and delivered... 35 points. The next sprint, we promised 60. We delivered 38. The PM kept saying, "We just need to work harder." Then, an Agile coach came in, looked at our data, and said, "Your velocity is 36. Stop promising more than 36." It was a revelation. Velocity isn't a goal to be beaten; it's a measurement of reality. A burndown chart visually proves whether you are on track to hit that reality or if you are about to crash.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A vibrant, chaotic Indian scenario illustrating Velocity and Burndown. For instance, a Swiggy delivery fleet routing orders during a massive Mumbai monsoon. */}
+
+Think of Velocity like your car's average speed on a Mumbai highway.
+
+| Driving Metric | Agile Equivalent |
+|---|---|
+| "I drive 40 km/h on average" | Team Velocity (35 points/sprint) |
+| "I have 120 km left to go" | Total Backlog Points |
+| "It will take me 3 hours" | Release Prediction |
+
+If your car only goes 40 km/h, shouting at the steering wheel won't make it go 100 km/h. Velocity tells the PM exactly how long the trip will take.
+
+## 4. Concept Explanation
+
+Velocity is the average number of story points a specific Agile team completes during a sprint. Bro, it is highly specific to the team. A "3" for Team A might be an "8" for Team B. You can never, ever compare the velocity of two different teams.
+
+A Burndown Chart is a visual graph showing how much work is left in the sprint versus time. The ideal line goes straight from the top-left (total points) to the bottom-right (zero points at the end of the sprint). The actual line shows reality.
+
+If the actual line is above the ideal line, you are behind schedule. If it goes *up*, it means the PM is secretly adding scope to the sprint. The burndown chart is the engineer's defense mechanism against scope creep.
+
+## 5. Syntax Table
+
+| Metric | Definition | Usage |
+|---|---|---|
+| Velocity | Average points completed over last 3-4 sprints | Capacity planning for the next sprint. |
+| Sprint Burndown | Points remaining vs. Days remaining | Daily standup health check. |
+| Epic Burnup | Points completed vs. Total Scope | Tracking long-term project releases. |
+
+## 6. Beginner Example
+
+```text
+// Bad Capacity Planning
+PM: "We have 100 points of work. Let's do it in 2 sprints!"
+Team: "Okay!" (Team fails miserably)
+
+// Good Capacity Planning using Velocity
+PM: "We have 100 points of work."
+Scrum Master: "Our historical velocity is 25 points per sprint."
+PM: "Okay, this is a 4-sprint project."
+```
+
+## 7. Real-World Engineering Example
+
+```python
+# Calculating sprint health programmatically
+def calculate_sprint_health(total_points, days_in_sprint, current_day, points_completed):
+    # Ideal burn rate per day
+    ideal_burn_rate = total_points / days_in_sprint
+    expected_completed = ideal_burn_rate * current_day
+
+    # Check reality against the ideal line
+    if points_completed < (expected_completed * 0.8):
+        return "WARNING: Team is significantly behind the burndown curve."
+    elif points_completed > (expected_completed * 1.2):
+        return "ALERT: Team is burning too fast, might have under-estimated."
+    else:
+        return "HEALTHY: Team is tracking the ideal burndown line."
+```
+
+## 8. Internal Working
+
+This diagram shows how velocity dictates planning.
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Calculate Velocity' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'data', data: { label: 'Sprint Backlog' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'process', data: { label: 'Daily Work (Burndown Updates)' }, position: { x: 250, y: 200 } },
+    { id: '4', type: 'output', data: { label: 'Review Actual vs Ideal' }, position: { x: 250, y: 300 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true },
+    { id: 'e2-3', source: '2', target: '3' },
+    { id: 'e3-4', source: '3', target: '4', animated: true }
+  ]}
+/>
+
+## 9. Performance Table
+
+| Scenario | Burndown Shape | Action Required |
+|---|---|---|
+| Line stays flat for days | Blockers exist | Scrum master needs to unblock the team immediately. |
+| Line drops completely on last day | Waterfall disguised as Agile | Team needs to merge/deploy smaller chunks earlier. |
+| Line goes up | Scope Creep | Reject new tickets being added mid-sprint. |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Can you use velocity as a performance metric for developers? | Absolutely not. If you reward high velocity, developers will simply inflate their estimates (point inflation) to look better. It ruins predictability. |
+| What does a flat line on a burndown chart mean? | It means work is started but not finishing. It usually indicates a massive blocker, like a broken CI environment or waiting on external approvals. |
+| How do you handle a team member going on vacation regarding velocity? | You adjust the sprint capacity. If a 5-person team has a velocity of 50, and 1 person leaves, the capacity for that sprint is roughly 40. |
+| Why is it dangerous to compare velocity between teams? | Because points are relative. Team A's 5-point story might be Team B's 1-point story. Comparing them is mathematically invalid. |
+| What is a Burn-up chart? | Unlike a burndown that tracks what is left, a burn-up tracks what is done *and* tracks the total scope line. It's better for seeing if the PM is adding scope. |
+
+## 11. Tricky Questions & Edge Cases
+
+Bro, what happens when a sprint ends and a 5-point story is 80% done? Do you get 4 points of velocity? No. Agile is binary. Done or Not Done. You get 0 points for that sprint. The story rolls over to the next sprint, where you will complete the remaining 20% and get the full 5 points. Over a 3-sprint average, this mathematical harshness smooths out into an accurate velocity. Never take partial credit.
+
+## 12. Real-World Usage
+
+Mature engineering orgs at companies like Spotify don't stress over day-to-day burndowns; they care about long-term velocity stability. If a team's velocity wildly swings from 20 to 60 to 10, it means the team's estimation process is broken or their infrastructure is unstable. Predictability is prized over raw speed.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use a 3-sprint rolling average for velocity | Use a single outlier sprint to plan the future |
+| Update ticket statuses daily | Wait until Friday to move tickets to 'Done' |
+| Protect the team from mid-sprint scope creep | Let PMs weaponize velocity to demand more work |
+
+## 14. Production Notes
+
+<Admonition type="warning" title="Watch Out in Prod!">
+If your burndown chart constantly looks like a cliff (flat all sprint, then plummets on the last day), your team is deploying too large of batches. This is a massive production risk. Break stories down so you deploy continuously.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Point Inflation | Ensure a 3 today means the same effort as a 3 did six months ago. |
+| Taking partial credit | Only award points when the ticket meets the Definition of Done. |
+| Ignoring the chart | Review the burndown in every daily standup to spot blockers early. |
+
+## 16. Related Topics
+
+- Estimation Techniques
+- Planning Poker
+- Sprint Retrospectives
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [kamranahmedse/developer-roadmap](https://github.com/kamranahmedse/developer-roadmap) | ⭐ 250k+ | Roadmaps to becoming a developer | Context for agile workflows. |
+| [joelparkerhenderson/architecture-decision-record](https://github.com/joelparkerhenderson/architecture-decision-record) | ⭐ 8k+ | Architecture decision record (ADR) examples | Good contrast between product docs and tech docs. |
+| [thoughtworks/build-your-own-radar](https://github.com/thoughtworks/build-your-own-radar) | ⭐ 1k+ | Tech radar builder | Helps teams assess technologies. |
+| [donnemartin/system-design-primer](https://github.com/donnemartin/system-design-primer) | ⭐ 220k+ | Learn how to design large-scale systems | High-level requirements. |
+| [microsoft/api-guidelines](https://github.com/microsoft/api-guidelines) | ⭐ 20k+ | Microsoft REST API Guidelines | Excellent example of strict guidelines. |

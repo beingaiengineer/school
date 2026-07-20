@@ -1,0 +1,167 @@
+---
+sidebar_position: 4
+sidebar_label: "Acceptance Criteria"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Acceptance Criteria
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Acceptance Criteria |
+| Difficulty | Beginner |
+| Used For | Defining exactly when a User Story is considered "done". |
+| Common Mistake | Using vague terms like "fast" or "easy to use". |
+| Performance | Prevents endless QA loops and rework. |
+
+## 2. Engineering Story
+
+Bro, I once picked up a ticket to "Add a CSV upload feature". I built it, tested it with a 10-row file, and shipped it. The next day, production crashed. A user tried to upload a 2GB CSV file with 15 million rows. The PM yelled at me. I yelled back, "The ticket didn't say there was a file size limit!" It was a mess. That's when I learned the hard way about Acceptance Criteria (AC). AC are the exact, testable boundaries of a feature. If the AC had said, "Given a CSV file larger than 5MB, Then reject it with an error message," the outage would have never happened. AC is the armor that protects engineers from moving goalposts.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A vibrant, chaotic Indian scenario illustrating Acceptance Criteria. For instance, taking a high-interest loan from a local moneylender and the compounding pressure. */}
+
+Think of Acceptance Criteria like signing a strict lease agreement in Mumbai.
+
+| Lease Term | Software Equivalent |
+|---|---|
+| "Apartment is for rent" | User Story |
+| "Rent is strictly 40k, due on the 5th" | Explicit AC |
+| "No pets, no loud music after 10 PM" | Negative AC (Error states) |
+
+If you just sign a paper saying "I will live here," the landlord might demand 1 lakh next month. Explicit criteria protect both parties.
+
+## 4. Concept Explanation
+
+Acceptance Criteria (AC) are the conditions that a software product must satisfy to be accepted by a user, customer, or other stakeholder. Bro, it is the definition of "Done" for a specific ticket.
+
+While a User Story describes the *intent* ("As a user, I want to upload a CSV so I can bulk import"), the AC defines the *boundaries*. Good AC removes all ambiguity. It tells the developer exactly what to code, and it tells the QA exactly what to test.
+
+The industry standard format for writing AC is Gherkin syntax (Given / When / Then). This forces everyone to think in terms of states and actions.
+
+## 5. Syntax Table
+
+| Gherkin Keyword | Meaning | Example |
+|---|---|---|
+| Given | The initial state or context | "Given the user is logged in" |
+| When | The action performed | "When they click 'Upload CSV'" |
+| Then | The expected outcome | "Then the file is processed asynchronously" |
+
+## 6. Beginner Example
+
+```text
+// Bad Acceptance Criteria
+- Upload should work.
+- It should be fast.
+- Don't allow bad files.
+
+// Good Acceptance Criteria (Gherkin)
+- Given a logged-in user, When they upload a valid 1MB CSV, Then the records are added to the DB.
+- Given a logged-in user, When they upload a 10MB CSV, Then show error "File exceeds 5MB limit".
+```
+
+## 7. Real-World Engineering Example
+
+```python
+# Translating AC directly into an automated test (TDD approach)
+def test_csv_upload_size_limit():
+    # GIVEN a logged-in user
+    user = create_mock_user(logged_in=True)
+
+    # GIVEN a file that exceeds the limit (10MB)
+    large_file = generate_dummy_file(size_mb=10)
+
+    # WHEN they attempt to upload
+    response = api_client.post("/upload", user=user, file=large_file)
+
+    # THEN the system rejects it with a specific error
+    assert response.status_code == 413 # Payload Too Large
+    assert response.json["error"] == "File exceeds 5MB limit"
+```
+
+## 8. Internal Working
+
+This diagram shows how AC is used in the development lifecycle.
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'User Story' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'data', data: { label: 'Define AC (Gherkin)' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'process', data: { label: 'Dev writes code to pass AC' }, position: { x: 100, y: 200 } },
+    { id: '4', type: 'process', data: { label: 'QA writes tests using AC' }, position: { x: 400, y: 200 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true },
+    { id: 'e2-3', source: '2', target: '3' },
+    { id: 'e2-4', source: '2', target: '4' }
+  ]}
+/>
+
+## 9. Performance Table
+
+| Activity | Without AC | With AC |
+|---|---|---|
+| Development Time | Fast initially, slow later | Predictable |
+| QA Rejections | Very High (Misalignment) | Very Low |
+| Developer Stress | High (Goalposts move) | Low |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between Acceptance Criteria and Definition of Done? | AC is specific to a single ticket (e.g., CSV upload must be &lt;5MB). DoD applies to ALL tickets (e.g., all code must have unit tests and pass CI). |
+| Have you ever worked on a ticket without AC? What happened? | Yes, I built what I thought was right, but QA failed it because their assumptions were different. It caused a 3-day delay. |
+| What is Gherkin syntax? | It's a structured format using Given, When, Then to define testable behavior. |
+| Who is responsible for writing AC? | The PM drafts it, but Engineers and QA must review and refine it before development starts. |
+| Can you add AC in the middle of a sprint? | Only if the team agrees it's a clarification, not a scope increase. If it's new scope, it belongs in a new ticket. |
+
+## 11. Tricky Questions & Edge Cases
+
+Bro, a tricky edge case is defining non-functional AC. How do you write an AC for "make it fast"? You don't. You write: "Given the dashboard is loading, When the API is called, Then the P95 response time must be &lt;200ms." You must use hard numbers. Another gotcha is forgetting "Negative Path" AC. Always define what happens when the user does the wrong thing (invalid input, network drop).
+
+## 12. Real-World Usage
+
+In modern CI/CD pipelines, tools like Cucumber or Behave can actually read Gherkin AC directly from Jira and execute them as automated integration tests. The PM writes the English requirement, and the test suite executes it against the codebase. This is Behavior-Driven Development (BDD) at scale.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Write AC before a line of code is written | Treat AC as an afterthought |
+| Include both happy paths and error paths | Use subjective words like "fast" or "beautiful" |
+| Make every statement testable | Dictate technical implementation (e.g., "Use Redis") |
+
+## 14. Production Notes
+
+<Admonition type="warning" title="Watch Out in Prod!">
+If an AC is not testable, it will break in production. If the AC says "Handle high traffic", nobody knows what that means until the servers crash. Always demand quantifiable metrics.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Too vague | Use hard numbers and exact error messages. |
+| Too technical | AC should describe behavior, not database schemas. |
+| No error states | Explicitly define what happens on failure (e.g., 500 errors). |
+
+## 16. Related Topics
+
+- Writing User Stories
+- Estimation Techniques
+- Software Testing Pyramid
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [cucumber/cucumber-js](https://github.com/cucumber/cucumber-js) | ⭐ 4k+ | BDD testing framework | Automates testing directly from Gherkin AC. |
+| [kamranahmedse/developer-roadmap](https://github.com/kamranahmedse/developer-roadmap) | ⭐ 250k+ | Roadmaps to becoming a developer | Context for agile workflows. |
+| [behave/behave](https://github.com/behave/behave) | ⭐ 3k+ | BDD for Python | Shows how AC maps to Python test execution. |
+| [donnemartin/system-design-primer](https://github.com/donnemartin/system-design-primer) | ⭐ 220k+ | Learn how to design large-scale systems | High-level requirements. |
+| [microsoft/api-guidelines](https://github.com/microsoft/api-guidelines) | ⭐ 20k+ | Microsoft REST API Guidelines | Excellent example of strict guidelines. |
