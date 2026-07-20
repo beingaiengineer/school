@@ -1,0 +1,177 @@
+---
+sidebar_position: 6
+sidebar_label: "Sprint Planning"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Sprint Planning
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Sprint Planning Ceremony |
+| Difficulty | Intermediate |
+| Used For | Defining what will be built in the upcoming Sprint and how |
+| Common Mistake | Management forcing the team to commit to an unrealistic amount of work |
+| Performance | Directly determines the predictability and stress levels of the team |
+
+## 2. Engineering Story
+
+You're entering a 2-week Sprint. The Product Manager wants 15 new features. If you say yes to all of them, the team works weekends, writes terrible code, introduces bugs, and burns out. If you say no to everything, the company makes no money.
+
+Sprint Planning is the art of negotiation. It's the critical ceremony where engineering pushes back against unrealistic product demands, using data (Story Points and past Velocity) to say, 'Bro, we can only safely deliver exactly *this* much value this sprint.' It's about setting realistic expectations, designing a technical approach, and committing to a shared goal as a team.
+
+## 3. Real-World Analogy
+
+| Daily Scenario | Sprint Planning Equivalent |
+|---|---|
+| Deciding the destination of the road trip | Defining the Sprint Goal |
+| Looking at how much space is in the car's trunk | Assessing Team Capacity |
+| Picking which bags to take and which to leave behind | Selecting Backlog Items |
+| Estimating how heavy a bag is | Story Pointing |
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A family trying to pack a car boot for a trip, negotiating what stays and what goes to fit within the limited space (capacity). */}
+
+## 4. Concept Explanation
+
+Sprint Planning initiates the Sprint. It requires the entire Scrum Team (PO, SM, Developers) and answers three questions:
+1. **Why is this Sprint valuable?** (The Sprint Goal)
+2. **What can be Done this Sprint?** (Selecting items from the Product Backlog)
+3. **How will the chosen work get done?** (Decomposing tasks into technical steps)
+
+The Developers pull work into the Sprint based on their historical capacity (Velocity). No one outside the development team can force more work into the Sprint than the team believes they can handle. This protects engineering quality.
+
+## 5. Syntax Table
+
+| Term | Description |
+|---|---|
+| Sprint Goal | A singular objective that gives meaning to the Sprint |
+| Story Points | A relative unit of measure for effort/complexity (usually Fibonacci sequence: 1, 2, 3, 5, 8) |
+| Velocity | The average number of Story Points the team completes per Sprint |
+
+## 6. Beginner Example
+
+A script calculating if a team can take on a new task based on their velocity:
+
+```python
+team_velocity = 20 # points per sprint
+current_sprint_load = 15 # points currently committed
+new_task_estimate = 8 # points
+
+def can_commit(velocity, current_load, new_estimate):
+    if (current_load + new_estimate) <= velocity:
+        return True
+    return False
+
+if can_commit(team_velocity, current_sprint_load, new_task_estimate):
+    print("Add to sprint!")
+else:
+    print("Push back: Exceeds capacity. Move to next sprint.")
+    # Output: Push back: Exceeds capacity.
+```
+
+## 7. Real-World Engineering Example
+
+During planning, a high-level user story must be broken down into technical sub-tasks by the engineers:
+
+```json
+// The User Story (The "What" chosen by the PO)
+{
+  "ticket_id": "AUTH-101",
+  "title": "As a user, I want to log in with Google",
+  "story_points": 5,
+  "technical_subtasks": [
+    // The "How" defined by the Developers during planning
+    {"task": "Configure OAuth credentials in GCP console", "owner": "Backend"},
+    {"task": "Implement JWT token generation and validation", "owner": "Backend"},
+    {"task": "Create 'Login with Google' button in React", "owner": "Frontend"},
+    {"task": "Write integration tests for auth flow", "owner": "QA"}
+  ]
+}
+```
+
+## 8. Internal Working
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Product Backlog', detail: 'Prioritized List', x: 0, y: 100, kind: 'data' },
+    { id: '2', title: 'Capacity Check', detail: 'Velocity vs PTO', x: 250, y: 0, kind: 'process' },
+    { id: '3', title: 'Negotiation', detail: 'PO & Devs', x: 250, y: 200, kind: 'warning' },
+    { id: '4', title: 'Task Breakdown', detail: 'Technical plan', x: 500, y: 100, kind: 'core' },
+    { id: '5', title: 'Sprint Backlog', detail: 'Committed Work', x: 750, y: 100, kind: 'output' }
+  ],
+  edges: [
+    { source: '1', target: '3', label: 'proposes' },
+    { source: '2', target: '3', label: 'limits' },
+    { source: '3', target: '4', label: 'agreed items' },
+    { source: '4', target: '5', label: 'finalized' }
+  ]
+}} />
+
+## 9. Performance Table
+
+| Activity | Time Cost | Output |
+|---|---|---|
+| Establishing the Goal | 15 mins | Clear team alignment |
+| Pointing/Estimating | 30-60 mins | Shared understanding of complexity |
+| Task Breakdown | 1-2 hours | Actionable engineering steps |
+
+## 10. Top Interview Questions
+
+| Question | Answer Summary |
+|---|---|
+| Who decides how much work goes into the Sprint? | Only the Developers. |
+| What is the purpose of the Sprint Goal? | To provide focus and allow flexibility in *how* the work is done as long as the goal is met. |
+| Why use Fibonacci numbers for estimation? | Because humans are bad at absolute time estimation (hours), but good at relative sizing (this is about twice as hard as that). |
+| What happens if a task is estimated at 21 points? | It is too large and must be broken down into smaller, independent stories before planning. |
+| Can the Product Owner assign tasks to developers during planning? | No, Developers pull tasks themselves (Self-organization). |
+
+## 11. Tricky Questions & Edge Cases
+
+- **What if the team finishes all work by day 6 of a 10-day Sprint?** They consult the PO and pull the next highest priority item from the Product Backlog.
+- **What if a team member is on PTO for half the Sprint?** The team's total capacity is reduced, and they must commit to fewer story points during planning.
+
+## 12. Real-World Usage
+
+Tech companies often use "Planning Poker" apps (like pointing tools integrated into Slack or Jira) where every engineer blindly votes on the complexity of a task simultaneously. If a junior dev votes a '2' and a senior dev votes an '8', it forces a technical conversation to uncover hidden complexity before committing.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Break tasks down so they take no longer than 1-2 days to complete | Commit to a single 8-point task that will span the entire sprint |
+| Factor in technical debt and bug fixing into capacity | Dedicate 100% of capacity to new product features |
+| Define a clear Sprint Goal | Say the goal is "Complete all 15 Jira tickets" |
+
+## 14. Production Notes
+
+<Admonition type="warning">
+Treating Story Points as "Hours" (e.g., 1 point = 1 day) completely destroys the Agile estimation system. It leads to management tracking hours, micromanagement, and developers inflating estimates to protect themselves.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Dictated capacity | POs or managers telling the team what their velocity should be. |
+| No task breakdown | Leaving stories high-level means engineers will get stuck on day 1 figuring out architecture. |
+| Planning in isolation | The whole team must be present to catch cross-functional dependencies. |
+
+## 16. Related Topics
+
+- Scrum Framework
+- Definition of Done
+- Requirements Gathering
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [microsoft/azure-boards](https://github.com/microsoft/azure-boards) | ⭐ 3k+ | Azure DevOps tracking | The enterprise standard for Sprint Planning tooling. |
+| [scrumalliance/resources](https://github.com/scrumalliance/resources) | ⭐ 2k+ | Official Scrum resources | Rules for the planning ceremony. |
+| [plan-poker/plan-poker](https://github.com/plan-poker/plan-poker) | ⭐ 1k+ | Open source planning poker | A tool for relative estimation. |
+| [linear/linear-method](https://github.com/linear/linear-method) | ⭐ 8k+ | The Linear way | How to plan cycles without the heavy overhead. |
+| [github/project-boards](https://github.com/github/project-boards) | ⭐ 10k+ | GitHub's native tools | Managing sprint backlogs natively in git. |

@@ -1,0 +1,168 @@
+---
+sidebar_position: 7
+sidebar_label: "Daily Standups"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Daily Standups
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | The Daily Standup (Daily Scrum) |
+| Difficulty | Beginner |
+| Used For | Daily synchronization and unblocking the engineering team |
+| Common Mistake | Treating it as a status report for the manager |
+| Performance | Critical for maintaining daily flow and identifying risks early |
+
+## 2. Engineering Story
+
+The daily standup is not a status report for your manager. It's a quick, tactical synchronization point for the engineering team. If you're stuck on a tricky database query for 2 days and you don't say anything, you are putting the entire sprint at risk. The standup is where you say 'I am blocked.'
+
+A senior engineer hears this, pairs with you for 10 minutes after the meeting, and the problem is solved. If you hide your blockers because you want to look smart, you fail the sprint. Standups are about unblocking flow, adjusting the daily plan, and keeping the team moving toward the Sprint Goal.
+
+## 3. Real-World Analogy
+
+| Daily Scenario | Standup Equivalent |
+|---|---|
+| Chai tapri meeting before work | The 15-minute timebox |
+| "I'm meeting the client at 2 PM" | "What I will do today" |
+| "The train is delayed, I'll be late" | "I am blocked" |
+| "Let's figure out a different route" | Taking problem-solving offline |
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: Colleagues standing around a chai tapri (tea stall) in the morning, having a quick, focused 15-minute sync before heading to the office. */}
+
+## 4. Concept Explanation
+
+The Daily Scrum (Standup) is a 15-minute timeboxed event for the Developers. It happens at the same time and place every day.
+
+Traditionally, each developer answers three questions:
+1. What did I do yesterday that helped the Development Team meet the Sprint Goal?
+2. What will I do today to help the Development Team meet the Sprint Goal?
+3. Do I see any impediment that prevents me or the Development Team from meeting the Sprint Goal?
+
+Modern teams often just "walk the board" (reviewing the Kanban/Sprint board from right to left) to discuss the flow of tickets rather than individual updates. The key is brevity. It is a planning meeting, not a problem-solving meeting.
+
+## 5. Syntax Table
+
+| Action | Description |
+|---|---|
+| The Update | Brief, tactical, related to the Sprint Goal |
+| The Blocker | Any technical or organizational issue stopping progress |
+| The "Parking Lot" | Post-standup discussion for deep technical problem-solving |
+
+## 6. Beginner Example
+
+A good vs bad standup update:
+
+```text
+# BAD (Too detailed, sounds like a status report)
+"Yesterday I arrived at 9, checked emails, attended a meeting, then I opened VS Code and looked at the user auth module. I wrote 3 functions for the login. Today I will write 2 more functions."
+
+# GOOD (Tactical, goal-oriented)
+"Yesterday I finished the frontend login component (Ticket #42). Today I'll wire it up to the backend API. No blockers."
+```
+
+## 7. Real-World Engineering Example
+
+How async standups are handled via Slack bots in remote teams:
+
+```json
+// geekbot_payload.json
+{
+  "user": "jules_engineer",
+  "channel": "#eng-squad-alpha",
+  "answers": {
+    "yesterday": "Merged the database migration for the new users table.",
+    "today": "Working on the Redis caching layer for user sessions.",
+    "blockers": "Need DevOps to provision the staging Redis cluster. @devops_team can we sync?"
+  }
+}
+```
+
+## 8. Internal Working
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Start (Same Time)', detail: 'Max 15 mins', x: 0, y: 100, kind: 'data' },
+    { id: '2', title: 'Update', detail: 'Yesterday/Today', x: 250, y: 0, kind: 'process' },
+    { id: '3', title: 'Raise Blocker', detail: 'Impediments', x: 250, y: 200, kind: 'warning' },
+    { id: '4', title: 'Adjust Plan', detail: 'Update board', x: 500, y: 100, kind: 'core' },
+    { id: '5', title: 'Parking Lot', detail: 'Deep dives offline', x: 750, y: 100, kind: 'output' }
+  ],
+  edges: [
+    { source: '1', target: '2' },
+    { source: '1', target: '3' },
+    { source: '2', target: '4' },
+    { source: '3', target: '4' },
+    { source: '4', target: '5', label: 'if needed' }
+  ]
+}} />
+
+## 9. Performance Table
+
+| Anti-pattern | Impact |
+|---|---|
+| Meeting takes 45 minutes | Devs hate it, productivity drops |
+| Problem solving during standup | Wastes time for people not involved in the problem |
+| Reporting to the manager | Destroys team autonomy and peer accountability |
+
+## 10. Top Interview Questions
+
+| Question | Answer Summary |
+|---|---|
+| Who is the Daily Standup for? | It is for the Developers, to synchronize with each other. |
+| Does the Scrum Master have to be there? | No. Their job is to ensure it *happens* and stays under 15 minutes, but they don't need to participate unless they are also coding. |
+| What do you do if a technical debate breaks out? | The Scrum Master (or anyone) should say "Let's take this to the parking lot" and move on. |
+| Is it mandatory to stand up? | No, but standing physically encourages people to keep it short. |
+| What is "walking the board"? | Discussing tickets starting from the ones closest to "Done", rather than going person-by-person. |
+
+## 11. Tricky Questions & Edge Cases
+
+- **What if someone is consistently late to standup?** The team should discuss changing the time. The meeting belongs to the team. If the time is fine, peer pressure usually solves lateness.
+- **Can stakeholders attend?** Yes, as silent observers. If they start asking questions, the Scrum Master must intervene.
+
+## 12. Real-World Usage
+
+Almost every modern tech company (remote or in-person) runs daily standups. Highly distributed remote teams (like GitLab or Buffer) heavily rely on asynchronous standup bots in Slack/Discord to accommodate different time zones, preserving the synchronous time for actual pair programming.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Keep it strictly under 15 minutes | Wait for latecomers to start |
+| Speak to your team members | Look directly at the manager/Scrum Master while giving your update |
+| Highlight blockers immediately | Say "Everything is fine" when you've been stuck on a bug for 2 days |
+
+## 14. Production Notes
+
+<Admonition type="warning">
+If developers are dreading the daily standup, it means the meeting has devolved into a micro-management status report. The Scrum Master must intervene immediately to restore it as a peer-to-peer planning session.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Deep technical dives | Use the "Parking Lot" rule immediately. |
+| Listing every minor task | Focus only on tasks related to the Sprint Goal. |
+| Irregular schedule | Keep it the same time, same place, every day to build the habit. |
+
+## 16. Related Topics
+
+- Scrum Framework
+- Sprint Planning
+- Cross-Team Collaboration
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [geekbot/standup-bot](https://github.com/geekbot/standup-bot) | ⭐ 1k+ | Slack standup bot | Automating async standups for remote teams. |
+| [scrumalliance/resources](https://github.com/scrumalliance/resources) | ⭐ 2k+ | Official Scrum resources | The canonical source for Scrum ceremonies. |
+| [wekan/wekan](https://github.com/wekan/wekan) | ⭐ 7k+ | Open source boards | Used during standup to "walk the board". |
+| [mattermost/mattermost](https://github.com/mattermost/mattermost) | ⭐ 25k+ | Open source Slack alt | Where many enterprise teams run async standups. |
+| [atlassian/agile-tutorials](https://github.com/atlassian/agile-tutorials) | ⭐ 5k+ | Atlassian's Agile guide | Best practices for running standups. |
