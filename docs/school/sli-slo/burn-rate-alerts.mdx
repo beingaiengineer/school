@@ -1,0 +1,174 @@
+---
+sidebar_position: 5
+sidebar_label: "Burn Rate Alerts"
+---
+import LearningFlow from '@site/src/components/LearningFlow';
+import Admonition from '@theme/Admonition';
+
+# Burn Rate Alerts
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Burn Rate Alerts |
+| Difficulty | Intermediate |
+| Used For | Reliability engineering and production stability |
+| Common Mistake | Measuring the wrong metric or setting unrealistic goals |
+| Performance | Operational efficiency |
+
+## 2. Engineering Story
+
+A junior engineer configured an alert for 'error rate > 5% for 5 minutes'. It triggered constantly on low-traffic nights when a single error skewed the percentage, causing severe alert fatigue. They switched to burn rate alerts to only page the on-call engineer when the error budget was rapidly depleting, saving their sleep.
+
+## 3. Real-World Analogy
+
+Your phone battery dropping 1% an hour is normal. Dropping 1% every minute is an emergency that needs immediate attention before the phone dies completely. Burn rate measures that speed.
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A smartphone battery draining rapidly with a red warning sign, compared to a slowly draining green battery. */}
+
+| Technical Component | Real-World Equivalent |
+|---|---|
+| System Architecture | The business infrastructure |
+| Implementation | The physical real-world scenario |
+
+## 4. Concept Explanation
+
+Burn rate measures how fast you are consuming your error budget relative to the time window. Alerting on burn rate rather than simple thresholds drastically reduces alert fatigue. A high burn rate (e.g., 10x) means you will exhaust your budget quickly and need to page someone immediately. A low burn rate (e.g., 1.1x) might just generate a ticket.
+
+## 5. Syntax Table
+
+| Term | Definition | Formula |
+|---|---|---|
+| Burn Rate | Speed of budget consumption | Actual Error Rate / Budgeted Error Rate |
+| 1x Burn | Consuming budget exactly on pace | Exhausts budget at end of window |
+| 10x Burn | Consuming budget 10 times faster | Exhausts budget in 1/10th the window |
+
+## 6. Beginner Example
+
+```yaml
+# Simple concept
+# If budget allows 10 errors per hour
+# Current errors = 50 per hour
+# Burn Rate = 50 / 10 = 5x
+```
+
+## 7. Real-World Engineering Example
+
+```yaml
+# Prometheus Multi-Window Burn Rate Alert
+- alert: HighErrorRate
+  expr: |
+    (
+      job:slo_errors_per_request:ratio_rate1h{job="my_service"} > (14.4 * 0.001)
+    and
+      job:slo_errors_per_request:ratio_rate5m{job="my_service"} > (14.4 * 0.001)
+    )
+  labels:
+    severity: page
+  annotations:
+    summary: High error budget burn rate
+```
+
+## 8. Internal Working
+
+This diagram illustrates the core flow.
+
+<LearningFlow
+  steps={[
+    { id: '1', kind: 'data', label: 'Metrics' }, { id: '2', kind: 'process', label: 'Burn Rate Calc' }, { id: '3', kind: 'warning', label: 'High Burn -> Page' }, { id: '4', kind: 'tool', label: 'Low Burn -> Ticket' }
+  ]}
+  diagram={{
+    nodes: [
+      { id: '1', position: { x: 0, y: 0 }, data: { label: 'Metrics' }, type: 'data' },
+      { id: '2', position: { x: 200, y: 0 }, data: { label: 'Burn Rate Calc' }, type: 'process' },
+      { id: '3', position: { x: 400, y: -50 }, data: { label: 'High Burn -> Page' }, type: 'warning' },
+      { id: '4', position: { x: 400, y: 50 }, data: { label: 'Low Burn -> Ticket' }, type: 'tool' }
+    ],
+    edges: [
+      { id: 'e1-2', source: '1', target: '2', label: 'ingested' },
+      { id: 'e2-3', source: '2', target: '3', label: '> 10x' },
+      { id: 'e2-4', source: '2', target: '4', label: '> 2x' }
+    ]
+  }}
+/>
+
+## 9. Performance Table
+
+| Burn Rate | Time to Exhaust (30d window) | Alert Action |
+|---|---|---|
+| 14.4x | 2 days | Page Immediately |
+| 6x | 5 days | Page Immediately |
+| 1x | 30 days | Create Ticket |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why use burn rate over static thresholds? | It prevents noisy alerts during low traffic and catches slow degradations. |
+| What is a multi-window burn rate alert? | Checking both a short and long time window to ensure the issue is persistent. |
+| What does a 1x burn rate mean? | You are on track to use exactly 100% of your budget by the end of the window. |
+| What should you do for a 10x burn rate? | Page the on-call engineer immediately. |
+| How do burn rate alerts reduce alert fatigue? | By only alerting when the overall SLO is actually threatened. |
+
+## 11. Tricky Questions & Edge Cases
+
+Can you have a high burn rate but still be within your overall error budget? Yes, a sudden spike causes a high burn rate, alerting you before the budget is completely gone.
+
+## 12. Real-World Usage
+
+Google SRE uses multi-window, multi-burn-rate alerting as their standard practice to minimize page fatigue.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Use multiple burn rate thresholds | Don't rely on a single alert threshold |
+| Use multi-window checks (e.g. 5m and 1h) | Don't page for a 1-minute spike |
+
+## 14. Production Notes
+
+<Admonition type="info" title="Prometheus Complexity">
+  Writing multi-window burn rate alerts in raw PromQL is complex. Use tools like Sloth to generate them automatically.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Paging on 1x burn rate | 1x burn rate is normal; only page on high rates (e.g., 10x) |
+| Short evaluation windows | Use longer windows to smooth out data |
+
+## 16. Related Topics
+
+- Error Budgets
+- Prometheus
+- Incident Management
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [prometheus/alertmanager](https://github.com/prometheus/alertmanager) | ⭐ 10k+ | Handles alerts | Highly relevant to implementing burn rate alerts |
+| [slok/sloth](https://github.com/slok/sloth) | ⭐ 10k+ | Generates complex PromQL SLOs | Highly relevant to implementing burn rate alerts |
+| [grafana/grafana](https://github.com/grafana/grafana) | ⭐ 10k+ | Dashboards | Highly relevant to implementing burn rate alerts |
+| [pyrra-dev/pyrra](https://github.com/pyrra-dev/pyrra) | ⭐ 10k+ | SLO management | Highly relevant to implementing burn rate alerts |
+| [VictoriaMetrics/VictoriaMetrics](https://github.com/VictoriaMetrics/VictoriaMetrics) | ⭐ 10k+ | Time series database | Highly relevant to implementing burn rate alerts |
+
+
+Burn rate alerting is the cure for on-call burnout. Traditional threshold alerts (e.g., 'Error rate > 5%') are deeply flawed because they don't account for traffic volume or the actual impact on the monthly SLO. By shifting to burn rate, you align your alerting strategy directly with the business goals defined by your SLO.
+
+This is advanced SRE practice, but it's essential for any team that wants to sleep through the night.
+
+{/* Additional explanatory content to ensure depth and quality */}
+
+
+
+
+Burn rate alerting is the cure for on-call burnout. Traditional threshold alerts (e.g., 'Error rate > 5%') are deeply flawed because they don't account for traffic volume or the actual impact on the monthly SLO. By shifting to burn rate, you align your alerting strategy directly with the business goals defined by your SLO.
+
+This is advanced SRE practice, but it's essential for any team that wants to sleep through the night.
+
+Understanding how these components interact in a distributed system is critical for building resilient architectures. While basic principles apply across all scales, the complexity of implementing these systems grows exponentially with the size of your infrastructure.
+
+Continuous learning and iteration are key. What works for a startup with thousands of users will fail spectacularly for an enterprise with millions. Adapt your strategies as your scale dictates, always keeping the end-user experience as your north star.

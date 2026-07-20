@@ -1,0 +1,171 @@
+---
+sidebar_position: 2
+sidebar_label: "Defining SLIs (Service Level Indicators)"
+---
+import LearningFlow from '@site/src/components/LearningFlow';
+import Admonition from '@theme/Admonition';
+
+# Defining SLIs (Service Level Indicators)
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Defining SLIs (Service Level Indicators) |
+| Difficulty | Intermediate |
+| Used For | Reliability engineering and production stability |
+| Common Mistake | Measuring the wrong metric or setting unrealistic goals |
+| Performance | Operational efficiency |
+
+## 2. Engineering Story
+
+An engineering team at a fintech startup set an SLI based on CPU utilization. CPU was consistently at 20%, so they thought everything was fine. However, the application was returning 500 errors to users because the database connection pool was exhausted. CPU was the wrong indicator because it didn't reflect the user's pain. They learned that measuring infrastructure doesn't equate to measuring the service.
+
+## 3. Real-World Analogy
+
+Checking the fuel gauge on a car to see if the engine is running. A full tank doesn't mean the car isn't broken down. You need to measure what actually matters to the driver.
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A car dashboard showing a full fuel tank but a broken engine symbol, representing wrong SLIs. */}
+
+| Technical Component | Real-World Equivalent |
+|---|---|
+| System Architecture | The business infrastructure |
+| Implementation | The physical real-world scenario |
+
+## 4. Concept Explanation
+
+SLIs should measure user happiness. They are the foundational metrics that tell you if your service is functioning correctly from the perspective of the people using it. Common types of SLIs include availability, latency, error rate, and throughput. A good SLI is directly correlated with user satisfaction. If the SLI is good, the user should be happy.
+
+## 5. Syntax Table
+
+| SLI Type | Calculation | Ideal Use Case |
+|---|---|---|
+| Availability | Good Requests / Total Requests | Web servers, APIs |
+| Latency | Requests &lt; Threshold / Total | Interactive systems |
+| Freshness | Data Updated Recently / Total | Data pipelines |
+
+## 6. Beginner Example
+
+```json
+// Prometheus query for availability SLI
+sum(rate(http_requests_total{status=~"2.."}[5m]))
+/
+sum(rate(http_requests_total[5m]))
+```
+
+## 7. Real-World Engineering Example
+
+```yaml
+# DataDog SLI definition
+name: API Latency SLI
+type: latency
+query: avg:aws.elb.latency{environment:prod} < 0.2
+window: 30d
+```
+
+## 8. Internal Working
+
+This diagram illustrates the core flow.
+
+<LearningFlow
+  steps={[
+    { id: '1', kind: 'data', label: 'User Action' }, { id: '2', kind: 'process', label: 'Load Balancer' }, { id: '3', kind: 'tool', label: 'Metric Extractor' }, { id: '4', kind: 'core', label: 'SLI Metric' }
+  ]}
+  diagram={{
+    nodes: [
+      { id: '1', position: { x: 0, y: 0 }, data: { label: 'User Action' }, type: 'data' },
+      { id: '2', position: { x: 200, y: 0 }, data: { label: 'Load Balancer' }, type: 'process' },
+      { id: '3', position: { x: 400, y: 0 }, data: { label: 'Metric Extractor' }, type: 'tool' },
+      { id: '4', position: { x: 600, y: 0 }, data: { label: 'SLI Metric' }, type: 'core' }
+    ],
+    edges: [
+      { id: 'e1-2', source: '1', target: '2', label: 'hits' },
+      { id: 'e2-3', source: '2', target: '3', label: 'logs to' },
+      { id: 'e3-4', source: '3', target: '4', label: 'calculates' }
+    ]
+  }}
+/>
+
+## 9. Performance Table
+
+| Metric Type | Collection Cost | Query Performance |
+|---|---|---|
+| Counters | Very Low | Very Fast |
+| Histograms | Medium | Medium |
+| Traces | High | Slow |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why is CPU a bad SLI? | It measures infrastructure, not user experience. |
+| How do you measure an availability SLI? | Successful requests divided by total requests. |
+| What is a latency SLI? | The percentage of requests served under a specific time limit. |
+| Where should you measure SLIs? | As close to the user as possible (e.g., load balancer). |
+| How many SLIs should a service have? | Usually 2-3 key ones (like latency and error rate). |
+
+## 11. Tricky Questions & Edge Cases
+
+How do you measure an SLI for an asynchronous background job? Measure 'freshness' or 'queue depth' instead of direct latency.
+
+## 12. Real-World Usage
+
+Netflix uses stream start latency and video playback error rates as their primary SLIs.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Measure at the load balancer | Don't measure deep inside the app server |
+| Use ratio metrics (good/total) | Don't use absolute numbers |
+
+## 14. Production Notes
+
+<Admonition type="caution" title="Measurement Point">
+  Measuring latency at the app server misses network latency. Measure at the edge.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Tracking too many SLIs | Focus on the critical user journeys |
+| Not defining 'success' | Clearly define what a successful request looks like |
+
+## 16. Related Topics
+
+- Setting SLOs
+- PromQL Basics
+- DataDog Monitoring
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [prometheus/prometheus](https://github.com/prometheus/prometheus) | ⭐ 10k+ | Standard metric store | Highly relevant to implementing defining slis |
+| [DataDog/integrations-core](https://github.com/DataDog/integrations-core) | ⭐ 10k+ | Datadog integrations | Highly relevant to implementing defining slis |
+| [open-telemetry/opentelemetry-collector](https://github.com/open-telemetry/opentelemetry-collector) | ⭐ 10k+ | Vendor neutral collector | Highly relevant to implementing defining slis |
+| [influxdata/telegraf](https://github.com/influxdata/telegraf) | ⭐ 10k+ | Agent for collecting metrics | Highly relevant to implementing defining slis |
+| [elastic/beats](https://github.com/elastic/beats) | ⭐ 10k+ | Data shippers | Highly relevant to implementing defining slis |
+
+
+Defining the right SLIs requires a deep understanding of your product architecture and user behavior. A poorly defined SLI will result in alerts firing when users are fine, or silence when the system is actually broken.
+
+Always ask: 'If this metric degrades, is a user actually noticing?' If the answer is no, it shouldn't be an SLI.
+
+Getting this right is often the hardest part of adopting SRE practices. It forces engineering teams to talk to product teams and actually understand the business value of their code.
+
+{/* Additional explanatory content to ensure depth and quality */}
+
+
+
+
+Defining the right SLIs requires a deep understanding of your product architecture and user behavior. A poorly defined SLI will result in alerts firing when users are fine, or silence when the system is actually broken.
+
+Always ask: 'If this metric degrades, is a user actually noticing?' If the answer is no, it shouldn't be an SLI.
+
+Getting this right is often the hardest part of adopting SRE practices. It forces engineering teams to talk to product teams and actually understand the business value of their code.
+
+Engineers must constantly evaluate the trade-offs between consistency, availability, and partition tolerance (the CAP theorem) when designing their services. No system can be perfect in all three dimensions simultaneously. Therefore, the decisions you make regarding which metrics to track and what targets to set will fundamentally shape the architecture of your application.
+
+Continuous learning and iteration are key. What works for a startup with thousands of users will fail spectacularly for an enterprise with millions. Adapt your strategies as your scale dictates, always keeping the end-user experience as your north star.

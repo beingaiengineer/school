@@ -27,8 +27,8 @@ Below are the topics that make up this course. This list serves as the structura
 
 ## Course Status
 
-- **Status**: Not Started
-- **Progress**: 0 / 9
+- **Status**: In Progress
+- **Progress**: 9 / 9
 - **Next Milestone**: Complete initial planning
 
 ---
@@ -83,23 +83,23 @@ No reusable insights recorded yet.
 
 ## Metrics
 
-- Lessons Completed: 0
-- Lessons Remaining: 9
-- Completion %: 0.0%
+- Lessons Completed: 9
+- Lessons Remaining: 0
+- Completion %: 100.0%
 - Open Tasks: 0
 
 ---
 
 ## Backlog
-- [ ] [BAE-SLI-001] | Create `sli-slo-sla-explained.mdx`
-- [ ] [BAE-SLI-002] | Create `defining-slis.mdx`
-- [ ] [BAE-SLI-003] | Create `setting-slos.mdx`
-- [ ] [BAE-SLI-004] | Create `error-budgets.mdx`
-- [ ] [BAE-SLI-005] | Create `burn-rate-alerts.mdx`
-- [ ] [BAE-SLI-006] | Create `reliability-engineering.mdx`
-- [ ] [BAE-SLI-007] | Create `toil-reduction.mdx`
-- [ ] [BAE-SLI-008] | Create `capacity-planning.mdx`
-- [ ] [BAE-SLI-009] | Create `chaos-engineering.mdx`
+- [x] [BAE-SLI-001] | Create `sli-slo-sla-explained.mdx`
+- [x] [BAE-SLI-002] | Create `defining-slis.mdx`
+- [x] [BAE-SLI-003] | Create `setting-slos.mdx`
+- [x] [BAE-SLI-004] | Create `error-budgets.mdx`
+- [x] [BAE-SLI-005] | Create `burn-rate-alerts.mdx`
+- [x] [BAE-SLI-006] | Create `reliability-engineering.mdx`
+- [x] [BAE-SLI-007] | Create `toil-reduction.mdx`
+- [x] [BAE-SLI-008] | Create `capacity-planning.mdx`
+- [x] [BAE-SLI-009] | Create `chaos-engineering.mdx`
 
 ---
 
@@ -107,6 +107,7 @@ No reusable insights recorded yet.
 
 | BAE ID | What's Done (High Level) |
 |---|---|
+| `[BAE-SLI-001]` through `[BAE-SLI-009]` | Created all 9 modules for SLIs & SLOs course following BAE rules. |
 
 ---
 

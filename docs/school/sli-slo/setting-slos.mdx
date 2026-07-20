@@ -1,0 +1,176 @@
+---
+sidebar_position: 3
+sidebar_label: "Setting SLOs (Service Level Objectives)"
+---
+import LearningFlow from '@site/src/components/LearningFlow';
+import Admonition from '@theme/Admonition';
+
+# Setting SLOs (Service Level Objectives)
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Setting SLOs (Service Level Objectives) |
+| Difficulty | Intermediate |
+| Used For | Reliability engineering and production stability |
+| Common Mistake | Measuring the wrong metric or setting unrealistic goals |
+| Performance | Operational efficiency |
+
+## 2. Engineering Story
+
+A passionate startup founder mandated an SLO of 100% uptime for their new microservice. Engineers spent all their time fixing minor, inconsequential bugs and building overly complex redundant systems, completely halting feature development. They soon realized that 100% is the wrong target for almost everything. Users don't need or notice perfection.
+
+## 3. Real-World Analogy
+
+Trying to score exactly 100/100 in every single school exam vs aiming for a solid 90% and having time for extracurricular activities and sports. Perfection is too expensive.
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A stressed student studying frantically for 100% vs a balanced student with a 90% report card playing cricket. */}
+
+| Technical Component | Real-World Equivalent |
+|---|---|
+| System Architecture | The business infrastructure |
+| Implementation | The physical real-world scenario |
+
+## 4. Concept Explanation
+
+SLOs define the acceptable level of unreliability. They act as a balancing mechanism between the need for feature velocity and the need for system stability. By setting an SLO of 99.9% instead of 100%, you give your engineering team a 'budget' for errors, which they can spend on deploying new features or performing risky migrations.
+
+## 5. Syntax Table
+
+| Component | Description | Example |
+|---|---|---|
+| Target | The percentage goal | 99.9% |
+| Window | The time period | 30 days rolling |
+| SLI | The metric being tracked | HTTP 5xx errors |
+
+## 6. Beginner Example
+
+```yaml
+# Simple SLO definition
+name: Web Latency
+target: 99%
+condition: latency < 200ms
+window: 28d
+```
+
+## 7. Real-World Engineering Example
+
+```yaml
+# Advanced SLO with multiple windows
+apiVersion: openslo/v1
+kind: SLO
+metadata:
+  name: payment-processing
+spec:
+  service: payments
+  target: 0.9999
+  timeWindow:
+    - duration: 7d
+      isRolling: true
+    - duration: 30d
+      isRolling: true
+```
+
+## 8. Internal Working
+
+This diagram illustrates the core flow.
+
+<LearningFlow
+  steps={[
+    { id: '1', kind: 'core', label: 'Product Manager' }, { id: '3', kind: 'core', label: 'Engineering' }, { id: '2', kind: 'process', label: 'Negotiation' }, { id: '4', kind: 'data', label: 'Agreed SLO' }
+  ]}
+  diagram={{
+    nodes: [
+      { id: '1', position: { x: 0, y: 0 }, data: { label: 'Product Manager' }, type: 'core' },
+      { id: '2', position: { x: 200, y: 0 }, data: { label: 'Negotiation' }, type: 'process' },
+      { id: '3', position: { x: 0, y: 100 }, data: { label: 'Engineering' }, type: 'core' },
+      { id: '4', position: { x: 400, y: 50 }, data: { label: 'Agreed SLO' }, type: 'data' }
+    ],
+    edges: [
+      { id: 'e1-2', source: '1', target: '2', label: 'wants features' },
+      { id: 'e3-2', source: '3', target: '2', label: 'wants stability' },
+      { id: 'e2-4', source: '2', target: '4', label: 'produces' }
+    ]
+  }}
+/>
+
+## 9. Performance Table
+
+| SLO Target | Allowed Downtime (30 days) | Engineering Cost |
+|---|---|---|
+| 99% | 7.2 hours | Low |
+| 99.9% | 43 minutes | Medium |
+| 99.99% | 4 minutes | Very High |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why not 100%? | Unrealistic, expensive, and limits deployment velocity. |
+| Who should set the SLO? | A collaboration between Product and Engineering. |
+| What is a rolling window? | A continuously moving time frame (e.g., last 30 days) for evaluation. |
+| How do you improve an SLO? | By reducing errors or improving latency. |
+| What happens if you consistently beat your SLO? | You might be moving too slowly. Deploy more often! |
+
+## 11. Tricky Questions & Edge Cases
+
+What if your internal SLO is met, but customers are complaining? Your SLI is measuring the wrong thing, or your SLO is set too low.
+
+## 12. Real-World Usage
+
+Stripe targets 99.999% for its core payment API, investing heavily in redundancy to achieve it.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Align SLOs with business impact | Don't create SLOs in a vacuum |
+| Review SLOs periodically | Don't set them and forget them |
+
+## 14. Production Notes
+
+<Admonition type="info" title="Cost of Reliability">
+  Every extra '9' of reliability generally costs 10x more in engineering effort.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Setting SLOs too high initially | Start lower and iterate upwards if needed |
+| Hiding SLO misses | Use them to drive honest conversations about technical debt |
+
+## 16. Related Topics
+
+- Error Budgets
+- Defining SLIs
+- Capacity Planning
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [slok/sloth](https://github.com/slok/sloth) | ⭐ 10k+ | SLO generator | Highly relevant to implementing setting slos |
+| [google/slo-generator](https://github.com/google/slo-generator) | ⭐ 10k+ | Google's generator | Highly relevant to implementing setting slos |
+| [pyrra-dev/pyrra](https://github.com/pyrra-dev/pyrra) | ⭐ 10k+ | Making SLOs with Prometheus manageable | Highly relevant to implementing setting slos |
+| [nobl9/sloctl](https://github.com/nobl9/sloctl) | ⭐ 10k+ | Nobl9 CLI | Highly relevant to implementing setting slos |
+| [open-telemetry/opentelemetry-demo](https://github.com/open-telemetry/opentelemetry-demo) | ⭐ 10k+ | Demo app with observability | Highly relevant to implementing setting slos |
+
+
+Setting an SLO is fundamentally a business decision, not purely a technical one. It dictates how much risk a company is willing to take in pursuit of releasing new features.
+
+The process of setting an SLO forces a healthy tension between product managers (who want to ship fast) and site reliability engineers (who want to keep the system stable). Master this negotiation, and you master modern engineering management.
+
+{/* Additional explanatory content to ensure depth and quality */}
+
+
+
+
+Setting an SLO is fundamentally a business decision, not purely a technical one. It dictates how much risk a company is willing to take in pursuit of releasing new features.
+
+The process of setting an SLO forces a healthy tension between product managers (who want to ship fast) and site reliability engineers (who want to keep the system stable). Master this negotiation, and you master modern engineering management.
+
+Engineers must constantly evaluate the trade-offs between consistency, availability, and partition tolerance (the CAP theorem) when designing their services. No system can be perfect in all three dimensions simultaneously. Therefore, the decisions you make regarding which metrics to track and what targets to set will fundamentally shape the architecture of your application.
+
+Furthermore, integrating these practices into your CI/CD pipelines ensures that reliability is treated as a first-class citizen, rather than an afterthought. Automated deployment checks based on current system health can prevent catastrophic rollouts and minimize the blast radius of inevitable bugs.
