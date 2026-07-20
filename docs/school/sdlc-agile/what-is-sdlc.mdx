@@ -1,0 +1,186 @@
+---
+sidebar_position: 1
+sidebar_label: "What is SDLC?"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# What is SDLC?
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Software Development Life Cycle |
+| Difficulty | Beginner |
+| Used For | Structuring the end-to-end software delivery process |
+| Common Mistake | Starting to code without understanding the full requirements |
+| Performance | N/A - conceptual framework |
+
+## 2. Engineering Story
+
+Bro, imagine building a skyscraper without blueprints. You just tell a bunch of construction workers 'build a tall building' and walk away. It's going to collapse. In software engineering, this is what happens when you just start writing code without a plan. The Software Development Life Cycle (SDLC) is the blueprint. It's the structured process that takes an idea from a Jira ticket to code running in production serving millions of users. It ensures we don't just build software, but we build the *right* software, securely, and predictably. Without it, you get unmaintainable spaghetti code that breaks every deployment.
+
+## 3. Real-World Analogy
+
+| Event Phase | SDLC Phase Equivalent |
+|---|---|
+| Figuring out guest list and budget | Requirements Gathering |
+| Choosing venue layout | System Design |
+| Cooking the food and decorating | Implementation (Coding) |
+| Tasting the food before serving | Testing |
+| Serving the guests | Deployment |
+| Cleaning up and fixing broken chairs | Maintenance |
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: An Indian wedding planning scenario where families follow a strict step-by-step checklist (SDLC) versus chaos. */}
+
+## 4. Concept Explanation
+
+The Software Development Life Cycle (SDLC) is a structured framework that outlines the phases involved in creating high-quality software. It's not just a buzzword; it's how professional engineering organizations operate.
+
+The standard phases typically include:
+1. **Planning & Requirements:** What problem are we solving? What do the users actually need?
+2. **Design:** How will we build it? What is the architecture? Database schema? API contracts?
+3. **Implementation (Development):** Writing the actual code.
+4. **Testing:** Verifying the code works and doesn't break existing functionality.
+5. **Deployment:** Pushing the code to production safely.
+6. **Maintenance:** Fixing bugs, applying security patches, and keeping the system running.
+
+You should care because understanding SDLC is the difference between a "coder" and a "software engineer". A coder just types syntax; an engineer understands the entire pipeline of delivering value.
+
+## 5. Syntax Table
+
+| Term | Meaning in Production |
+|---|---|
+| PRD | Product Requirements Document - the "what" |
+| RFC / Tech Spec | Request for Comments - the "how" (design phase) |
+| CI/CD | Continuous Integration / Continuous Deployment |
+
+## 6. Beginner Example
+
+While SDLC isn't "code", here's a mental model represented as a simple script:
+
+```python
+def sdlc_process(idea):
+    requirements = gather_requirements(idea)
+    design = create_architecture(requirements)
+    code = write_implementation(design)
+    if run_tests(code):
+        deploy_to_production(code)
+    else:
+        fix_bugs(code)
+```
+
+## 7. Real-World Engineering Example
+
+In reality, SDLC is enforced through tooling. For example, a deployment pipeline configuration (like GitHub Actions) represents the testing and deployment phases of the SDLC.
+
+```yaml
+name: Production SDLC Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run Unit Tests
+        run: npm run test
+      - name: Security Scan
+        run: npm audit
+
+  deploy:
+    needs: test # Enforces that Testing must pass before Deployment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to AWS
+        run: ./deploy.sh production
+```
+
+## 8. Internal Working
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Requirements', detail: 'PRD created', x: 0, y: 0, kind: 'data' },
+    { id: '2', title: 'Design', detail: 'Architecture setup', x: 200, y: 0, kind: 'process' },
+    { id: '3', title: 'Development', detail: 'Writing code', x: 400, y: 0, kind: 'core' },
+    { id: '4', title: 'Testing', detail: 'QA & Automation', x: 600, y: 0, kind: 'process' },
+    { id: '5', title: 'Production', detail: 'Live to users', x: 800, y: 0, kind: 'output' }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'approved' },
+    { source: '2', target: '3', label: 'handoff' },
+    { source: '3', target: '4', label: 'PR merged' },
+    { source: '4', target: '5', label: 'tests passed' },
+    { source: '4', target: '3', label: 'bugs found', type: 'step' }
+  ]
+}} />
+
+## 9. Performance Table
+
+| Phase | Time Cost | Risk of Skipping |
+|---|---|---|
+| Requirements | Days/Weeks | Building the wrong product |
+| Design | Days | Unscalable spaghetti architecture |
+| Testing | Hours (Automated) | Production outages |
+
+## 10. Top Interview Questions
+
+| Question | Answer Summary |
+|---|---|
+| What are the phases of the SDLC? | Requirements, Design, Implementation, Testing, Deployment, Maintenance. |
+| Why is the Design phase crucial? | It prevents architectural mistakes that are very expensive to fix later. |
+| What happens if testing is skipped? | Bugs reach users, causing bad UX and potential data loss. |
+| What is a PRD? | A document explaining *what* needs to be built and *why*. |
+| How does CI/CD relate to SDLC? | It automates the Testing and Deployment phases. |
+
+## 11. Tricky Questions & Edge Cases
+
+- **Can phases overlap?** Yes, in Agile methodologies, design, coding, and testing often happen concurrently in small batches.
+- **Is SDLC only for large teams?** No. Even a solo developer writing a weekend project implicitly follows SDLC (thinking of an idea, designing it in their head, coding, running it). Formalizing it just adds predictability.
+
+## 12. Real-World Usage
+
+Companies like Netflix and Google have highly automated SDLCs. A developer merging code triggers thousands of automated tests (Testing phase) before slowly rolling out to 1% of users (Deployment phase). The core principles remain the same, just at a massive scale.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Write design documents (RFCs) before coding complex features | Start writing database schemas without understanding the business logic |
+| Automate as much of the testing phase as possible | Rely solely on manual QA clicking around |
+| Involve QA and Security teams early in the design phase | Throw the code over the wall to QA right before launch |
+
+## 14. Production Notes
+
+<Admonition type="warning">
+The cost of fixing a bug increases exponentially the later it is found in the SDLC. Fixing a logic error during the Design phase costs a few hours of discussion. Fixing that same error in Production can cost millions in lost revenue and engineering hours to migrate bad data.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| "Code First, Design Later" | Always write a technical spec for features taking > 3 days |
+| Ignoring maintenance | Allocate 20% of engineering time to tech debt and updates |
+| Vague requirements | Push back on product managers for clear acceptance criteria |
+
+## 16. Related Topics
+
+- Waterfall vs Agile
+- CI/CD Pipelines
+- Systems Design Basics
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [google/engineering-practices](https://github.com/google/engineering-practices) | ⭐ 30k+ | Google's engineering practices | Defines standard processes at scale. |
+| [kamranahmedse/developer-roadmap](https://github.com/kamranahmedse/developer-roadmap) | ⭐ 250k+ | Tech roadmaps | Shows the skills needed across the SDLC. |
+| [donnemartin/system-design-primer](https://github.com/donnemartin/system-design-primer) | ⭐ 230k+ | System Design resources | Crucial for the SDLC Design phase. |
+| [github/gitignore](https://github.com/github/gitignore) | ⭐ 150k+ | standard ignore files | Essential for the coding phase of SDLC. |
+| [actions/checkout](https://github.com/actions/checkout) | ⭐ 4k+ | GitHub Action | Automates the SDLC pipeline. |

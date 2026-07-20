@@ -1,0 +1,178 @@
+---
+sidebar_position: 3
+sidebar_label: "Agile Principles"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Agile Principles
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | The 12 Agile Principles |
+| Difficulty | Beginner |
+| Used For | Guiding team behavior and decision making |
+| Common Mistake | Treating Agile as just a set of meetings (Scrum) rather than a mindset |
+| Performance | High impact on team morale and delivery speed |
+
+## 2. Engineering Story
+
+It's Friday at 5 PM, and your team lead says, 'The client changed their mind, we need to rewrite the checkout flow.' If your team panics and says 'But we already signed off on the requirements 3 months ago!', you're not operating with an Agile mindset. Agile principles exist precisely for this moment. They embrace change because software is inherently complex and user needs are unpredictable. In production, adapting to a late change is vastly better than deploying a perfectly coded feature that nobody wants to use.
+
+## 3. Real-World Analogy
+
+| Daily Scenario | Agile Principle Equivalent |
+|---|---|
+| A street food vendor adjusting their menu based on the weather | Welcoming changing requirements |
+| Handing over a hot chai immediately rather than making them wait for a 5-course meal | Delivering working software frequently |
+| The chef and the cashier chatting constantly to manage the crowd | Business and developers working together |
+| Cleaning the kitchen at the end of the day to work faster tomorrow | Continuous attention to technical excellence |
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A street food vendor in Mumbai quickly changing their offerings because it started raining, adapting to the customer's needs instantly. */}
+
+## 4. Concept Explanation
+
+The Agile Manifesto isn't a strict rulebook; it's a set of 4 core values and 12 guiding principles. The most critical values prioritize **Individuals and interactions** over processes and tools, and **Working software** over comprehensive documentation.
+
+The principles enforce behaviors like:
+- Satisfying the customer through early delivery.
+- Welcoming changing requirements, even late in development.
+- Building projects around motivated individuals and trusting them.
+- Using face-to-face (or high bandwidth) communication.
+- Reflecting regularly on how to become more effective (Retrospectives).
+
+You need to internalize these principles because when you are arguing about whether a Jira ticket is technically "done", referring back to the principles (e.g., "Does this deliver value to the customer right now?") resolves the argument.
+
+## 5. Syntax Table
+
+| Value | Over This |
+|---|---|
+| Working Software | Comprehensive Documentation |
+| Customer Collaboration | Contract Negotiation |
+| Responding to Change | Following a Plan |
+
+## 6. Beginner Example
+
+A script demonstrating the "Responding to Change" principle:
+
+```python
+# Non-Agile: Rigid class that breaks if requirements change
+class HardcodedReport:
+    def generate(self):
+        return "PDF Report only. Cannot change format."
+
+# Agile: Flexible architecture anticipating change
+class AgileReport:
+    def __init__(self, formatter):
+        self.formatter = formatter # Strategy pattern to handle changes easily
+
+    def generate(self, data):
+        return self.formatter.format(data)
+```
+
+## 7. Real-World Engineering Example
+
+How continuous attention to technical excellence (a core principle) looks in a CI pipeline:
+
+```yaml
+# CI Pipeline enforcing Agile technical excellence
+name: Enforce Quality
+
+on: [push]
+
+jobs:
+  quality-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code Linting
+        run: flake8 . # Keeps code clean
+      - name: Unit Tests
+        run: pytest --cov=app # Ensures working software
+      - name: Fail if coverage drops
+        run: python check_coverage.py --min=80
+```
+
+## 8. Internal Working
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Customer Need', detail: 'Identified problem', x: 0, y: 0, kind: 'data' },
+    { id: '2', title: 'Empowered Team', detail: 'Self-organizing', x: 250, y: 0, kind: 'core' },
+    { id: '3', title: 'Working Software', detail: 'Rapid delivery', x: 500, y: 0, kind: 'output' },
+    { id: '4', title: 'Feedback', detail: 'Adaptation', x: 250, y: 150, kind: 'process' }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'collaboration' },
+    { source: '2', target: '3', label: 'builds' },
+    { source: '3', target: '4', label: 'generates' },
+    { source: '4', target: '1', label: 'changes', animated: true }
+  ]
+}} />
+
+## 9. Performance Table
+
+| Principle | Benefit | Cost |
+|---|---|---|
+| Face-to-Face Comm | High alignment, fast unblocking | Requires overlap in timezones |
+| Simplicity | Less code to maintain | Requires deeper architectural thinking |
+| Self-Organizing | High morale and ownership | Hard for traditional micromangers |
+
+## 10. Top Interview Questions
+
+| Question | Answer Summary |
+|---|---|
+| What does "Working software over comprehensive documentation" mean? | It means a working feature is the primary measure of progress, not a 50-page spec document. |
+| Why does Agile welcome late changes? | Because blocking a change that gives a competitive advantage hurts the business. |
+| How do Agile principles handle technical debt? | Principle 9 requires "Continuous attention to technical excellence," meaning you refactor as you go. |
+| What is a self-organizing team? | A team that decides *how* to do the work themselves, rather than being told by a manager. |
+| How do teams ensure continuous improvement? | By holding regular reflection meetings (Retrospectives). |
+
+## 11. Tricky Questions & Edge Cases
+
+- **Does "Working software over documentation" mean no documentation?** No. It says "over," not "instead of." You still document APIs and architecture, but you don't write documents just for the sake of bureaucracy.
+- **How do you handle "welcoming change" without endless scope creep?** Change is welcomed in the *backlog*, not necessarily in the middle of an active sprint. You trade a new feature for an old one.
+
+## 12. Real-World Usage
+
+Spotify is famous for deeply embedding Agile principles. Their "Squad" model emphasizes highly autonomous, self-organizing teams that are aligned on a mission but decide internally how to build the software, maximizing the principle of trusting motivated individuals.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Maximize the amount of work *not* done (Simplicity) | Over-engineer a system for a scale you won't hit for 3 years |
+| Trust the engineering team to estimate tasks | Have managers dictate how long a feature should take |
+| Demo working software to stakeholders | Demo PowerPoint slides about what the software *will* do |
+
+## 14. Production Notes
+
+<Admonition type="warning">
+Agile principles fail in environments without psychological safety. If developers are punished for admitting they don't know something or for an honest mistake, they will stop collaborating and start covering their tracks, breaking the core values.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Remote isolation | Use video calls and pair programming to simulate high-bandwidth communication. |
+| Ignoring refactoring | Technical excellence is mandatory; allocate time to clean up code. |
+| Treating Agile as a tool | Agile is a mindset. Installing Jira does not make you Agile. |
+
+## 16. Related Topics
+
+- Scrum Framework
+- Kanban Method
+- Sprint Retrospectives
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [thoughtworks/build-your-own-radar](https://github.com/thoughtworks/build-your-own-radar) | ⭐ 1k+ | Tech radar tool | Visualizing technology choices dynamically. |
+| [kamranahmedse/developer-roadmap](https://github.com/kamranahmedse/developer-roadmap) | ⭐ 250k+ | Tech roadmaps | Finding the simplest path to a goal (Simplicity principle). |
+| [agilemanifesto.org](https://github.com/agile-manifesto) | N/A | The original text | The foundational source of these principles. |
+| [spotify/spotify-retro](https://github.com/spotify/spotify-retro) | ⭐ 2k+ | Spotify's retro tools | Tooling for continuous improvement. |
+| [atlassian/agile-tutorials](https://github.com/atlassian/agile-tutorials) | ⭐ 5k+ | Atlassian's Agile guide | Practical implementation of the principles. |

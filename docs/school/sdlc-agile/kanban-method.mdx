@@ -1,0 +1,181 @@
+---
+sidebar_position: 5
+sidebar_label: "Kanban Method"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Kanban Method
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Kanban Method |
+| Difficulty | Beginner |
+| Used For | Continuous delivery and managing unpredictable workloads |
+| Common Mistake | Using a board without setting Work In Progress (WIP) limits |
+| Performance | Optimizes for flow and reduces cycle time |
+
+## 2. Engineering Story
+
+In a heavy support or Site Reliability Engineering (SRE) environment, issues come in unpredictably. Prod might go down on Tuesday, and a critical security patch might be needed on Thursday. You can't plan a rigid 2-week Scrum Sprint if your priorities change daily.
+
+This is where Kanban shines. It's all about continuous flow. Instead of timeboxing work, you limit Work In Progress (WIP) so your engineers don't start 50 things and finish none. Kanban is how mature ops, infrastructure, and continuous delivery teams manage a never-ending stream of tasks without burning out. It focuses on getting a single task from 'To Do' to 'Done' as quickly as possible.
+
+## 3. Real-World Analogy
+
+| Daily Scenario | Kanban Equivalent |
+|---|---|
+| A visual order board in a fast-food kitchen | The Kanban Board |
+| Only putting 4 burgers on the grill at once | WIP Limits |
+| A customer taking a finished burger | Pull System |
+| The time between ordering and receiving food | Cycle Time |
+| Ensuring the line keeps moving | Managing Flow |
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A visual board at a busy Mumbai restaurant showing orders moving from 'Received' to 'Cooking' to 'Ready', ensuring the kitchen isn't overwhelmed. */}
+
+## 4. Concept Explanation
+
+Kanban (Japanese for "visual signal" or "card") is a lean method to manage and improve work across human systems. It does not use fixed timeboxes (like Sprints).
+
+The core principles are:
+1. **Visualize the workflow:** Use a board with columns (e.g., Backlog, Doing, Review, Done).
+2. **Limit Work in Progress (WIP):** A column can only hold a maximum number of cards. This forces the team to finish old tasks before starting new ones.
+3. **Manage flow:** Identify bottlenecks (e.g., if the 'Review' column is always full, you need more reviewers).
+4. **Make policies explicit:** Define exactly what it means to move a card from one column to the next.
+
+It operates on a "pull" system. When an engineer finishes a task, they pull the next one from the top of the prioritized backlog.
+
+## 5. Syntax Table
+
+| Concept | Description |
+|---|---|
+| WIP Limit | The maximum number of active tasks allowed in a stage |
+| Lead Time | Time from when a request is made until it is delivered |
+| Cycle Time | Time from when work *starts* on a request until it is delivered |
+
+## 6. Beginner Example
+
+A simple simulation of a pull system with WIP limits:
+
+```python
+class KanbanBoard:
+    def __init__(self, wip_limit):
+        self.wip_limit = wip_limit
+        self.in_progress = []
+
+    def pull_task(self, task):
+        if len(self.in_progress) < self.wip_limit:
+            self.in_progress.append(task)
+            print(f"Started working on {task}")
+        else:
+            print(f"WIP Limit reached! Cannot start {task} until something is finished.")
+
+    def finish_task(self, task):
+        self.in_progress.remove(task)
+        print(f"Finished {task}")
+```
+
+## 7. Real-World Engineering Example
+
+How an SRE team might handle incoming incident alerts using a Kanban queue:
+
+```python
+import queue
+
+class IncidentQueue:
+    def __init__(self):
+        # The WIP limit prevents the on-call engineer from getting overwhelmed
+        self.active_incidents = queue.Queue(maxsize=3)
+
+    def route_alert(self, alert_id):
+        try:
+            self.active_incidents.put_nowait(alert_id)
+            print(f"Alert {alert_id} assigned to engineer.")
+        except queue.Full:
+            # Buffer is full, escalate to secondary on-call
+            print(f"WIP limit hit! Escalating Alert {alert_id} to secondary on-call.")
+```
+
+## 8. Internal Working
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Backlog', detail: 'Prioritized', x: 0, y: 0, kind: 'data' },
+    { id: '2', title: 'Dev (WIP: 3)', detail: 'Coding', x: 250, y: 0, kind: 'process' },
+    { id: '3', title: 'Review (WIP: 2)', detail: 'PRs', x: 500, y: 0, kind: 'warning' },
+    { id: '4', title: 'Done', detail: 'Deployed', x: 750, y: 0, kind: 'output' }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'pull', animated: true },
+    { source: '2', target: '3', label: 'pull', animated: true },
+    { source: '3', target: '4', label: 'push' }
+  ]
+}} />
+
+## 9. Performance Table
+
+| Metric | Impact | Goal |
+|---|---|---|
+| Cycle Time | Measures delivery speed | Keep it as low as possible |
+| Throughput | Items delivered per week | High and consistent |
+| WIP Count | Number of active items | Stay strictly at or below limits |
+
+## 10. Top Interview Questions
+
+| Question | Answer Summary |
+|---|---|
+| What is the primary difference between Scrum and Kanban? | Scrum uses fixed timeboxes (Sprints); Kanban is a continuous flow system without timeboxes. |
+| Why are WIP limits important? | They prevent context switching, expose bottlenecks, and ensure tasks actually get finished. |
+| What is a pull system? | Work is pulled into a stage only when there is capacity, rather than being pushed onto overwhelmed workers. |
+| How do you measure performance in Kanban? | Using Cycle Time and Lead Time. |
+| When would you choose Kanban over Scrum? | When work is highly unpredictable, like support queues or DevOps tasks. |
+
+## 11. Tricky Questions & Edge Cases
+
+- **Can you change priorities in Kanban?** Yes, constantly. Because there are no sprints, the Product Owner can rearrange the Backlog daily. The next pulled task is always the most important one.
+- **What happens if a column hits its WIP limit?** The team swarms the bottleneck. Developers might stop coding and help review PRs to clear the 'Review' column so work can flow again.
+
+## 12. Real-World Usage
+
+Toyota invented Kanban for manufacturing. Today, AWS infrastructure teams, GitHub's internal ops, and support desks worldwide use it. CI/CD pipelines are essentially automated Kanban boards moving code from 'Build' to 'Test' to 'Prod' based on capacity.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Respect the WIP limits | Ignore limits and start 10 tasks just to look busy |
+| Swarm bottlenecks when they occur | Ignore a backlog of PRs because "reviewing isn't your job" |
+| Make the board visible to everyone | Hide the board in a private management tool |
+
+## 14. Production Notes
+
+<Admonition type="warning">
+A board with columns is NOT Kanban if it lacks WIP limits. Without limits, it's just a visual list of tasks that will eventually turn into a massive traffic jam in the 'In Progress' column.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| High WIP limits | Set limits low enough to force collaboration (e.g., 3 tasks for 4 devs). |
+| Pushing work | Do not assign tickets to devs; let them pull when they have capacity. |
+| Ignoring blocked items | Blocked items must be highly visible and prioritized for unblocking. |
+
+## 16. Related Topics
+
+- Scrum Framework
+- Agile Principles
+- CI/CD Pipelines
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [wekan/wekan](https://github.com/wekan/wekan) | ⭐ 7k+ | Open source Kanban | A production-ready Kanban board implementation. |
+| [plankanban/planka](https://github.com/plankanban/planka) | ⭐ 4k+ | Elegant Kanban | A highly visual, real-time board for agile teams. |
+| [kanboard/kanboard](https://github.com/kanboard/kanboard) | ⭐ 7k+ | Minimalist Kanban | Focuses entirely on lean principles and flow. |
+| [github/project-boards](https://github.com/github/project-boards) | ⭐ 10k+ | GitHub's native tools | How open source projects organize work. |
+| [linear/linear-method](https://github.com/linear/linear-method) | ⭐ 8k+ | The Linear way of working | A modern take that often blends Scrum and Kanban. |

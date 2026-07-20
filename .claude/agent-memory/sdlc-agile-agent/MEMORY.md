@@ -84,24 +84,24 @@ No reusable insights recorded yet.
 
 ## Metrics
 
-- Lessons Completed: 0
-- Lessons Remaining: 10
-- Completion %: 0.0%
+- Lessons Completed: 10
+- Lessons Remaining: 0
+- Completion %: 100.0%
 - Open Tasks: 0
 
 ---
 
 ## Backlog
-- [ ] [BAE-SDL-001] | Create `what-is-sdlc.mdx`
-- [ ] [BAE-SDL-002] | Create `waterfall-vs-agile.mdx`
-- [ ] [BAE-SDL-003] | Create `agile-principles.mdx`
-- [ ] [BAE-SDL-004] | Create `scrum-framework.mdx`
-- [ ] [BAE-SDL-005] | Create `kanban-method.mdx`
-- [ ] [BAE-SDL-006] | Create `sprint-planning.mdx`
-- [ ] [BAE-SDL-007] | Create `daily-standups.mdx`
-- [ ] [BAE-SDL-008] | Create `sprint-retrospectives.mdx`
-- [ ] [BAE-SDL-009] | Create `sprint-reviews-and-demos.mdx`
-- [ ] [BAE-SDL-010] | Create `definition-of-done.mdx`
+- [x] [BAE-SDL-001] | Create `what-is-sdlc.mdx`
+- [x] [BAE-SDL-002] | Create `waterfall-vs-agile.mdx`
+- [x] [BAE-SDL-003] | Create `agile-principles.mdx`
+- [x] [BAE-SDL-004] | Create `scrum-framework.mdx`
+- [x] [BAE-SDL-005] | Create `kanban-method.mdx`
+- [x] [BAE-SDL-006] | Create `sprint-planning.mdx`
+- [x] [BAE-SDL-007] | Create `daily-standups.mdx`
+- [x] [BAE-SDL-008] | Create `sprint-retrospectives.mdx`
+- [x] [BAE-SDL-009] | Create `sprint-reviews-and-demos.mdx`
+- [x] [BAE-SDL-010] | Create `definition-of-done.mdx`
 
 ---
 
@@ -109,6 +109,7 @@ No reusable insights recorded yet.
 
 | BAE ID | What's Done (High Level) |
 |---|---|
+| `[BAE-SDL-001]` through `[BAE-SDL-010]` | Generated all 10 modules for SDLC & Agile course following BAE rules. |
 
 ---
 

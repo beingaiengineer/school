@@ -1,0 +1,168 @@
+---
+sidebar_position: 9
+sidebar_label: "Sprint Reviews and Demos"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Sprint Reviews and Demos
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Sprint Review (The Demo) |
+| Difficulty | Beginner |
+| Used For | Inspecting the Increment and adapting the Product Backlog |
+| Common Mistake | Showing PowerPoint slides instead of working software |
+| Performance | Critical for ensuring the team is building the right product |
+
+## 2. Engineering Story
+
+You spent 2 weeks building a robust backend API and a slick React frontend. You think it's perfect. Now it's time to show it to the stakeholders (sales, marketing, or actual users).
+
+The Sprint Review is where you prove you delivered value. It's not about showing code; the CEO doesn't care about your clean architecture. It's about showing *working software*. If you can't demo it, it's not 'Done.' This ceremony forces engineers to think from the user's perspective. It prevents the nightmare scenario of spending 6 months building a feature only to realize the business doesn't actually want it. Immediate feedback is the lifeblood of Agile.
+
+## 3. Real-World Analogy
+
+| Daily Scenario | Sprint Review Equivalent |
+|---|---|
+| A chef bringing a new dish out to the owner | The Demo |
+| The owner tasting it and saying "Too salty" | Stakeholder Feedback |
+| The chef updating the recipe | Adapting the Backlog |
+| Serving it to actual customers | Releasing the Increment |
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: An engineer proudly demonstrating a working app on a phone to a group of stakeholders, who are providing immediate feedback. */}
+
+## 4. Concept Explanation
+
+The Sprint Review is held at the end of the Sprint. The Scrum Team presents the results of their work to key stakeholders.
+
+This is an informal working session, not a status meeting. The presentation of the Increment (the software) is intended to elicit feedback and foster collaboration. Based on what was done (and what wasn't done), the Product Backlog is adjusted.
+
+If the stakeholders hate the feature, the PO might cancel future work on it. If they love it, the PO might prioritize similar features. This is the ultimate "Inspect and Adapt" mechanism for the *product* (whereas the Retrospective is for the *process*).
+
+## 5. Syntax Table
+
+| Term | Description |
+|---|---|
+| The Increment | The sum of all completed Sprint Backlog items |
+| Stakeholders | Anyone outside the Scrum team who has an interest in the product |
+| Adaptation | Changing the Product Backlog based on the demo feedback |
+
+## 6. Beginner Example
+
+A script modeling the feedback loop of a Review:
+
+```python
+def sprint_review(completed_features, stakeholders):
+    print("Demoing working software...")
+    feedback = []
+
+    for feature in completed_features:
+        if stakeholders.approve(feature):
+            print(f"{feature} accepted!")
+        else:
+            print(f"{feature} rejected. Adding changes to Backlog.")
+            feedback.append(f"Modify {feature} based on feedback")
+
+    return feedback # This becomes new backlog items
+```
+
+## 7. Real-World Engineering Example
+
+What actually happens technically to prepare for a Sprint Review:
+
+```yaml
+# CI/CD Pipeline step: Deploy to Staging for the Demo
+deploy_staging:
+  stage: deploy
+  script:
+    - echo "Deploying branch to staging environment..."
+    - npm run build
+    - aws s3 sync build/ s3://staging-app-bucket
+    # The team will use this live URL during the Sprint Review
+    - echo "Demo environment ready at https://staging.myapp.com"
+```
+
+## 8. Internal Working
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Increment', detail: 'Working Code', x: 0, y: 0, kind: 'core' },
+    { id: '2', title: 'The Demo', detail: 'Show Stakeholders', x: 250, y: 0, kind: 'process' },
+    { id: '3', title: 'Feedback', detail: 'Criticism/Praise', x: 500, y: 0, kind: 'data' },
+    { id: '4', title: 'Backlog Updated', detail: 'New priorities', x: 750, y: 0, kind: 'output' }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'presented' },
+    { source: '2', target: '3', label: 'generates' },
+    { source: '3', target: '4', label: 'adapts' }
+  ]
+}} />
+
+## 9. Performance Table
+
+| Action | Outcome | Value |
+|---|---|---|
+| Demoing live code | High trust from stakeholders | Prove value |
+| Hiding bugs during demo | Loss of trust, tech debt | Very negative |
+| Gathering feedback | Adjusted product roadmap | Maximum ROI |
+
+## 10. Top Interview Questions
+
+| Question | Answer Summary |
+|---|---|
+| What is the difference between a Sprint Review and a Retrospective? | The Review inspects the *Product* (the software); the Retro inspects the *Process* (how the team worked). |
+| Who should attend the Sprint Review? | The Scrum Team and key Stakeholders invited by the Product Owner. |
+| Can you demo work that is not 100% "Done"? | Generally, no. Only items that meet the Definition of Done should be demonstrated to avoid setting false expectations. |
+| What happens to items not completed in the Sprint? | They are not demoed; they return to the Product Backlog. |
+| Is the Review just a presentation? | No, it is a collaborative working session to adjust the backlog based on market/stakeholder feedback. |
+
+## 11. Tricky Questions & Edge Cases
+
+- **What if a feature is entirely backend (like a database migration)?** You still demo it! Show the logs, run a query showing a 10x speedup, or show the Grafana dashboard. Prove the value.
+- **What if the stakeholders don't show up?** The PO acts as the proxy for the stakeholders, but it's a major organizational dysfunction that the Scrum Master must fix.
+
+## 12. Real-World Usage
+
+Companies use feature flags heavily to facilitate Sprint Reviews. They deploy code to production but keep it hidden behind a flag. During the review, they toggle the flag on in a live environment to prove it works securely in production before rolling it out to real users.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Let the developers who built the feature drive the demo | Have the PO do all the talking |
+| Demo in a production-like staging environment | Demo on `localhost:3000` on your laptop |
+| Accept criticism gracefully | Argue with stakeholders that they "just don't understand the UI" |
+
+## 14. Production Notes
+
+<Admonition type="warning">
+Do not spend 3 days preparing a slide deck for the Sprint Review. The Agile principle is "Working software over comprehensive documentation." Turn on the app, click the buttons, and see what happens. If it breaks during the demo, that's valuable feedback.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Slides instead of software | Delete PowerPoint. Open the browser. |
+| Faking it | Never hardcode data just to pass a demo. If it's not done, admit it. |
+| Ignoring feedback | Write down every piece of stakeholder feedback into the backlog immediately. |
+
+## 16. Related Topics
+
+- Sprint Planning
+- Definition of Done
+- Feature Flags
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [scrumalliance/resources](https://github.com/scrumalliance/resources) | ⭐ 2k+ | Official Scrum resources | Guidelines on how to conduct a review. |
+| [Unleash/unleash](https://github.com/Unleash/unleash) | ⭐ 9k+ | Feature flags | Tools to deploy code safely before demoing. |
+| [microsoft/azure-boards](https://github.com/microsoft/azure-boards) | ⭐ 3k+ | Azure DevOps tracking | Tracking demo feedback into the backlog. |
+| [github/project-boards](https://github.com/github/project-boards) | ⭐ 10k+ | GitHub's native tools | Managing the product backlog updates. |
+| [atlassian/agile-tutorials](https://github.com/atlassian/agile-tutorials) | ⭐ 5k+ | Atlassian's Agile guide | Best practices for presenting the Increment. |

@@ -1,0 +1,179 @@
+---
+sidebar_position: 4
+sidebar_label: "Scrum Framework"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Scrum Framework
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Scrum Framework |
+| Difficulty | Beginner |
+| Used For | Organizing complex software development into manageable chunks |
+| Common Mistake | Acting as a "Scrum Zombie" going through ceremonies without adapting |
+| Performance | High velocity if implemented with discipline |
+
+## 2. Engineering Story
+
+Bro, imagine 10 engineers working on the same microservice without any coordination. It's a merge conflict nightmare. Everyone is building features that don't connect, no one knows what the priority is, and the product manager is screaming because nothing is ready for launch.
+
+Scrum provides a framework with defined roles (Scrum Master, Product Owner, Developers) and ceremonies (Sprints, Standups) to keep everyone aligned. It takes the abstract ideas of Agile and turns them into a strict, repeatable operating system. It turns a chaotic mob of coders into a synchronized delivery machine that predictably ships code every two weeks.
+
+## 3. Real-World Analogy
+
+| Daily Scenario | Scrum Equivalent |
+|---|---|
+| The Team Captain calling the shots | Product Owner |
+| The Coach removing obstacles | Scrum Master |
+| The players executing the plays | Development Team |
+| A huddle before the play | Sprint Planning |
+| Analyzing the tape after the game | Sprint Retrospective |
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A professional cricket team in a huddle, discussing specific roles and strategies for the next few overs (a Sprint). */}
+
+## 4. Concept Explanation
+
+Scrum is a specific implementation of Agile. While Agile is a philosophy, Scrum is a concrete framework. It consists of three pillars: **Transparency, Inspection, and Adaptation**.
+
+It defines three roles:
+1. **Product Owner (PO):** Owns the "What". They manage the Backlog and decide priorities.
+2. **Scrum Master (SM):** Owns the "Process". They ensure Scrum is followed and remove blockers for the team.
+3. **Developers:** Own the "How". They build the software.
+
+Work is executed in **Sprints**, which are fixed timeboxes (usually 2 weeks). You plan the Sprint, do the work, review the work, and then figure out how to do it better next time.
+
+## 5. Syntax Table
+
+| Artifact/Ceremony | Description |
+|---|---|
+| Product Backlog | The master list of all desired features |
+| Sprint Backlog | The specific items committed to for the current Sprint |
+| Increment | The working software produced by the end of the Sprint |
+
+## 6. Beginner Example
+
+A mental model of the Scrum loop:
+
+```python
+def run_scrum(backlog):
+    while backlog.has_items():
+        sprint_backlog = sprint_planning(backlog, capacity=10)
+
+        while sprint_backlog.is_active():
+            daily_standup()
+            write_code(sprint_backlog.next_task())
+
+        increment = sprint_review(sprint_backlog)
+        sprint_retrospective()
+```
+
+## 7. Real-World Engineering Example
+
+How you might define a Scrum artifact in an internal tooling system:
+
+```python
+class Sprint:
+    def __init__(self, sprint_goal, start_date, end_date):
+        self.goal = sprint_goal
+        self.tasks = []
+        self.is_active = True
+
+    def add_task(self, task):
+        if self.is_active:
+            self.tasks.append(task)
+        else:
+            raise Exception("Cannot modify a closed sprint!")
+
+    def close_sprint(self):
+        self.is_active = False
+        uncompleted = [t for t in self.tasks if t.status != "DONE"]
+        return uncompleted # These go back to the Product Backlog
+```
+
+## 8. Internal Working
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Product Backlog', detail: 'All ideas', x: 0, y: 100, kind: 'data' },
+    { id: '2', title: 'Sprint Planning', detail: 'Select work', x: 200, y: 100, kind: 'process' },
+    { id: '3', title: 'Sprint Backlog', detail: 'Current focus', x: 400, y: 100, kind: 'data' },
+    { id: '4', title: '2-Week Sprint', detail: 'Coding loop', x: 600, y: 100, kind: 'core' },
+    { id: '5', title: 'Increment', detail: 'Shippable code', x: 800, y: 100, kind: 'output' }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'prioritized' },
+    { source: '2', target: '3', label: 'committed' },
+    { source: '3', target: '4', label: 'execution' },
+    { source: '4', target: '5', label: 'review' }
+  ]
+}} />
+
+## 9. Performance Table
+
+| Metric | Measured By | Goal |
+|---|---|---|
+| Velocity | Story points completed per Sprint | Consistent, predictable pace |
+| Capacity | Available developer hours | Prevent burnout and over-commitment |
+| Burndown | Remaining work vs time left | Hit 0 by the end of the Sprint |
+
+## 10. Top Interview Questions
+
+| Question | Answer Summary |
+|---|---|
+| What is the role of the Scrum Master? | To coach the team on Scrum, facilitate ceremonies, and remove impediments. |
+| Can the Sprint Goal change during a Sprint? | No. If the goal becomes obsolete, the PO cancels the Sprint. |
+| Who estimates the work? | The Development Team, because they are the ones doing the work. |
+| What is an Increment? | The sum of all Backlog items completed during a Sprint, which must be in a useable state. |
+| What is the difference between PO and SM? | PO maximizes the value of the product; SM maximizes the efficiency of the team. |
+
+## 11. Tricky Questions & Edge Cases
+
+- **Who manages the Developers in Scrum?** Nobody. They are explicitly self-managing. The Scrum Master is a servant-leader, not a boss.
+- **Can you extend a Sprint by 2 days if you aren't finished?** No. Sprints are strictly timeboxed to maintain a predictable cadence. Unfinished work goes back to the backlog.
+
+## 12. Real-World Usage
+
+Scrum is the dominant Agile framework globally. From small YC startups to massive enterprises like banking software divisions, teams organize into 5-9 person Scrum "Squads" to isolate complexity and deliver features independently.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Keep the team size between 3 and 9 people | Have a 20-person Scrum team (communication overhead will kill it) |
+| Protect the team from outside interruptions during the Sprint | Allow the CEO to tap a dev on the shoulder to build a pet feature mid-sprint |
+| Ensure the Increment meets the Definition of Done | Demo half-finished, untested code |
+
+## 14. Production Notes
+
+<Admonition type="warning">
+Do not use Story Points to compare different Scrum teams. A "5" for Team A might be a "2" for Team B. Velocity is an internal team metric for planning, not an executive performance metric.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Scrum Master acting as a Project Manager | SM should coach and unblock, not assign tasks and demand status updates. |
+| Skipping Retrospectives | The Retro is where adaptation happens. Never skip it. |
+| Vague Sprint Goals | The goal should be a clear business objective, not "Finish 10 tickets". |
+
+## 16. Related Topics
+
+- Sprint Planning
+- Daily Standups
+- Definition of Done
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [scrumalliance/resources](https://github.com/scrumalliance/resources) | ⭐ 2k+ | Official Scrum resources | The canonical source for Scrum rules. |
+| [microsoft/azure-boards](https://github.com/microsoft/azure-boards) | ⭐ 3k+ | Azure DevOps tracking | How Microsoft manages enterprise work. |
+| [wekan/wekan](https://github.com/wekan/wekan) | ⭐ 7k+ | Open source boards | Useful for visualizing the Sprint Backlog. |
+| [github/project-boards](https://github.com/github/project-boards) | ⭐ 10k+ | GitHub's native tools | How open source projects organize work in Sprints. |
+| [atlassian/agile-tutorials](https://github.com/atlassian/agile-tutorials) | ⭐ 5k+ | Atlassian's Agile guide | Practical implementation of Scrum using Jira. |

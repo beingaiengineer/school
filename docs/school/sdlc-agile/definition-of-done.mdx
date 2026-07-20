@@ -1,0 +1,184 @@
+---
+sidebar_position: 10
+sidebar_label: "Definition of Done"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Definition of Done
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | The Definition of Done (DoD) |
+| Difficulty | Beginner |
+| Used For | Ensuring quality and preventing technical debt |
+| Common Mistake | Treating "it works on my machine" as Done |
+| Performance | Reduces bugs in production and standardizes code quality |
+
+## 2. Engineering Story
+
+A junior engineer says 'My ticket is done, it works on my machine.' The Scrum Master smiles, the ticket is moved to 'Done' on the board. Then it gets deployed. It breaks production instantly because there were no database migrations, it has zero unit tests so future changes will break it silently, and the API documentation is entirely missing.
+
+Bro, that is not 'Done.' That is 'I typed some code and got bored.' The Definition of Done (DoD) is the ultimate checklist that every single ticket must pass before it can be considered complete. It is the agreed-upon standard of quality for the entire engineering organization. DoD is how you maintain quality at scale; without it, you are just accumulating massive technical debt with every commit.
+
+## 3. Real-World Analogy
+
+| Daily Scenario | DoD Equivalent |
+|---|---|
+| Engine starts | Code compiles |
+| Brakes work | Tests pass |
+| Passed safety inspection | Passed Code Review |
+| Street legal | Ready for Production |
+| **A car isn't "done" until all of the above are true.** | **The Definition of Done** |
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A strict quality inspector putting a final 'Approved' stamp on a product only after checking off a long list of requirements on a clipboard. */}
+
+## 4. Concept Explanation
+
+The Definition of Done is a formal description of the state of the Increment when it meets the quality measures required for the product.
+
+It creates transparency. When a developer says a task is "Done," everyone on the team knows exactly what that means. It typically includes:
+- Code is written and formatted correctly.
+- Unit and Integration tests are written and passing.
+- Code has been peer-reviewed (PR approved).
+- CI/CD pipeline is green (build passes).
+- Security scans passed.
+- Documentation (Swagger, Readme) is updated.
+
+If a task meets 5 out of 6 DoD criteria, it is NOT DONE. It cannot be demoed in the Sprint Review, and it goes back to the backlog.
+
+## 5. Syntax Table
+
+| Concept | Description |
+|---|---|
+| DoD (Definition of Done) | Applies globally to *every* ticket in the sprint |
+| Acceptance Criteria | Applies specifically to the unique requirements of *one* ticket |
+| Tech Debt | What accumulates when you ignore the DoD |
+
+## 6. Beginner Example
+
+Think of DoD as a required boolean evaluation in code:
+
+```python
+def check_if_done(code, tests_pass, code_review_approved, docs_updated):
+    # Definition of Done is an AND statement
+    is_done = code and tests_pass and code_review_approved and docs_updated
+
+    if is_done:
+        print("Merge to main branch.")
+    else:
+        print("Ticket is not Done. Fix the failing checks.")
+```
+
+## 7. Real-World Engineering Example
+
+In GitHub, you enforce the Definition of Done using Branch Protection Rules:
+
+```yaml
+# Enforcing DoD via GitHub Actions (CI)
+name: DoD Enforcer
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  verify-dod:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Check Code Formatting
+        run: npm run lint
+      - name: Require 80% Test Coverage
+        run: npm run test:coverage
+      - name: Security Scan
+        run: snyk test
+      # If any of these steps fail, the PR cannot be merged.
+```
+
+## 8. Internal Working
+
+<LearningFlow diagram={{
+  nodes: [
+    { id: '1', title: 'Code Complete', detail: 'Local environment', x: 0, y: 0, kind: 'data' },
+    { id: '2', title: 'Automated DoD', detail: 'CI/CD checks', x: 250, y: 0, kind: 'process' },
+    { id: '3', title: 'Manual DoD', detail: 'Code Review/Docs', x: 500, y: 0, kind: 'process' },
+    { id: '4', title: 'Merge Rejected', detail: 'DoD Failed', x: 375, y: 150, kind: 'warning' },
+    { id: '5', title: 'Increment', detail: 'Truly Done', x: 750, y: 0, kind: 'output' }
+  ],
+  edges: [
+    { source: '1', target: '2', label: 'push' },
+    { source: '2', target: '3', label: 'pass' },
+    { source: '2', target: '4', label: 'fail', type: 'step' },
+    { source: '3', target: '4', label: 'fail', type: 'step' },
+    { source: '3', target: '5', label: 'pass' }
+  ]
+}} />
+
+## 9. Performance Table
+
+| Metric | With strict DoD | Without DoD |
+|---|---|---|
+| Initial Velocity | Feels slower | Feels faster (fake speed) |
+| Long-term Velocity | Consistent and high | Drops to zero due to bugs |
+| Production Outages | Rare | Frequent |
+
+## 10. Top Interview Questions
+
+| Question | Answer Summary |
+|---|---|
+| What is the difference between DoD and Acceptance Criteria? | DoD applies to every ticket (e.g., "code must be tested"). Acceptance Criteria apply to a specific ticket (e.g., "login button must be blue"). |
+| Who defines the Definition of Done? | The Development Team creates it, though the organization might have a minimum baseline standard. |
+| Can the DoD change? | Yes. Mature teams often make their DoD stricter over time as they automate more checks. |
+| What happens if a ticket is 99% done at the end of the sprint? | It is marked as Not Done and moves back to the backlog. No partial credit in Scrum. |
+| Why is "It works on my machine" dangerous? | Because local environments differ from production. DoD forces checks in standardized, prod-like environments. |
+
+## 11. Tricky Questions & Edge Cases
+
+- **Can you waive the DoD for an emergency hotfix?** Technically no. If a bug is in prod, you still need to write a test so it doesn't happen again. Bypassing DoD usually creates more emergencies later.
+- **Is DoD a checklist in Jira?** It can be, but it's best when it's automated via CI/CD pipelines so developers can't accidentally skip a step.
+
+## 12. Real-World Usage
+
+Google requires rigorous adherence to their DoD for every commit. A single PR must pass automated testing, style linters, static analysis, and a mandatory code review by someone with "Readability" status in that language before the 'Merge' button even turns green.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Automate as much of the DoD as possible via CI/CD | Rely on humans to remember to run the test suite |
+| Update the DoD during Retrospectives if you find gaps | Keep a DoD that no one actually follows |
+| Make the DoD highly visible to the team | Assume new hires know the quality standards |
+
+## 14. Production Notes
+
+<Admonition type="warning">
+A weak Definition of Done is the #1 cause of legacy code nightmares. If your DoD doesn't require unit tests, you are building an unmaintainable system from Day 1.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Partial credit | "Done" is binary. It's either 100% Done, or Not Done. |
+| Overcomplicating early on | Start with a simple DoD (tests + review) and grow it; don't start with 50 rules. |
+| Ignoring documentation | Make "API Docs updated" a mandatory part of the DoD. |
+
+## 16. Related Topics
+
+- Scrum Framework
+- Continuous Integration
+- Code Review Culture
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [google/engineering-practices](https://github.com/google/engineering-practices) | ⭐ 30k+ | Google's eng rules | A massive, real-world example of DoD standards. |
+| [actions/setup-node](https://github.com/actions/setup-node) | ⭐ 4k+ | GitHub Actions | Tools to automate DoD checks. |
+| [scrumalliance/resources](https://github.com/scrumalliance/resources) | ⭐ 2k+ | Official Scrum resources | The canonical source for DoD rules. |
+| [snyk/snyk](https://github.com/snyk/snyk) | ⭐ 1k+ | Security scanning | Often a mandatory step in an enterprise DoD. |
+| [linear/linear-method](https://github.com/linear/linear-method) | ⭐ 8k+ | The Linear way | How modern teams handle issue states and completeness. |
