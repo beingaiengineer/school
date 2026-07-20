@@ -1,0 +1,165 @@
+---
+sidebar_position: 5
+sidebar_label: "Estimation Techniques"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Estimation Techniques
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Estimation Techniques |
+| Difficulty | Intermediate |
+| Used For | Predicting the complexity, time, and effort required to build a feature. |
+| Common Mistake | Treating estimates as hard, guaranteed deadlines. |
+| Performance | Ensures predictable delivery and prevents team burnout. |
+
+## 2. Engineering Story
+
+Bro, early in my career, the VP of Engineering asked me how long it would take to integrate a new payment provider. I looked at their API docs, saw it was just a REST call, and proudly declared: "Two days max." I forgot about error handling, database migrations, security reviews, QA testing, and the fact that their staging environment was down for a week. It took three weeks. The VP was furious. I learned that estimation is not about guessing how fast you can type code; it's about evaluating the total complexity of delivering value to production. If you don't use proper estimation techniques, you are setting yourself up to fail.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A vibrant, chaotic Indian scenario illustrating Estimation Techniques. For instance, a chaotic Indian wedding planner adjusting to sudden 500 extra guests. */}
+
+Think of estimating software like an Indian wedding planner estimating catering costs.
+
+| Catering Estimate | Software Equivalent |
+|---|---|
+| Base cost for 500 guests | Happy path code |
+| Buffer for 100 extra uninvited guests | Edge case handling |
+| Accounting for power cuts in summer | Infrastructure / DevOps buffer |
+
+If the planner just estimates based on the exact guest list, food runs out. You must estimate based on complexity and risk, not just the best-case scenario.
+
+## 4. Concept Explanation
+
+Estimation Techniques are the methods engineering teams use to predict the effort required to complete a task. Bro, an estimate is a guess, but it should be an *educated* guess based on historical data and shared team understanding.
+
+The biggest mistake junior engineers make is estimating in "Hours". Humans are terrible at estimating hours because they assume 8 hours of coding a day (ignoring meetings, code reviews, and bathroom breaks). Instead, modern teams estimate in "Story Points" or "T-Shirt Sizes", which measure *complexity* and *effort* relative to other known tasks.
+
+If a simple text change is a 1, a new database table might be a 3. If a ticket is an 8 or 13, it's too complex and must be broken down.
+
+## 5. Syntax Table
+
+| Technique | How it Works | Best For |
+|---|---|---|
+| Story Points (Fibonacci) | 1, 2, 3, 5, 8... based on relative complexity. | Agile sprints, mature teams. |
+| T-Shirt Sizing | XS, S, M, L, XL based on high-level effort. | Early project phases, roadmapping. |
+| Time-based | Guessing hours or days. | Freelancers, rigid waterfall contracts. |
+
+## 6. Beginner Example
+
+```text
+// Bad Estimation
+"I will finish this ticket in exactly 4 hours." (Ignores PR review time, CI/CD pipeline runs).
+
+// Good Estimation
+"This ticket feels like a 5-point story. It's similar in complexity to the email service we built last month."
+```
+
+## 7. Real-World Engineering Example
+
+```python
+# How relative complexity maps to engineering tasks
+def estimate_task(task_details):
+    points = 0
+
+    # 1. Base implementation complexity
+    if task_details.has_ui_changes: points += 2
+    if task_details.has_db_migrations: points += 3
+
+    # 2. Risk and Unknowns (The hidden multiplier)
+    if task_details.uses_new_framework: points *= 2
+    if task_details.relies_on_3rd_party_api: points += 3
+
+    # Map to nearest Fibonacci (1, 2, 3, 5, 8, 13)
+    return round_to_nearest_fibonacci(points)
+```
+
+## 8. Internal Working
+
+This diagram shows how effort is calculated.
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Ticket' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'Analyze Complexity' }, position: { x: 100, y: 100 } },
+    { id: '3', type: 'process', data: { label: 'Analyze Risk/Unknowns' }, position: { x: 400, y: 100 } },
+    { id: '4', type: 'output', data: { label: 'Final Story Point' }, position: { x: 250, y: 200 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true },
+    { id: 'e1-3', source: '1', target: '3', animated: true },
+    { id: 'e2-4', source: '2', target: '4' },
+    { id: 'e3-4', source: '3', target: '4' }
+  ]}
+/>
+
+## 9. Performance Table
+
+| Technique | Accuracy | Time to Estimate |
+|---|---|---|
+| T-Shirt Sizing | Low | Very Fast |
+| Story Points | High (over time) | Medium |
+| Exact Hours | Extremely Low (often wrong) | Very Slow |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why do we use the Fibonacci sequence for story points? | Because as tasks get larger, our ability to estimate them precisely gets worse. The gaps between 5, 8, and 13 reflect that uncertainty. |
+| What do you do if you realize your estimate is completely wrong mid-sprint? | I raise a flag immediately in the daily standup. Transparency is better than heroics. |
+| How do you estimate a task with a technology you've never used? | I ask for a timeboxed "Spike" (e.g., 1 day of research) before giving a final estimate. |
+| Does a 5-point story mean 5 days? | No. Points measure complexity, not time. Velocity determines how many points the team completes in a week. |
+| How do you handle a PM who treats an estimate as a hard deadline? | I clarify the difference between an estimate (a probability) and a commitment (a guarantee), and highlight the risks. |
+
+## 11. Tricky Questions & Edge Cases
+
+Bro, what if you have a ticket to "Refactor the legacy auth module"? It might take 2 days, or it might break 50 downstream services and take 3 weeks. You cannot estimate this accurately. The senior move is to break it down. You make the first ticket "Analyze legacy auth and write an RFC." That ticket is a 2. The *actual* refactor tickets are created and estimated *after* the analysis. Never estimate the unknown.
+
+## 12. Real-World Usage
+
+At tech giants, estimation is tied heavily to historical velocity. If a squad historically completes 40 story points per two-week sprint, they will strictly refuse to pull in 50 points of work, no matter how much the business screams. Estimation techniques are the mathematical defense against burnout.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Estimate as a team (Planning Poker) | Let the most senior dev dictate all estimates |
+| Base estimates on relative complexity | Try to map 1 point exactly to 1 day |
+| Re-estimate if scope changes significantly | Treat estimates as blood oaths |
+
+## 14. Production Notes
+
+<Admonition type="warning" title="Watch Out in Prod!">
+Estimates must include the time it takes to write tests, pass code review, deploy, and verify in production. If your estimate only covers "writing the code locally", you will fail every sprint.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Optimism Bias | Always account for context switching and meetings. |
+| Estimating Epics | Break Epics down into smaller stories before estimating. |
+| Punishing bad estimates | Treat missed estimates as a learning opportunity to calibrate the team. |
+
+## 16. Related Topics
+
+- Planning Poker
+- Velocity and Burndown
+- Sprint Planning
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [kamranahmedse/developer-roadmap](https://github.com/kamranahmedse/developer-roadmap) | ⭐ 250k+ | Roadmaps to becoming a developer | Context for agile workflows. |
+| [joelparkerhenderson/architecture-decision-record](https://github.com/joelparkerhenderson/architecture-decision-record) | ⭐ 8k+ | Architecture decision record (ADR) examples | Good contrast between product docs and tech docs. |
+| [thoughtworks/build-your-own-radar](https://github.com/thoughtworks/build-your-own-radar) | ⭐ 1k+ | Tech radar builder | Helps teams assess technologies. |
+| [donnemartin/system-design-primer](https://github.com/donnemartin/system-design-primer) | ⭐ 220k+ | Learn how to design large-scale systems | High-level requirements. |
+| [microsoft/api-guidelines](https://github.com/microsoft/api-guidelines) | ⭐ 20k+ | Microsoft REST API Guidelines | Excellent example of strict guidelines. |

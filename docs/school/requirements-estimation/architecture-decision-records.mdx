@@ -1,0 +1,167 @@
+---
+sidebar_position: 10
+sidebar_label: "Architecture Decision Records"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Architecture Decision Records
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Architecture Decision Records (ADR) |
+| Difficulty | Advanced |
+| Used For | Documenting *why* a specific technical decision was made. |
+| Common Mistake | Documenting *what* was built instead of the context and reasons *why*. |
+| Performance | Massive time saved when onboarding new engineers or auditing legacy code. |
+
+## 2. Engineering Story
+
+Bro, I inherited a legacy monolithic application. In the middle of the codebase, there was a random cron job that copied the user table to a SQLite file every hour. I thought, "This is stupid and inefficient," so I deleted it and replaced it with a real-time event stream. Three days later, the finance team's quarterly reporting tool broke because it hard-relied on that specific SQLite file. I spent days trying to figure out who built it and why. There was no documentation. If the original engineer had written an Architecture Decision Record (ADR) explaining that finance demanded a flat file for their legacy software, I would have understood the context. ADRs are time machines that explain the madness of the past.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A vibrant, chaotic Indian scenario illustrating Architecture Decision Records. For instance, a chaotic post office queue trying to figure out which form to fill. */}
+
+Think of an ADR like keeping the medical history file of a patient.
+
+| Medical History | ADR Equivalent |
+|---|---|
+| "Patient has an allergy to Penicillin" | Context (The constraints) |
+| "Decided to prescribe Alternative Drug X" | Decision |
+| "Doctor notes: Prescribed in 2018" | Date and Author |
+
+If a new doctor takes over and just gives Penicillin because it's standard, the patient dies. If a new engineer takes over and rewrites an architecture without knowing the historical constraints, the system crashes.
+
+## 4. Concept Explanation
+
+An Architecture Decision Record (ADR) is a short text file (usually Markdown) stored right inside your code repository that captures a single, significant architectural decision. Bro, it answers one critical question: "Why did we do it this way?"
+
+An RFC is used to *discuss* a future change. An ADR is used to *record* the final decision.
+
+ADRs are immutable. Once a decision is made, the ADR is committed to Git. If you change your mind a year later, you don't edit the old ADR; you create a new ADR that supersedes the old one. This creates a perfect historical ledger of the engineering team's thought process. It stops new engineers from constantly complaining, "Who wrote this garbage?" because they can read the ADR and say, "Ah, they were restricted by budget and time."
+
+## 5. Syntax Table
+
+| ADR Section | Purpose |
+|---|---|
+| Status | Proposed, Accepted, Deprecated, Superseded. |
+| Context | The forces at play (budget, time, scale, limitations). |
+| Decision | The actual technical choice made. |
+| Consequences | What happens because of this decision (good and bad). |
+
+## 6. Beginner Example
+
+```text
+// How code usually looks (No ADR)
+// "Why did we use RabbitMQ instead of Kafka here? Nobody knows. The guy who wrote it quit."
+
+// How an ADR looks (Stored in docs/adr/001-use-rabbitmq.md)
+Context: We need a message queue. Kafka is overkill for our 10 msgs/sec and we lack JVM expertise.
+Decision: We will use RabbitMQ.
+Consequences: Easy setup, but we won't have infinite event replay capability in the future.
+```
+
+## 7. Real-World Engineering Example
+
+```markdown
+# ADR 004: Use JWT for API Authentication
+
+## Status
+Accepted (Supersedes ADR 001)
+
+## Context
+Our current session-based auth requires a database lookup on every API request. As we scale to mobile clients and multiple microservices, the database is becoming a bottleneck.
+
+## Decision
+We will migrate to stateless JSON Web Tokens (JWT). The API gateway will verify the signature without hitting the database.
+
+## Consequences
+- **Positive:** Massive reduction in database load.
+- **Negative:** We cannot immediately revoke a token. We must wait for it to expire (set to 15 mins) or implement a complex blacklist cache.
+```
+
+## 8. Internal Working
+
+This diagram shows how ADRs fit into the system lifecycle.
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Architectural Problem' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'process', data: { label: 'RFC Discussion' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'data', data: { label: 'Write ADR (Commit to Git)' }, position: { x: 250, y: 200 } },
+    { id: '4', type: 'output', data: { label: 'Historical Ledger Preserved' }, position: { x: 250, y: 300 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true },
+    { id: 'e2-3', source: '2', target: '3' },
+    { id: 'e3-4', source: '3', target: '4', animated: true }
+  ]}
+/>
+
+## 9. Performance Table
+
+| Activity | Time Cost | Long-term Value |
+|---|---|---|
+| Writing the ADR | 30 minutes | Extremely High |
+| Arguing about old decisions | Days | Zero |
+| Onboarding new engineers | Fast (they read the ADRs) | High |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between an RFC and an ADR? | An RFC proposes a change and asks for feedback. An ADR records the final decision after the RFC is approved. |
+| Where should ADRs be stored? | Right next to the code in a `docs/adr/` folder within the Git repository. They belong with the codebase, not hidden in a Confluence wiki. |
+| Do you update old ADRs when architecture changes? | No. You mark the old ADR as "Superseded" and write a new one. ADRs form an immutable history. |
+| Should we write an ADR for choosing a linting rule? | No, that is too trivial. ADRs are for decisions that significantly impact the system's architecture, dependencies, or data flow. |
+| What is the most important section of an ADR? | The "Context". Understanding the constraints (e.g., "we had 2 weeks and no budget") explains why seemingly bad decisions were actually the right choice at the time. |
+
+## 11. Tricky Questions & Edge Cases
+
+Bro, a common edge case is dealing with "decision drift." An ADR is written, but over the next six months, the team slowly builds the system completely differently without updating the docs. The senior move is to enforce ADR compliance in PR reviews. If a PR introduces a new major dependency, the reviewer should block it and ask, "Where is the ADR for this?"
+
+## 12. Real-World Usage
+
+Companies like Spotify, GitHub, and AWS heavily utilize ADRs. When you join a new team at AWS, you don't ask the senior engineers why they chose DynamoDB over RDS; you go read ADR-005. It scales communication. It allows teams to work asynchronously across global time zones without needing endless meetings to explain system history.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Store them as plain Markdown in the Git repo | Hide them in a messy Google Drive folder |
+| Keep them short (1-2 pages maximum) | Write a novel |
+| Be honest about the negative consequences | Pretend your chosen architecture is flawless |
+
+## 14. Production Notes
+
+<Admonition type="warning" title="Watch Out in Prod!">
+If your ADR states a negative consequence like "We cannot handle more than 500 req/sec," ensure that monitoring and alerts are set up to trigger at 400 req/sec. Documented limitations must be operationally monitored.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Writing them too late | Write the ADR immediately after the decision is made, while the context is fresh. |
+| Justifying instead of explaining | Don't use the ADR to prove you were right; use it to explain the trade-offs. |
+| Deleting old ADRs | Never delete. Mark them as superseded to maintain the historical timeline. |
+
+## 16. Related Topics
+
+- Writing RFCs
+- Technical Debt
+- Systems Design Basics
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [joelparkerhenderson/architecture-decision-record](https://github.com/joelparkerhenderson/architecture-decision-record) | ⭐ 8k+ | Architecture decision record (ADR) examples | The definitive guide and template repository for ADRs. |
+| [kamranahmedse/developer-roadmap](https://github.com/kamranahmedse/developer-roadmap) | ⭐ 250k+ | Roadmaps to becoming a developer | Context for agile workflows. |
+| [thoughtworks/build-your-own-radar](https://github.com/thoughtworks/build-your-own-radar) | ⭐ 1k+ | Tech radar builder | Helps teams assess technologies. |
+| [donnemartin/system-design-primer](https://github.com/donnemartin/system-design-primer) | ⭐ 220k+ | Learn how to design large-scale systems | High-level requirements. |
+| [microsoft/api-guidelines](https://github.com/microsoft/api-guidelines) | ⭐ 20k+ | Microsoft REST API Guidelines | Excellent example of strict guidelines. |

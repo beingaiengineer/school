@@ -1,0 +1,169 @@
+---
+sidebar_position: 2
+sidebar_label: "Product Requirement Documents (PRD)"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Product Requirement Documents (PRD)
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Product Requirement Documents (PRD) |
+| Difficulty | Intermediate |
+| Used For | Documenting the "what" and "why" of a product before building it. |
+| Common Mistake | Making it a 50-page thesis no one reads. |
+| Performance | Speeds up engineering alignment and reduces meetings. |
+
+## 2. Engineering Story
+
+Bro, I once joined a team where the PM just threw JIRA tickets over the wall with titles like "Make login faster". No context, no metrics, no user journey. Half the team was optimizing database queries, while the frontend guy was rewriting the UI in React. We wasted two sprints. Then, a senior PM joined and introduced Product Requirement Documents (PRDs). Suddenly, we had a single source of truth. The PRD explicitly stated the goal ("Reduce time to interactive on login to &lt;1 second"), the target user, and the out-of-scope items. It was like someone turned the lights on. A PRD is the contract between Product and Engineering.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: A vibrant, chaotic Indian scenario illustrating Product Requirement Documents. For instance, bargaining for a shirt at Sarojini Nagar market, weighing cost vs value. */}
+
+Think of a PRD like buying a house with a proper builder's contract.
+
+| Buying a House | PRD Equivalent |
+|---|---|
+| "I want a 3BHK in Bandra" | Product Vision & Goals |
+| "It must have 2 balconies and a parking spot" | Core Requirements |
+| "No swimming pool needed" | Out of Scope |
+
+If you just tell a builder "build me a house," you might get a shack. The PRD is the detailed blueprint that ensures everyone knows exactly what is being built and why.
+
+## 4. Concept Explanation
+
+A Product Requirement Document (PRD) is a living document written mostly by Product Managers, but reviewed heavily by Engineering and Design. Bro, it answers *what* we are building, *who* it is for, and *why* it matters. It rarely dictates *how* to build it—that's the engineer's job.
+
+The PRD acts as the single source of truth. When the frontend engineer and the backend engineer argue over whether the API needs pagination, they look at the PRD. If the PRD says the UI will show 10,000 items, then yes, you need pagination.
+
+A good PRD is concise. It contains the objective, success metrics, user stories, out-of-scope features, and dependencies. If it's 50 pages long, it's a bad PRD because nobody will read it.
+
+## 5. Syntax Table
+
+| PRD Section | Purpose |
+|---|---|
+| Objective | The main goal of the feature (e.g., increase user retention). |
+| Target Audience | Who exactly is using this feature. |
+| In Scope / Out of Scope | Clear boundaries of what will NOT be built. |
+| Success Metrics | How we know the feature worked (e.g., 5% increase in DAU). |
+
+## 6. Beginner Example
+
+```python
+# A simple representation of reading a vague ticket
+def build_feature(ticket):
+    if ticket.title == "Add dark mode":
+        # We don't know if we need a toggle, or auto-detect OS settings
+        implement_css_changes()
+    return "Done, maybe?"
+```
+
+## 7. Real-World Engineering Example
+
+```python
+# Translating a strict PRD into technical architecture
+def build_feature_from_prd(prd_spec):
+    # The PRD specifies exactly what to do
+    if prd_spec.feature == "Dark Mode":
+        # Requirement: Respect OS settings first
+        os_preference = get_os_theme()
+
+        # Requirement: Allow user to override
+        user_override = db.get_user_setting("theme_override")
+
+        # Requirement: Fallback to light mode
+        final_theme = user_override or os_preference or "light"
+
+        apply_theme(final_theme)
+
+        # Requirement: Analytics tracking for success metrics
+        analytics.track("theme_applied", {"theme": final_theme})
+```
+
+## 8. Internal Working
+
+This diagram shows the lifecycle of a PRD.
+
+<LearningFlow
+  nodes={[
+    { id: '1', type: 'core', data: { label: 'Idea / Business Need' }, position: { x: 250, y: 0 } },
+    { id: '2', type: 'data', data: { label: 'Draft PRD (by PM)' }, position: { x: 250, y: 100 } },
+    { id: '3', type: 'process', data: { label: 'Engineering Review' }, position: { x: 250, y: 200 } },
+    { id: '4', type: 'output', data: { label: 'Final PRD & Tech Spec' }, position: { x: 250, y: 300 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', animated: true },
+    { id: 'e2-3', source: '2', target: '3' },
+    { id: 'e3-4', source: '3', target: '4', animated: true }
+  ]}
+/>
+
+## 9. Performance Table
+
+| Action | Cost without PRD | Cost with PRD |
+|---|---|---|
+| Aligning the team | 5 days of meetings | 1 hour document read |
+| Scope Creep | Extremely high | Low |
+| Developer Frustration | High | Low |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| As an engineer, what do you look for in a PRD? | I look for clear edge cases, out-of-scope definitions, and measurable success metrics so I know what to optimize for. |
+| What if the PRD dictates the technical implementation? | I gently push back. The PRD should define the 'what' and 'why'. Engineering owns the 'how'. |
+| How do you handle a PRD that keeps changing? | If it's in the middle of a sprint, I flag it as scope creep and ask the PM to move the changes to the next iteration. |
+| What is the most important section of a PRD? | The "Out of Scope" section. It actively prevents engineers from over-engineering features nobody asked for. |
+| Have you ever worked without a PRD? | Yes, and it led to misaligned expectations. I now advocate for at least a 1-page PRD for any major feature. |
+
+## 11. Tricky Questions & Edge Cases
+
+Bro, what if the PRD is perfect but the technical reality makes it impossible within the deadline? You do not just stay silent. You bring it up immediately during the PRD review. You offer alternatives: "We can't do real-time updates in 2 weeks, but we can do polling every 5 minutes." The PRD is a negotiation, not a dictatorship.
+
+## 12. Real-World Usage
+
+At companies like Stripe, a PRD is often paired with an API design document. The PM writes the business requirements (the PRD), and the engineering team writes the technical response. This dual-document system ensures the business gets what it wants and the technical architecture remains pristine.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Keep it concise and readable | Write a 40-page essay |
+| Clearly define success metrics | Use vague terms like "make it fast" |
+| Include UX wireframes or links to Figma | Describe UI layouts purely in text |
+
+## 14. Production Notes
+
+<Admonition type="warning" title="Watch Out in Prod!">
+Never start coding until the PRD is "frozen" or approved. If you start coding while the PM is still changing the core requirements, you will write throwaway code. Wait for the ink to dry.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Engineers ignoring the PRD | Read it thoroughly and leave comments before the kickoff meeting. |
+| Forgetting analytics | Ensure the PRD explicitly states what data needs tracking. |
+| No 'Out of Scope' section | Always define what you are explicitly choosing NOT to build. |
+
+## 16. Related Topics
+
+- Writing User Stories
+- Requirement Gathering
+- Writing RFCs
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [joelparkerhenderson/architecture-decision-record](https://github.com/joelparkerhenderson/architecture-decision-record) | ⭐ 8k+ | Architecture decision record (ADR) examples | Good contrast between product docs and tech docs. |
+| [kamranahmedse/developer-roadmap](https://github.com/kamranahmedse/developer-roadmap) | ⭐ 250k+ | Roadmaps to becoming a developer | Good context on where PRDs fit into a career. |
+| [thoughtworks/build-your-own-radar](https://github.com/thoughtworks/build-your-own-radar) | ⭐ 1k+ | Tech radar builder | Helps teams assess technologies. |
+| [donnemartin/system-design-primer](https://github.com/donnemartin/system-design-primer) | ⭐ 220k+ | Learn how to design large-scale systems | High-level requirements. |
+| [microsoft/api-guidelines](https://github.com/microsoft/api-guidelines) | ⭐ 20k+ | Microsoft REST API Guidelines | Excellent example of strict guidelines. |
