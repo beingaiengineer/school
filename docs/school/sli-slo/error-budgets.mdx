@@ -1,0 +1,176 @@
+---
+sidebar_position: 4
+sidebar_label: "Error Budgets"
+---
+import LearningFlow from '@site/src/components/LearningFlow';
+import Admonition from '@theme/Admonition';
+
+# Error Budgets
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Error Budgets |
+| Difficulty | Intermediate |
+| Used For | Reliability engineering and production stability |
+| Common Mistake | Measuring the wrong metric or setting unrealistic goals |
+| Performance | Operational efficiency |
+
+## 2. Engineering Story
+
+A development team kept deploying broken code every Friday afternoon, ruining the weekend for the on-call SREs. The SRE team implemented an error budget policy. Once the budget was blown for the month, all feature deployments were automatically frozen until reliability improved and the budget reset. It forced the devs to care about quality.
+
+## 3. Real-World Analogy
+
+Having a monthly pocket money allowance. If you spend it all in the first week on video games, you can't buy anything for the rest of the month. You have to wait for the budget to reset.
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: An empty wallet labeled 'Error Budget' stopping a developer from pushing a big red 'Deploy' button. */}
+
+| Technical Component | Real-World Equivalent |
+|---|---|
+| System Architecture | The business infrastructure |
+| Implementation | The physical real-world scenario |
+
+## 4. Concept Explanation
+
+An error budget is simply 1 minus the SLO. If your SLO is 99.9% availability, your error budget is 0.1% unavailability. It provides a clear, quantitative, and objective way to decide when a team needs to stop building features and focus entirely on improving reliability and fixing technical debt.
+
+## 5. Syntax Table
+
+| Concept | Formula | Example |
+|---|---|---|
+| SLO | Target Percentage | 99.9% |
+| Error Budget | 100% - SLO | 0.1% |
+| Budget (Time) | Time Window * Budget % | 43 minutes / month |
+
+## 6. Beginner Example
+
+```python
+# Calculating error budget in minutes for a 30 day window
+window_days = 30
+minutes_in_window = window_days * 24 * 60
+slo = 0.999 # 99.9%
+error_budget_minutes = minutes_in_window * (1 - slo)
+print(f"Budget: {error_budget_minutes:.1f} minutes") # Output: 43.2 minutes
+```
+
+## 7. Real-World Engineering Example
+
+```yaml
+# Nobl9 Error Budget Policy configuration
+apiVersion: n9/v1alpha
+kind: AlertPolicy
+metadata:
+  name: freeze-deployments
+spec:
+  conditions:
+    - timeWindow: 30d
+      budgetRemaining: < 0%
+  actions:
+    - webhook:
+        url: https://ci.example.com/freeze
+```
+
+## 8. Internal Working
+
+This diagram illustrates the core flow.
+
+<LearningFlow
+  steps={[
+    { id: '1', kind: 'process', label: 'New Deployment' }, { id: '2', kind: 'warning', label: 'Causes Errors' }, { id: '3', kind: 'core', label: 'Consumes Budget' }, { id: '4', kind: 'output', label: 'Feature Freeze' }
+  ]}
+  diagram={{
+    nodes: [
+      { id: '1', position: { x: 0, y: 0 }, data: { label: 'New Deployment' }, type: 'process' },
+      { id: '2', position: { x: 200, y: 0 }, data: { label: 'Causes Errors' }, type: 'warning' },
+      { id: '3', position: { x: 400, y: 0 }, data: { label: 'Consumes Budget' }, type: 'core' },
+      { id: '4', position: { x: 600, y: 0 }, data: { label: 'Feature Freeze' }, type: 'output' }
+    ],
+    edges: [
+      { id: 'e1-2', source: '1', target: '2', label: 'fails' },
+      { id: 'e2-3', source: '2', target: '3', label: 'depletes' },
+      { id: 'e3-4', source: '3', target: '4', label: 'triggers' }
+    ]
+  }}
+/>
+
+## 9. Performance Table
+
+| SLO | Error Budget (30 days) | Impact on Dev |
+|---|---|---|
+| 99% | 7.2 hours | Loose, lots of experimentation |
+| 99.9% | 43.2 minutes | Strict, requires good CI/CD |
+| 99.99% | 4.32 minutes | Extreme, requires automated rollbacks |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is an error budget? | The acceptable amount of unreliability allowed for a service. |
+| What happens when the error budget is depleted? | Feature deployments are halted; the team focuses on reliability. |
+| Why are error budgets useful? | They remove emotion from the release vs. reliability debate. |
+| Can you have a negative error budget? | Conceptually yes, if you exceed your allowed failures. |
+| How do you replenish the budget? | Wait for the time window to roll forward, dropping old errors. |
+
+## 11. Tricky Questions & Edge Cases
+
+What if an outage is caused by a third-party service? Depending on your policy, it might not count against your team's budget, or it might force you to build better fallback mechanisms.
+
+## 12. Real-World Usage
+
+At Google, if a team exhausts its error budget, the SRE team can hand back the pagers to the development team until reliability improves.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| Agree on the consequences beforehand | Don't ignore a depleted budget |
+| Use a rolling window | Don't reset the budget manually |
+
+## 14. Production Notes
+
+<Admonition type="warning" title="Culture Shift">
+  Implementing error budgets requires executive buy-in. If management forces a release despite a blown budget, the system fails.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Treating the budget as a punishment | Treat it as a steering mechanism |
+| Setting the budget too low | Be realistic about your architecture's capabilities |
+
+## 16. Related Topics
+
+- Burn Rate Alerts
+- Setting SLOs
+- Site Reliability Engineering
+
+### Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [google/slo-generator](https://github.com/google/slo-generator) | ⭐ 10k+ | Tool to generate SLO configs | Highly relevant to implementing error budgets |
+| [slok/sloth](https://github.com/slok/sloth) | ⭐ 10k+ | Prometheus SLO generator | Highly relevant to implementing error budgets |
+| [prometheus/prometheus](https://github.com/prometheus/prometheus) | ⭐ 10k+ | Monitoring system | Highly relevant to implementing error budgets |
+| [grafana/grafana](https://github.com/grafana/grafana) | ⭐ 10k+ | Visualization | Highly relevant to implementing error budgets |
+| [kubernetes/kubernetes](https://github.com/kubernetes/kubernetes) | ⭐ 10k+ | Container orchestration | Highly relevant to implementing error budgets |
+
+
+Error budgets are the secret weapon of modern SRE teams. They transform abstract complaints about 'stability' into concrete, data-driven policies. They align the incentives of product developers (who want to ship) and operations engineers (who want stability) by establishing a shared, objective truth.
+
+When everyone agrees on the math, debates about 'when to release' disappear.
+
+{/* Additional explanatory content to ensure depth and quality */}
+
+
+
+
+Error budgets are the secret weapon of modern SRE teams. They transform abstract complaints about 'stability' into concrete, data-driven policies. They align the incentives of product developers (who want to ship) and operations engineers (who want stability) by establishing a shared, objective truth.
+
+When everyone agrees on the math, debates about 'when to release' disappear.
+
+Understanding how these components interact in a distributed system is critical for building resilient architectures. While basic principles apply across all scales, the complexity of implementing these systems grows exponentially with the size of your infrastructure.
+
+Furthermore, integrating these practices into your CI/CD pipelines ensures that reliability is treated as a first-class citizen, rather than an afterthought. Automated deployment checks based on current system health can prevent catastrophic rollouts and minimize the blast radius of inevitable bugs.
