@@ -1,0 +1,165 @@
+---
+sidebar_position: 6
+sidebar_label: "Cross-Team Collaboration"
+---
+
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Cross-Team Collaboration
+
+## 1. Quick Summary
+| Area | Details |
+|---|---|
+| Topic | How to work effectively with other engineering squads |
+| Difficulty | Intermediate |
+| Used For | Unblocking dependencies, defining API contracts, and navigating company politics |
+| Common Mistake | Coding against an assumed API contract without written agreement |
+| Performance | Time: High latency due to meetings. Space: High risk of miscommunication |
+
+## 2. Engineering Story
+You are building the frontend for a new checkout flow. You need the Backend Cart team to add a `discount_code` field to their response. You ping their engineer on Slack, they say "Sure, I'll add it tomorrow," and you build your entire UI assuming it will be there. Tomorrow comes. The field isn't there. You ping them again. They say, "Sorry, my EM pulled me onto a high-priority bug." Now your sprint is blocked, your PM is angry, and you look incompetent. Bro, this is why cross-team collaboration is the hardest part of software engineering at scale. It is not about writing code; it is about negotiating priorities, defining strict contracts, and managing dependencies before you write a single line of logic.
+
+## 3. Real-World Analogy
+Think of cross-team collaboration like navigating a busy Indian street market.
+
+| Market Scenario | Engineering Equivalent |
+|---|---|
+| Haggling over the price of vegetables | Negotiating API contracts and response times |
+| Vendors shouting over each other | Teams fighting for priority in the sprint planning |
+| The mediator (usually an older uncle) stepping in | The Engineering Managers aligning on priorities |
+| Promising to bring cash tomorrow, but the vendor won't give the goods today | Refusing to build against an API until the swagger doc is published |
+
+{/* TODO: [BAE-ILLUSTRATION] Generate and embed illustration here. Prompt: Illustration of developers from different teams trying to negotiate dependencies like haggling at a busy Indian street market, trading APIs and timelines over cups of cutting chai. */}
+
+## 4. Concept Explanation
+Cross-team collaboration happens when your feature requires work from a team you do not control. This is the source of 90% of missed deadlines in tech. To survive, you must move from implicit trust (Slack promises) to explicit contracts (RFCs, Swagger docs, Jira tickets). Bro, you cannot just "ask" another team to do something. Every team has their own roadmap, their own PM, and their own KPIs. If your request does not align with their goals, they will de-prioritize it. You have to align incentives. This usually means involving your EM to talk to their EM, filing formal request tickets, and defining the exact JSON payloads (API Contracts) before the sprint even begins.
+
+## 5. Syntax Table
+Here is the "syntax" for handling dependencies.
+
+| Situation | Amateur Approach | Senior Approach |
+|---|---|---|
+| Need an API change | Ping a dev on Slack | File a formal Jira ticket with exact requirements and CC the PM |
+| Waiting on another team | Block your sprint | Mock the API locally and continue building the UI/Logic |
+| API Contract | "Just send me an array of user IDs" | Write a Swagger/OpenAPI spec and get them to approve the PR |
+
+## 6. Beginner Example
+Here is how a beginner handles a cross-team dependency.
+
+```javascript
+// DON'T do this:
+// Assuming the backend will return the exact shape you need.
+fetch('/api/cart')
+  .then(res => res.json())
+  .then(data => {
+    // If Backend changes this to data.cart.discount, the app crashes.
+    applyDiscount(data.discountCode);
+  });
+```
+
+## 7. Real-World Engineering Example
+Here is how a senior engineer handles it using Consumer-Driven Contracts or defensive programming.
+
+```javascript
+// DO this:
+// Define the expected contract and fail gracefully if the other team breaks it.
+import { z } from 'zod';
+
+const CartSchema = z.object({
+  items: z.array(z.string()),
+  // Make it optional because we don't trust the other team to deliver it on time
+  discountCode: z.string().optional(),
+});
+
+async function fetchCart() {
+  const res = await fetch('/api/cart');
+  const rawData = await res.json();
+
+  // Validate the contract
+  const parsed = CartSchema.safeParse(rawData);
+  if (!parsed.success) {
+    logError("Backend team broke the API contract!", parsed.error);
+    return { items: [], discountCode: null }; // Fallback
+  }
+  return parsed.data;
+}
+```
+
+## 8. Internal Working
+Here is the flow of resolving a cross-team dependency.
+
+<LearningFlow
+  steps={[
+    { id: '1', type: 'core', data: { label: 'Your Team' }, position: { x: 50, y: 150 } },
+    { id: '2', type: 'process', data: { label: 'Define API Contract (Swagger)' }, position: { x: 250, y: 50 } },
+    { id: '3', type: 'warning', data: { label: 'EMs Negotiate Priority' }, position: { x: 250, y: 250 } },
+    { id: '4', type: 'tool', data: { label: 'Other Team' }, position: { x: 450, y: 150 } },
+    { id: '5', type: 'output', data: { label: 'Integration Test Passes' }, position: { x: 650, y: 150 } }
+  ]}
+  edges={[
+    { id: 'e1-2', source: '1', target: '2', label: 'proposes', animated: true },
+    { id: 'e1-3', source: '1', target: '3', label: 'escalates', animated: true },
+    { id: 'e2-4', source: '2', target: '4', label: 'agrees to', animated: true },
+    { id: 'e3-4', source: '3', target: '4', label: 'allocates sprint time', animated: true },
+    { id: 'e4-5', source: '4', target: '5', label: 'delivers API', animated: false }
+  ]}
+/>
+
+## 9. Performance Table
+Methods of cross-team alignment.
+
+| Method | Speed | Reliability | When to use |
+|---|---|---|---|
+| Slack DM | Fast | Very Low | Quick context gathering, not for commitments |
+| Cross-Team Sync Meeting | Medium | Medium | Brainstorming solutions |
+| Formal RFC / Tech Spec | Slow | High | Major architectural dependencies |
+| EM to EM negotiation | Medium | Very High | When another team refuses to prioritize your work |
+
+## 10. Top Interview Questions
+| Question | Answer |
+|---|---|
+| Tell me about a time you had to work with a difficult team to deliver a feature. | (Focus on process): "Team X was ignoring our requests. I realized they were measured on reliability, not feature delivery. I wrote a design doc proving our request wouldn't impact their uptime, and their EM agreed to prioritize it." |
+| How do you handle it if a dependency won't be ready in time for your release? | I decouple the work. I build against a mocked interface or feature flag the code so we can merge our work without breaking production, waiting for their service to go live. |
+| What is an API Contract? | It is a strict, documented agreement (like Swagger/OpenAPI or Protobuf) defining exactly what requests and responses will look like between two services. |
+| Why is verbal agreement dangerous in software? | Because people forget, priorities change, and turnover happens. If it isn't documented in a ticket or a PR, it doesn't exist. |
+| What do you do if another team breaks your code with an unannounced API change? | I revert or fix the immediate break, then set up Consumer-Driven Contract testing (like Pact) in the CI pipeline to ensure their future builds fail if they break our required schema. |
+
+## 11. Tricky Questions & Edge Cases
+What if the other team is physically in a different timezone (e.g., you are in India, they are in the US) and you only have a 30-minute overlap? Bro, asynchronous communication becomes your lifeline. You cannot rely on meetings. You must write extremely detailed PR descriptions, use Loom videos to explain complex issues, and ensure your Jira tickets have zero ambiguity.
+
+## 12. Real-World Usage
+Microservice architectures (used by Netflix, Uber, Amazon) force cross-team collaboration. Because every team owns a small piece of the pie, a single user checkout flow might touch 15 different services owned by 10 different teams. This is why API gateways and strict contract testing were invented.
+
+## 13. Best Practices
+| DO | DON'T |
+|---|---|
+| Build against mocks while waiting for the real API. | Sit idle and blame the other team for your lack of output. |
+| Document decisions in public channels or wikis. | Rely on private Slack DMs for architectural decisions. |
+| Give credit to the other team during the sprint demo. | Throw the other team under the bus in front of leadership. |
+
+## 14. Production Notes
+<Admonition type="caution" title="The Blame Game">
+When production goes down because of a cross-team integration failure, do not point fingers. Leadership doesn't care whose fault it was; they care who is fixing it. Jump into the incident bridge and help debug, even if it's "their" codebase.
+</Admonition>
+
+## 15. Common Mistakes
+| Mistake | Correction |
+|---|---|
+| Assuming good intentions means guaranteed delivery | Trust, but verify with Jira tickets and sprint commitments |
+| Waiting for the end of the sprint to integrate | Integrate on day 1 with mocks, and continuously test |
+| Escalating aggressively without warning | Tell the developer, "If we can't resolve this today, I'll need to involve our EMs to figure out bandwidth." |
+
+## 16. Related Topics
+- Communication in Engineering
+- Engineering Manager Role
+- Remote Work Engineering
+
+### Top GitHub Repositories
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [OAI/OpenAPI-Specification](https://github.com/OAI/OpenAPI-Specification) | ⭐ 30k+ | The OpenAPI Spec | The industry standard for defining cross-team API contracts |
+| [pact-foundation/pact-js](https://github.com/pact-foundation/pact-js) | ⭐ 2k+ | Consumer Driven Contracts | Shows how to enforce contracts in CI/CD so teams can't break each other |
+| [grpc/grpc](https://github.com/grpc/grpc) | ⭐ 40k+ | gRPC | A framework that uses Protobufs to enforce strict cross-team communication |
+| [postmanlabs/newman](https://github.com/postmanlabs/newman) | ⭐ 6k+ | Postman CLI | Used to run cross-team API tests in pipelines |
+| [thoughtbot/guides](https://github.com/thoughtbot/guides) | ⭐ 10k+ | Thoughtbot guidelines | Excellent sections on how teams should collaborate on code |
