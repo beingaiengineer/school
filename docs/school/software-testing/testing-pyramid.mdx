@@ -1,0 +1,165 @@
+---
+sidebar_position: 1
+sidebar_label: "Testing Pyramid"
+---
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Software Testing: Testing Pyramid
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Testing Pyramid |
+| Difficulty | Beginner |
+| Used For | Structuring your automated testing strategy |
+| Common Mistake | Building an ice-cream cone (too many E2E tests, too few unit tests) |
+| Performance | Fast at the bottom (Unit), slow at the top (E2E) |
+
+## 2. Engineering Story
+
+Bro, imagine being the lead engineer on a major e-commerce platform during Black Friday. You push a small change to the checkout button styling, and suddenly, the entire payment gateway stops working. The team scrambles for three hours to find the bug, losing thousands of dollars in the process. Why wasn't this caught? Because the team relied entirely on slow, flaky end-to-end (E2E) tests that were skipped by developers to "save time." This is a classic production nightmare. We need a structured approach to testing. We need fast feedback for simple logic and comprehensive checks for the entire system, layered correctly so developers can move fast without breaking things.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] A meticulous structural engineer building a massive 3-tier pyramid using tiny precise bricks at the bottom and large fragile blocks at the top. */}
+
+Think of the Testing Pyramid like building a solid, stable house in India.
+
+| Analogy | Concept |
+|---|---|
+| Thousands of small, strong bricks | Unit Tests (Fast, isolated, foundational) |
+| Dozens of concrete pillars connecting walls | Integration Tests (Connecting components) |
+| One final inspection of the entire painted house | End-to-End Tests (Slow, comprehensive, top-level) |
+
+You wouldn't try to build a house using only final inspections. You need a strong foundation of bricks first.
+
+## 4. Concept Explanation
+
+The Testing Pyramid is a conceptual model that helps teams structure their automated testing suite. Bro, the core idea is simple: you should have many fast, isolated unit tests at the bottom, fewer integration tests in the middle, and very few slow, brittle end-to-end (E2E) tests at the top.
+Why? Because unit tests run in milliseconds and give developers immediate feedback. E2E tests spin up browsers, databases, and networks, taking minutes or hours to run. If you invert this pyramid, your CI/CD pipeline becomes a bottleneck, and developers will start skipping tests. Do NOT fall into the trap of writing only E2E tests just because they "test exactly what the user sees."
+
+## 5. Syntax Table
+
+| Layer | Tools | Speed | Scope |
+|---|---|---|---|
+| Unit | `pytest`, `unittest` | Very Fast (&lt; 10ms) | Single function or class |
+| Integration | `pytest`, `testcontainers` | Medium (100ms - 2s) | Multiple modules, DB calls |
+| End-to-End | `Playwright`, `Selenium` | Slow (5s - 5m) | Full user journey via UI/API |
+
+## 6. Beginner Example
+
+```python
+# A simple unit test (Base of the pyramid)
+def calculate_discount(price, discount_percent):
+    if discount_percent < 0 or discount_percent > 100:
+        raise ValueError("Invalid discount")
+    return price * (1 - discount_percent / 100)
+
+def test_calculate_discount():
+    # Fast, isolated check
+    assert calculate_discount(100, 20) == 80
+    assert calculate_discount(50, 0) == 50
+```
+
+## 7. Real-World Engineering Example
+
+```python
+# Integration Test Example (Middle of the pyramid)
+import pytest
+import requests
+from app.database import get_db_connection
+
+def test_user_registration_integration():
+    # Connect to a real, isolated test database
+    db = get_db_connection('test_db')
+
+    # Action: Call the internal service
+    from app.services import register_user
+    response = register_user(db, "test@example.com", "password123")
+
+    # Assert DB state changed correctly
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM users WHERE email='test@example.com'")
+    user = cursor.fetchone()
+
+    assert response.status == "SUCCESS"
+    assert user is not None
+```
+
+## 8. Internal Working
+
+<LearningFlow
+  steps={[
+    { title: 'Step 1', detail: 'Setup' },
+    { title: 'Step 2', detail: 'Execute' },
+    { title: 'Step 3', detail: 'Verify' }
+  ]}
+/>
+
+## 9. Performance Table
+
+| Test Type | Execution Time | Resource Cost | Confidence Level |
+|---|---|---|---|
+| Unit | ~1ms | Very Low | Low (Isolated logic only) |
+| Integration | ~500ms | Medium | High (Component contracts) |
+| E2E | ~10s+ | High | Very High (Real user flow) |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the Testing Pyramid? | A strategy that advocates for a large number of unit tests, fewer integration tests, and very few E2E tests. |
+| What is the Ice-Cream Cone anti-pattern? | When a project has many E2E tests but very few unit tests, leading to slow, brittle test suites. |
+| Why are E2E tests at the top? | Because they are slow, expensive to run, and prone to flakiness, so they should be used sparingly. |
+| What is a flaky test? | A test that sometimes passes and sometimes fails without any code changes, usually due to timing or external state. |
+| Can you achieve 100% test coverage with just unit tests? | Yes, but it's dangerous. Unit tests mock dependencies, so they won't catch integration failures. |
+
+## 11. Tricky Questions & Edge Cases
+
+What if you are building a microservices architecture where services communicate heavily via Kafka?
+In this edge case, unit tests provide very little value compared to contract testing and integration testing. The classic Testing Pyramid might shift into a "Testing Honeycomb," where integration tests form the bulk of the suite, as the complexity lies in the interactions between services rather than the internal logic of a single service.
+
+## 12. Real-World Usage
+
+Top tech companies like Google and Meta enforce the Testing Pyramid rigorously.
+Their CI/CD pipelines run thousands of unit tests on every commit within seconds. E2E tests are reserved only for the absolute most critical user journeys (like "User logs in" or "User checks out cart") and are often run on a separate nightly schedule rather than on every commit to save CI resources.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| DO write 70% unit, 20% integration, 10% E2E tests | DON'T write E2E tests for every single edge case |
+| DO run unit tests locally before pushing | DON'T push code that breaks the foundational layer |
+| DO mock external APIs in unit tests | DON'T mock the database in integration tests |
+| DO delete flaky E2E tests if they cannot be fixed | DON'T ignore failing tests in the pipeline |
+
+## 14. Production Notes
+
+<Admonition type="caution" title="Beware the Sunk Cost of E2E">
+  Bro, teams often spend months building massive Selenium/Playwright suites, only to abandon them because they take 4 hours to run and fail randomly. Maintain strict discipline. If a bug can be caught by a unit test, DO NOT write an E2E test for it.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| The Ice Cream Cone | Shift testing efforts down. Rewrite brittle UI tests as API integration tests. |
+| Hourglass Anti-pattern | Having lots of unit and E2E tests but no integration tests. Add integration tests to catch DB/Network issues. |
+| Testing the framework | Don't write unit tests to check if Django's ORM saves to the database. Test your custom business logic. |
+
+## 16. Related Topics
+- CI/CD Pipelines
+- Test-Driven Development
+- Integration Testing
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [pytest-dev/pytest](https://github.com/pytest-dev/pytest) | ⭐ 11k+ | The pytest framework | Core tool for writing Python unit tests. |
+| [microsoft/playwright](https://github.com/microsoft/playwright) | ⭐ 60k+ | E2E testing framework | Best-in-class tool for top-of-pyramid tests. |
+| [SeleniumHQ/selenium](https://github.com/SeleniumHQ/selenium) | ⭐ 30k+ | Browser automation | The classic tool for UI testing. |
+| [testcontainers/testcontainers-python](https://github.com/testcontainers/testcontainers-python) | ⭐ 1k+ | Docker for tests | Perfect for the integration testing layer. |
+| [pact-foundation/pact-python](https://github.com/pact-foundation/pact-python) | ⭐ 500+ | Contract testing | Essential for microservice integration testing. |

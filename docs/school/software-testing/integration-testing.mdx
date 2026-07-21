@@ -1,0 +1,183 @@
+---
+sidebar_position: 5
+sidebar_label: "Integration Testing"
+---
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Software Testing: Integration Testing
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Integration Testing |
+| Difficulty | Intermediate |
+| Used For | Verifying that different components or services work together correctly |
+| Common Mistake | Using production databases or failing to isolate test state |
+| Performance | Medium speed (requires real IO, databases, or network calls) |
+
+## 2. Engineering Story
+
+Bro, two teams at your company spent a month building microservices. Team A built the User Service, and Team B built the Email Service. Both teams wrote 100% unit test coverage, mocking out the other team's API. They deploy to production on Friday afternoon. Immediately, the system crashes. Why? Team A sent the user ID as an integer, but Team B expected a string. The unit tests passed because the mocks were wrong. This is the classic "two units work perfectly, but the system fails" scenario. Integration tests prevent this by wiring the actual, real components together (like a real database, or a real API contract) to ensure they can actually communicate in reality, not just in theory.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] Multiple independent chaotic Swiggy delivery fleets connecting at a busy traffic junction without crashing into each other. */}
+
+Think of Integration Testing like a busy Swiggy delivery handoff point.
+
+| Analogy | Concept |
+|---|---|
+| Checking the restaurant cooked the food | Unit Test |
+| The rider picking up the food from the restaurant | Integration Test (Connecting two distinct entities) |
+| Customer eating the hot food | End-to-End Test |
+
+You can have the best cook in the world and the fastest rider in the world, but if the rider goes to the wrong address to pick up the food, the system fails. Integration testing tests the handoff.
+
+## 4. Concept Explanation
+
+Integration testing sits in the middle of the Testing Pyramid. It verifies that different modules, databases, external APIs, or microservices function correctly when combined.
+Bro, you use this to test database queries (e.g., does this SQLAlchemy model actually save to Postgres?), cache layers (e.g., does Redis actually store this key?), and internal API contracts.
+Do NOT mock the database in an integration test. The whole point is to hit a real (but isolated) infrastructure component to ensure your code and the infrastructure agree on the data format and behavior.
+
+## 5. Syntax Table
+
+| Tool / Concept | Usage | Speed | Example |
+|---|---|---|---|
+| Test Database | Spin up a real DB for tests | Medium | `CREATE DATABASE test_db;` |
+| Testcontainers | Use Docker to spin up services | Slow setup | `PostgresContainer("postgres:13")` |
+| HTTP Client | Call internal APIs | Fast | `TestClient(app)` (FastAPI) |
+| Transaction Rollback | Clean up state | Very Fast | `db.rollback()` |
+
+## 6. Beginner Example
+
+```python
+# Testing integration between application logic and an SQLite database
+import sqlite3
+import pytest
+
+def save_user(conn, username):
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO users (username) VALUES (?)", (username,))
+    conn.commit()
+
+def test_save_user_integration():
+    # Setup a real, in-memory database
+    conn = sqlite3.connect(":memory:")
+    conn.execute("CREATE TABLE users (username TEXT)")
+
+    # Action: Run the real code against the real DB
+    save_user(conn, "bro_coder")
+
+    # Assert: Query the DB to verify
+    cursor = conn.cursor()
+    cursor.execute("SELECT username FROM users")
+    result = cursor.fetchone()
+
+    assert result[0] == "bro_coder"
+```
+
+## 7. Real-World Engineering Example
+
+```python
+# Real-world production integration test using FastAPI and Testcontainers
+from fastapi.testclient import TestClient
+from testcontainers.postgres import PostgresContainer
+import pytest
+from app.main import app
+from app.db import get_db
+
+@pytest.fixture(scope="module")
+def postgres_db():
+    # Spin up a real PostgreSQL docker container just for this test
+    with PostgresContainer("postgres:14") as postgres:
+        yield postgres.get_connection_url()
+
+def test_create_order_integration(postgres_db):
+    # Override the app's DB dependency to use the Docker container
+    app.dependency_overrides[get_db] = lambda: create_session(postgres_db)
+
+    client = TestClient(app)
+
+    # Action: Hit the API which hits the real DB
+    response = client.post("/orders/", json={"item": "Laptop", "price": 1000})
+
+    # Verify the full stack integration
+    assert response.status_code == 201
+    assert response.json()["id"] is not None
+```
+
+## 8. Internal Working
+
+<LearningFlow
+  steps={[
+    { title: 'Step 1', detail: 'Setup' },
+    { title: 'Step 2', detail: 'Execute' },
+    { title: 'Step 3', detail: 'Verify' }
+  ]}
+/>
+
+## 9. Performance Table
+
+| Strategy | Execution Time | Isolation | Complexity |
+|---|---|---|---|
+| In-Memory SQLite | Very Fast | High | Low (May lack Postgres features) |
+| Local Postgres | Fast | Low (Shared state) | Low |
+| Docker Testcontainers | Slow Setup, Fast Run | Very High | High |
+| Transaction Rollback | Very Fast | Very High | Medium |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is Integration Testing? | Testing the connection and communication between two or more components (like code and a database). |
+| How do you prevent tests from messing up the database? | Use a dedicated test database, wrap each test in a transaction and roll it back, or rebuild the schema per test. |
+| Why not just use E2E tests? | Integration tests are faster, less brittle, and pinpoint exact boundaries (like the DB layer) rather than the whole UI. |
+| Should you mock in integration tests? | Generally no for internal infrastructure (DBs/Caches). You might still mock 3rd party external APIs (like Stripe). |
+| What is Testcontainers? | A library that automatically spins up Docker containers (like Postgres, Redis) for the duration of a test suite. |
+
+## 11. Tricky Questions & Edge Cases
+
+What happens when your integration tests run in parallel in CI?
+Bro, if you run tests in parallel (`pytest -n 4`), they will all hit the same test database simultaneously. If Test A deletes a user that Test B expects to exist, you have intermittent, nightmare flaky tests. The solution is strictly isolating state: either use transaction rollbacks for every single test, or dynamically generate unique database schemas/names for every parallel worker.
+
+## 12. Real-World Usage
+
+At companies like Uber, integration tests are crucial for verifying that complex ORM queries perform correctly. A unit test will not tell you if a complex `SQLAlchemy` join statement generates efficient SQL or crashes due to a missing index. They use integration tests connected to real Postgres instances in their CI pipelines to validate schema migrations and query syntax before deployment.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| DO use a real database engine matching production | DON'T use SQLite for tests if production is Postgres |
+| DO use transaction rollbacks to clean state | DON'T manually run `DELETE FROM` to clean up |
+| DO test your database migrations | DON'T test against an outdated schema |
+| DO use Docker/Testcontainers | DON'T require developers to manually install Postgres |
+
+## 14. Production Notes
+
+<Admonition type="info" title="The SQLite Trap">
+  Bro, using SQLite in-memory for testing a Postgres application is a massive trap. Your tests will pass locally, but production will crash because SQLite doesn't enforce strict typing, lacks JSONB support, and handles concurrency differently. Always test against the same engine you run in production.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Shared state pollution | Ensure every test starts with a completely clean database state using fixtures. |
+| Testing third-party services | Don't hit the real Stripe or Twilio API in CI. That's a boundary you should mock, or test against a dedicated sandbox environment. |
+| Overlapping with unit tests | If an integration test doesn't actually talk to a database, file system, or network, it should be a unit test. |
+
+## 16. Related Topics
+- Unit Testing with Pytest
+- Testing Pyramid
+- API Testing
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [testcontainers/testcontainers-python](https://github.com/testcontainers/testcontainers-python) | ⭐ 1k+ | Docker for tests | The absolute best way to manage real databases for tests. |
+| [pytest-dev/pytest-django](https://github.com/pytest-dev/pytest-django) | ⭐ 1k+ | Django testing | Provides native DB transaction rollback fixtures for Django. |
+| [pact-foundation/pact-python](https://github.com/pact-foundation/pact-python) | ⭐ 500+ | Contract testing | Essential for testing integrations between microservices without spinning them all up. |

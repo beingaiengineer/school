@@ -1,0 +1,179 @@
+---
+sidebar_position: 9
+sidebar_label: "Load Testing"
+---
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Software Testing: Load Testing
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Load Testing |
+| Difficulty | Advanced |
+| Used For | Testing system behavior, stability, and response times under heavy traffic |
+| Common Mistake | Testing against the local dev environment instead of production-like infrastructure |
+| Performance | Simulates thousands of users, highly resource-intensive |
+
+## 2. Engineering Story
+
+Bro, imagine you build a ticket booking app for a massive concert. Your unit tests pass, integration tests pass, and API tests are flawless. You launch the app. At exactly 10:00 AM, 50,000 users hit the "Buy Ticket" button simultaneously. The database connection pool is instantly exhausted, the CPU spikes to 100%, and the servers crash. The site is down for an hour, and the company is humiliated on Twitter. You tested the logic perfectly, but you never tested the *scale*. This is why Load Testing is non-negotiable for high-traffic systems. It answers the question: "Does the code still work when a stadium full of people try to use it at the exact same second?"
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] A Mumbai local train completely overflowing with passengers as engineers push more people inside to see if the doors hold. */}
+
+Think of Load Testing like operating a Mumbai local train.
+
+| Analogy | Concept |
+|---|---|
+| A mechanic checking the engine in the depot | Unit / Integration Test |
+| Letting 10 people onto the train to see if it moves | Basic API Test |
+| Forcing 5,000 people onto the train at rush hour | Load Test |
+| Continuing to push people in until the doors break | Stress / Breakpoint Test |
+
+A train that works perfectly with 10 people might completely fail to close its doors or move forward with 5,000 people inside.
+
+## 4. Concept Explanation
+
+Load Testing is the process of simulating expected or peak concurrent traffic to your application to measure response times, throughput, and resource utilization (CPU/Memory).
+Bro, tools like Locust (Python) or k6 (JavaScript) allow you to write scripts defining user behavior, and then spawn thousands of virtual users to hammer your API.
+Use it to find bottlenecks (like unindexed database queries, slow external APIs, or bad connection pooling). Do NOT run load tests against production without explicit permission, as you will likely trigger a self-inflicted Distributed Denial of Service (DDoS) attack.
+
+## 5. Syntax Table
+
+| Tool | Language | Use Case | Strengths |
+|---|---|---|---|
+| Locust | Python | Complex user journeys | Write tests in pure Python, highly extensible |
+| k6 | JavaScript | High concurrency | Written in Go, uses very little CPU to generate load |
+| JMeter | Java/GUI | Enterprise legacy systems | Massive ecosystem, but clunky GUI |
+| Artillery | YAML/JS | Serverless / API load | Great CI/CD integration |
+
+## 6. Beginner Example
+
+```python
+# A simple Locust file (locustfile.py)
+from locust import HttpUser, task, between
+
+class WebsiteUser(HttpUser):
+    # Wait between 1 and 5 seconds between tasks
+    wait_time = between(1, 5)
+
+    @task
+    def view_homepage(self):
+        self.client.get("/")
+
+    @task(3) # This task runs 3 times more often
+    def view_item(self):
+        self.client.get("/item/42")
+
+# Run via terminal:
+# locust -f locustfile.py --host=https://my-staging-site.com
+```
+
+## 7. Real-World Engineering Example
+
+```python
+# Real-world production load test mimicking an authenticated user journey
+from locust import HttpUser, task, between
+import random
+
+class AuthenticatedUser(HttpUser):
+    wait_time = between(2, 5)
+
+    def on_start(self):
+        # Setup: Log in before hitting other endpoints
+        response = self.client.post("/api/login", json={
+            "username": "test_user", "password": "password"
+        })
+        self.token = response.json().get("token")
+        self.headers = {"Authorization": f"Bearer {self.token}"}
+
+    @task
+    def browse_catalog(self):
+        self.client.get("/api/products", headers=self.headers)
+
+    @task
+    def purchase_random_item(self):
+        item_id = random.randint(1, 1000)
+        self.client.post(f"/api/checkout", headers=self.headers, json={
+            "item_id": item_id,
+            "quantity": 1
+        })
+```
+
+## 8. Internal Working
+
+<LearningFlow
+  steps={[
+    { title: 'Step 1', detail: 'Setup' },
+    { title: 'Step 2', detail: 'Execute' },
+    { title: 'Step 3', detail: 'Verify' }
+  ]}
+/>
+
+## 9. Performance Table
+
+| Metric | Definition | Good Target |
+|---|---|---|
+| Throughput (RPS) | Requests Per Second the system handles | Varies by scale |
+| Latency (p95) | Time it takes for 95% of requests to complete | &lt; 200ms |
+| Error Rate | Percentage of 5xx or timeout errors | &lt; 0.1% |
+| CPU Utilization | Server processor usage under load | ~70% (leaves buffer for spikes) |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between Load and Stress testing? | Load testing simulates expected peak traffic. Stress testing pushes traffic past the peak until the system breaks to find the failure point. |
+| What is a p99 latency metric? | It means 99% of requests completed faster than this time. It's a measure of worst-case performance. |
+| Why shouldn't you load test against a local dev machine? | Your laptop has totally different CPU, memory, DB config, and network latency than production. The results are meaningless. |
+| What is connection pooling, and why does load testing expose it? | Reusing DB connections. Under load, if a pool is too small, requests queue and timeout. If too large, the DB crashes. |
+
+## 11. Tricky Questions & Edge Cases
+
+What happens if your load testing tool runs out of CPU before your server does?
+Bro, this is a massive trap. If you run a Locust script from your single laptop trying to generate 10,000 Requests Per Second, your laptop's CPU will hit 100%, and the outgoing request rate will drop. You will look at the metrics and think, "Wow, our server is handling this easily!" No, your laptop just stopped sending traffic. You must use distributed load generation (multiple worker machines) to saturate a production-grade system.
+
+## 12. Real-World Usage
+
+Companies like Netflix and Amazon run constant, automated load tests. When they expect a massive event (like the Super Bowl or Prime Day), they spin up hundreds of EC2 instances in different geographical regions just to generate enough synthetic traffic to push their staging environments to the absolute limit. They track SLIs/SLOs to ensure the p99 latency remains under strict thresholds.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| DO test on an exact replica of production | DON'T test on a tiny staging server |
+| DO use random data (ids, queries) in tests | DON'T request the exact same DB row 10,000 times (it just tests the cache) |
+| DO monitor the DB CPU, not just the app | DON'T assume the app is the bottleneck |
+| DO ramp up traffic slowly | DON'T blast 10,000 users in 1 second |
+
+## 14. Production Notes
+
+<Admonition type="caution" title="Cache Bypassing">
+  Bro, if your load test script requests `/item/1` ten thousand times, the database only works once, and the Redis cache serves the other 9,999 requests. Your load test will show amazing results. Then in production, users request 10,000 *different* items, bypassing the cache, and the database crashes instantly. Your load test must use randomized, realistic data distribution.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Ignoring third-party APIs | If your app calls Stripe, and you load test your app with 1,000 RPS, Stripe will rate-limit or ban you. Mock third parties during load tests. |
+| Looking at Average Latency | Averages lie. A few 10-second timeouts hidden among 10ms responses will show a "good" average. Always look at p95 and p99 metrics. |
+| Not cleaning up data | A load test can create millions of dummy users. Ensure your test environment can be wiped clean afterward. |
+
+## 16. Related Topics
+- API Testing
+- SLIs and SLOs
+- Observability and Monitoring
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [locustio/locust](https://github.com/locustio/locust) | ⭐ 22k+ | Python load testing | Write tests in pure Python, distributed by default. |
+| [grafana/k6](https://github.com/grafana/k6) | ⭐ 20k+ | JS load testing | Incredible performance, writes test in modern JavaScript. |
+| [artilleryio/artillery](https://github.com/artilleryio/artillery) | ⭐ 6k+ | Cloud-native load testing | Excellent for serverless and CI/CD pipelines. |
+| [wg/wrk](https://github.com/wg/wrk) | ⭐ 35k+ | HTTP benchmarking | Raw, brute-force CLI tool to benchmark HTTP APIs. |

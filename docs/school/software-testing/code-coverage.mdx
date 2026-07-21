@@ -1,0 +1,164 @@
+---
+sidebar_position: 8
+sidebar_label: "Code Coverage"
+---
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Software Testing: Code Coverage
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Code Coverage |
+| Difficulty | Beginner |
+| Used For | Measuring the percentage of your codebase that is executed during automated tests |
+| Common Mistake | Treating 100% coverage as proof that the software has no bugs |
+| Performance | Adds slight overhead during test execution |
+
+## 2. Engineering Story
+
+Bro, the engineering manager just proudly announced to the CTO that the new payment service has "100% Code Coverage." Everyone applauds. Two days later, a customer tries to buy an item with a negative price, and the system happily issues them a refund instead of charging them. How did this happen with 100% coverage? The developer wrote a test that executed the payment function, but they forgot to add any `assert` statements. The code was executed (covered), but the logic was never actually verified. This is the great illusion of Code Coverage. It is a fantastic tool for finding untested code, but it is a terrible metric for measuring code quality.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] A security guard sweeping a flashlight across a massive dark warehouse trying to illuminate every hidden corner. */}
+
+Think of Code Coverage like a security guard sweeping a flashlight across a warehouse.
+
+| Analogy | Concept |
+|---|---|
+| The area illuminated by the flashlight | Covered code (executed during tests) |
+| The dark corners | Uncovered code (never executed) |
+| Seeing a box in the light | Knowing the code ran without crashing |
+| Opening the box to check its contents | Writing assertions to verify the logic |
+
+The flashlight (coverage tool) tells you where you have looked. But just shining a light on a box doesn't tell you if the contents inside are broken. You still have to open the box (write assertions).
+
+## 4. Concept Explanation
+
+Code Coverage is a metric that calculates what percentage of your source code is executed when your test suite runs.
+Bro, in Python, we use the `coverage.py` library (usually via `pytest-cov`). It measures line coverage (which lines ran) and branch coverage (did an `if` statement evaluate to both true AND false?).
+Use coverage reports to find dead code and blind spots in your test suite. Do NOT set a hard CI/CD pipeline rule requiring "100% coverage," as this will encourage developers to write useless, assertion-less tests just to game the system and pass the build.
+
+## 5. Syntax Table
+
+| Command | Usage | Result |
+|---|---|---|
+| `pytest --cov=app` | Run tests with coverage | Prints terminal report |
+| `pytest --cov=app --cov-report=html` | Generate HTML report | Creates a clickable UI |
+| `pytest --cov-fail-under=80` | Enforce a threshold | Fails CI if coverage < 80% |
+| `# pragma: no cover` | Exclude a line | Ignores the line in calculations |
+
+## 6. Beginner Example
+
+```python
+# code.py
+def check_age(age):
+    if age < 18:
+        return "Minor"
+    else:
+        return "Adult"
+
+# test_code.py
+from code import check_age
+
+def test_check_age_minor():
+    assert check_age(15) == "Minor"
+
+# If we run coverage now, it will report ~80% coverage.
+# Why? Because the `else: return "Adult"` branch was never executed.
+```
+
+## 7. Real-World Engineering Example
+
+```bash
+# A real-world production CI pipeline script
+#!/bin/bash
+set -e
+
+echo "Running tests with branch coverage..."
+pytest --cov=src --cov-branch --cov-report=xml --cov-report=term-missing
+
+# The resulting terminal output shows exact missing lines:
+# Name                  Stmts   Miss Branch BrPart  Cover   Missing
+# -----------------------------------------------------------------
+# src/payments.py          45      5     10      2    85%   23-27, 40
+# src/users.py             30      0      6      0   100%
+# -----------------------------------------------------------------
+# TOTAL                    75      5     16      2    91%
+```
+
+## 8. Internal Working
+
+<LearningFlow
+  steps={[
+    { title: 'Step 1', detail: 'Setup' },
+    { title: 'Step 2', detail: 'Execute' },
+    { title: 'Step 3', detail: 'Verify' }
+  ]}
+/>
+
+## 9. Performance Table
+
+| Tracer Type | Execution Overhead | Accuracy | Note |
+|---|---|---|---|
+| Python `sys.settrace` | High (~30% slower) | Exact | Default for pure Python |
+| C Extension Tracer | Low (~5% slower) | Exact | Default if compiled |
+| Branch Coverage | Medium | Very High | Tracks every IF/ELSE path |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between Line and Branch coverage? | Line coverage checks if a line ran. Branch coverage checks if every possible path of an `if/else` statement was taken. |
+| Does 100% coverage mean no bugs? | Absolutely not. Coverage tracks execution, not correctness. It doesn't check assertions or logic. |
+| How do you exclude code from coverage? | Use the `# pragma: no cover` comment. |
+| What is a good coverage percentage? | Usually 70-85%. Pushing for 100% often leads to diminishing returns and bad test habits. |
+| What does `sys.settrace` do? | It's a Python C-API feature that allows a function to be called on every single line of executed code, which is how coverage tools work. |
+
+## 11. Tricky Questions & Edge Cases
+
+What happens if you have an `Exception` block that only triggers when the database crashes, but you want 100% coverage?
+Bro, you have to write a test that intentionally mocks the database to raise that specific exception. If you cannot do that easily, you should use `# pragma: no cover` on the exception block. Don't waste 4 hours writing a hyper-complex mock just to satisfy a coverage metric for a simple logging statement.
+
+## 12. Real-World Usage
+
+Companies use platforms like Codecov or SonarQube integrated into GitHub Actions. When a developer opens a Pull Request, the CI runs `pytest --cov`, generates an XML report, and uploads it to Codecov. A bot then comments on the PR, stating: "This PR decreases overall coverage by -1.2%. The following new lines are untested." This provides immediate visibility into blind spots before code merges.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| DO use coverage to find untested edge cases | DON'T use coverage as a KPI for developer performance |
+| DO enforce a reasonable baseline (e.g., 75%) | DON'T enforce 100% coverage |
+| DO use Branch Coverage (`--cov-branch`) | DON'T exclude critical logic just to boost stats |
+| DO generate HTML reports to visualize gaps | DON'T write tests without assertions just to hit lines |
+
+## 14. Production Notes
+
+<Admonition type="caution" title="Goodhart's Law">
+  Bro, remember Goodhart's Law: "When a measure becomes a target, it ceases to be a good measure." If you tell developers their bonus depends on hitting 95% coverage, they will write thousands of tests that simply call functions without verifying the outputs. You will have 95% coverage and a completely broken system.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Ignoring branch coverage | A line with `if x or y:` might run, but you need branch coverage to ensure both `x` and `y` conditions were evaluated. |
+| Testing third-party code | Only measure coverage for your `src` or `app` directory. Exclude `site-packages` or `tests`. |
+| Running coverage in production | Never run the coverage tracer in production; it adds significant performance overhead. |
+
+## 16. Related Topics
+- Unit Testing with Pytest
+- Test-Driven Development
+- Integration Testing
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [nedbat/coveragepy](https://github.com/nedbat/coveragepy) | ⭐ 3k+ | Code coverage tool | The underlying engine for Python coverage. |
+| [pytest-dev/pytest-cov](https://github.com/pytest-dev/pytest-cov) | ⭐ 1k+ | Pytest plugin | The easiest way to run coverage inside pytest. |
+| [codecov/codecov-python](https://github.com/codecov/codecov-python) | ⭐ 1k+ | Codecov uploader | Tool for uploading XML reports to the Codecov dashboard. |
