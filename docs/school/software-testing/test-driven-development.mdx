@@ -1,0 +1,173 @@
+---
+sidebar_position: 7
+sidebar_label: "Test-Driven Development"
+---
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Software Testing: Test-Driven Development
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Test-Driven Development (TDD) |
+| Difficulty | Advanced |
+| Used For | Designing software architecture by writing tests before writing the implementation |
+| Common Mistake | Writing tests after writing the code and calling it TDD |
+| Performance | High initial time investment, massive long-term velocity |
+
+## 2. Engineering Story
+
+Bro, imagine being assigned a complex ticket: "Calculate prorated subscription refunds across multiple time zones with leap year adjustments." You stare at a blank IDE for an hour. You start writing a massive function, but halfway through, you realize you forgot about daylight savings. You rewrite it. It takes two days, and you are terrified to deploy it. Now imagine a different approach. You start by writing one simple test: "If a user cancels on day 15 of a 30-day month, refund 50%." It fails (because the code doesn't exist). You write just enough code to make it pass. Then you write the next test for leap years. It fails. You adjust the code. You build the complex logic step-by-step, guided entirely by failing tests. By the end, you have 100% confidence, a clean architecture, and zero fear of deployment. That is TDD.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] A tailor drawing precise chalk outlines on a piece of cloth before making a single cut with the scissors. */}
+
+Think of Test-Driven Development like a master tailor making a custom suit.
+
+| Analogy | Concept |
+|---|---|
+| Drawing the chalk outline first | Writing the failing test (Red) |
+| Cutting the fabric along the chalk line | Writing the minimal implementation (Green) |
+| Adjusting the seams to make it look perfect | Refactoring the code (Refactor) |
+
+You would never take scissors to expensive fabric without drawing the chalk line first. TDD forces you to draw the outline (test) before you cut the code (implementation).
+
+## 4. Concept Explanation
+
+Test-Driven Development (TDD) is a software engineering practice where you write a failing test BEFORE you write any production code.
+Bro, it strictly follows the "Red-Green-Refactor" cycle.
+Use it to force yourself to think about the API design and edge cases before getting lost in implementation details. Do NOT write 50 tests at once. You write ONE test, watch it fail, make it pass, and then refactor. TDD is not just a testing strategy; it is a software design philosophy that results in highly decoupled, easily testable code.
+
+## 5. Syntax Table
+
+| TDD Phase | Action | Goal |
+|---|---|---|
+| 1. Red | Write a test that fails | Define the requirement and API design |
+| 2. Green | Write the minimal code to pass | Satisfy the requirement quickly |
+| 3. Refactor | Clean up the code | Improve design without changing behavior |
+
+## 6. Beginner Example
+
+```python
+# TDD Step 1 (Red): Write the test for code that doesn't exist yet
+import pytest
+# from calculator import add  <-- This file doesn't even exist yet!
+
+def test_add_two_numbers():
+    assert add(2, 3) == 5
+
+# When you run pytest, it fails with NameError. (RED)
+
+# TDD Step 2 (Green): Write the minimal implementation
+def add(a, b):
+    return 5 # Minimal code just to pass the test!
+
+# Pytest passes. (GREEN)
+
+# TDD Step 3 (Refactor): Make the implementation actually correct
+def add(a, b):
+    return a + b
+
+# Pytest still passes. (REFACTOR)
+```
+
+## 7. Real-World Engineering Example
+
+```python
+# Real-world TDD: Building a URL validator
+# RED: We write the test first.
+def test_validates_https_url():
+    assert is_valid_url("https://google.com") is True
+
+def test_rejects_http_url():
+    assert is_valid_url("http://google.com") is False
+
+def test_rejects_malformed_string():
+    assert is_valid_url("not_a_url") is False
+
+# GREEN & REFACTOR: We write the implementation to satisfy the tests.
+from urllib.parse import urlparse
+
+def is_valid_url(url: str) -> bool:
+    try:
+        result = urlparse(url)
+        return all([result.scheme == "https", result.netloc])
+    except Exception:
+        return False
+```
+
+## 8. Internal Working
+
+<LearningFlow
+  steps={[
+    { title: 'Step 1', detail: 'Setup' },
+    { title: 'Step 2', detail: 'Execute' },
+    { title: 'Step 3', detail: 'Verify' }
+  ]}
+/>
+
+## 9. Performance Table
+
+| Phase | Developer Time | Code Quality Impact | Note |
+|---|---|---|---|
+| Red | High (Thinking required) | High | Forces API design |
+| Green | Low (Hacking it together) | Low | Just get it working |
+| Refactor | Medium (Cleaning up) | Very High | Removes tech debt immediately |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is Red-Green-Refactor? | The core loop of TDD. Write a failing test (Red), make it pass (Green), clean the code (Refactor). |
+| Why is TDD hard to adopt? | It requires a complete mindset shift from "write code then test it" to "test it then write code." |
+| Does TDD slow you down? | It slows down initial development but drastically speeds up long-term maintenance and debugging. |
+| What happens during the Refactor step? | You improve the code's structure (e.g., removing duplication, extracting functions) while relying on the tests to ensure you didn't break anything. |
+| Can you do TDD for UI? | It's much harder and less common. TDD shines best in complex backend business logic. |
+
+## 11. Tricky Questions & Edge Cases
+
+What if you write a test, and it immediately passes (Green) before you write the implementation?
+Bro, this means your test is completely broken. It is a false positive. This is why the "Red" step is mandatory. You MUST see the test fail first. If you don't see it fail, you have no proof that the test is actually testing anything. Never skip the Red phase.
+
+## 12. Real-World Usage
+
+Many extreme programming (XP) teams and financial institutions use strict TDD. When writing trading algorithms where a single bug can lose millions of dollars, engineers use TDD to meticulously build out edge cases (e.g., negative stock prices, missing ticks, overflow errors) before writing the mathematical implementation.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| DO write the absolute minimum code to pass | DON'T write extra features not covered by the test |
+| DO run tests constantly (every few minutes) | DON'T write tests for getters/setters or trivial code |
+| DO see the test fail first (Red phase) | DON'T skip the refactor phase |
+| DO use TDD for complex business logic | DON'T force TDD for exploratory data science |
+
+## 14. Production Notes
+
+<Admonition type="info" title="TDD is a Design Tool, Not Just a Testing Tool">
+  Bro, the biggest secret of TDD is that it's actually a software architecture tool. By writing the test first, you are forced to use your own code before it exists. If the setup for your test requires 50 lines of mocks, you immediately realize your architecture is too tightly coupled, and you fix the design before writing the implementation.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Writing too many tests at once | Write one test, make it pass. Do not write 10 failing tests at once. |
+| Skipping the Refactor step | "Green" code is usually ugly. If you stop at Green, you build technical debt quickly. |
+| Getting stuck on UI/DB TDD | Don't force TDD on complex database queries or UI layouts. Use it for core domain logic. |
+
+## 16. Related Topics
+- Unit Testing with Pytest
+- Mocking and Patching
+- Code Coverage
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [CleanCode/UncleBob](https://github.com/unclebob) | N/A | Robert C. Martin's concepts | The pioneer of modern TDD principles. |
+| [pytest-dev/pytest-watch](https://github.com/joeyespo/pytest-watch) | ⭐ 1k+ | Auto-runner | Automatically runs tests on file save; essential for fast TDD loops. |
+| [Textualize/textual](https://github.com/Textualize/textual) | ⭐ 20k+ | Python TUI | A massive project that heavily utilizes testing for complex logic. |

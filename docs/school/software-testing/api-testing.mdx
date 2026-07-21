@@ -1,0 +1,183 @@
+---
+sidebar_position: 6
+sidebar_label: "API Testing"
+---
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Software Testing: API Testing
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | API Testing |
+| Difficulty | Intermediate |
+| Used For | Verifying that HTTP endpoints return the correct status codes, headers, and payload formats |
+| Common Mistake | Only checking `status_code == 200` and ignoring the JSON structure or headers |
+| Performance | Fast (using in-memory TestClients) to Medium (hitting a deployed sandbox) |
+
+## 2. Engineering Story
+
+Bro, you just finished writing a brilliant new machine learning microservice. You tested the internal python functions, they work perfectly. You deploy to staging, and the frontend team immediately messages you: "The API is broken." You check the logs. Your code expects a POST request with `{"user_id": 5}`, but the API router is strictly requiring `{"user_id": "5"}` (a string), returning a 422 Validation Error. Because you only wrote unit tests for the core logic and skipped API testing, you completely missed the boundary validation layer. API tests catch these exact contract failures, ensuring that the outside world can actually communicate with your system.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] A postman aggressively stuffing 100 different oddly shaped packages into a small local post box to see if it breaks. */}
+
+Think of API Testing like a strict post office.
+
+| Analogy | Concept |
+|---|---|
+| The Post Office Counter | The API Endpoint (e.g., `/api/v1/ship`) |
+| The format of the address on the box | The JSON Payload schema |
+| The Postmaster rejecting an overweight box | The API returning a 400 Bad Request |
+
+You might have a beautiful letter inside (your business logic), but if the address format on the envelope (the API contract) is wrong, the post office will reject it immediately. API testing verifies the envelope.
+
+## 4. Concept Explanation
+
+API Testing involves making programmatic HTTP requests (GET, POST, PUT, DELETE) to your application and asserting that the response matches expectations.
+Bro, in Python frameworks like FastAPI or Django, you use a `TestClient`. This allows you to test the API routing, middleware, authentication, and validation layers without actually starting a live web server on a port.
+Use API tests to verify status codes, validate JSON schemas, and ensure authentication works. Do NOT write API tests that assert deep database state changes if an integration test already covers it; focus strictly on the HTTP contract and boundary layer.
+
+## 5. Syntax Table
+
+| Concept | FastAPI TestClient Syntax | Purpose |
+|---|---|---|
+| GET Request | `client.get("/users/1")` | Fetching data |
+| POST Request | `client.post("/users", json={"name": "A"})` | Submitting JSON data |
+| Check Status | `assert response.status_code == 200` | Verifying HTTP status |
+| Check JSON | `assert response.json()["name"] == "A"` | Verifying response payload |
+
+## 6. Beginner Example
+
+```python
+# Testing a simple FastAPI endpoint
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
+app = FastAPI()
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
+# The Test
+client = TestClient(app)
+
+def test_health_check():
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+```
+
+## 7. Real-World Engineering Example
+
+```python
+# A real-world production example testing authentication and validation
+from fastapi.testclient import TestClient
+from app.main import app
+
+client = TestClient(app)
+
+def test_create_post_unauthorized():
+    # Attempting to post without a token
+    response = client.post("/posts/", json={"title": "My Post"})
+    assert response.status_code == 401
+
+def test_create_post_invalid_payload(auth_headers):
+    # Posting with missing required fields (e.g. content)
+    response = client.post(
+        "/posts/",
+        headers=auth_headers,
+        json={"title": "My Post"}
+    )
+    assert response.status_code == 422
+    assert "content" in response.text
+
+def test_create_post_success(auth_headers):
+    # Successful post
+    response = client.post(
+        "/posts/",
+        headers=auth_headers,
+        json={"title": "My Post", "content": "Hello World"}
+    )
+    assert response.status_code == 201
+    assert response.json()["title"] == "My Post"
+```
+
+## 8. Internal Working
+
+<LearningFlow
+  steps={[
+    { title: 'Step 1', detail: 'Setup' },
+    { title: 'Step 2', detail: 'Execute' },
+    { title: 'Step 3', detail: 'Verify' }
+  ]}
+/>
+
+## 9. Performance Table
+
+| Strategy | Speed | Realism | Setup Complexity |
+|---|---|---|---|
+| In-Memory TestClient | Fast (~10ms) | High (Tests routing/middleware) | Low |
+| Live Server (uvicorn via subprocess) | Slow Setup | Very High (Real network stack) | High |
+| Postman/Newman via CI | Slow | Very High (External tool) | Medium |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is a TestClient? | A tool provided by web frameworks to simulate HTTP requests without starting a real socket server. |
+| Why test 4xx and 5xx errors? | To ensure the API fails gracefully, returns correct error messages, and doesn't leak stack traces. |
+| What is contract testing? | Verifying that the API consumer and provider agree on the request/response JSON schema. |
+| How do you test authenticated endpoints? | Create a fixture that generates a valid JWT or session cookie and injects it into the TestClient headers. |
+| Why not just test the controller function directly? | Calling the python function bypasses the routing, middleware, and schema validation layers. |
+
+## 11. Tricky Questions & Edge Cases
+
+What happens if you change a field name in your database model, and your API automatically serializes it?
+Bro, if you rename `user_name` to `username` in the DB, and your ORM dumps it directly to the API response, you just broke the API contract for all mobile apps using your service. API tests using explicit JSON assertions (`assert data["user_name"] == "bro"`) will catch this immediately, preventing a silent production outage. This is why you should assert explicit dictionary keys, not just rely on model serialization.
+
+## 12. Real-World Usage
+
+At scale, companies like Stripe or Twilio treat their APIs as their primary product. They use tools like `schemathesis` to fuzz their API tests. They automatically generate thousands of malformed requests based on their OpenAPI spec and hammer their own endpoints during CI to ensure no bizarre string combination can cause a 500 Internal Server Error.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| DO test negative paths (400, 401, 403, 404, 422) | DON'T only write tests that return 200 OK |
+| DO validate the exact JSON structure returned | DON'T just assert the status code |
+| DO use fixtures to handle auth headers | DON'T hardcode tokens in your test files |
+| DO test pagination and query parameters | DON'T assume default values always work |
+
+## 14. Production Notes
+
+<Admonition type="info" title="The Over-Fetching Trap">
+  Bro, when testing endpoints that return lists, always test pagination limits. If you write an API test that creates 2 items and asserts the endpoint returns 2 items, it will pass. But in production, with 2 million items, the endpoint might crash if it lacks a `limit`. Write an API test that specifically requests `?limit=10` and verify it only returns 10.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Skipping validation tests | Explicitly send missing fields, wrong types, and long strings to verify 422/400 behavior. |
+| Asserting full JSON matches | Don't do `assert response.json() == expected_dict` if the response includes dynamic timestamps. Assert specific fields instead. |
+| Leaking DB state between API tests | API tests usually hit the DB. Ensure your DB is rolled back or cleared between every API call. |
+
+## 16. Related Topics
+- Integration Testing
+- Test-Driven Development
+- Unit Testing with Pytest
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [tiangolo/fastapi](https://github.com/tiangolo/fastapi) | ⭐ 65k+ | FastAPI Framework | Includes the brilliant Starlette TestClient. |
+| [schemathesis/schemathesis](https://github.com/schemathesis/schemathesis) | ⭐ 2k+ | API Fuzzing | Automatically tests your API using your OpenAPI schema. |
+| [tavern-testing/tavern](https://github.com/tavern-testing/tavern) | ⭐ 1k+ | YAML-based API tests | Great for writing API tests without writing pure Python code. |
+| [postmanlabs/newman](https://github.com/postmanlabs/newman) | ⭐ 6k+ | Postman CLI | Essential if your QA team writes tests in Postman. |

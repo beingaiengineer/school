@@ -1,0 +1,179 @@
+---
+sidebar_position: 3
+sidebar_label: "Pytest Fixtures and Parametrize"
+---
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Software Testing: Pytest Fixtures and Parametrize
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Pytest Fixtures and Parametrize |
+| Difficulty | Intermediate |
+| Used For | Setting up test state, managing teardown, and data-driven testing |
+| Common Mistake | Using traditional `setup` / `teardown` methods instead of modular fixtures |
+| Performance | Highly optimized via fixture scope caching |
+
+## 2. Engineering Story
+
+Bro, imagine you are writing tests for an e-commerce cart. For every single test, you need a dummy user, an active session, a mock database connection, and a pre-filled cart. If you copy-paste the database connection code into 50 different test files, what happens when the DB credentials change? You have to update 50 files. What if the setup takes 2 seconds? Your test suite now takes 100 seconds just to connect to the database.
+This is why Pytest Fixtures exist. They allow you to define a single, modular setup function, inject it automatically into any test that needs it, and cache the result so the 2-second DB connection only happens once per session. Combine this with Parametrize to run the same test logic over hundreds of data variants, and you have a bulletproof testing strategy.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] A massive Indian wedding catering kitchen automatically serving 100 identical perfectly arranged thalis using a single master template. */}
+
+Think of Pytest Fixtures and Parametrize like an efficient Indian wedding catering operation.
+
+| Analogy | Concept |
+|---|---|
+| The master kitchen preparing a huge vat of Dal | A Session-scoped Fixture (Setup once) |
+| A waiter carrying a specific Thali to a guest | Dependency Injection into a test |
+| Serving the same Thali but with different spice levels | Parametrize (Same logic, varying data) |
+
+You don't cook a fresh pot of Dal for every single guest (which is what happens if you don't use scoped fixtures). You cook it once and serve it to everyone.
+
+## 4. Concept Explanation
+
+Pytest Fixtures are functions that run before (and sometimes after) your actual test functions. Bro, they replace the outdated `setUp` and `tearDown` methods from `unittest`. They use dependency injection: if a test function has an argument with the same name as a fixture, Pytest automatically runs the fixture and passes its return value into the test.
+Parametrize is a decorator that allows you to run a single test function multiple times with different sets of arguments.
+Use fixtures to manage state (like DB connections or mock data). Use parametrize to test edge cases (like testing a validator against 10 different invalid email strings). Do NOT write a `for` loop inside a test function; use `@pytest.mark.parametrize` instead so that if one variant fails, the others still run.
+
+## 5. Syntax Table
+
+| Concept | Syntax | Usage |
+|---|---|---|
+| Basic Fixture | `@pytest.fixture` | Define reusable test data |
+| Scoped Fixture | `@pytest.fixture(scope="session")` | Cache fixture for the whole run |
+| Teardown (Yield) | `yield data; db.close()` | Setup, pause for test, then clean up |
+| Parametrize | `@pytest.mark.parametrize("x, y", [(1,2)])` | Data-driven testing |
+
+## 6. Beginner Example
+
+```python
+import pytest
+
+# Define a fixture
+@pytest.fixture
+def dummy_user():
+    return {"id": 1, "username": "bro_coder", "role": "admin"}
+
+# Inject the fixture by name
+def test_user_is_admin(dummy_user):
+    assert dummy_user["role"] == "admin"
+
+# Data-driven testing without writing a loop
+@pytest.mark.parametrize("username, expected_valid", [
+    ("bro_coder", True),
+    ("ab", False), # Too short
+    ("invalid@name", False) # Invalid chars
+])
+def test_username_validation(username, expected_valid):
+    assert validate_username(username) == expected_valid
+```
+
+## 7. Real-World Engineering Example
+
+```python
+# A real-world production example using yield for DB teardown
+import pytest
+from app.db import Database
+
+@pytest.fixture(scope="module")
+def test_db():
+    # SETUP: Run once per module
+    db = Database(url="sqlite:///:memory:")
+    db.connect()
+    db.run_migrations()
+
+    # Pause and pass the DB to the tests
+    yield db
+
+    # TEARDOWN: Run after all tests in module finish
+    db.drop_tables()
+    db.disconnect()
+
+def test_insert_user(test_db):
+    test_db.execute("INSERT INTO users (name) VALUES ('Jules')")
+    result = test_db.query("SELECT * FROM users")
+    assert len(result) == 1
+```
+
+## 8. Internal Working
+
+<LearningFlow
+  steps={[
+    { title: 'Step 1', detail: 'Setup' },
+    { title: 'Step 2', detail: 'Execute' },
+    { title: 'Step 3', detail: 'Verify' }
+  ]}
+/>
+
+## 9. Performance Table
+
+| Scope | Re-evaluated | Best Used For |
+|---|---|---|
+| `function` (default) | Every single test | Mutated state, fresh objects |
+| `class` | Once per class | Class-level state |
+| `module` | Once per file | Expensive setup like test databases |
+| `session` | Once per entire test run | Global config, heavy Docker containers |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is a Pytest Fixture? | A reusable function that provides data or state setup/teardown for tests via dependency injection. |
+| How do you clean up state in a fixture? | Use the `yield` keyword instead of `return`. Code after `yield` runs as teardown. |
+| What is fixture scope? | It defines how long a fixture's return value is cached (function, class, module, or session). |
+| Why use `@pytest.mark.parametrize` instead of a `for` loop? | A loop fails the entire test on the first error. Parametrize treats each data set as a separate, independent test case. |
+| Can fixtures use other fixtures? | Yes, fixtures are modular and can request other fixtures as arguments. |
+
+## 11. Tricky Questions & Edge Cases
+
+What happens if a test mutates a `module` scoped fixture?
+Bro, this is a dangerous edge case. If you have a `module` scoped fixture that returns a dictionary, and `test_A` modifies that dictionary, `test_B` will receive the mutated dictionary. This causes test pollution. Only use module/session scopes for immutable data or services that manage their own isolation (like a DB connection where each test uses a transaction rollback).
+
+## 12. Real-World Usage
+
+Companies using complex microservices heavily rely on `conftest.py` files to define global session-scoped fixtures. For example, a session fixture might use `testcontainers` to spin up a real PostgreSQL Docker container before any tests run, and tear it down automatically when the test suite finishes. This ensures tests run against real infrastructure without manual developer setup.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| DO put shared fixtures in `conftest.py` | DON'T import fixtures manually |
+| DO use `yield` for clean teardown | DON'T leave dangling database connections |
+| DO use `parametrize` for varied inputs | DON'T write massive `if/else` blocks in tests |
+| DO keep fixtures focused on one job | DON'T create a "god fixture" that sets up everything |
+
+## 14. Production Notes
+
+<Admonition type="caution" title="Avoid Fixture Hell">
+  Bro, because fixtures are automatically injected by name, relying too heavily on deep fixture dependency chains (Fixture A requests B which requests C) makes your test suite impossible to debug. Keep your fixture trees shallow and explicit. If a developer cannot figure out where `mock_aws_client` is coming from, you've over-engineered it.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Loop inside a test | Replace `for item in cases:` with `@pytest.mark.parametrize`. |
+| Memory leaks in tests | If you open a file or DB in a fixture, you MUST use `yield` and close it. |
+| Mutating shared state | Never modify an object returned by a `session` scoped fixture. |
+
+## 16. Related Topics
+- Mocking and Patching
+- Unit Testing with Pytest
+- Integration Testing
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [pytest-dev/pytest](https://github.com/pytest-dev/pytest) | ⭐ 11k+ | The pytest framework | Core framework source code. |
+| [pytest-dev/pytest-mock](https://github.com/pytest-dev/pytest-mock) | ⭐ 1k+ | Mocking fixture | Provides the `mocker` fixture natively. |
+| [pytest-dev/pytest-asyncio](https://github.com/pytest-dev/pytest-asyncio) | ⭐ 1k+ | Async fixtures | Essential for testing async/await code. |
+| [testcontainers/testcontainers-python](https://github.com/testcontainers/testcontainers-python) | ⭐ 1k+ | Docker for tests | Perfect for module-scoped DB fixtures. |
+| [FactoryBoy/factory_boy](https://github.com/FactoryBoy/factory_boy) | ⭐ 3k+ | Test data generation | Use this inside fixtures to generate data. |

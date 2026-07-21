@@ -28,23 +28,23 @@ Below are the topics that make up this course. This list serves as the structura
 
 ## Course Status
 
-- **Status**: Not Started
-- **Progress**: 0 / 10
-- **Next Milestone**: Complete initial planning
+- **Status**: Completed
+- **Progress**: 10 / 10
+- **Next Milestone**: Review and refine
 
 ---
 
 ## Health
 
 🟢 Healthy
-- 0% complete
-- Ready for kick-off
+- 100% complete
+- Ready for review
 
 ---
 
 ## Current Focus
 
-Ready for next planning phase.
+Course complete. Reviewing backlog if any.
 
 ---
 
@@ -60,7 +60,16 @@ _Empty_
 _Empty_
 
 ### DONE
-_Empty_
+- [x] [BAE-SOF-001] | Create `testing-pyramid.mdx`
+- [x] [BAE-SOF-002] | Create `unit-testing-with-pytest.mdx`
+- [x] [BAE-SOF-003] | Create `pytest-fixtures-and-parametrize.mdx`
+- [x] [BAE-SOF-004] | Create `mocking-and-patching.mdx`
+- [x] [BAE-SOF-005] | Create `integration-testing.mdx`
+- [x] [BAE-SOF-006] | Create `api-testing.mdx`
+- [x] [BAE-SOF-007] | Create `test-driven-development.mdx`
+- [x] [BAE-SOF-008] | Create `code-coverage.mdx`
+- [x] [BAE-SOF-009] | Create `load-testing.mdx`
+- [x] [BAE-SOF-010] | Create `testing-best-practices.mdx`
 
 ---
 
@@ -84,24 +93,24 @@ No reusable insights recorded yet.
 
 ## Metrics
 
-- Lessons Completed: 0
-- Lessons Remaining: 10
-- Completion %: 0.0%
+- Lessons Completed: 10
+- Lessons Remaining: 0
+- Completion %: 100.0%
 - Open Tasks: 0
 
 ---
 
 ## Backlog
-- [ ] [BAE-SOF-001] | Create `testing-pyramid.mdx`
-- [ ] [BAE-SOF-002] | Create `unit-testing-with-pytest.mdx`
-- [ ] [BAE-SOF-003] | Create `pytest-fixtures-and-parametrize.mdx`
-- [ ] [BAE-SOF-004] | Create `mocking-and-patching.mdx`
-- [ ] [BAE-SOF-005] | Create `integration-testing.mdx`
-- [ ] [BAE-SOF-006] | Create `api-testing.mdx`
-- [ ] [BAE-SOF-007] | Create `test-driven-development.mdx`
-- [ ] [BAE-SOF-008] | Create `code-coverage.mdx`
-- [ ] [BAE-SOF-009] | Create `load-testing.mdx`
-- [ ] [BAE-SOF-010] | Create `testing-best-practices.mdx`
+- [x] [BAE-SOF-001] | Create `testing-pyramid.mdx`
+- [x] [BAE-SOF-002] | Create `unit-testing-with-pytest.mdx`
+- [x] [BAE-SOF-003] | Create `pytest-fixtures-and-parametrize.mdx`
+- [x] [BAE-SOF-004] | Create `mocking-and-patching.mdx`
+- [x] [BAE-SOF-005] | Create `integration-testing.mdx`
+- [x] [BAE-SOF-006] | Create `api-testing.mdx`
+- [x] [BAE-SOF-007] | Create `test-driven-development.mdx`
+- [x] [BAE-SOF-008] | Create `code-coverage.mdx`
+- [x] [BAE-SOF-009] | Create `load-testing.mdx`
+- [x] [BAE-SOF-010] | Create `testing-best-practices.mdx`
 
 ---
 
@@ -109,6 +118,7 @@ No reusable insights recorded yet.
 
 | BAE ID | What's Done (High Level) |
 |---|---|
+| `[BAE-SOF-001]` through `[BAE-SOF-010]` | Created 10 topics for Software Testing course including testing pyramid, pytest, mocking, tdd, and load testing. |
 
 ---
 

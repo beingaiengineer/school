@@ -1,0 +1,178 @@
+---
+sidebar_position: 4
+sidebar_label: "Mocking and Patching"
+---
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Software Testing: Mocking and Patching
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Mocking and Patching |
+| Difficulty | Intermediate |
+| Used For | Isolating code by simulating external dependencies |
+| Common Mistake | Mocking the wrong namespace (where it's defined, not where it's used) |
+| Performance | Instant (No real network/DB I/O) |
+
+## 2. Engineering Story
+
+Bro, imagine writing a test for a function that charges a user's credit card via the Stripe API. You run the test suite, and it passes. Great! But the next day, finance calls you in a panic: your automated CI pipeline just charged a real customer's credit card 5,000 times during the nightly build. This is a catastrophic failure of test isolation. Your unit tests must NEVER touch real external APIs, send real emails, or modify production databases. We need a way to intercept these calls and pretend they happened successfully. This is exactly what Mocking and Patching do: they create fake objects that mimic the behavior of the real dependencies, allowing us to test our internal logic safely and instantly.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] A candidate practicing for an IAS interview with strict actors pretending to be government officials in a mock room. */}
+
+Think of Mocking like preparing for a high-stakes IAS interview using a mock panel.
+
+| Analogy | Concept |
+|---|---|
+| The candidate practicing their answers | Your internal business logic |
+| Actors pretending to be the IAS panel | Mock Objects simulating an external API |
+| The actor responding with a fake tricky question | A mock returning a specific edge-case payload |
+
+You don't need real government officials to practice your answers. You just need someone to simulate their behavior perfectly.
+
+## 4. Concept Explanation
+
+Mocking is the process of creating a fake version of an external dependency. Patching is the mechanism used to temporarily replace the real dependency with the mock during the test execution.
+Bro, in Python, we use `unittest.mock` (or `pytest-mock` which provides the `mocker` fixture). You use it when a function depends on something slow, expensive, or unpredictable (like an HTTP request to AWS, a random number generator, or the current time).
+Do NOT mock your own internal logic. Only mock the boundaries of your system. If you mock too much, your tests become meaningless because they only test the mocks, not reality.
+
+## 5. Syntax Table
+
+| Concept | Pytest-Mock Syntax | Purpose |
+|---|---|---|
+| Patch a function | `mocker.patch('module.func', return_value=5)` | Replace a function with a mock |
+| Check call | `mock_obj.assert_called_once_with(x)` | Verify the mock was called correctly |
+| Mock Exception | `mocker.patch('module.func', side_effect=ValueError)` | Simulate an external error/timeout |
+| Spy | `mocker.spy(obj, 'method')` | Watch a real function without replacing it |
+
+## 6. Beginner Example
+
+```python
+# payment.py
+import requests
+
+def charge_card(amount):
+    response = requests.post("https://api.stripe.com/charge", json={"amount": amount})
+    return response.status_code == 200
+
+# test_payment.py
+def test_charge_card_success(mocker):
+    # Setup: Intercept the requests.post call
+    mock_post = mocker.patch('payment.requests.post')
+    mock_post.return_value.status_code = 200
+
+    # Action
+    result = charge_card(500)
+
+    # Verify: The logic works and the external call was intercepted
+    assert result is True
+    mock_post.assert_called_once_with("https://api.stripe.com/charge", json={"amount": 500})
+```
+
+## 7. Real-World Engineering Example
+
+```python
+# A real-world production example testing retry logic on AWS S3 failure
+import boto3
+from my_app.storage import upload_to_s3
+
+def test_upload_retries_on_timeout(mocker):
+    # Patch the S3 client creation
+    mock_boto = mocker.patch('my_app.storage.boto3.client')
+    mock_s3_client = mock_boto.return_value
+
+    # Simulate a network timeout on the first call, success on the second
+    from botocore.exceptions import ConnectTimeoutError
+    mock_s3_client.upload_file.side_effect = [
+        ConnectTimeoutError(endpoint_url="fake"),
+        True
+    ]
+
+    # Action
+    result = upload_to_s3("file.txt", "bucket_name")
+
+    # Verify the retry logic executed correctly
+    assert result is True
+    assert mock_s3_client.upload_file.call_count == 2
+```
+
+## 8. Internal Working
+
+<LearningFlow
+  steps={[
+    { title: 'Step 1', detail: 'Setup' },
+    { title: 'Step 2', detail: 'Execute' },
+    { title: 'Step 3', detail: 'Verify' }
+  ]}
+/>
+
+## 9. Performance Table
+
+| Strategy | Speed | Realism | Use Case |
+|---|---|---|---|
+| Real API Call | Very Slow | 100% | End-to-End tests |
+| VCR.py (Recorded) | Fast | 90% | Complex API integrations |
+| MagicMock | Instant | Low | Unit testing logic flow |
+| Spy | Instant | 100% | Verifying state without altering it |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| What is the difference between Mock and Stub? | A stub just returns hardcoded data. A mock records how it was called (arguments, count) for verification. |
+| Where do you patch a module? | You patch it where it is *imported and used*, not where it is defined. (e.g., `patch('my_module.os.remove')`). |
+| What is `side_effect` used for? | To raise exceptions (like timeouts) or return different values on consecutive calls. |
+| Why is excessive mocking bad? | It leads to "tautological tests" that only test the mock configuration, providing false confidence. |
+| What is a Spy? | A wrapper that calls the real underlying function but records the arguments and return values. |
+
+## 11. Tricky Questions & Edge Cases
+
+What happens if you mock a function but spell the method name wrong?
+Bro, this is a classic trap. Standard mocks will gladly accept ANY method call (`mock.fligh_to_moon()`) and just return another mock. This hides bugs. You should always use `autospec=True` when patching. Autospec ensures the mock exactly mirrors the real object's signature, raising an AttributeError if you call a non-existent method.
+
+## 12. Real-World Usage
+
+In production, teams use mocking to test devastating failure modes that are impossible to replicate reliably in real life. For example, Netflix engineers mock AWS region failures to ensure their fallback routing logic works. You cannot actually take down `us-east-1` just to run a unit test, so you mock the AWS SDK to throw a `503 Service Unavailable` error and verify your code handles it gracefully.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| DO use `autospec=True` to prevent fake method calls | DON'T mock everything; keep tests realistic |
+| DO use the `mocker` fixture from `pytest-mock` | DON'T use `unittest.mock.patch` decorators if using Pytest |
+| DO mock external boundaries (DB, API, Time) | DON'T mock the internal functions you are trying to test |
+| DO use `responses` or `vcr.py` for complex HTTP mocks | DON'T manually mock `requests.Session` internals |
+
+## 14. Production Notes
+
+<Admonition type="caution" title="The Over-Mocking Trap">
+  Bro, if you have 15 lines of mock setup for 2 lines of business logic, your design is flawed. This usually means your function is tightly coupled to infrastructure. Refactor your code using Dependency Injection so you can pass in simple objects rather than heavily patching global imports.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Patching the wrong location | Patch `target_module.dependency`, NOT `dependency_module.dependency`. |
+| Forgetting to stop the patch | If not using a context manager or fixture, you must `.stop()` the patch, or it leaks into other tests. (Using `pytest-mock` solves this automatically). |
+| Mocking standard library unnecessarily | Don't mock `datetime` manually. Use `freezegun`. Don't mock `os.path`. Use Pytest's `tmp_path` fixture. |
+
+## 16. Related Topics
+- Unit Testing with Pytest
+- Pytest Fixtures and Parametrize
+- API Testing
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [pytest-dev/pytest-mock](https://github.com/pytest-dev/pytest-mock) | ⭐ 1k+ | Mocking fixture | The modern standard for mocking in Pytest. |
+| [getsentry/responses](https://github.com/getsentry/responses) | ⭐ 3k+ | HTTP mocking | A clean way to mock the `requests` library. |
+| [kevin1024/vcrpy](https://github.com/kevin1024/vcrpy) | ⭐ 5k+ | Record and replay HTTP | Records real API calls to cassette files for playback. |
+| [spulec/freezegun](https://github.com/spulec/freezegun) | ⭐ 3k+ | Time mocking | Essential for testing code dependent on current time. |
+| [spulec/moto](https://github.com/getmoto/moto) | ⭐ 8k+ | Mocking AWS SDK | The industry standard for mocking boto3. |

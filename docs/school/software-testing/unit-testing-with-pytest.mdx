@@ -1,0 +1,180 @@
+---
+sidebar_position: 2
+sidebar_label: "Unit Testing with Pytest"
+---
+import Admonition from '@theme/Admonition';
+import LearningFlow from '@site/src/components/LearningFlow';
+
+# Software Testing: Unit Testing with Pytest
+
+## 1. Quick Summary
+
+| Area | Details |
+|---|---|
+| Topic | Unit Testing with Pytest |
+| Difficulty | Beginner |
+| Used For | Writing fast, isolated tests for individual functions and classes |
+| Common Mistake | Writing tests that depend on external state or take too long to run |
+| Performance | Extremely fast (milliseconds per test) |
+
+## 2. Engineering Story
+
+Bro, imagine deploying a new data processing pipeline that is supposed to handle millions of records. You tested it manually, and it seemed fine. But in production, a specific edge case—a null value in an obscure field—causes the entire pipeline to crash, halting operations for hours. If you had written unit tests, you could have simulated every possible input variant (including nulls, negatives, and malformed strings) in milliseconds before the code ever left your laptop. Pytest is the engine that runs these tiny, crucial checks. It ensures that the smallest building blocks of your software are rock solid, so you don't discover fundamental logic flaws during a midnight production outage.
+
+## 3. Real-World Analogy
+
+{/* TODO: [BAE-ILLUSTRATION] A strict chai stall owner meticulously tasting a single spoonful of tea for the perfect sugar balance before serving it. */}
+
+Think of unit testing with Pytest like a strict chai stall owner preparing a massive batch of tea.
+
+| Analogy | Concept |
+|---|---|
+| Tasting a single spoonful of the tea | A unit test running a single function |
+| Checking the sugar balance in isolation | Testing a specific edge case |
+| Serving the massive pot to customers | Deploying to production |
+
+You don't need to drink the entire pot to know if the tea is good; one isolated spoonful tells you if the fundamental recipe is correct.
+
+## 4. Concept Explanation
+
+Unit testing is the practice of testing the smallest testable parts of an application in complete isolation. In Python, `pytest` is the undisputed king of testing frameworks. Bro, it is lightyears ahead of the built-in `unittest` module because it requires zero boilerplate. You don't need to create classes or remember obscure assertion methods like `assertEqual`; you just use the standard Python `assert` statement.
+Use Pytest to verify algorithms, data transformations, and business logic. Do NOT use it (in the context of pure unit testing) to test database connections, network calls, or third-party APIs. Those belong in integration tests.
+
+## 5. Syntax Table
+
+| Pytest Feature | Usage | Example |
+|---|---|---|
+| Standard Assert | Checking truthiness | `assert result == 5` |
+| Exception Testing | Checking for expected errors | `with pytest.raises(ValueError):` |
+| Marker | Tagging tests for selective runs | `@pytest.mark.slow` |
+| Skip | Skipping tests conditionally | `@pytest.mark.skipif(...)` |
+
+## 6. Beginner Example
+
+```python
+# calculator.py
+def add(a, b):
+    return a + b
+
+def divide(a, b):
+    if b == 0:
+        raise ValueError("Cannot divide by zero")
+    return a / b
+
+# test_calculator.py
+import pytest
+from calculator import add, divide
+
+def test_add_positive_numbers():
+    assert add(2, 3) == 5
+
+def test_add_negative_numbers():
+    assert add(-2, -3) == -5
+
+def test_divide_by_zero_raises_error():
+    with pytest.raises(ValueError, match="Cannot divide by zero"):
+        divide(10, 0)
+```
+
+## 7. Real-World Engineering Example
+
+```python
+# A real-world production example testing a data parser
+import pytest
+from app.parsers import parse_user_payload
+
+def test_parse_user_payload_valid():
+    payload = {"id": "123", "email": "test@example.com", "age": "25"}
+    result = parse_user_payload(payload)
+
+    assert result.user_id == 123
+    assert result.email == "test@example.com"
+    assert result.age == 25
+
+def test_parse_user_payload_missing_email():
+    payload = {"id": "123", "age": "25"}
+
+    with pytest.raises(KeyError, match="email"):
+        parse_user_payload(payload)
+
+def test_parse_user_payload_invalid_age():
+    payload = {"id": "123", "email": "test@example.com", "age": "invalid"}
+
+    with pytest.raises(ValueError):
+        parse_user_payload(payload)
+```
+
+## 8. Internal Working
+
+<LearningFlow
+  steps={[
+    { title: 'Step 1', detail: 'Setup' },
+    { title: 'Step 2', detail: 'Execute' },
+    { title: 'Step 3', detail: 'Verify' }
+  ]}
+/>
+
+## 9. Performance Table
+
+| Operation | Pytest Overhead | Execution Time | Note |
+|---|---|---|---|
+| Collection | Low | ~50ms | Scans AST for test functions |
+| Execution | Very Low | &lt;1ms per test | Direct Python execution |
+| Assertion Rewrite | Medium | One-time cost | Pytest rewrites asserts for better error messages |
+
+## 10. Top Interview Questions
+
+| Question | Answer |
+|---|---|
+| Why prefer Pytest over Unittest? | Less boilerplate, native assert usage, powerful fixtures, and detailed failure introspection. |
+| How do you test exceptions in Pytest? | Use the `pytest.raises` context manager. |
+| How does Pytest find tests? | It looks for files starting with `test_` or ending with `_test.py`, and functions starting with `test_`. |
+| What is Pytest assert introspection? | Pytest rewrites assert statements before running them to provide detailed contextual variables when a test fails. |
+| How do you run only specific tests? | Use `pytest -k "keyword"` to run tests matching a string, or `-m` to run marked tests. |
+
+## 11. Tricky Questions & Edge Cases
+
+What happens if you use `assert False` inside a deeply nested helper function called by a test?
+Pytest will catch the assertion error, but the stack trace might not provide the beautiful introspection it does when the assert is directly inside the `test_` function, unless you configure pytest to rewrite assertions for that specific helper module.
+
+## 12. Real-World Usage
+
+In massive Python monoliths like Instagram's backend or Dropbox's infrastructure, Pytest is heavily utilized. They use Pytest's powerful plugin ecosystem (`pytest-xdist`) to run tens of thousands of unit tests in parallel across multiple CPU cores, reducing a test suite that would take hours down to a few minutes.
+
+## 13. Best Practices
+
+| DO | DON'T |
+|---|---|
+| DO name tests descriptively (e.g., `test_login_fails_with_bad_password`) | DON'T name tests generically (e.g., `test_case_1`) |
+| DO keep tests deterministic | DON'T use `random` or `datetime.now()` without mocking |
+| DO test one logical concept per test | DON'T put 50 assertions testing 5 different things in one function |
+| DO run tests with `-v` (verbose) for better output | DON'T commit code without running the test suite locally |
+
+## 14. Production Notes
+
+<Admonition type="caution" title="Avoid Flaky Date/Time Logic">
+  Bro, one of the most common causes of flaky unit tests is hardcoding time checks. If your function calculates "7 days from now", do NOT write `assert result == datetime.now() + timedelta(days=7)`. The millisecond difference during execution will cause intermittent failures. Always use libraries like `freezegun` to mock time in your tests.
+</Admonition>
+
+## 15. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Re-inventing the wheel with unittest | Stop using `self.assertEqual()`. Just use Pytest's native `assert`. |
+| Not isolating tests | Tests must not depend on the execution order. If running `test_B` before `test_A` fails, your tests are tightly coupled. |
+| Catching exceptions manually | Don't use `try/except` to check for errors in tests. Use `pytest.raises`. |
+
+## 16. Related Topics
+- Pytest Fixtures and Parametrize
+- Mocking and Patching
+- Code Coverage
+
+## 17. Top GitHub Repositories
+
+| Repository | Stars | Description | Why It Matters |
+|---|---|---|---|
+| [pytest-dev/pytest](https://github.com/pytest-dev/pytest) | ⭐ 11k+ | The pytest framework | Core framework source code. |
+| [pytest-dev/pytest-xdist](https://github.com/pytest-dev/pytest-xdist) | ⭐ 1k+ | Parallel test execution | Essential for speeding up massive test suites. |
+| [pytest-dev/pytest-cov](https://github.com/pytest-dev/pytest-cov) | ⭐ 1k+ | Coverage reporting | Connects Pytest with Coverage.py. |
+| [spulec/freezegun](https://github.com/spulec/freezegun) | ⭐ 3k+ | Mocking time | Crucial for deterministic date/time testing. |
+| [FactoryBoy/factory_boy](https://github.com/FactoryBoy/factory_boy) | ⭐ 3k+ | Test data generation | Helps build complex test objects cleanly. |
