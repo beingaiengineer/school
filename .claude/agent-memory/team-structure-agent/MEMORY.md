@@ -83,23 +83,26 @@ No reusable insights recorded yet.
 
 ## Metrics
 
-- Lessons Completed: 0
-- Lessons Remaining: 9
-- Completion %: 0.0%
+- Lessons Completed: 9
+- Lessons Remaining: 0
+- Completion %: 100.0%
 - Open Tasks: 0
 
 ---
 
+### Completed This Cycle
+- [x] [BAE-TEA-001] | Create `your-first-day.mdx`
+- [x] [BAE-TEA-002] | Create `engineering-org-structure.mdx`
+- [x] [BAE-TEA-003] | Create `product-manager-role.mdx`
+- [x] [BAE-TEA-004] | Create `engineering-manager-role.mdx`
+- [x] [BAE-TEA-005] | Create `tech-lead-vs-staff-engineer.mdx`
+- [x] [BAE-TEA-006] | Create `cross-team-collaboration.mdx`
+- [x] [BAE-TEA-007] | Create `communication-in-engineering.mdx`
+- [x] [BAE-TEA-008] | Create `remote-work-engineering.mdx`
+- [x] [BAE-TEA-009] | Create `engineering-ladder.mdx`
+
 ## Backlog
-- [ ] [BAE-TEA-001] | Create `your-first-day.mdx`
-- [ ] [BAE-TEA-002] | Create `engineering-org-structure.mdx`
-- [ ] [BAE-TEA-003] | Create `product-manager-role.mdx`
-- [ ] [BAE-TEA-004] | Create `engineering-manager-role.mdx`
-- [ ] [BAE-TEA-005] | Create `tech-lead-vs-staff-engineer.mdx`
-- [ ] [BAE-TEA-006] | Create `cross-team-collaboration.mdx`
-- [ ] [BAE-TEA-007] | Create `communication-in-engineering.mdx`
-- [ ] [BAE-TEA-008] | Create `remote-work-engineering.mdx`
-- [ ] [BAE-TEA-009] | Create `engineering-ladder.mdx`
+_Empty_
 
 ---
 
@@ -107,6 +110,7 @@ No reusable insights recorded yet.
 
 | BAE ID | What's Done (High Level) |
 |---|---|
+| `[BAE-TEA-001] through [BAE-TEA-009]` | Created 9 topics covering team structure, roles, and collaboration for the course. |
 
 ---
 
