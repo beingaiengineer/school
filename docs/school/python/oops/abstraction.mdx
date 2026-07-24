@@ -68,8 +68,7 @@ from abc import ABC, abstractmethod
 class Animal(ABC):
     @abstractmethod
     def make_sound(self):
-        pass
-
+        raise NotImplementedError("This method must be implemented by the subclass")
     def sleep(self):
         print("Sleeping... Zzz")
 
@@ -101,13 +100,11 @@ class PaymentGateway(ABC):
     @abstractmethod
     def process_payment(self, amount: float) -> bool:
         """Process the payment and return True if successful."""
-        pass
-
+        raise NotImplementedError("This method must be implemented by the subclass")
     @abstractmethod
     def refund_payment(self, transaction_id: str) -> bool:
         """Refund a payment given a transaction ID."""
-        pass
-
+        raise NotImplementedError("This method must be implemented by the subclass")
 class StripeGateway(PaymentGateway):
     def process_payment(self, amount: float) -> bool:
         print(f"Processing ${amount} via Stripe API...")
@@ -173,8 +170,7 @@ class BaseDatabase(ABC):
 
     @abstractmethod
     def connect(self):
-        pass
-
+        raise NotImplementedError("This method must be implemented by the subclass")
 class MySQLDatabase(BaseDatabase):
     def connect(self):
         print(f"Connecting to MySQL at {self.connection_string}")
