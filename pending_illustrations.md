@@ -5,25 +5,15 @@ When Jules runs in an autonomous/headless server environment where the `generate
 
 An agent in an interactive chat session can then read this file, generate the images, save them to their asset paths, insert the proper image tag replacing the comment marker in the MDX files, and clear the entries from this queue.
 
-## Total Pending Illustrations: 191
+## Total Pending Illustrations: 178
 
 ## Queue
 
 <!-- entries start -->
-### Course: Agentic Frameworks (10 topics pending)
+### Course: Agentic Frameworks (0 topics pending)
 
 | Topic | File Path | Target Image Path | Prompt |
 |---|---|---|---|
-| Agno (formerly Phidata) | docs/school/agentic-frameworks/emerging-frameworks/agno-formerly-phidata.mdx | docs/school/agentic-frameworks/assets/agno-formerly-phidata.png | A dedicated financial advisor quickly setting up specialized tools (calculators, market data) for a client, representing Agno's focus on specialized agent tooling. |
-| LlamaIndex Agents and Workflows | docs/school/agentic-frameworks/emerging-frameworks/llamaindex-agents-and-workflows.mdx | docs/school/agentic-frameworks/assets/llamaindex-agents-and-workflows.png | A smart librarian efficiently navigating a massive library index system to find exactly the right book, representing LlamaIndex data retrieval. |
-| Haystack Agents | docs/school/agentic-frameworks/emerging-frameworks/haystack-agents.mdx | docs/school/agentic-frameworks/assets/haystack-agents.png | An assembly line passing components through different specialized stations, representing Haystack's pipeline architecture. |
-| Mastra TypeScript Agents | docs/school/agentic-frameworks/emerging-frameworks/mastra-typescript-agents.mdx | docs/school/agentic-frameworks/assets/mastra-typescript-agents.png | A high-tech digital ordering system seamlessly syncing with barista stations, representing Mastra's native TypeScript integration. |
-| Camel AI | docs/school/agentic-frameworks/emerging-frameworks/camel-ai.mdx | docs/school/agentic-frameworks/assets/camel-ai.png | Two expert debaters systematically arguing back and forth to reach a conclusion, representing Camel AI's role-playing. |
-| MetaGPT | docs/school/agentic-frameworks/emerging-frameworks/metagpt.mdx | docs/school/agentic-frameworks/assets/metagpt.png | A software company with a CEO, PM, architect, and developer passing documents down a chain of command, representing MetaGPT. |
-| MCP Protocol Deep Dive | docs/school/agentic-frameworks/protocols/mcp-protocol-deep-dive.mdx | docs/school/agentic-frameworks/assets/mcp-protocol-deep-dive.png | A universal USB-C cable that can connect to a monitor, a hard drive, or a phone, representing the Model Context Protocol (MCP). |
-| MCP Popular Servers | docs/school/agentic-frameworks/protocols/mcp-popular-servers.mdx | docs/school/agentic-frameworks/assets/mcp-popular-servers.png | A digital marketplace where different specialized applications can be downloaded, representing the ecosystem of MCP servers. |
-| MCP Server Development | docs/school/agentic-frameworks/protocols/mcp-server-development.mdx | docs/school/agentic-frameworks/assets/mcp-server-development.png | An engineer soldering a custom adapter that translates a proprietary connection into a universal standard, representing building an MCP server. |
-| A2A Protocol Deep Dive | docs/school/agentic-frameworks/protocols/a2a-protocol-deep-dive.mdx | docs/school/agentic-frameworks/assets/a2a-protocol-deep-dive.png | Two corporate departments with different internal systems communicating seamlessly via official email memos, representing the Agent-to-Agent (A2A) protocol. |
 
 ### Course: App Security (0 topics pending)
 
@@ -35,13 +25,10 @@ An agent in an interactive chat session can then read this file, generate the im
 | Topic | File Path | Target Image Path | Prompt |
 |---|---|---|---|
 
-### Course: Git Workflows (10 topics pending)
+### Course: Git Workflows (7 topics pending)
 
 | Topic | File Path | Target Image Path | Prompt |
 |---|---|---|---|
-| Branching Strategies | [`branching-strategies.mdx`](file:///docs/school/git-workflows/branching-strategies.mdx) | [`branching-strategies.png`](file:///docs/school/git-workflows/assets/branching-strategies.png) | Modern black and white illustration, clean ink or vector style. Pure white background. Strictly grayscale, no colors. Minimal text. The main character is Bae, a cute baby elephant drawn in black and white, wearing a backward baseball cap and oversized thick-rimmed glasses. Bae the baby elephant is think of a branching strategy like managing a restaurant kitchen during a busy dinner service. If the head chef threw his experimental soup directly onto a customer's plate (`main`), chaos would happen. |
-| Code Review Culture | [`code-review-culture.mdx`](file:///docs/school/git-workflows/code-review-culture.mdx) | [`code-review-culture.png`](file:///docs/school/git-workflows/assets/code-review-culture.png) | Modern black and white illustration, clean ink or vector style. Pure white background. Strictly grayscale, no colors. Minimal text. The main character is Bae, a cute baby elephant drawn in black and white, wearing a backward baseball cap and oversized thick-rimmed glasses. Bae the baby elephant is think of a Code Review like an architectural inspection before building a house. If the inspector just screams 'THIS IS TERRIBLE' and leaves, nothing gets built. |
-| Conventional Commits | [`conventional-commits.mdx`](file:///docs/school/git-workflows/conventional-commits.mdx) | [`conventional-commits.png`](file:///docs/school/git-workflows/assets/conventional-commits.png) | Modern black and white illustration, clean ink or vector style. Pure white background. Strictly grayscale, no colors. Minimal text. The main character is Bae, a cute baby elephant drawn in black and white, wearing a backward baseball cap and oversized thick-rimmed glasses. Bae the baby elephant is think of Conventional Commits like putting standard category stickers on moving boxes. If you just label every box 'Stuff' (like `git commit -m 'updates'`), unpacking the house takes forever. |
 | Git Advanced Operations | [`git-advanced-operations.mdx`](file:///docs/school/git-workflows/git-advanced-operations.mdx) | [`git-advanced-operations.png`](file:///docs/school/git-workflows/assets/git-advanced-operations.png) | Modern black and white illustration, clean ink or vector style. Pure white background. Strictly grayscale, no colors. Minimal text. The main character is Bae, a cute baby elephant drawn in black and white, wearing a backward baseball cap and oversized thick-rimmed glasses. Bae the baby elephant is think of standard Git like driving a reliable sedan to work. Advanced Git is like having a mechanic's toolset in the trunk when the car breaks down on the highway. |
 | Git Fundamentals | [`git-fundamentals.mdx`](file:///docs/school/git-workflows/git-fundamentals.mdx) | [`git-fundamentals.png`](file:///docs/school/git-workflows/assets/git-fundamentals.png) | Modern black and white illustration, clean ink or vector style. Pure white background. Strictly grayscale, no colors. Minimal text. The main character is Bae, a cute baby elephant drawn in black and white, wearing a backward baseball cap and oversized thick-rimmed glasses. Bae the baby elephant is think of Git like taking a series of snapshots of your house while you renovate it. |
 | Git Hooks & Automation | [`git-hooks-and-automation.mdx`](file:///docs/school/git-workflows/git-hooks-and-automation.mdx) | [`git-hooks-and-automation.png`](file:///docs/school/git-workflows/assets/git-hooks-and-automation.png) | Modern black and white illustration, clean ink or vector style. Pure white background. Strictly grayscale, no colors. Minimal text. The main character is Bae, a cute baby elephant drawn in black and white, wearing a backward baseball cap and oversized thick-rimmed glasses. Bae the baby elephant is think of a Git Hook like the security scanner at an airport. If you don't pass the scanner, you don't get on the plane. |
