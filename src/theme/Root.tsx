@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { User } from 'firebase/auth';
-import { auth, googleProvider, onAuthStateChanged, signInWithPopup } from '../firebase';
+import { auth, googleProvider, onAuthStateChanged, signInWithRedirect } from '../firebase';
 import './root.css';
 
 export default function Root({ children }: { children: React.ReactNode }) {
@@ -21,7 +21,7 @@ export default function Root({ children }: { children: React.ReactNode }) {
   const handleLogin = async () => {
     try {
       setError(null);
-      await signInWithPopup(auth, googleProvider);
+      await signInWithRedirect(auth, googleProvider);
     } catch (err: any) {
       console.error("Error signing in with Google", err);
       setError(err.message || "Failed to sign in");

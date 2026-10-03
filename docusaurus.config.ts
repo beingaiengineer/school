@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
@@ -86,6 +87,10 @@ const config: Config = {
           to: '/docs/school/python/interview-prep/top-python-interview-questions',
           label: 'Interview Prep',
           position: 'left',
+        },
+        {
+          type: 'custom-authProfile',
+          position: 'right',
         },
       ],
     },
